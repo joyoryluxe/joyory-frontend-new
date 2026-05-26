@@ -1,0 +1,478 @@
+/* .hero-slider {
+  width: 100%;
+  height: 100vh; 
+  overflow: hidden;
+}
+
+.hero-slider .swiper {
+  width: 100%;
+  height: 100%;
+}
+
+.slide-media {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+
+
+.swiper-pagination-bullet {
+  background: #fff;
+  opacity: 0.7;
+}
+.swiper-pagination-bullet-active {
+  background: #ff4081;
+  opacity: 1;
+}
+
+
+
+.swiper-button-next,
+.swiper-button-prev {
+  color: #fff;
+}
+
+
+
+
+.hero-slider {
+  width: 100%;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+} */
+
+
+/* 
+
+
+.hero-slider {
+  width: 100%;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-slider .swiper {
+  width: 100%;
+  height: 100%;
+}
+
+.slide-media {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+
+.swiper-pagination-bullet {
+  background: #fff;
+  opacity: 0.7;
+  transition: opacity 0.3s, transform 0.3s;
+}
+
+.swiper-pagination-bullet-active {
+  background: #ff4081;
+  opacity: 1;
+  transform: scale(1.2);
+}
+
+
+.swiper-button-next,
+.swiper-button-prev {
+  color: #fff;
+  transition: color 0.3s ease;
+}
+
+.swiper-button-next:hover,
+.swiper-button-prev:hover {
+  color: #ff4081;
+}
+
+
+
+@media (max-width: 1024px) {
+  .hero-slider {
+    height: 70vh; 
+  }
+
+  .slide-media {
+    object-fit: cover;
+    height: 70vh;
+  }
+
+  .swiper-button-next,
+  .swiper-button-prev {
+    transform: scale(0.9);
+  }
+
+  .swiper-pagination-bullet {
+    width: 10px;
+    height: 10px;
+  }
+}
+
+
+@media (max-width: 767px) {
+  .hero-slider {
+    height: 50vh; 
+  }
+
+  .slide-media {
+    height: 52vh;
+    object-fit: cover;
+    object-fit: contain;
+  }
+
+  
+  .swiper-button-next,
+  .swiper-button-prev {
+    display: none;
+  }
+
+
+  .swiper-pagination-bullet {
+    margin: 0 4px !important;
+  }
+}
+
+
+@media (max-width: 480px) {
+  .hero-slider {
+    height: 50vh;
+    height: auto;
+  }
+
+  .slide-media {
+    height: 50vh;
+    height: auto;
+
+    object-fit: contain;
+
+  }
+
+  .swiper-pagination-bullet {
+    width: 8px;
+    height: 8px;
+  }
+} */
+
+
+/* Add this at the top of your CSS file */
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap');
+
+/* @font-face {
+  font-family: "Play-fair";
+  src: url("./Font/playfair-display/PlayfairDisplay-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+}
+
+
+@font-face {
+  font-family: "Play-fair-i";
+  src: url("./Font/playfair-display/PlayfairDisplay-Italic.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+} */
+
+
+/* ========== Base Hero Slider Styles ========== */
+
+.hero-slider {
+    width: 100%;
+    /* height: 100vh; */
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-slider .swiper {
+    width: 100%;
+    height: 100%;
+}
+
+.slide-wrapper {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+
+/* 🎬 Video/Image Styling */
+
+.slide-media {
+    width: 100%;
+    height: 560px;
+    /* object-fit: cover; */
+    /* background: #000; */
+}
+
+
+/* 🔥 Dark Overlay for better text visibility */
+
+.slide-overlay {
+    content: "";
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    /* background: rgba(0, 0, 0, 0.45); */
+    top: 0;
+    left: 0;
+    z-index: 2;
+}
+
+
+/* ===== Overlay Text Content ===== */
+
+.slide-content {
+    position: absolute;
+    z-index: 5;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: #fff;
+    padding: 20px;
+    /* max-width: 80%; */
+}
+
+.slide-title {
+    font-size: 12rem;
+    letter-spacing: 0;
+    /* font-weight: 700; */
+    /* margin-bottom: 12px; */
+    text-align: center;
+    font-family: 'Playfair Display', serif;
+}
+
+
+/* .margin-setup{
+  padding-right: 65px;
+  padding-left: 80px;
+} */
+
+.slide-subtitle {
+    font-size: 20px;
+    line-height: 1.6;
+    margin-bottom: 20px;
+    font-family: 'Playfair Display';
+    font-weight: 400;
+    width: 75%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.slide-subtitle-main {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.slide-btn {
+    display: inline-block;
+    background: transparent;
+    padding: 12px 50px;
+    letter-spacing: 1px;
+    color: #fff;
+    border: 1px solid #FFF;
+    font-weight: 400;
+    text-decoration: none;
+    font-size: 1.2rem;
+    transition: 0.3s ease;
+    margin-top: 20px;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.slide-btn:hover {
+    background: transparent;
+    color: #FFF;
+    transform: scale(1.05);
+}
+
+
+/* ========== Swiper Pagination & Arrows ========== */
+
+.swiper-pagination-bullet {
+    background: #fff;
+    opacity: 0.7;
+}
+
+.swiper-pagination-bullet-active {
+    background: #ff4081;
+    opacity: 1;
+    transform: scale(1.2);
+}
+
+.swiper-button-next,
+.swiper-button-prev {
+    color: #fff;
+}
+
+@media (max-width:1180px) {
+    .slide-media {
+        width: 100%;
+        height: auto !important;
+        /* object-fit: cover; */
+        /* background: #000; */
+    }
+}
+
+
+/* ========== Responsive Design ========== */
+
+@media (max-width:1023px) {
+    .hero-slider-image-responsive {
+        margin-top: 40px !important;
+    }
+}
+
+@media (max-width:1024px) {
+    .margin-setup {
+        padding-right: 0;
+        padding-left: 0;
+    }
+    .slide-media {
+        height: auto;
+    }
+}
+
+
+/* Tablet */
+
+@media (max-width: 992px) {
+    .hero-slider {
+        height: auto;
+    }
+    .slide-title {
+        font-size: 7rem;
+    }
+    .slide-subtitle {
+        width: 100% !important;
+    }
+    .slide-subtitle-main {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+}
+
+
+/* Mobile */
+
+@media (max-width: 768px) {
+    .hero-slider {
+        height: auto;
+    }
+    .hero-slider-image-responsive {
+        margin-top: 60px !important;
+    }
+    .slide-media {
+        /* height: 40vh; */
+        /* object-fit: none; */
+    }
+    /* .slide-content {
+    top: 60%;
+    transform: translate(-50%, -40%);
+    max-width: 90%;
+  } */
+    .slide-title {
+        font-size: 5rem;
+        letter-spacing: 5px;
+    }
+    .slide-subtitle {
+        font-size: 0.9rem;
+    }
+    .slide-btn {
+        padding: 8px 20px;
+        font-size: 0.55rem;
+        margin-top: 0;
+        width: 120px !important;
+    }
+    .swiper-button-next,
+    .swiper-button-prev {
+        display: none;
+    }
+    .slide-content {
+        position: absolute;
+        z-index: 5;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        color: #fff;
+        padding: 20px;
+        width: 100%;
+    }
+}
+
+
+/* Small Phones */
+
+@media (max-width: 480px) {
+    .slide-title {
+        font-size: 3rem;
+    }
+    .slide-subtitle {
+        font-size: 0.7rem;
+        letter-spacing: 1px;
+    }
+    .slide-btn {
+        padding: 8px 20px !important;
+        font-size: 0.55rem;
+        margin-top: 0;
+        width: 135px !important;
+    }
+}
+
+
+/* ===== CUSTOM PAGINATION BULLETS ===== */
+
+.custom-swiper-bullet {
+    width: 6px !important;
+    height: 6px !important;
+    background-color: #000 !important;
+    /* white – visible on dark slides */
+    opacity: 0.6 !important;
+    margin: 0 4px !important;
+    border-radius: 50%;
+    display: inline-block;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.custom-swiper-bullet-active {
+    background-color: #000 !important;
+    /* your brand colour */
+    opacity: 1 !important;
+    transform: scale(1.1);
+    height: 7px;
+    width: 1.5% !important;
+    border-radius: 20px;
+}
+
+
+/* Ensure pagination container is visible and positioned */
+
+.swiper-pagination {
+    position: static;
+    bottom: 0 !important;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 10 !important;
+    text-align: center;
+    margin-top: 20px;
+}
+
+
+/* On mobile, adjust size if needed */
+
+@media (max-width: 768px) {
+    .custom-swiper-bullet {
+        width: 16px !important;
+        height: 16px !important;
+    }
+}

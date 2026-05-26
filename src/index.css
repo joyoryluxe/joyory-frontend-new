@@ -1,0 +1,37 @@
+/* src/index.css */
+
+body {
+    margin: 0;
+}
+
+.auth-bg {
+    background: url("/src/assets/Login.webp") no-repeat center center / cover;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+@media (max-width:1023px) {
+    .hero-slider-image-responsive {
+        margin-top: 40px !important;
+    }
+}
+
+.hero-slider-image-responsive {
+    margin-top: 50px !important;
+}
+
+@media (max-width:1028px) {
+    .margin-left-for-Virtualtryonhome {
+        margin: 15px 0 15px 0 !important;
+    }
+}
+
+.margin-left-for-Virtualtryonhome {
+    margin-left: 8px;
+}
+
+.main-mnargin-top-ss {
+    padding-top: 130px;
+}

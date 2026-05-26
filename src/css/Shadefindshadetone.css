@@ -1,0 +1,212 @@
+/* .shade-card {
+  border-radius: 20px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+  border: 2px solid transparent;
+}
+
+.shade-card:hover {
+  transform: translateY(-5px);
+}
+
+.slick-slide img{
+  display: block;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+
+.shade-card.selected {
+  border: 2px solid #007bff; 
+}
+
+.shade-label {
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  padding: 8px;
+  font-weight: 500;
+  text-align: center;
+  border-radius: 0 0 20px 20px;
+}
+
+.shade-label .dot {
+  height: 12px;
+  width: 12px;
+  background-color: #f5c0a5;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 6px;
+} */
+
+
+/* Container adjustments */
+
+.undertone-page-wrapper {
+    position: relative;
+    min-height: 100vh;
+    background-color: #fff;
+    overflow-x: hidden;
+    padding-bottom: 150px;
+    /* Space for the wave */
+}
+
+.undertone-main-content {
+    position: relative;
+    z-index: 2;
+}
+
+.undertone-title {
+    font-size: 2.8rem;
+    color: #1a1a1a;
+    letter-spacing: -1px;
+}
+
+.undertone-subtitle {
+    color: #333;
+    font-weight: 300;
+}
+
+
+/* Card Styling */
+
+.undertone-card {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    background: transparent;
+}
+
+.undertone-bar {
+    height: 8px;
+    width: 100%;
+    border-radius: 0;
+}
+
+.custom-radio-circle {
+    width: 15px;
+    height: 15px;
+    border: 1px solid #333;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 5px;
+}
+
+.custom-radio-circle.selected {
+    background-color: #000;
+    border-color: #000;
+}
+
+.inner-dot {
+    width: 8px;
+    height: 8px;
+    background-color: #000;
+    /* If you want it filled like the image, use background color on the circle itself */
+    border-radius: 50%;
+}
+
+.undertone-desc {
+    font-size: 0.95rem;
+    line-height: 1.4;
+}
+
+
+/* Buttons */
+
+.btn-previous {
+    background-color: #B8D1DF;
+    color: #fff;
+    border: none;
+    padding: 12px 40px;
+    font-size: 1.1rem;
+    border-radius: 4px;
+    min-width: 180px;
+}
+
+.btn-previous:hover {
+    background-color: #a5c0ce;
+    color: white;
+}
+
+.btn-next-black {
+    background-color: #000;
+    color: #fff;
+    border: none;
+    padding: 12px 40px;
+    font-size: 1.1rem;
+    border-radius: 4px;
+    min-width: 180px;
+}
+
+.btn-next-black:hover:not(:disabled) {
+    background-color: #333;
+    color: white;
+}
+
+.btn-next-black:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+
+/* Wavy Background */
+
+.wavy-footer-bg {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    line-height: 0;
+    z-index: 1;
+}
+
+.wavy-footer-bg svg {
+    width: 100%;
+    height: auto;
+}
+
+@media (max-width: 768px) {
+    .undertone-page-wrapper {
+        padding-top: 95px !important;
+    }
+
+    .undertone-title {
+        font-size: 1.8rem !important;
+    }
+
+    .undertone-subtitle {
+        font-size: 0.85rem !important;
+    }
+
+    .undertone-actions {
+        flex-direction: row !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        gap: 10px !important;
+        margin-top: 25px !important;
+    }
+
+    .btn-previous,
+    .btn-next-black {
+        width: auto !important;
+        min-width: 110px !important;
+        padding: 8px 20px !important;
+        font-size: 12px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .undertone-title {
+        font-size: 1.5rem !important;
+    }
+
+    .btn-previous,
+    .btn-next-black {
+        min-width: 120px !important;
+        padding: 6px 14px !important;
+        font-size: 13px !important;
+    }
+}

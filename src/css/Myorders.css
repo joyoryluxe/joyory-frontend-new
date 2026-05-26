@@ -1,0 +1,661 @@
+/* .orders-container {
+  max-width: 1100px;
+  margin: 2rem auto;
+  padding: 1rem;
+}
+
+.orders-title {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 2rem;
+  color: #222;
+}
+
+.loading-text,
+.empty-text {
+  text-align: center;
+  font-size: 1.2rem;
+  color: #555;
+}
+
+.error-text {
+  text-align: center;
+  font-size: 1.2rem;
+  color: red;
+}
+
+
+.order-card {
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.2s ease;
+}
+
+.order-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.order-id {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.order-id span {
+  color: #111;
+}
+
+.order-date {
+  font-size: 0.9rem;
+  color: #777;
+}
+
+
+.order-status {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.status-pill {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.8rem;
+  border-radius: 999px;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.status-pill.pending {
+  background: #fff4e6;
+  color: #e67e22;
+}
+
+.status-pill.delivered {
+  background: #e6f7f0;
+  color: #2ecc71;
+}
+
+.status-pill.shipped {
+  background: #e6f0ff;
+  color: #3498db;
+}
+
+
+.order-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  color: #555;
+}
+
+.order-info span {
+  font-weight: 600;
+  color: #222;
+}
+
+
+.order-products h4 {
+  font-weight: 600;
+  margin-bottom: 0.8rem;
+  color: #333;
+}
+
+.products-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+.product-card {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  background: #fafafa;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  padding: 0.8rem;
+  transition: background 0.2s ease;
+}
+
+.product-card:hover {
+  background: #f5f5f5;
+}
+
+.product-img {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+.product-name {
+  font-weight: 600;
+  color: #222;
+  margin-bottom: 0.2rem;
+}
+
+.product-price {
+  font-weight: 600;
+  color: #000;
+} */
+
+
+/* Popup Styles */
+
+.popup-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+}
+
+.popup-content {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.close-btn {
+    position: absolute;
+    top: 12px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.popup-product-img {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 10px;
+    margin-bottom: 10px;
+}
+
+.orders-container {
+    max-width: 1400px;
+    margin: auto;
+    padding: 20px;
+    display: grid;
+    grid-template-columns: -50% 50%;
+    gap: 10px;
+}
+
+.orders-title {
+    text-align: left;
+    margin-bottom: 20px;
+}
+
+.order-card {
+    height: max-content;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    /* padding: 15px; */
+    margin-bottom: 20px;
+    background: #fff;
+}
+
+.product-cards {
+    box-shadow: none;
+    padding: 0;
+    margin-top: 15px;
+    gap: 15px;
+    height: auto;
+}
+
+.product-imgs {
+    height: 153px;
+    width: 90px;
+    border-radius: 15px;
+    margin-left: 15px;
+}
+
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    padding-bottom: 0;
+    padding-top: 10px;
+}
+
+.order-id {
+    color: rgba(97, 97, 115, 1);
+}
+
+.order-id span {
+    font-weight: 400;
+    color: rgba(97, 97, 115, 1);
+}
+
+.order-confirmed {
+    padding: 5px 10px;
+    border-radius: 20px;
+    background-color: #e0ffe0;
+    color: green;
+    font-weight: 500;
+}
+
+.order-products {
+    padding-top: 10px;
+}
+
+.order-products-border {
+    border-top: 2px solid rgba(217, 217, 217, 1);
+    width: 100%;
+}
+
+.product-card {
+    display: flex;
+    /* align-items: center; */
+    margin-bottom: 10px;
+}
+
+.product-img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    margin-right: 10px;
+    border-radius: 5px;
+}
+
+.product-details {
+    flex: 1;
+}
+
+.product-price {
+    font-weight: 600;
+    color: #333;
+    font-size: 16px;
+}
+
+.product-arrow {
+    font-size: 18px;
+}
+
+.order-delivery {
+    display: flex;
+    align-items: center;
+    margin-top: 10px;
+    font-weight: 500;
+    color: #2e7d32;
+}
+
+.delivery-icon {
+    margin-right: 5px;
+}
+
+.counts {
+    column-count: 2;
+}
+
+.order-status-pill {
+    color: #2e7d32;
+    display: flex;
+    align-items: center;
+}
+
+.order-status-pill svg {
+    margin-right: 6px;
+}
+
+.product-names {
+    font-weight: 400;
+    color: rgba(0, 0, 0, 1);
+    font-weight: 600;
+    font-family: "Poppins", sans-serif;
+    font-size: 14px;
+    text-align: justify;
+    padding: 0;
+    margin: 0;
+}
+
+.mll {
+    color: Dark grey;
+    margin: 0;
+    padding: 0;
+}
+
+.order-delivery {
+    border-top: 2px solid rgba(217, 217, 217, 1);
+    padding: 15px;
+    display: flex;
+    align-items: baseline;
+    padding-bottom: 0;
+}
+
+.Right-Arrows {
+    cursor: pointer;
+}
+
+.flex-for-small-screen {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+@media (max-width: 991px) {
+    .orders-container {
+        max-width: 1400px;
+        margin: auto;
+        padding: 20px;
+        display: grid;
+        grid-template-columns: 100%;
+        gap: 25px;
+    }
+    .product-imgs {
+        height: auto;
+        width: 100%;
+        border-radius: 15px;
+        margin-left: 15px;
+    }
+    .product-cards {
+        display: flex;
+        flex-direction: column;
+    }
+    .mll {
+        text-align: start;
+    }
+    .product-names {
+        font-weight: 400;
+        color: rgba(0, 0, 0, 1);
+        font-weight: 600;
+        font-family: "Poppins", sans-serif;
+        font-size: 14px;
+        text-align: start;
+        padding: 0;
+        margin: 0;
+    }
+    .product-details {
+        flex: 1;
+        width: 100%;
+    }
+}
+
+@media (max-width: 767px) and (min-width: 990px) {
+    .product-cards {
+        display: flex;
+        flex-direction: row;
+    }
+    .product-imgs {
+        height: auto;
+        max-width: auto;
+        border-radius: 15px;
+        margin-left: 0;
+    }
+    .product-names {
+        font-weight: 400;
+        color: rgba(0, 0, 0, 1);
+        font-weight: 600;
+        font-family: "Poppins", sans-serif;
+        font-size: 14px;
+        text-align: start;
+        padding: 0;
+        margin: 0;
+    }
+    .mll {
+        text-align: start;
+    }
+    .Right-Arrows {
+        width: 50%;
+    }
+    .flex-for-small-screen {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+    }
+    .product-details {
+        margin-left: 15px;
+    }
+}
+
+@media (min-width: 330px) and (max-width:(667px)) {
+    .product-cards {
+        display: flex;
+        flex-direction: column;
+    }
+    .product-imgs {
+        height: auto;
+        width: -webkit-fill-available;
+        border-radius: 15px;
+    }
+    .product-names {
+        font-weight: 400;
+        color: rgba(0, 0, 0, 1);
+        font-weight: 600;
+        font-family: "Poppins", sans-serif;
+        font-size: 14px;
+        text-align: start;
+        padding: 0;
+        margin: 0;
+    }
+    .mll {
+        text-align: start;
+    }
+}
+
+
+/* @media (max-width: 567px) {
+  .product-imgs {
+    height: 120px;
+    width: 100px;
+    border-radius: 15px;
+}
+}
+
+
+
+@media (max-width: 380px) {
+  .product-cards {
+    display: flex;
+    flex-direction: column;
+  }
+  .product-imgs {
+    height: auto;
+    width: -webkit-fill-available;
+    border-radius: 15px;
+  }
+
+  .product-names {
+    font-weight: 400;
+    color: rgba(0, 0, 0, 1);
+    font-weight: 600;
+    font-family: "Poppins", sans-serif;
+    font-size: 14px;
+    text-align: start;
+    padding: 0;
+    margin: 0;
+  }
+
+  .mll {
+    text-align: start;
+  }
+
+  .flex-for-small-screen .product-details{
+    margin-left: 18px;
+  }
+
+  .Right-Arrows{
+    width: 50%;
+  }
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+/* Add these styles to your Myorders.css file */
+
+
+/* Order Amount Section */
+
+.order-amount-section {
+    padding: 10px 15px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.order-amount {
+    font-weight: 600;
+    color: #28a745;
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+
+/* Shipments Section */
+
+.order-shipments {
+    padding: 15px;
+}
+
+.shipments-title {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 15px;
+    font-size: 1.1rem;
+}
+
+.shipment-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.shipment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+    border-radius: 8px 8px 0 0;
+}
+
+.shipment-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.shipment-label {
+    font-weight: 600;
+    color: #333;
+    font-size: 1rem;
+}
+
+.shipment-id {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.shipment-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.shipment-status-pill.confirmed {
+    background: #e7f3ff;
+    color: #007bff;
+    border: 1px solid #007bff;
+}
+
+.shipment-status-pill.shipped {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+.shipment-status-pill.delivered {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.shipment-status-pill.cancelled {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.shipment-date {
+    padding: 8px 15px;
+    margin: 0;
+    font-size: 0.9rem;
+    color: #666;
+    background: #fafafa;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.shipment-products {
+    padding: 15px;
+}
+
+.shipment-badge {
+    background: #e7f3ff;
+    color: #007bff;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    border: 1px solid #007bff;
+}
+
+
+/* Responsive Design */
+
+@media (max-width: 768px) {
+    .shipment-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    .shipment-status-pill {
+        align-self: flex-start;
+    }
+    .order-amount {
+        font-size: 1rem;
+    }
+}

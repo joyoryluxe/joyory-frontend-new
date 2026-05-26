@@ -1,0 +1,25 @@
+User-agent: *
+# Allow all essential pages
+Allow: /
+
+# Disallow non-SEO pages
+Disallow: /cart
+Disallow: /checkout
+Disallow: /useraccount
+Disallow: /wishlist
+Disallow: /myorders
+Disallow: /addressselection
+Disallow: /paymentpage
+Disallow: /ordersuccess
+Disallow: /wallet
+Disallow: /referral
+
+# Block WordPress admin and login if using WP
+Disallow: /wp-admin/
+Disallow: /wp-login.php
+
+# Crawl-delay (optional, set if server load issues)
+# Crawl-delay: 10
+
+# Sitemap location
+Sitemap: https://joyory.com/sitemap.xml

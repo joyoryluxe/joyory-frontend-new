@@ -1,0 +1,836 @@
+.foryou-card-wrapper {
+    position: relative;
+    /* border-radius: 12px; */
+    overflow: hidden;
+    box-shadow: none !important;
+    /* transition: all 0.3s ease; */
+    /* background: white; */
+    height: 100%;
+}
+
+.foryou-card-wrapper:hover {
+    /* transform: translateY(-5px); */
+    /* box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15); */
+}
+
+.foryou-card {
+    cursor: pointer;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.variant-overlay {
+    position: absolute;
+    top: 0;
+    background-color: white;
+    height: 100%;
+    width: 100%;
+    left: 0;
+    right: 0;
+    z-index: 100;
+}
+
+.foryou-heading {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    letter-spacing: 0px;
+}
+
+.foryou-img-wrapper {
+    position: relative;
+    width: 100%;
+    /* height: 220px; */
+    overflow: hidden;
+    background: #f8f9fa;
+}
+
+.foryou-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.foryou-card:hover .foryou-img {
+    transform: scale(1.05);
+}
+
+
+/* Badges */
+
+.discount-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: linear-gradient(135deg, #ff4444, #ff6b6b);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    z-index: 2;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.stock-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    z-index: 2;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.promo-badge {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    background: #000;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    z-index: 2;
+}
+
+.color-indicator {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    z-index: 2;
+}
+
+
+/* Product Info */
+
+.foryou-product-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    /* background: white; */
+}
+
+.foryou-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+    line-height: 1.4;
+    width: 150px;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.variant-name {
+    font-size: 13px;
+}
+
+
+/* Price Section */
+
+.price-section {
+    margin: 8px 0;
+}
+
+.current-price {
+    color: #2c3e50;
+    font-weight: 700;
+}
+
+.original-price {
+    font-size: 14px;
+    color: #95a5a6;
+}
+
+.discount-amount {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+
+/* Tone Info */
+
+.tone-info .badge {
+    font-size: 11px;
+    padding: 4px 8px;
+    margin-bottom: 4px;
+}
+
+
+/* Promo Message */
+
+.promo-message {
+    background: #e8f5e9;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border-left: 3px solid #28a745;
+}
+
+
+/* Stock Info */
+
+.stock-info {
+    font-size: 12px;
+    padding-top: 8px;
+    border-top: 1px solid #eee;
+}
+
+
+/* Ratings */
+
+.star-rating {
+    color: #ffc107;
+    font-size: 14px;
+}
+
+
+/* Quick Actions */
+
+.quick-actions .btn {
+    font-size: 13px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.quick-actions .btn:hover {
+    transform: translateY(-2px);
+}
+
+
+/* Section Tag */
+
+.section-tag {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    color: #666;
+    z-index: 3;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+
+/* Swiper Customization */
+
+.foryou-swiper {
+    padding: 10px 5px 20px !important;
+}
+
+.swiper-button-next,
+.swiper-button-prev {
+    background: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    color: #333;
+}
+
+.swiper-button-next:after,
+.swiper-button-prev:after {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.swiper-pagination-bullet {
+    background: #007bff;
+    opacity: 0.5;
+}
+
+.swiper-pagination-bullet-active {
+    opacity: 1;
+    transform: scale(1.2);
+}
+
+
+/* Mobile Responsive */
+
+@media (max-width: 768px) {
+    /* .foryou-img-wrapper {
+    height: 180px;
+  } */
+    .foryou-name {
+        font-size: 14px;
+    }
+    .current-price {
+        font-size: 16px;
+    }
+    .quick-actions {
+        flex-direction: column;
+        gap: 8px;
+    }
+    .swiper-button-next,
+    .swiper-button-prev {
+        display: none;
+    }
+}
+
+
+/* Hover Effects */
+
+@media (min-width: 992px) {
+    .foryou-card-wrapper:hover .quick-actions {
+        opacity: 1;
+        visibility: visible;
+    }
+}
+
+@media (max-width: 992px) {
+    .varient-margin {
+        margin-bottom: 5px;
+        margin-left: 8px;
+    }
+    .varient-margin:nth-child(1) {
+        margin-left: 3px;
+    }
+    .foryou-heading {
+        font-size: 16px;
+    }
+    /* .varient-margin:nth-child(2) {
+    margin-left: 10px;
+  } */
+}
+
+
+/* Add these styles to your existing Foryou.css */
+
+
+/* Out of Stock Cross Styling for color circles */
+
+.color-circle.out-of-stock {
+    position: relative;
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.color-circle.out-of-stock::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(45deg);
+    width: 24px;
+    height: 2px;
+    background-color: #dc3545;
+    z-index: 2;
+}
+
+.color-circle.out-of-stock::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-45deg);
+    width: 24px;
+    height: 2px;
+    background-color: #dc3545;
+    z-index: 2;
+}
+
+
+/* Out of Stock styling for variant buttons */
+
+.variant-btn:disabled {
+    position: relative;
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.variant-btn:disabled::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(45deg);
+    width: 24px;
+    height: 2px;
+    background-color: #dc3545;
+    z-index: 2;
+}
+
+.variant-btn:disabled::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-45deg);
+    width: 24px;
+    height: 2px;
+    background-color: #dc3545;
+    z-index: 2;
+}
+
+
+/* Color circle styles */
+
+.color-circle {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.color-circle.selected {
+    border-color: #007bff;
+    transform: scale(1.1);
+    /* box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.2); */
+}
+
+.color-circle:hover:not(.out-of-stock) {
+    transform: scale(1.05);
+}
+
+
+/* Variant list styling */
+
+.variant-list {
+    gap: 8px;
+    margin-top: 8px;
+}
+
+
+/* Quantity selector styling */
+
+.quantity-selector {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 4px;
+    border: 1px solid #dee2e6;
+    min-width: 100px;
+    justify-content: center;
+}
+
+.quantity-selector button {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: bold;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.quantity-selector button:hover:not(:disabled) {
+    background-color: #e9ecef;
+}
+
+.quantity-selector button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.quantity-selector span {
+    min-width: 30px;
+    text-align: center;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+
+/* Add to cart button styling */
+
+.btn-add-cart {
+    background: #3c3c3c !important;
+    border: none;
+    padding: 10px 24px;
+    /* border-radius: 6px; */
+    font-size: 16px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    color: white !important;
+    transition: all 0.3s ease;
+    /* box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3); */
+    /* min-width: 120px; */
+    height: 55px;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+}
+
+.btn-add-cart:hover:not(:disabled) {
+    transform: translateY(-2px);
+    /* box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4); */
+}
+
+.btn-add-cart:disabled {
+    background: #cccccc;
+    transform: none;
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
+
+/* Loading spinner */
+
+.btn-add-cart .spinner-border {
+    width: 1rem;
+    height: 1rem;
+    border-width: 2px;
+}
+
+
+/* Selected variant info */
+
+.selected-variant-info {
+    /* background: #e8f4ff; */
+    /* padding: 8px 12px; */
+    border-radius: 6px;
+    /* border-left: 4px solid #007bff; */
+    /* margin-top: 10px; */
+}
+
+.selected-variant-info p {
+    margin: 0;
+    font-size: 14px;
+    color: #2c3e50;
+    font-weight: 500;
+}
+
+
+/* Mobile responsive adjustments */
+
+@media (max-width: 768px) {
+    .color-circle {
+        width: 24px;
+        height: 24px;
+    }
+    .color-circle.out-of-stock::before,
+    .color-circle.out-of-stock::after {
+        width: 20px;
+    }
+    .variant-btn:disabled::before,
+    .variant-btn:disabled::after {
+        width: 20px;
+    }
+    .variant-btn {
+        font-size: 11px;
+        padding: 3px 6px;
+        min-width: 40px;
+    }
+    .quantity-selector {
+        min-width: 80px;
+    }
+    .quantity-selector button {
+        width: 28px;
+        height: 28px;
+        font-size: 16px;
+    }
+    .btn-add-cart {
+        padding: 8px 16px;
+        font-size: 14px;
+        min-width: 100px;
+    }
+    .selected-variant-info {
+        padding: 6px 10px;
+        font-size: 13px;
+    }
+}
+
+
+/* Variant Display Styles */
+
+.selected-variant-display {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin-bottom: 10px;
+}
+
+.selected-variant-label {
+    font-size: 12px;
+}
+
+.variant-text-box {
+    /* border: 2px solid #0077b6 !important; */
+    border-radius: 4px;
+    background-color: #fff;
+    color: #0077b6;
+    font-weight: 600;
+    font-size: 14px;
+    min-width: 80px;
+    text-align: start;
+    transition: all 0.2s ease;
+}
+
+.variant-text-option {
+    transition: all 0.2s ease;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+}
+
+.variant-text-option.selected {
+    border-color: #000 !important;
+    color: #FFF !important;
+    background-color: #000 !important;
+    font-weight: 600;
+}
+
+.variant-text-option:hover:not(.out-of-stock):not(.selected) {
+    border-color: #bbb;
+    background-color: #f8f9fa;
+}
+
+.selected-text-variant {
+    display: flex;
+    align-items: center;
+}
+
+
+/* Color circle styles */
+
+.color-circle {
+    transition: all 0.2s ease;
+}
+
+.color-circle.selected {
+    /* box-shadow: 0 0 0 2px white, 0 0 0 3px #000000 !important; */
+}
+
+.color-circle:hover:not(.out-of-stock):not(.selected) {
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.selected-color-circle {
+    position: relative;
+    box-shadow: 0 0 0 2px rgba(0, 119, 182, 0.3) !important;
+}
+
+.selected-color-preview {
+    position: relative;
+}
+
+
+/* Stock indicator */
+
+.out-of-stock {
+    position: relative;
+    opacity: 0.5;
+    cursor: not-allowed !important;
+}
+
+
+/* Check mark styles */
+
+.check-mark {
+    font-size: 10px;
+    font-weight: bold;
+}
+
+
+/* Section tag */
+
+.section-tag {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background-color: rgba(0, 119, 182, 0.9);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    z-index: 2;
+}
+
+
+/* Card wrapper */
+
+.foryou-card-wrapper {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.foryou-card {
+    /* background: white; */
+    /* border-radius: 10px; */
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    height: 100%;
+}
+
+
+/* Image wrapper */
+
+.foryou-img-wrapper {
+    position: relative;
+    overflow: hidden;
+    /* height: 200px; */
+}
+
+.foryou-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.foryou-img-wrapper:hover .foryou-img {
+    transform: scale(1.05);
+}
+
+.promo-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background-color: #000;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    z-index: 2;
+    height: 28px;
+}
+
+
+/* Product info */
+
+.foryou-product-info {
+    padding: 15px !important;
+}
+
+
+/* .foryou-name {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  height: 40px;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+} */
+
+.brand-name {
+    font-size: 12px;
+    color: #6c757d;
+}
+
+
+/* Price section */
+
+.current-price {
+    color: #000;
+}
+
+.original-price {
+    color: #6c757d;
+}
+
+.discount-percent {
+    font-size: 14px;
+}
+
+
+/* Cart section */
+
+.quantity-selector {
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    padding: 4px;
+}
+
+.quantity-selector button {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #dee2e6;
+}
+
+.quantity-selector span {
+    min-width: 30px;
+    text-align: center;
+}
+
+
+/* .btn-add-cart {
+  padding: 8px 16px;
+  font-weight: 500;
+  border-radius: 4px;
+  min-width: 120px;
+} */
+
+
+/* Rating */
+
+.star-rating {
+    color: #ffc107;
+    font-size: 14px;
+}
+
+
+/* Swiper navigation */
+
+.swiper-button-next,
+.swiper-button-prev {
+    background-color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    color: #0077b6;
+}
+
+.swiper-button-next:after,
+.swiper-button-prev:after {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.swiper-button-next:hover,
+.swiper-button-prev:hover {
+    background-color: #0077b6;
+    color: white;
+}
+
+
+/* Responsive */
+
+@media (max-width: 576px) {
+    .foryou-img-wrapper {
+        /* height: 160px; */
+        object-fit: cover;
+    }
+    .variant-text-option {
+        padding: 4px 8px;
+        font-size: 11px;
+        min-width: 50px;
+    }
+    .btn-add-cart {
+        min-width: 100px;
+        font-size: 14px;
+        padding: 6px 12px;
+    }
+    .quantity-selector button {
+        width: 25px;
+        height: 25px;
+    }
+}

@@ -1,0 +1,368 @@
+/* @font-face {
+  font-family: "Poppins";
+  src: url("css/Font/Poppins/Poppins-Light.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+}
+
+
+@font-face {
+  font-family: "Playfair";
+  src: url("css/Font/playfair-display/PlayfairDisplay-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+} */
+
+
+/* .font-family-Poppins{
+font-family: "Poppins";
+}
+
+.font-family-Playfair{
+font-family: "Playfair";
+} */
+
+body {
+    overflow-x: hidden;
+    background-color: #fff;
+}
+
+.spacing {
+    letter-spacing: 0px;
+    /* text-transform: uppercase; */
+}
+
+.mobile-responsive-code {
+    /* margin-left: 70px; */
+    margin-left: 40px;
+    margin-right: 50px;
+}
+
+@media (max-width:992px) {
+    .mobile-responsive-code {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+    .varient-responsive {
+        width: 50px !important;
+    }
+    /* .Virtualtryonhome-container-width {
+    width: 95% !important;
+  }
+
+  .margin-left-for-Virtualtryonhome{
+    margin:15px 15px 15px 0 !important;
+  } */
+    .gaps-for-responsive {
+        gap: 4 !important;
+    }
+}
+
+@media (max-width:1028px) {
+    .Virtualtryonhome-container-width {
+        /* width: 96% !important; */
+        margin-left: auto;
+        margin-right: auto;
+    }
+    .margin-left-for-Virtualtryonhome {
+        margin: 15px 0 15px 0 !important;
+    }
+}
+
+@media (max-width:1024px) {
+    .padding-left-rightss {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+}
+
+.margin-left-for-Virtualtryonhome {
+    margin-left: 8px;
+}
+
+@media (max-width:568px) {
+    .varient-responsive {
+        width: 50% !important;
+    }
+    .variant-section {
+        min-height: 0px !important;
+    }
+    .loader-responsive {
+        width: 400px;
+        height: auto !important;
+        margin-bottom: 0px;
+    }
+    .width-loader-content {
+        width: 70%;
+        margin-left: auto;
+        margin-right: auto;
+        margin-top: 30px;
+    }
+}
+
+.swiper-button-next,
+.swiper-button-prev {
+    display: none !important;
+}
+
+.add-to-card-button {
+    margin-top: 5px;
+}
+
+.container,
+.container-fluid,
+.container-lg,
+.container-md,
+.container-sm,
+.container-xl,
+.container-xxl {
+    --bs-gutter-x: 1.5rem;
+    --bs-gutter-y: 0;
+    width: 100%;
+    padding-right: calc(var(--bs-gutter-x) * .5) !important;
+    padding-left: calc(var(--bs-gutter-x) * .5) !important;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+.page-title-main-name {
+    font-family: 'Montserrat', sans-serif !important;
+    font-weight: normal;
+}
+
+.playfair-font-bold {
+    font-family: 'playfair', sans-serif !important;
+    font-weight: 700;
+}
+
+.lower {
+    text-transform: lowercase;
+}
+
+.fs-10 {
+    font-size: 10px !important;
+}
+
+:focus-visible {
+    outline: none 0px #FFF !important;
+}
+
+.d-ruby {
+    display: ruby !important;
+}
+
+.Virtualtryonhome-height {
+    height: 88%;
+}
+
+.Virtualtryonhome-container-width {
+    /* width: 90%;
+    margin-left: auto;
+    margin-right: auto; */
+    margin-left: 48px !important;
+    margin-right: 62px !important;
+}
+
+.padding-left-rightss {
+    padding-left: 60px;
+    padding-right: 60px;
+}
+
+@media (max-width: 768px) {
+    .top-categories-title {
+        font-size: 16px;
+        letter-spacing: 0px !important;
+        margin-left: 0px;
+        margin-bottom: 5px !important;
+    }
+    .next-button-makeupquiz {
+        margin-bottom: 80px;
+    }
+    .font-weightss {
+        font-weight: 300 !important;
+    }
+    .mobile-responsive-design-text {
+        font-size: 14px !important;
+    }
+    .reword-heading-responsive {
+        font-size: 20px !important;
+        margin-left: 6px !important;
+    }
+}
+
+.reword-heading-responsive {
+    font-size: 28px;
+}
+
+.next-button-makeupquiz {
+    margin-bottom: 40px;
+}
+
+.next-button-makupbtns button {
+    background-color: #000;
+    width: 350px;
+    height: 60px;
+    color: #FFF;
+    border: none;
+}
+
+.addtocartbuttton {
+    height: 65px !important;
+    border-radius: 0 0 20px 20px !important;
+}
+
+button img {
+    transition: filter 0.3s ease;
+}
+
+
+/* Default (black icon assumed) */
+
+button img {
+    filter: brightness(0);
+}
+
+
+/* Hover → white */
+
+button:hover img {
+    filter: brightness(0) invert(1);
+}
+
+.text-limit-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    /* Number of lines to show */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.btn-for-shadetones:hover {
+    background-color: #fff;
+    color: #000;
+    border: 1px solid #000;
+    border-radius: 0px;
+}
+
+.btn-for-back-buttons {
+    background-color: #fff;
+    color: #000;
+    border: 1px solid #000;
+    border-radius: 0px;
+}
+
+.btn-for-back-buttons:hover {
+    background-color: #000;
+    color: #fff;
+    border-radius: 0px;
+}
+
+.btn-for-back-buttons-bg-color {
+    background-color: #fff !important;
+    color: #000 !important;
+    border: 1px solid #000 !important;
+    border-radius: 0px !important;
+}
+
+.btn-for-back-buttons-bg-color:hover {
+    background-color: #dc3545 !important;
+    color: #fff !important;
+}
+
+.btn-for-back-buttons.active-black {
+    background-color: black !important;
+    color: white;
+    border-color: black;
+}
+
+
+/*=================================================================Bullet-Point-slider(Start)===========================================================================*/
+
+
+/* Custom Swiper Pagination Bullets */
+
+.custom-swiper-bullet {
+    width: 12px;
+    height: 12px;
+    display: inline-block;
+    border-radius: 50%;
+    background: #fff;
+    opacity: 0.5;
+    margin: 0 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 1px solid #000;
+}
+
+.custom-swiper-bullet-active {
+    opacity: 1;
+    background: #000;
+    transform: scale(1.2);
+}
+
+
+/* Position the pagination */
+
+.swiper-pagination {
+    bottom: 20px !important;
+}
+
+
+/* Ensure bullets are centered */
+
+.swiper-pagination-bullets {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.accordion-button:not(.collapsed) {
+    color: var(--bs-accordion-active-color);
+    background-color: #FFF !important;
+    Border: none;
+    box-shadow: inset 0 calc(-1 * var(--bs-accordion-border-width)) 0 var(--bs-accordion-border-color);
+}
+
+.accordion-button:focus {
+    z-index: 3;
+    outline: 0;
+    box-shadow: none !important;
+    border-bottom: 0.5px solid#0000002a;
+}
+
+.foryoulanding-css {
+    height: 80%;
+    width: 100%;
+}
+
+.mobile-responsive-design-text {
+    font-size: 20px;
+}
+
+.height-selcted-section {
+    height: 60px;
+    overflow-y: scroll;
+}
+
+.height-selcted-section-sub {
+    margin: 16px 0 15px 10px;
+    background-color: #000;
+    color: #FFF;
+    padding: 7px 8px 7px 8px;
+    border-radius: 15px;
+    display: inline-block;
+}
+
+.loader-responsive {
+    width: 500px;
+}
+
+
+/*=================================================================Bullet-Point-slider(End)===========================================================================*/
+
+
+/*=================================================================Bullet-Point-slider(End)===========================================================================*/

@@ -1,0 +1,155 @@
+/* .vision-mission-section {
+  max-width: 1200px;
+}
+
+.section-title {
+  font-family: cursive;
+  color: #000;
+  font-weight: 600;
+  font-size: clamp(1.5rem, 2vw + 1rem, 2.2rem);
+  line-height: 1.4;
+}
+
+.info-card {
+  background-color: #DEFAFF;
+  border-radius: 12px;
+  padding: 2rem 1.5rem;
+  height: 100%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.info-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+.info-card .icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  background: linear-gradient(45deg, #4a7ca5, #a579b1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.9);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.info-card .title {
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: #2b5d7e;
+  font-size: 1.25rem;
+}
+
+.info-card .text {
+  font-size: 0.95rem;
+  color: #333;
+  line-height: 1.6;
+}
+
+
+.decor {
+  position: absolute;
+  font-size: 1.2rem;
+  color: #7b8da5;
+  opacity: 0.6;
+}
+
+.decor-top-left {
+  top: -10px;
+  left: 15%;
+}
+.decor-top-right {
+  top: -10px;
+  right: 15%;
+}
+.decor-left {
+  top: 50%;
+  left: -15px;
+}
+.decor-right {
+  bottom: -10px;
+  right: -15px;
+}
+
+
+@media (max-width: 1220px) {
+  .decor-right {
+    display: none !important;
+  }
+}
+
+
+@media (max-width: 768px) {
+  .info-card {
+    padding: 1.5rem 1rem;
+  }
+  .info-card .icon {
+    font-size: 2.5rem;
+  }
+
+  .decor-right ,.decor-left {
+    display: none !important;
+  }
+}
+@media (max-width: 576px) {
+  .section-title {
+    font-size: 1.4rem;
+  }
+  .info-card .title {
+    font-size: 1.1rem;
+  }
+  .info-card .text {
+    font-size: 0.85rem;
+  }
+} */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* Full Section */
+.mission-vision-section {
+  background-color: #083645; /* Dark Teal */
+  padding: 80px 20px;
+}
+
+/* Inner Container */
+.mission-vision-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  gap: 80px;
+  flex-wrap: wrap;
+}
+
+/* Each Column */
+.mission-box {
+  flex: 1;
+}
+
+/* Headings */
+.mission-box h2 {
+  color: #ffffff;
+  font-size: 64px;
+  font-weight: 600;
+  margin-bottom: 25px;
+}
+
+/* Paragraph */
+.mission-box p {
+  color: #d6e2e7;
+  font-size: 16px;
+  line-height: 1.8;
+  max-width: 500px;
+}

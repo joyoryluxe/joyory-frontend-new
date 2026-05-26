@@ -1,0 +1,126 @@
+/* Sidebar base */
+.ua-sidebar {
+  width: 300px;
+  border-right: 1px solid #eee;
+  padding-right: 10px;
+  box-sizing: border-box;
+  background: #fff;
+  transition: transform 0.3s ease-in-out;
+}
+
+/* List */
+.ua-sidebar ul {
+  list-style: none;
+  margin: 0;
+  padding: 10px;
+}
+
+.ua-sidebar li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #333;
+  font-weight: 500;
+  border: 1px solid transparent;
+  transition: background-color 0.18s, color 0.18s;
+  margin-bottom: 8px;
+}
+
+.ua-sidebar li:hover {
+  background: #fafafa;
+}
+
+.ua-sidebar li.active {
+  background: #e8f5f8;
+  color: #1f6f8b;
+  border-color: rgba(31, 111, 139, 0.12);
+}
+
+.ua-icon {
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.02);
+  font-size: 15px;
+}
+
+/* Sidebar toggle for mobile */
+.ua-sidebar-toggle {
+  display: none;
+  font-size: 24px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin: 10px;
+}
+
+/* Responsive */
+@media (max-width: 991px) {
+  .ua-sidebar {
+    position: absolute;
+    top: 50px;
+    left: 10px;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    z-index: 1000;
+    width: 220px;
+    padding: 10px;
+    transform: translateX(-120%);
+  }
+
+  .ua-sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin-top: 0 !important;
+}
+
+
+.ua-sidebar-toggle{
+    text-align: justify;
+}
+
+  .ua-sidebar.open {
+    transform: translateX(0);
+        position: absolute;
+        top: 25px;
+        margin-top: 25px;
+        left: auto;
+        right: 0;
+  }
+
+  .ua-sidebar-toggle {
+    display: block;
+  }
+
+  .ua-sidebar li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    color: #333;
+    font-weight: 500;
+    border: 1px solid transparent;
+    transition: background-color .18s, color .18s;
+    margin-bottom: 8px;
+    background: #fff;
+    margin-left: 0px !important;
+}
+
+.ua-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: auto;
+    transform: translateX(-100%);
+    z-index: 1500;
+  }
+}

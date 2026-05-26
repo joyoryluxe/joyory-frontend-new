@@ -1,0 +1,145 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.hero-section img {
+    border-radius: 0px !important;
+}
+
+@font-face {
+    font-family: "Playfair";
+    src: url("../css/Font/playfair-display/PlayfairDisplay-Regular.ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "Montserrat";
+    src: url("../css/Font/Montserrat/Montserrat-VariableFont_wght.ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+}
+
+
+/*=======================================================================Top-Share-Category(Start)============================*/
+
+
+/* .card-img-top {
+    transition: transform 0.3s ease;
+} */
+
+
+/* .card-img-top:hover {
+    transform: scale(1.05);
+} */
+
+.top-categories-wrapper {
+    padding: 1rem 0;
+}
+
+.top-cat-card {
+    border-radius: 0;
+    overflow: hidden;
+    background: #fff;
+}
+
+.top-cat-img {
+    width: 100%;
+    height: 280px;
+    object-fit: cover;
+    display: block;
+    border-radius: 0;
+    transition: transform 0.35s ease;
+}
+
+.top-cat-card:hover .top-cat-img {
+    transform: scale(1.03);
+}
+
+.top-cat-title {
+    font-size: 18px;
+    margin: 0.6rem 0;
+}
+
+.slide-item {
+    padding: 6px;
+}
+
+.top-categories-title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    margin-left: 0px;
+}
+
+.top-category-name-font {
+    font-family: 'Montserrat', sans-serif;
+}
+
+
+/* responsive sizes */
+
+@media (max-width: 1024px) {
+    .top-cat-img {
+        height: 200px;
+    }
+    .top-cat-title {
+        font-size: 17px
+    }
+}
+
+@media (max-width: 768px) {
+    .top-cat-img {
+        height: 170px;
+    }
+    .top-cat-title {
+        font-size: 16px
+    }
+    .top-categories-title {
+        font-size: 16px;
+        letter-spacing: 0px !important;
+        margin-left: 0;
+        margin-bottom: 5px !important;
+    }
+}
+
+@media (min-width: 768px) {
+    .responsive-container {
+        max-width: 1200px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .responsive-containers {
+        max-width: 1200px !important;
+    }
+}
+
+@media (min-width: 576px) {
+    .responsive-container {
+        max-width: 1200px !important;
+    }
+}
+
+.responsive-imagesss {
+    height: auto;
+}
+
+@media (max-width: 576px) {
+    .top-cat-title {
+        font-size: 15px
+    }
+}
+
+@media (max-width: 380px) {
+    .top-cat-img {
+        height: auto;
+    }
+    .top-cat-title {
+        font-size: 14px
+    }
+}
+
+
+/*=======================================================================Top-Share-Category(End)============================*/

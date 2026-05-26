@@ -1,0 +1,203 @@
+/* .timeline-item {
+  position: relative;
+}
+
+.timeline-circle {
+  position: absolute;
+  left: -22px;
+  top: 4px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.timeline-line {
+  position: absolute;
+  left: -15px;
+  top: 22px;
+  width: 2px;
+  height: calc(100% - 5px);
+  background: repeating-linear-gradient(
+    to bottom,
+    #6c757d,
+    #6c757d 4px,
+    transparent 4px,
+    transparent 8px
+  );
+} */
+
+
+
+
+
+
+
+
+/* 
+.timeline-item {
+  position: relative;
+}
+
+.timeline-circle {
+  position: absolute;
+  left: -8px;
+  top: 5px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  z-index: 2;
+}
+
+.timeline-line {
+  position: absolute;
+  left: -1px;
+  top: 21px;
+  bottom: -20px;
+  width: 2px;
+  background-color: #dee2e6;
+  z-index: 1;
+}
+
+.blinking-dot {
+  animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+} */
+
+
+
+
+
+
+
+
+
+
+/* TrackOrder.css */
+.timeline-container {
+  position: relative;
+  padding-left: 2rem;
+}
+
+.timeline-item {
+  display: flex;
+  margin-bottom: 2rem;
+  position: relative;
+}
+
+.timeline-marker {
+  position: relative;
+  margin-right: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.timeline-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  z-index: 2;
+  position: relative;
+}
+
+.timeline-dot.completed {
+  background-color: #28a745 !important; /* Green for completed */
+}
+
+.timeline-dot.current {
+  background-color: #ffc107 !important; /* Yellow for current */
+}
+
+.timeline-dot.upcoming {
+  background-color: #6c757d !important; /* Gray for upcoming */
+}
+
+.timeline-dot.blinking-dot {
+  animation: blink-animation 1.5s ease-in-out infinite;
+  box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7);
+}
+
+@keyframes blink-animation {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(0.9);
+    box-shadow: 0 0 0 8px rgba(255, 193, 7, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 193, 7, 0);
+  }
+}
+
+.timeline-connector {
+  width: 2px;
+  background-color: #dee2e6;
+  flex: 1;
+  margin-top: 4px;
+  min-height: 20px;
+}
+
+.timeline-content {
+  flex: 1;
+  padding-bottom: 1rem;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .timeline-container {
+    padding-left: 1rem;
+  }
+  
+  .timeline-item {
+    margin-bottom: 1.5rem;
+  }
+  
+  .timeline-marker {
+    margin-right: 0.75rem;
+  }
+}
+
+/* Ensure Bootstrap compatibility */
+/* .card {
+  border: 1px solid rgba(0, 0, 0, 0.125);
+} */
+
+.card-header {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+/* Custom badge styles */
+.badge {
+  font-size: 0.7em;
+  padding: 0.35em 0.65em;
+}
+
+/* Text styling */
+.text-muted {
+  color: #6c757d !important;
+}
+
+.text-secondary {
+  color: #6c757d !important;
+}
+
+/* Force animation to work */
+.blinking-dot {
+  animation-duration: 1.5s !important;
+  animation-timing-function: ease-in-out !important;
+  animation-iteration-count: infinite !important;
+  animation-name: blink-animation !important;
+}
