@@ -36,7 +36,7 @@ const AboutUs = () => {
   const [missionRef, missionVisible] = useInView(0.1);
   const [brandsRef, brandsVisible] = useInView(0.1);
   const [whyRef, whyVisible] = useInView(0.1);
-  const [ctaRef, ctaVisible] = useInView(0.1);
+  const [ctaRef, ctaVisible] = useInView(0.1);git switch -c about-final-ui
 
   const scrollToStory = () => {
     storyRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
