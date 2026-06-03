@@ -6767,15 +6767,16 @@
 
 
 
-import React, { useEffect, useState, useContext, useCallback } from "react";
+import React, { useEffect, useState, useContext, useCallback, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Header from "./Header";
 import Footer from "./Footer";
 import "../css/cartpage.css";
+import "../css/Foryou.css";
 import { CartContext } from "../Context/Cartcontext";
-import { FaTimes } from "react-icons/fa";
-import { FaHeart, FaRegHeart, FaChevronDown } from "react-icons/fa";
+import { FaTimes, FaHeart, FaRegHeart, FaChevronDown, FaCheck } from "react-icons/fa";
 import { Modal, Button, Alert } from "react-bootstrap";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -6819,382 +6820,430 @@ const groupVariantsByType = (variants) => {
 };
 
 // ─── Recommendation / Wishlist product card (mirrors Foryou.jsx exactly) ───────────
-const RecoProductCard = ({ product, navigate, user }) => {
-  const [selectedVariant, setSelectedVariant] = useState(
-    product.selectedVariant || product.variants?.[0] || {}
+const formatPrice = (price) =>
+  new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(parseFloat(price || 0));
+
+// ─── Recommendation / Wishlist product card (mirrors Foryou.jsx exactly) ───────────
+const RecoProductCard = ({ product, navigate, user, onAddToCartSuccess }) => {
+  const allVariants = useMemo(
+    () => product?.variants || product?.product?.variants || product?.shadeOptions || product?.product?.shadeOptions || [],
+    [product]
   );
 
+  const hasVariants = allVariants.length > 0;
+
+  const [selectedVariant, setSelectedVariant] = useState(
+    () => product?.selectedVariant || product?.product?.selectedVariant || allVariants.find((v) => v.stock > 0) || allVariants[0] || {}
+  );
+  const [tempSelectedVariant, setTempSelectedVariant] = useState(null);
+  const [variantSelected, setVariantSelected] = useState(false);
   const [addingToCart, setAddingToCart] = useState(false);
   const [wishlistLoading, setWishlistLoading] = useState(false);
   const [wishlistData, setWishlistData] = useState([]);
   const [showVariantOverlay, setShowVariantOverlay] = useState(false);
-  const [selectedVariantType, setSelectedVariantType] = useState("all");
-  const [variantSelected, setVariantSelected] = useState(false);
 
-  const allVariants = product.variants || [];
-  const groupedVariants = groupVariantsByType(allVariants);
-  const totalVariants = allVariants.length;
-  const hasVariants = totalVariants > 0;
+  // ===================== OUT OF STOCK POPUP STATE =====================
+  const [showOutOfStockPopup, setShowOutOfStockPopup] = useState(false);
+  const [outOfStockProductName, setOutOfStockProductName] = useState("");
 
-  const variant = selectedVariant || {};
-  const displayPrice = variant.displayPrice || variant.discountedPrice || product.price || 0;
-  const originalPrice = variant.originalPrice || product.price || displayPrice;
-  const discountPercent = variant.discountPercent || 0;
-  const imageUrl = variant.images?.[0] || "/placeholder.png";
-  const outOfStock = hasVariants ? (variant.stock ?? 0) <= 0 : (product.stock ?? 0) <= 0;
-  const showSelectVariant = hasVariants && !variantSelected;
-  const brandName =
-    typeof product.brand === "object" ? product.brand?.name : product.brand || "";
+  const handleOutOfStockClick = (productName) => {
+    setOutOfStockProductName(productName || "This product");
+    setShowOutOfStockPopup(true);
+    setTimeout(() => setShowOutOfStockPopup(false), 3000);
+  };
 
-  // ── wishlist helpers ──────────────────────────────────────────────────────
-  const isInWishlist = useCallback(() => {
-    const sku = getSku(variant);
-    return wishlistData.some(
-      (item) =>
-        (item.productId === product._id || item._id === product._id) &&
-        item.sku === sku
-    );
-  }, [wishlistData, variant, product._id]);
+  const closeOutOfStockPopup = () => setShowOutOfStockPopup(false);
+  // ===================== END OUT OF STOCK POPUP STATE =====================
+
+  const location = useLocation();
+
+  /* wishlist helpers */
+  const isInWishlist = useCallback(
+    (productId, sku) =>
+      wishlistData.some((i) => (i.productId === productId || i._id === productId) && i.sku === sku),
+    [wishlistData]
+  );
 
   const fetchWishlistData = useCallback(async () => {
     try {
       if (user && !user.guest) {
-        const res = await axios.get(
-          "https://beauty.joyory.com/api/user/wishlist",
-          { withCredentials: true }
-        );
+        const res = await axios.get('https://beauty.joyory.com/api/user/wishlist', { withCredentials: true });
         if (res.data.success) setWishlistData(res.data.wishlist || []);
       } else {
         const local = JSON.parse(localStorage.getItem(WISHLIST_CACHE_KEY)) || [];
-        setWishlistData(
-          local.map((item) => ({
-            productId: item._id,
-            _id: item._id,
-            sku: item.sku,
-          }))
-        );
+        setWishlistData(local.map((i) => ({ productId: i._id, _id: i._id, sku: i.sku })));
       }
-    } catch {
-      setWishlistData([]);
-    }
+    } catch { setWishlistData([]); }
   }, [user]);
 
-  useEffect(() => {
-    fetchWishlistData();
-  }, [fetchWishlistData]);
+  useEffect(() => { fetchWishlistData(); }, [fetchWishlistData]);
 
-  const toggleWishlist = async (e) => {
-    e.stopPropagation();
-    setWishlistLoading(true);
-    const productId = product._id;
-    const sku = getSku(variant);
-    const inWishlist = isInWishlist();
-    try {
-      if (user && !user.guest) {
-        if (inWishlist) {
-          await axios.delete(
-            `https://beauty.joyory.com/api/user/wishlist/${productId}`,
-            { withCredentials: true, data: { sku } }
-          );
-          toast.success("Removed from wishlist!");
-        } else {
-          await axios.post(
-            `https://beauty.joyory.com/api/user/wishlist/${productId}`,
-            { sku },
-            { withCredentials: true }
-          );
-          toast.success("Added to wishlist!");
-        }
-        await fetchWishlistData();
-      } else {
-        const guestWishlist =
-          JSON.parse(localStorage.getItem(WISHLIST_CACHE_KEY)) || [];
-        if (inWishlist) {
-          const updated = guestWishlist.filter(
-            (item) => !(item._id === productId && item.sku === sku)
-          );
-          localStorage.setItem(WISHLIST_CACHE_KEY, JSON.stringify(updated));
-          toast.success("Removed from wishlist!");
-        } else {
-          guestWishlist.push({
-            _id: productId,
-            name: product.name,
-            sku,
-            image: imageUrl,
-            displayPrice,
-            originalPrice,
-          });
-          localStorage.setItem(WISHLIST_CACHE_KEY, JSON.stringify(guestWishlist));
-          toast.success("Added to wishlist!");
-        }
-        await fetchWishlistData();
-      }
-    } catch (err) {
-      if (err.response?.status === 401) {
-        toast.error("Please login to use wishlist");
-        navigate("/login");
-      } else {
-        toast.error("Failed to update wishlist");
-      }
-    } finally {
-      setWishlistLoading(false);
+  /* computed */
+  const displayVariant = tempSelectedVariant || selectedVariant || {};
+
+  const displayPrice = parseFloat(
+    displayVariant?.displayPrice || displayVariant?.discountedPrice || displayVariant?.price || product?.price || product?.product?.price || 0
+  );
+  const originalPrice = parseFloat(
+    displayVariant?.originalPrice || displayVariant?.mrp || product?.mrp || product?.product?.mrp || displayPrice
+  );
+  let discountPercent = parseFloat(displayVariant?.discountPercent || product?.discountPercent || product?.product?.discountPercent || 0);
+  if (!discountPercent && originalPrice > displayPrice)
+    discountPercent = Math.round(((originalPrice - displayPrice) / originalPrice) * 100);
+
+  const activeVar = displayVariant || (allVariants.find((v) => v.stock > 0) || allVariants[0]);
+  const stock = parseInt((hasVariants ? activeVar?.stock : (product?.stock || product?.product?.stock)) || 0);
+  const outOfStock = stock <= 0;
+  
+  // Check if ALL variants are out of stock
+  const isCompletelyOutOfStock = hasVariants
+    ? allVariants.every(v => parseInt(v.stock || 0) <= 0)
+    : parseInt(product?.stock || product?.product?.stock || 0) <= 0;
+
+  const showSelectVariantBtn = hasVariants && allVariants.length > 1;
+
+  const imageUrl = useMemo(() => {
+    let rawImage = displayVariant?.images?.[0] || displayVariant?.image ||
+      product?.selectedVariant?.images?.[0] || product?.product?.selectedVariant?.images?.[0] ||
+      product?.images?.[0] || product?.product?.images?.[0] ||
+      product?.image || product?.product?.image ||
+      '';
+    if (rawImage) {
+      return rawImage.startsWith("http")
+        ? rawImage
+        : `https://res.cloudinary.com/dekngswix/image/upload/${rawImage}`;
     }
+    return 'https://placehold.co/400x300/ffffff/cccccc?text=Product';
+  }, [displayVariant, product]);
+
+  const sku = getSku(displayVariant);
+  const productId = product?.product?._id || product?._id;
+  const productInWishlist = isInWishlist(productId, sku);
+  const groupedVariants = groupVariantsByType(allVariants);
+
+  const getBrandName = () => {
+    const brand = product?.brand || product?.product?.brand;
+    if (!brand) return 'Unknown Brand';
+    if (typeof brand === 'object' && brand.name) return brand.name;
+    return typeof brand === 'string' ? brand : 'Unknown Brand';
   };
 
-  // ── add to cart (SAME AS FORYOU) ──────────────────────────────────────────
-  const handleAddToCart = async (e) => {
-    e.stopPropagation();
-    if (showSelectVariant) {
-      setShowVariantOverlay(true);
-      return;
-    }
+  const getProductSlug = () =>
+    product?.slugs?.[0] || product?.product?.slugs?.[0] || 
+    product?.slug || product?.product?.slug || 
+    productId;
+
+  /* actions */
+  const handleVariantSelect = (v) => { setSelectedVariant(v); setVariantSelected(true); };
+
+  const closeVariantOverlay = () => {
+    setShowVariantOverlay(false);
+    setTempSelectedVariant(null);
+  };
+
+  const handleAddToCart = async (forceVariant = null) => {
     setAddingToCart(true);
     try {
-      const payload = hasVariants
-        ? {
-          productId: product._id,
-          variants: [{ variantSku: getSku(variant), quantity: 1 }],
-        }
-        : { productId: product._id, quantity: 1 };
-
-      // Cache selected variant (same as Foryou)
+      let payload;
       if (hasVariants) {
+        const sel = forceVariant || selectedVariant || (allVariants.find((v) => v.stock > 0) || allVariants[0]);
+        if (!sel || (sel.stock ?? 0) <= 0) { toast.error('Please select an in-stock variant.'); return; }
+        payload = { productId: productId, variants: [{ variantSku: getSku(sel), quantity: 1 }] };
+      } else {
+        if (outOfStock) { toast.error('Product is out of stock.'); return; }
+        payload = { productId: productId, quantity: 1 };
+      }
+
+      // Cache selected variant
+      const chosen = forceVariant || selectedVariant || (allVariants.find((v) => v.stock > 0) || allVariants[0]);
+      if (hasVariants && chosen) {
         const cache = JSON.parse(localStorage.getItem("cartVariantCache") || "{}");
-        cache[product._id] = variant;
+        cache[productId] = chosen;
         localStorage.setItem("cartVariantCache", JSON.stringify(cache));
       } else {
         const cache = JSON.parse(localStorage.getItem("cartVariantCache") || "{}");
-        delete cache[product._id];
+        delete cache[productId];
         localStorage.setItem("cartVariantCache", JSON.stringify(cache));
       }
 
       const res = await axios.post(`${API_BASE}/add`, payload, {
         withCredentials: true,
       });
-      if (!res.data.success) throw new Error(res.data.message || "Failed");
-      toast.success("Product added to cart!");
-      navigate("/cartpage");
+      if (!res.data.success) throw new Error(res.data.message || 'Failed');
+      toast.success('Product added to cart!');
+      if (onAddToCartSuccess) {
+        onAddToCartSuccess();
+      } else {
+        navigate('/cartpage');
+      }
     } catch (err) {
-      const msg =
-        err.response?.data?.message || err.message || "Failed to add to cart";
-      toast.error(msg);
-      if (err.response?.status === 401) navigate("/login");
+      toast.error(err.response?.data?.message || err.message || 'Failed to add product');
+      if (err.response?.status === 401) navigate('/login', { state: { from: location?.pathname } });
     } finally {
       setAddingToCart(false);
     }
   };
 
-  // ── variant select ────────────────────────────────────────────────────────
-  const handleVariantSelect = (v) => {
-    setSelectedVariant(v);
-    setVariantSelected(true);
-    setShowVariantOverlay(false);
+  const handleToggleWishlist = async (e) => {
+    e.stopPropagation();
+    if (!selectedVariant) { toast.error('Please select a variant first'); return; }
+    setWishlistLoading(true);
+    try {
+      const inWl = isInWishlist(productId, sku);
+      if (user && !user.guest) {
+        if (inWl) {
+          await axios.delete(`https://beauty.joyory.com/api/user/wishlist/${productId}`, { withCredentials: true, data: { sku } });
+          toast.success('Removed from wishlist!');
+        } else {
+          await axios.post(`https://beauty.joyory.com/api/user/wishlist/${productId}`, { sku }, { withCredentials: true });
+          toast.success('Added to wishlist!');
+        }
+        await fetchWishlistData();
+      } else {
+        const local = JSON.parse(localStorage.getItem('guestWishlist')) || [];
+        if (inWl) {
+          localStorage.setItem('guestWishlist', JSON.stringify(local.filter((i) => !(i._id === productId && i.sku === sku))));
+          toast.success('Removed from wishlist!');
+        } else {
+          const pName = product?.product?.name || product?.name || 'Unnamed Product';
+          local.push({ _id: productId, name: pName, sku, image: imageUrl, displayPrice, originalPrice });
+          localStorage.setItem('guestWishlist', JSON.stringify(local));
+          toast.success('Added to wishlist!');
+        }
+        await fetchWishlistData();
+      }
+    } catch (err) {
+      if (err.response?.status === 401) { toast.error('Please login to use wishlist'); navigate('/login'); }
+      else toast.error('Failed to update wishlist');
+    } finally {
+      setWishlistLoading(false);
+    }
   };
 
-  const buttonText = addingToCart
-    ? "Adding..."
-    : showSelectVariant
-      ? "Select Variant"
-      : outOfStock
-        ? "Out of Stock"
-        : "Add to Bag";
+  // Determine if we should show out of stock state (entirely OOS)
+  const showOutOfStock = isCompletelyOutOfStock && !hasVariants;
 
-  const inWishlist = isInWishlist();
+  const buttonDisabled = addingToCart || showOutOfStock;
+
+  let buttonText = "Add to Bag";
+  if (addingToCart) {
+    buttonText = "Adding...";
+  } else if (showOutOfStock) {
+    buttonText = "Out of Stock";
+  } else if (showSelectVariantBtn) {
+    buttonText = "Select Variant";
+  } else if (outOfStock) {
+    buttonText = "Out of Stock";
+  }
+
+  const pName = product?.product?.name || product?.name || 'Unnamed Product';
 
   return (
     <div className="foryou-card-wrapper" style={{ flex: "0 0 auto" }}>
       <div className="foryou-card">
-        {/* Image wrapper */}
+        {/* Product Image with Overlays */}
         <div
           className="foryou-img-wrapper"
-          onClick={() => navigate(`/product/${product._id}`)}
-          style={{ cursor: "pointer" }}
+          onClick={() => {
+            if (showOutOfStock) {
+              handleOutOfStockClick(pName);
+            } else {
+              navigate(`/product/${getProductSlug()}`);
+            }
+          }}
+          style={{ cursor: 'pointer', position: 'relative' }}
         >
           <img
             src={imageUrl}
-            alt={product.name || "Product"}
+            alt={pName}
             className="foryou-img img-fluid"
             loading="lazy"
-            onError={(e) => {
-              e.currentTarget.src =
-                "https://placehold.co/400x300/ffffff/cccccc?text=Product";
+            onError={(e) => { e.currentTarget.src = 'https://placehold.co/400x300/ffffff/cccccc?text=Product'; }}
+            style={{
+              opacity: showOutOfStock ? 0.6 : 1,
+              filter: showOutOfStock ? 'grayscale(0.3)' : 'none',
             }}
           />
 
-          {/* Wishlist button */}
-          <button className="bg-transparent"
-            onClick={toggleWishlist}
-            disabled={wishlistLoading}
-            style={{
-              position: "absolute",
-              top: "10px",
-              right: "10px",
-              cursor: wishlistLoading ? "not-allowed" : "pointer",
-              color: inWishlist ? "#dc3545" : "#ccc",
-              fontSize: "22px",
-              zIndex: 2,
-              // backgroundColor: "rgba(255,255,255,0.9)",
-              borderRadius: "50%",
-              width: "34px",
-              height: "34px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              // boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-              transition: "all 0.3s ease",
-              border: "none",
-              outline: "none",
-            }}
-            title={inWishlist ? "Remove from wishlist" : "Add to wishlist"}
-          >
-            {wishlistLoading ? (
-              <div className="spinner-border spinner-border-sm" role="status" />
-            ) : inWishlist ? (
-              <FaHeart />
-            ) : (
-              <FaRegHeart />
-            )}
-          </button>
-
-          {/* Promo badge */}
-          {variant.promoApplied && (
-            <div className="promo-badge">
-              <i className="bi bi-tag-fill me-1"></i>Promo
+          {/* OUT OF STOCK OVERLAY */}
+          {showOutOfStock && (
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 3,
+              }}
+            >
+              <div
+                style={{
+                  backgroundColor: '#dc3545',
+                  color: '#fff',
+                  padding: '8px 16px',
+                  borderRadius: '20px',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                }}
+              >
+                <FaTimes />
+                Out of Stock
+              </div>
             </div>
           )}
 
-          {/* Out-of-stock overlay badge */}
-          {outOfStock && (
-            <span
-              className="badge bg-secondary"
+          {/* Wishlist Icon - Hidden when out of stock */}
+          {!showOutOfStock && (
+            <button className='bg-transparent'
+              onClick={handleToggleWishlist}
+              disabled={wishlistLoading}
               style={{
-                position: "absolute",
-                top: "6px",
-                left: "6px",
-                fontSize: "10px",
-                zIndex: 1,
+                position: 'absolute',
+                top: '10px',
+                right: '10px',
+                cursor: wishlistLoading ? 'not-allowed' : 'pointer',
+                color: productInWishlist ? '#dc3545' : '#ccc',
+                fontSize: '22px',
+                zIndex: 2,
+                backgroundColor: 'transparent !important',
+                borderRadius: '50%',
+                width: '34px',
+                height: '34px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.3s ease',
+                border: 'none',
+                outline: 'none',
               }}
+              title={productInWishlist ? "Remove from wishlist" : "Add to wishlist"}
             >
-              Out of Stock
-            </span>
-          )}
-
-          {/* Discount badge */}
-          {!outOfStock && discountPercent > 0 && (
-            <span
-              className="badge bg-danger"
-              style={{
-                position: "absolute",
-                top: "6px",
-                left: "6px",
-                fontSize: "10px",
-                zIndex: 1,
-              }}
-            >
-              {discountPercent}% OFF
-            </span>
+              {wishlistLoading ? (
+                <div className="spinner-border spinner-border-sm" role="status" />
+              ) : productInWishlist ? (
+                <FaHeart />
+              ) : (
+                <FaRegHeart />
+              )}
+            </button>
           )}
         </div>
 
-        {/* Product info — same structure as Foryou.jsx */}
+        {/* Product Info */}
         <div className="foryou-product-info w-100 ps-lg-0 p-0 pt-md-0">
-          <div
-            className="justify-content-between d-flex flex-column"
-            style={{ height: "260px" }}
-          >
-            {/* Brand */}
-            <div className="brand-name small text-muted mb-1 mt-2 text-start">
-              {brandName}
-            </div>
+          <div className="justify-content-between d-flex flex-column" style={{ height: '200px' }}>
+            {/* Brand Name */}
+            <div className="brand-name small text-muted mb-1 mt-2 text-start">{getBrandName()}</div>
 
-            {/* Name */}
+            {/* Product Name */}
             <h6
               className="foryou-name font-family-Poppins m-0 p-0"
-              onClick={() => navigate(`/product/${product._id}`)}
-              style={{ cursor: "pointer" }}
+              onClick={() => {
+                if (showOutOfStock) {
+                  handleOutOfStockClick(pName);
+                } else {
+                  navigate(`/product/${getProductSlug()}`);
+                }
+              }}
+              style={{
+                cursor: 'pointer',
+                opacity: showOutOfStock ? 0.6 : 1,
+              }}
             >
-              {product.name || "Unnamed Product"}
+              {(() => {
+                const varText = displayVariant ? getVariantDisplayText(displayVariant) : "";
+                return varText && varText.toUpperCase() !== "DEFAULT" ? `${pName} - ${varText}` : pName;
+              })()}
             </h6>
 
-            {/* Variant display */}
-            {hasVariants && (
-              <div className="variant-section m-0 p-0 ms-0 mt-2 mb-2">
-                {variantSelected ? (
-                  <div
-                    className="selected-variant-display text-muted small"
-                    style={{ cursor: "pointer", display: "inline-block" }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowVariantOverlay(true);
-                    }}
-                    title="Click to change variant"
-                  >
-                    Variant:{" "}
-                    <span className="fw-bold text-dark">
-                      {getVariantDisplayText(variant)}
-                    </span>
-                    <FaChevronDown className="ms-1" style={{ fontSize: "10px" }} />
-                  </div>
-                ) : (
-                  <div className="small text-muted" style={{ height: "20px" }}>
-                    {totalVariants} Variants Available
-                  </div>
-                )}
+            {/* Show out of stock message in variant area */}
+            {showOutOfStock && (
+              <div className="mt-2 mb-2">
+                <span
+                  style={{
+                    color: '#dc3545',
+                    fontSize: '13px',
+                    fontWeight: 500,
+                  }}
+                >
+                  <FaTimes style={{ fontSize: '11px', marginRight: '4px' }} />
+                  Currently unavailable
+                </span>
               </div>
             )}
 
-            {/* Price */}
+            {/* Price Section */}
             <div className="price-section mb-3 mt-auto">
               <div className="d-flex align-items-baseline flex-wrap">
-                <span className="current-price fw-400 fs-5">₹{displayPrice}</span>
-                {originalPrice > displayPrice && (
+                <span 
+                  className="current-price fw-400 fs-5"
+                  style={{
+                    textDecoration: showOutOfStock ? 'line-through' : 'none',
+                    opacity: showOutOfStock ? 0.6 : 1,
+                  }}
+                >
+                  {formatPrice(displayPrice)}
+                </span>
+                {originalPrice > displayPrice && !showOutOfStock && (
                   <>
-                    <span className="original-price text-muted text-decoration-line-through ms-2 fs-6">
-                      ₹{originalPrice}
-                    </span>
-                    <span className="discount-percent text-danger fw-bold ms-2">
-                      ({discountPercent}% OFF)
-                    </span>
+                    <span className="original-price text-muted text-decoration-line-through ms-2 fs-6">{formatPrice(originalPrice)}</span>
+                    <span className="discount-percent text-danger fw-bold ms-2">({discountPercent}% OFF)</span>
                   </>
                 )}
               </div>
             </div>
 
-            {/* Add to Cart button — EXACT SAME AS FORYOU */}
+            {/* Add to Cart / Select Variant / Out of Stock Button */}
             <div className="cart-section">
               <div className="d-flex align-items-center justify-content-between">
                 <button
-                  className={`btn w-100 page-title-main-name add-tocard-buttonss d-flex align-items-center justify-content-center gap-2 ${addingToCart ? "btn-dark" : "btn-outline-dark"
-                    }`}
+                  className={`btn w-100 page-title-main-name addtocartbuttton d-flex align-items-center justify-content-center gap-2 ${
+                    showOutOfStock
+                      ? "btn-secondary"
+                      : addingToCart
+                        ? ""
+                        : "btn-outline-dark"
+                  }`}
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (showSelectVariant) {
+                    if (showOutOfStock) {
+                      handleOutOfStockClick(pName);
+                    } else if (showSelectVariantBtn) {
                       setShowVariantOverlay(true);
                     } else {
-                      handleAddToCart(e);
+                      handleAddToCart();
                     }
                   }}
-                  disabled={addingToCart || (!showSelectVariant && outOfStock)}
-                  style={{ transition: "background-color 0.3s ease, color 0.3s ease" }}
+                  disabled={buttonDisabled && !showOutOfStock}
+                  style={{
+                    transition: "background-color 0.3s ease, color 0.3s ease",
+                    opacity: showOutOfStock ? 0.8 : 1,
+                    cursor: showOutOfStock ? 'pointer' : (buttonDisabled ? 'not-allowed' : 'pointer'),
+                  }}
                 >
                   {addingToCart ? (
                     <>
-                      <span
-                        className="spinner-border spinner-border-sm me-2"
-                        role="status"
-                      />
+                      <span className="spinner-border spinner-border-sm me-2" />
                       Adding...
+                    </>
+                  ) : showOutOfStock ? (
+                    <>
+                      <FaTimes style={{ fontSize: '14px' }} />
+                      Out of Stock
                     </>
                   ) : (
                     <>
                       {buttonText}
-                      {!addingToCart && !showSelectVariant && !outOfStock && (
-                        <img
-                          src={bagIcon}
-                          className="img-fluid"
-                          style={{ height: "20px" }}
-                          alt="Bag-icon"
-                        />
+                      {!buttonDisabled && !addingToCart && !showSelectVariantBtn && (
+                        <img src={bagIcon} className="img-fluid ms-1" style={{ marginTop: '-3px', height: "20px" }} alt="Bag-icon" />
                       )}
                     </>
                   )}
@@ -7205,165 +7254,364 @@ const RecoProductCard = ({ product, navigate, user }) => {
         </div>
       </div>
 
-      {/* Variant Overlay — same as Foryou.jsx */}
-      {showVariantOverlay && (
-        <div
-          className="variant-overlay"
-          onClick={() => setShowVariantOverlay(false)}
-        >
+      {/* Desktop Variant Overlay */}
+      {showVariantOverlay && !showOutOfStock && (
+        <div className="variant-overlay" onClick={(e) => { e.stopPropagation(); closeVariantOverlay(); }}>
           <div
-            className="variant-overlay-content m-0 p-0"
+            className="variant-overlay-content"
             onClick={(e) => e.stopPropagation()}
-            style={{
-              width: "100%",
-              maxWidth: "500px",
-              maxHeight: "100vh",
-              background: "#fff",
-              overflow: "hidden",
-              display: "flex",
-              flexDirection: "column",
-            }}
           >
-            {/* Header */}
             <div className="overlay-header d-flex justify-content-between align-items-center p-3 border-bottom">
-              <h5 className="m-0 page-title-main-name">
-                Select Variant ({totalVariants})
-              </h5>
-              <button
-                onClick={() => setShowVariantOverlay(false)}
-                style={{ background: "none", border: "none", fontSize: "24px" }}
-              >
-                ×
-              </button>
+              <h5 className="m-0 page-title-main-name">Select Variant</h5>
+              <button onClick={(e) => { e.stopPropagation(); closeVariantOverlay(); }} style={{ background: 'none', border: 'none', fontSize: '40px' }}>×</button>
             </div>
 
-            {/* Tabs */}
-            <div className="variant-tabs d-flex">
-              <button
-                className={`variant-tab flex-fill py-3 page-title-main-name ${selectedVariantType === "all" ? "active" : ""}`}
-                onClick={() => setSelectedVariantType("all")}
-              >
-                All ({totalVariants})
-              </button>
+            <div className="variant-overlay-body">
               {groupedVariants.color.length > 0 && (
-                <button
-                  className={`variant-tab flex-fill py-3 page-title-main-name ${selectedVariantType === "color" ? "active" : ""}`}
-                  onClick={() => setSelectedVariantType("color")}
-                >
-                  Colors ({groupedVariants.color.length})
-                </button>
+                <div className="d-flex flex-wrap gap-3 justify-content-start align-items-center mb-3">
+                  {groupedVariants.color.map((v) => {
+                    const isSel = displayVariant.sku === v.sku;
+                    const isOOS = (v.stock ?? 0) <= 0;
+                    return (
+                      <div
+                        key={getSku(v) || v._id}
+                        style={{ cursor: isOOS ? "not-allowed" : "pointer", position: "relative" }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (!isOOS) {
+                            handleVariantSelect(v);
+                            setTempSelectedVariant(v);
+                          }
+                        }}
+                        title={v.shadeName}
+                      >
+                        <div
+                          style={{
+                            width: "32px",
+                            height: "32px",
+                            borderRadius: "20%",
+                            backgroundColor: v.hex || "#ccc",
+                            border: isSel ? "3px solid #000" : "1px solid #ddd",
+                            opacity: isOOS ? 0.4 : 1,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          {isSel && (
+                            <span style={{ color: "#fff", fontWeight: "bold", fontSize: 14 }}>
+                              ✓
+                            </span>
+                          )}
+                        </div>
+                        {isOOS && (
+                          <span style={{
+                            position: "absolute", top: 0, left: 8, right: 0, bottom: 0,
+                            display: "flex", alignItems: "center", justifyCorner: "center",
+                            color: "red", fontWeight: "bold", fontSize: 16, pointerEvents: "none"
+                          }}>✕</span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               )}
               {groupedVariants.text.length > 0 && (
-                <button
-                  className={`variant-tab flex-fill py-3 ${selectedVariantType === "text" ? "active" : ""}`}
-                  onClick={() => setSelectedVariantType("text")}
-                >
-                  Sizes ({groupedVariants.text.length})
-                </button>
+                <div className="d-flex flex-wrap gap-2 justify-content-start align-items-center">
+                  {groupedVariants.text.map((v) => {
+                    const isSel = displayVariant.sku === v.sku;
+                    const isOOS = (v.stock ?? 0) <= 0;
+                    return (
+                      <div
+                        key={getSku(v) || v._id}
+                        className="variant-text-item"
+                        style={{ cursor: isOOS ? "not-allowed" : "pointer" }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (!isOOS) {
+                            handleVariantSelect(v);
+                            setTempSelectedVariant(v);
+                          }
+                        }}
+                      >
+                        <div
+                          style={{
+                            padding: "8px 16px",
+                            borderRadius: "8px",
+                            border: isSel ? "2px solid #000" : "1px solid #ddd",
+                            background: isSel ? "#f8f9fa" : "#fff",
+                            opacity: isOOS ? 0.4 : 1,
+                            textDecoration: isOOS ? "line-through" : "none"
+                          }}
+                        >
+                          {getVariantDisplayText(v)}
+                          {isOOS && <span className="text-danger small ms-1">(OOS)</span>}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               )}
             </div>
 
-            {/* Content */}
-            <div className="p-3 overflow-auto flex-grow-1 p-0 m-0">
-              {/* Color variants */}
-              {(selectedVariantType === "all" || selectedVariantType === "color") &&
-                groupedVariants.color.length > 0 && (
-                  <div className="row row-col-4 g-3">
-                    {groupedVariants.color.map((v) => {
-                      const isSelected = variant.sku === v.sku;
-                      const isOOS = (v.stock ?? 0) <= 0;
-                      return (
-                        <div className="col-lg-4 col-6" key={getSku(v)}>
-                          <div
-                            className="text-center"
-                            style={{ cursor: isOOS ? "not-allowed" : "pointer" }}
-                            onClick={() => !isOOS && handleVariantSelect(v)}
-                          >
-                            <div
-                              className="page-title-main-name"
-                              style={{
-                                width: "28px",
-                                height: "28px",
-                                borderRadius: "20%",
-                                backgroundColor: v.hex || "#ccc",
-                                margin: "0 auto 8px",
-                                border: isSelected ? "2px solid #000" : "1px solid #ddd",
-                                opacity: isOOS ? 0.5 : 1,
-                                position: "relative",
-                              }}
-                            >
-                              {isSelected && (
-                                <span
-                                  style={{
-                                    position: "absolute",
-                                    top: "50%",
-                                    left: "50%",
-                                    transform: "translate(-50%, -50%)",
-                                    color: "#fff",
-                                    fontWeight: "bold",
-                                  }}
-                                >
-                                  ✓
-                                </span>
-                              )}
-                            </div>
-                            <div
-                              className="small page-title-main-name"
-                              style={{ fontSize: "12px" }}
-                            >
-                              {getVariantDisplayText(v)}
-                            </div>
-                            {isOOS && (
-                              <div className="text-danger small">Out of Stock</div>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+            <div className="variant-overlay-footer">
+              <div className="small text-muted fw-semibold">
+                Selected: <span className="text-dark fw-bold">{getVariantDisplayText(displayVariant)}</span>
+              </div>
+              <div className="mt-1 mb-2 text-start">
+                <span 
+                  onClick={(e) => { e.stopPropagation(); navigate(`/product/${getProductSlug()}`); }} 
+                  className="text-decoration-none fw-semibold" 
+                  style={{ cursor: 'pointer', fontSize: '12px' }}
+                >
+                  View Details
+                </span>
+              </div>
+              <button
+                className={`btn w-100 addtocartbuttton d-flex align-items-center justify-content-center gap-2 ${addingToCart ? "btn-dark" : "btn-outline-dark"}`}
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  const chosen = tempSelectedVariant || selectedVariant || (allVariants.find((v) => v.stock > 0) || allVariants[0]);
+                  if (chosen) {
+                    handleVariantSelect(chosen);
+                  }
+                  await handleAddToCart(chosen);
+                  closeVariantOverlay();
+                }}
+                disabled={addingToCart || (displayVariant && displayVariant.stock <= 0)}
+                style={{
+                  transition: "background-color 0.3s ease, color 0.3s ease",
+                }}
+              >
+                {addingToCart ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm me-2" />
+                    Adding...
+                  </>
+                ) : displayVariant?.stock <= 0 ? (
+                  "Out of Stock"
+                ) : (
+                  <>
+                    Add to Bag
+                    {!addingToCart && displayVariant?.stock > 0 && (
+                      <img src={bagIcon} className="img-fluid ms-1" style={{ marginTop: '-3px', height: "20px" }} alt="Bag-icon" />
+                    )}
+                  </>
                 )}
-
-              {/* Text variants */}
-              {(selectedVariantType === "all" || selectedVariantType === "text") &&
-                groupedVariants.text.length > 0 && (
-                  <div className="row row-cols-3 g-0">
-                    {groupedVariants.text.map((v) => {
-                      const isSelected = variant.sku === v.sku;
-                      const isOOS = (v.stock ?? 0) <= 0;
-                      return (
-                        <div className="col-lg-3 col-5" key={getSku(v)}>
-                          <div
-                            className="text-center"
-                            style={{ cursor: isOOS ? "not-allowed" : "pointer" }}
-                            onClick={() => !isOOS && handleVariantSelect(v)}
-                          >
-                            <div
-                              style={{
-                                padding: "10px",
-                                borderRadius: "8px",
-                                border: isSelected ? "2px solid #000" : "1px solid #ddd",
-                                background: isSelected ? "#f8f9fa" : "#fff",
-                                minHeight: "50px",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                opacity: isOOS ? 0.5 : 1,
-                              }}
-                            >
-                              {getVariantDisplayText(v)}
-                            </div>
-                            {isOOS && (
-                              <div className="text-danger small mt-1">Out of Stock</div>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
+              </button>
             </div>
           </div>
         </div>
+      )}
+
+      {/* Mobile Bottom Sheet Drawer using React Portal */}
+      {showVariantOverlay && !showOutOfStock && createPortal(
+        <>
+          <div
+            className="mobile-sheet-backdrop"
+            onClick={(e) => { e.stopPropagation(); closeVariantOverlay(); }}
+          />
+          <div className="mobile-sheet-container" onClick={(e) => e.stopPropagation()}>
+            {/* Drag grabber */}
+            <div className="mobile-sheet-grabber" onClick={closeVariantOverlay} style={{ cursor: 'pointer' }} />
+
+            {/* Header */}
+            <div className="mobile-sheet-header">
+              <h3 className="mobile-sheet-title">
+                {groupedVariants.color.length > 0 ? "Select Shade" : "Select Variant"}
+              </h3>
+              <button className="mobile-sheet-close-btn" onClick={closeVariantOverlay}>
+                &times;
+              </button>
+            </div>
+
+            {/* Body content */}
+            <div className="mobile-sheet-body">
+              {groupedVariants.color.length > 0 && (
+                <div className="mobile-sheet-variants-grid">
+                  {groupedVariants.color.map((v) => {
+                    const isSel = displayVariant.sku === v.sku;
+                    const isOOS = (v.stock ?? 0) <= 0;
+                    const variantText = getVariantDisplayText(v);
+
+                    return (
+                      <div
+                        key={getSku(v) || v._id}
+                        className={`mobile-sheet-variant-item ${isSel ? "selected" : ""} ${isOOS ? "oos" : ""}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (!isOOS) {
+                            handleVariantSelect(v);
+                            setTempSelectedVariant(v);
+                          }
+                        }}
+                      >
+                        <div
+                          className={`mobile-sheet-color-circle ${isSel ? "selected" : ""} ${isOOS ? "oos" : ""}`}
+                          style={{ backgroundColor: v.hex || "#ccc" }}
+                        >
+                          {isSel && (
+                            <FaCheck className="mobile-sheet-check-icon" />
+                          )}
+                        </div>
+                        <span className="mobile-sheet-variant-text">
+                          {variantText}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {groupedVariants.text.length > 0 && (
+                <div className="mobile-sheet-variants-grid">
+                  {groupedVariants.text.map((v) => {
+                    const isSel = displayVariant.sku === v.sku;
+                    const isOOS = (v.stock ?? 0) <= 0;
+                    const variantText = getVariantDisplayText(v);
+
+                    return (
+                      <div
+                        key={getSku(v) || v._id}
+                        className="mobile-sheet-variant-item"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (!isOOS) {
+                            handleVariantSelect(v);
+                            setTempSelectedVariant(v);
+                          }
+                        }}
+                      >
+                        <button className={`mobile-sheet-text-pill ${isSel ? "selected" : ""} ${isOOS ? "oos" : ""}`}>
+                          <span>{variantText}</span>
+                          {isSel && <FaCheck style={{ fontSize: '10px' }} />}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Footer Price & Info */}
+            <div className="mobile-sheet-footer">
+              <div className="mobile-sheet-footer-left">
+                <span className="mobile-sheet-selected-label">
+                  {getVariantDisplayText(displayVariant)}
+                </span>
+                <div className="mobile-sheet-price-row">
+                  <span className="mobile-sheet-current-price">
+                    {formatPrice(displayVariant.displayPrice)}
+                  </span>
+                  {displayVariant.originalPrice > displayVariant.displayPrice && (
+                    <>
+                      <span className="mobile-sheet-original-price">
+                        {formatPrice(displayVariant.originalPrice)}
+                      </span>
+                      <span className="mobile-sheet-discount">
+                        ({displayVariant.discountPercent || 0}% OFF)
+                      </span>
+                    </>
+                  )}
+                </div>
+              </div>
+              <span
+                className="mobile-sheet-view-details"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(`/product/${getProductSlug()}`);
+                  closeVariantOverlay();
+                }}
+              >
+                View Details
+              </span>
+            </div>
+
+            {/* Add to Bag Button */}
+            <div className="mobile-sheet-action-wrap">
+              <button
+                className="mobile-sheet-btn-add"
+                disabled={addingToCart || (displayVariant && displayVariant.stock <= 0)}
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  const chosen = tempSelectedVariant || selectedVariant || (allVariants.find((v) => v.stock > 0) || allVariants[0]);
+                  if (chosen) {
+                    handleVariantSelect(chosen);
+                  }
+                  await handleAddToCart(chosen);
+                  closeVariantOverlay();
+                }}
+              >
+                {addingToCart ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm" role="status" />
+                    Adding...
+                  </>
+                ) : (displayVariant && displayVariant.stock <= 0) ? (
+                  "Out of Stock"
+                ) : (
+                  "Add to Bag"
+                )}
+              </button>
+            </div>
+          </div>
+        </>
+        , document.body
+      )}
+
+      {/* Out of stock popup using React Portal */}
+      {showOutOfStockPopup && createPortal(
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            zIndex: 99999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+          onClick={closeOutOfStockPopup}
+        >
+          <div
+            style={{
+              backgroundColor: '#fff',
+              borderRadius: '12px',
+              padding: '30px 40px',
+              maxWidth: '400px',
+              width: '90%',
+              textAlign: 'center',
+              boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
+              position: 'relative',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={closeOutOfStockPopup}
+              style={{
+                position: 'absolute',
+                top: '10px',
+                right: '15px',
+                background: 'none',
+                border: 'none',
+                fontSize: '24px',
+                cursor: 'pointer',
+                color: '#666',
+              }}
+            >
+              &times;
+            </button>
+            <div style={{ fontSize: '50px', marginBottom: '15px' }}>😢</div>
+            <h4 style={{ fontWeight: 600, marginBottom: '10px' }}>Out of Stock</h4>
+            <p style={{ color: '#666', margin: 0 }}>
+              Oops! {outOfStockProductName} is out of stock right now. We are working hard to restock it as soon as possible!
+            </p>
+          </div>
+        </div>
+        , document.body
       )}
     </div>
   );
@@ -7372,7 +7620,7 @@ const RecoProductCard = ({ product, navigate, user }) => {
 // ─── Main CartPage ────────────────────────────────────────────────────────────
 const CartPage = () => {
   const [isClicked, setIsClicked] = useState(false);
-    const [applyingCoupon, setApplyingCoupon] = useState(false);
+  const [applyingCoupon, setApplyingCoupon] = useState(false);
   const [showApplyAnimation, setShowApplyAnimation] = useState(false);
 
   const handleClick = () => {
@@ -7412,11 +7660,17 @@ const CartPage = () => {
   const [manualCoupon, setManualCoupon] = useState("");
   let cartCallCount = 0;
 
+  const handleAddToCartSuccess = async () => {
+    const savedCoupon = localStorage.getItem("appliedCoupon");
+    await fetchCart(savedCoupon, true);
+    await syncCartFromBackend();
+  };
+
   // ── fetch cart ──────────────────────────────────────────────────────────────
-  const fetchCart = async (discountCode = null) => {
+  const fetchCart = async (discountCode = null, silent = false) => {
     cartCallCount++;
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const url = discountCode
         ? `${API_BASE}/summary?discount=${discountCode}`
         : `${API_BASE}/summary`;
@@ -7425,7 +7679,7 @@ const CartPage = () => {
       if (res.status === 400) {
         setCartData({ cart: [], freebies: [], bagMrp: 0, bagDiscount: 0, autoDiscount: 0, couponDiscount: 0, shipping: 0, taxableAmount: 0, gstRate: "0%", gstAmount: 0, gstMessage: "", payable: 0, appliedCoupon: null, applicableCoupons: [], inapplicableCoupons: [], promotions: [], totalSavings: 0, savingsMessage: "", grandTotal: 0, shippingMessage: "" });
         setStockError("");
-        setLoading(false);
+        if (!silent) setLoading(false);
         return;
       }
       if (!res.ok) { if (res.status === 401) navigate("/login"); throw new Error("Failed to fetch cart"); }
@@ -7474,7 +7728,7 @@ const CartPage = () => {
       console.error("Error fetching cart:", err);
       setCartData(null);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
@@ -7649,83 +7903,83 @@ const CartPage = () => {
 
 
 
-    const handleProceed = async () => {
-  try {
-    setInitiating(true);
+  const handleProceed = async () => {
+    try {
+      setInitiating(true);
 
-    // 🔐 Check login first
-    if (!document.cookie.includes("token=")) {
-      setTimeout(() => {
-        navigate("/login", {
-          state: {
-            from: "/cartpage",
-            message: "Please login to proceed with checkout",
-          },
-        });
-      }, 1200); // small delay for UX
+      // 🔐 Check login first
+      if (!document.cookie.includes("token=")) {
+        setTimeout(() => {
+          navigate("/login", {
+            state: {
+              from: "/cartpage",
+              message: "Please login to proceed with checkout",
+            },
+          });
+        }, 1200); // small delay for UX
 
-      return;
-    }
-
-    const body = {
-      discountCode: cartData?.appliedCoupon?.code || null,
-      pointsToUse: cartData?.pointsToUse || 0,
-      giftCardCode: cartData?.giftCardApplied?.code || null,
-      giftCardPin: cartData?.giftCardApplied?.pin || null,
-      giftCardAmount: cartData?.giftCardApplied?.amount || 0,
-      taxableAmount: cartData?.taxableAmount || 0,
-      gstAmount: cartData?.gstAmount || 0,
-      gstRate: cartData?.gstRate || "0%",
-    };
-
-    const res = await fetch(INITIATE_ORDER_API, {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-
-    if (!res.ok) {
-      if (res.status === 401) {
-        setTimeout(() => navigate("/login"), 1200);
         return;
       }
-      throw new Error("Failed to initiate order");
-    }
 
-    const orderData = await res.json();
+      const body = {
+        discountCode: cartData?.appliedCoupon?.code || null,
+        pointsToUse: cartData?.pointsToUse || 0,
+        giftCardCode: cartData?.giftCardApplied?.code || null,
+        giftCardPin: cartData?.giftCardApplied?.pin || null,
+        giftCardAmount: cartData?.giftCardApplied?.amount || 0,
+        taxableAmount: cartData?.taxableAmount || 0,
+        gstAmount: cartData?.gstAmount || 0,
+        gstRate: cartData?.gstRate || "0%",
+      };
 
-    // 🧠 Add delay BEFORE redirect (smooth UX)
-    setTimeout(() => {
-      navigate("/AddressSelection", {
-        state: {
-          orderId: orderData.orderId,
-          cartItems: cartData.cart,
-          priceDetails: {
-            bagMrp: cartData.bagMrp,
-            bagDiscount: cartData.bagDiscount,
-            autoDiscount: cartData.autoDiscount,
-            couponDiscount: cartData.couponDiscount,
-            shipping: cartData.shipping,
-            taxableAmount: cartData.taxableAmount,
-            gstRate: cartData.gstRate,
-            gstAmount: cartData.gstAmount,
-            gstMessage: cartData.gstMessage,
-            payable: cartData.payable,
-            appliedCoupon: cartData.appliedCoupon,
-            totalSavings: cartData.totalSavings,
-            savingsMessage: cartData.savingsMessage,
-          },
-        },
+      const res = await fetch(INITIATE_ORDER_API, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
       });
-    }, 1500); // 🔥 control loader duration here
 
-  } catch (err) {
-    console.error("Checkout Error:", err);
-    alert(err.message || "Something went wrong during checkout.");
-    setInitiating(false);
-  }
-};
+      if (!res.ok) {
+        if (res.status === 401) {
+          setTimeout(() => navigate("/login"), 1200);
+          return;
+        }
+        throw new Error("Failed to initiate order");
+      }
+
+      const orderData = await res.json();
+
+      // 🧠 Add delay BEFORE redirect (smooth UX)
+      setTimeout(() => {
+        navigate("/AddressSelection", {
+          state: {
+            orderId: orderData.orderId,
+            cartItems: cartData.cart,
+            priceDetails: {
+              bagMrp: cartData.bagMrp,
+              bagDiscount: cartData.bagDiscount,
+              autoDiscount: cartData.autoDiscount,
+              couponDiscount: cartData.couponDiscount,
+              shipping: cartData.shipping,
+              taxableAmount: cartData.taxableAmount,
+              gstRate: cartData.gstRate,
+              gstAmount: cartData.gstAmount,
+              gstMessage: cartData.gstMessage,
+              payable: cartData.payable,
+              appliedCoupon: cartData.appliedCoupon,
+              totalSavings: cartData.totalSavings,
+              savingsMessage: cartData.savingsMessage,
+            },
+          },
+        });
+      }, 1500); // 🔥 control loader duration here
+
+    } catch (err) {
+      console.error("Checkout Error:", err);
+      alert(err.message || "Something went wrong during checkout.");
+      setInitiating(false);
+    }
+  };
 
   // ── mount ───────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -7823,6 +8077,7 @@ const CartPage = () => {
                               product={product}
                               navigate={navigate}
                               user={user}
+                              onAddToCartSuccess={handleAddToCartSuccess}
                             />
                           </SwiperSlide>
                         ))}
@@ -7845,33 +8100,33 @@ const CartPage = () => {
     <>
 
 
-    {initiating && (
-  <div
-    style={{
-      position: "fixed",
-      top: 0,
-      left: 0,
-      width: "100%",
-      height: "100%",
-      background: "#fff",
-      zIndex: 9999,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      flexDirection: "column",
-    }}
-  >
-    <DotLottieReact
-      src="https://lottie.host/73673e65-df58-41a5-87e7-b837c5d00fe8/dJVGVbJuYJ.lottie"
-      loop
-      autoplay
-      style={{ width: "250px" }}
-    />
-    <p className="mt-3 text-muted">Preparing your checkout...</p>
-  </div>
-)}
+      {initiating && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            background: "#fff",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexDirection: "column",
+          }}
+        >
+          <DotLottieReact
+            src="https://lottie.host/73673e65-df58-41a5-87e7-b837c5d00fe8/dJVGVbJuYJ.lottie"
+            loop
+            autoplay
+            style={{ width: "250px" }}
+          />
+          <p className="mt-3 text-muted">Preparing your checkout...</p>
+        </div>
+      )}
       <Header />
-      <ToastContainer position="top-right" autoClose={3000} />
+      {/* <ToastContainer position="top-right" autoClose={3000} /> */}
       <div className="container-lg Conatiner-fluid mt-xl-5 pt-xl-5">
         <h2 className="page-title-main-name mb-4 cartpage-titlesss mt-lg-5 pt-lg-3 mt-5 pt-5">Your Cart</h2>
         <div className="row">
@@ -7888,16 +8143,15 @@ const CartPage = () => {
                     <div className="d-flex align-items-center gap-2" style={{ cursor: "pointer" }} onClick={() => navigate(`/product/${item.productId}`)}>
                       <img src={item.image} alt={item.name} style={{ width: "80px", height: "80px", objectFit: "cover", borderRadius: "8px" }} />
                       <div className="w-75">
-                        <strong className="page-title-main-name">{item.name}</strong>
+                        <strong className="page-title-main-name">
+                          {(() => {
+                            const variantText = shadeName ? shadeName.trim() : "";
+                            return variantText && variantText.toUpperCase() !== "DEFAULT" ? `${item.name} - ${shadeName}` : item.name;
+                          })()}
+                        </strong>
                         {item.brand && <div className="text-muted small page-title-main-name">{item.brand}</div>}
                         {item.stockStatus !== "in_stock" && (
                           <div className="small text-danger fw-semibold page-title-main-name">{item.stockMessage || "Out of stock"}</div>
-                        )}
-                        {shadeName && (
-                          <div className="mt-1 small d-flex align-items-center gap-2 page-title-main-name">
-                            <span>Shade: {shadeName}</span>
-                            {shadeHex && <span style={{ width: "16px", height: "16px", borderRadius: "50%", display: "inline-block", backgroundColor: shadeHex, border: "1px solid #aaa" }} />}
-                          </div>
                         )}
                         <div className="small d-flex align-items-center page-title-main-name">
                           {variant.originalPrice && variant.originalPrice > item.price ? (
@@ -8141,6 +8395,7 @@ const CartPage = () => {
                           product={product}
                           navigate={navigate}
                           user={user}
+                          onAddToCartSuccess={handleAddToCartSuccess}
                         />
                       </SwiperSlide>
                     ))}
@@ -8154,7 +8409,31 @@ const CartPage = () => {
 
       {/* Confirm Remove Modal */}
       <Modal className="page-title-main-name" show={showConfirm} onHide={handleCloseConfirm} centered>
-        <Modal.Header closeButton><Modal.Title>Confirm Removal</Modal.Title></Modal.Header>
+        <Modal.Header style={{ position: 'relative' }}>
+          <Modal.Title>Confirm Removal</Modal.Title>
+          <button 
+            type="button" 
+            onClick={handleCloseConfirm} 
+            style={{
+              position: 'absolute',
+              right: '20px',
+              top: '12px',
+              background: 'none',
+              border: 'none',
+              fontSize: '28px',
+              color: '#000',
+              cursor: 'pointer',
+              lineHeight: '1',
+              padding: '0',
+              opacity: '0.8',
+              transition: 'opacity 0.2s'
+            }}
+            onMouseOver={(e) => e.currentTarget.style.opacity = '1'}
+            onMouseOut={(e) => e.currentTarget.style.opacity = '0.8'}
+          >
+            &times;
+          </button>
+        </Modal.Header>
         <Modal.Body className="page-title-main-name">Are you sure you want to remove "{itemToRemove?.name}" from your cart?</Modal.Body>
         <Modal.Footer>
           <Button

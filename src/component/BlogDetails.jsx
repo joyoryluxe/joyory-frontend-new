@@ -3357,7 +3357,7 @@ const BlogDetail = () => {
     <>
 
     <Header />
-      <ToastContainer position="top-right" autoClose={3000} />
+      {/* <ToastContainer position="top-right" autoClose={3000} /> */}
 
       {/* Hero Section */}
       <section className="trending-hero overflow-hidden margin-top-responsive-design">
@@ -3527,12 +3527,12 @@ const BlogDetail = () => {
                                 </button>
 
                                 {/* Promo Badge */}
-                                {variant.promoApplied && (
+                                {/* {variant.promoApplied && (
                                   <div className="promo-badge">
                                     <i className="bi bi-tag-fill me-1"></i>
                                     Promo
                                   </div>
-                                )}
+                                )} */}
                               </div>
 
                               {/* Product Info */}
@@ -3646,7 +3646,7 @@ const BlogDetail = () => {
                                 >
                                   <div className="overlay-header d-flex justify-content-between align-items-center p-3 border-bottom">
                                     <h5 className="m-0 page-title-main-name">Select Variant ({totalVariants})</h5>
-                                    <button onClick={closeVariantOverlay} style={{ background: 'none', border: 'none', fontSize: '24px' }}>×</button>
+                                    <button onClick={closeVariantOverlay} style={{ background: 'none', border: 'none', fontSize: '40px' }}>×</button>
                                   </div>
 
                                   <div className="variant-tabs d-flex">

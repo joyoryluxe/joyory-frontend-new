@@ -2662,7 +2662,7 @@ const ProductDetailsHero = ({
   }, [variantsList]);
 
   const showPrevThumbnails = () => setThumbnailStartIndex(prev => Math.max(0, prev - 1));
-  const showNextThumbnails = () => setThumbnailStartIndex(prev => 
+  const showNextThumbnails = () => setThumbnailStartIndex(prev =>
     Math.min(initialDisplayImages.length - thumbnailsPerView, prev + 1)
   );
 
@@ -2698,7 +2698,7 @@ const ProductDetailsHero = ({
   };
 
   const visibleThumbnails = initialDisplayImages.slice(
-    thumbnailStartIndex, 
+    thumbnailStartIndex,
     thumbnailStartIndex + thumbnailsPerView
   );
 
@@ -2715,8 +2715,8 @@ const ProductDetailsHero = ({
         <div className="product-hero-image-wrapper">
           <div className="product-hero-thumbnails">
             {initialDisplayImages.length > thumbnailsPerView && (
-              <button className="btn btn-link p-0 thumbnail-nav-btn right-sides" 
-                      onClick={showPrevThumbnails} disabled={!canScrollUp}>
+              <button className="btn btn-link p-0 thumbnail-nav-btn right-sides"
+                onClick={showPrevThumbnails} disabled={!canScrollUp}>
                 <FaChevronUp color={canScrollUp ? "#333" : "#ccc"} />
               </button>
             )}
@@ -2739,8 +2739,8 @@ const ProductDetailsHero = ({
             </div>
 
             {initialDisplayImages.length > thumbnailsPerView && (
-              <button className="btn btn-link p-0 thumbnail-nav-btn left-side" 
-                      onClick={showNextThumbnails} disabled={!canScrollDown}>
+              <button className="btn btn-link p-0 thumbnail-nav-btn left-side"
+                onClick={showNextThumbnails} disabled={!canScrollDown}>
                 <FaChevronDown color={canScrollDown ? "#333" : "#ccc"} />
               </button>
             )}
@@ -2769,13 +2769,17 @@ const ProductDetailsHero = ({
         <p className="text-muted mb-1 text-start mt-lg-2 mt-4">
           {product.brand?.name || product.brand || "Brand Name"}
         </p>
-        <h1 className="fs-3 fw-bold mb-2 text-start">{product.name}</h1>
+        {(() => {
+          const varText = selectedShade ? getVariantDisplayText(selectedShade) : "";
+          const mainTitleName = varText && varText.toUpperCase() !== "DEFAULT" ? `${product.name} - ${varText}` : product.name;
+          return <h1 className="fs-3 fw-bold mb-2 text-start">{mainTitleName}</h1>;
+        })()}
 
         <div className="d-flex align-items-center gap-1 mb-3 text-start">
           {[...Array(5)].map((_, i) => (
-            <FaStar 
-              key={i} 
-              color={i < Math.round(reviewSummary.avgRating || 0) ? "#ffc107" : "#e4e5e9"} 
+            <FaStar
+              key={i}
+              color={i < Math.round(reviewSummary.avgRating || 0) ? "#ffc107" : "#e4e5e9"}
             />
           ))}
           <span className="text-muted ms-2">
@@ -2792,6 +2796,13 @@ const ProductDetailsHero = ({
           )}
           <span className="text-success fw-bold">10% off</span>
         </div>
+
+        {/* Selected Variant Display */}
+        {selectedShade && (
+          <div className="text-muted small text-start mb-3">
+            Selected Option: <span className="fw-bold text-dark">{getVariantDisplayText(selectedShade)}</span>
+          </div>
+        )}
 
         {/* Color Variants */}
         <div className="mb-4 text-start">
@@ -2821,9 +2832,9 @@ const ProductDetailsHero = ({
             {groupedVariants.color.length > 4 && (
               <button
                 className="btn border fw-normal more-variants-btn"
-                onClick={() => { 
-                  setSelectedVariantType("color"); 
-                  setShowVariantOverlay(true); 
+                onClick={() => {
+                  setSelectedVariantType("color");
+                  setShowVariantOverlay(true);
                 }}
               >
                 +{groupedVariants.color.length - 4}
@@ -2859,7 +2870,7 @@ const ProductDetailsHero = ({
             onClick={handleAddToCartClick}
             disabled={addingToCart || !selectedShade || isOutOfStock(selectedShade)}
           >
-            {addingToCart ? "Adding..." : isOutOfStock(selectedShade) ? "Out of Stock" : "Add To Bag"} 
+            {addingToCart ? "Adding..." : isOutOfStock(selectedShade) ? "Out of Stock" : "Add To Bag"}
             <FaShoppingBag className="ms-2" />
           </button>
 
@@ -2878,67 +2889,73 @@ const ProductDetailsHero = ({
       {/* Variant Overlay */}
       {showVariantOverlay && (
         <div className="variant-overlay position-absolute bg-white p-0 m-0" onClick={() => setShowVariantOverlay(false)}>
-          <div className="variant-overlay-content mw-100" onClick={e => e.stopPropagation()}>
-            <div className="d-flex justify-content-between align-items-center mb-4">
+          <div
+            className="variant-overlay-content mw-100 p-0"
+            onClick={e => e.stopPropagation()}
+            style={{
+              width: "90%",
+              maxWidth: 500,
+              maxHeight: "80vh",
+              background: "#fff",
+              overflow: "hidden",
+              display: "flex",
+              flexDirection: "column"
+            }}
+          >
+            {/* <div className="overlay-header d-flex justify-content-between align-items-center p-3 border-bottom w-100">
               <h5 className="m-0 fw-bold">Select Variant</h5>
               <button className="btn p-0 fs-4" onClick={() => setShowVariantOverlay(false)}>
                 <FaTimes />
               </button>
+            </div> */}
+
+            <div className="overlay-header d-flex justify-content-between align-items-center p-3 border-bottom">
+              <h5 className="m-0 page-title-main-name">Select Variant</h5>
+              <button onClick={() => setShowVariantOverlay(false)} style={{ background: 'none', border: 'none', fontSize: '40px' }}>×</button>
             </div>
 
-            <div className="d-flex mb-4 border-bottom">
-              {['all', 'color', 'text'].map(type => (
-                <button
-                  key={type}
-                  className={`btn flex-fill py-2 rounded-0 ${selectedVariantType === type ? "border-bottom border-dark border-3 fw-bold" : "text-muted"}`}
-                  onClick={() => setSelectedVariantType(type)}
-                >
-                  {type.charAt(0).toUpperCase() + type.slice(1)}
-                </button>
-              ))}
-            </div>
-
-            <div className="overflow-auto">
-              {(selectedVariantType === 'all' || selectedVariantType === 'color') && groupedVariants.color.length > 0 && (
-                <div className="row g-3 pb-4">
+            <div className="p-3 overflow-auto flex-grow-1 w-100">
+              {/* Color Variants Grid */}
+              {groupedVariants.color.length > 0 && (
+                <div className="d-flex flex-wrap gap-3 justify-content-start align-items-center mb-4">
                   {groupedVariants.color.map((v, i) => {
                     const isSelected = selectedShade?.sku === getSku(v);
                     const outOfStock = isOutOfStock(v);
                     return (
-                      <div key={i} className="col-lg-2 col-6 text-center">
-                        <div
-                          onClick={() => { 
-                            if (!outOfStock) {
-                              handleVariantClick(v); 
-                              setShowVariantOverlay(false);
-                            } else {
-                              toast.warn("This variant is out of stock");
-                            }
-                          }}
-                          className={`overlay-color-swatch ${outOfStock ? 'out-of-stock-overlay-swatch' : ''}`}
-                          style={{
-                            backgroundColor: v.hex,
-                            border: isSelected && !outOfStock ? '3px solid #000' : '1px solid #ddd',
-                            cursor: outOfStock ? 'not-allowed' : 'pointer',
-                            opacity: outOfStock ? 0.5 : 1,
-                          }}
-                          title={outOfStock ? `${v.shadeName || v.name} - Out of Stock` : v.shadeName || v.name}
-                        >
-                          {isSelected && !outOfStock && <span className="overlay-check">✓</span>}
-                          {outOfStock && <span className="overlay-cross">✕</span>}
+                      <div
+                        key={i}
+                        style={{ cursor: outOfStock ? "not-allowed" : "pointer", position: "relative" }}
+                        onClick={() => {
+                          if (!outOfStock) {
+                            handleVariantClick(v);
+                          } else {
+                            toast.warn("This variant is out of stock");
+                          }
+                        }}
+                        title={outOfStock ? `${v.shadeName || v.name} - Out of Stock` : v.shadeName || v.name}
+                      >
+                        <div style={{
+                          width: 32, height: 32, borderRadius: "20%",
+                          backgroundColor: v.hex || "#ccc",
+                          border: isSelected && !outOfStock ? "3px solid #000" : "1px solid #ddd",
+                          opacity: outOfStock ? 0.4 : 1, display: "flex", alignItems: "center", justifyContent: "center"
+                        }}>
+                          {isSelected && !outOfStock && <span className="overlay-check" style={{ color: "#fff", fontWeight: "bold", fontSize: 12 }}>✓</span>}
                         </div>
-                        <small className={`d-block mt-1 ${outOfStock ? 'text-muted text-decoration-line-through' : ''}`}>
-                          {v.shadeName || v.name}
-                          {outOfStock && <span className="text-danger ms-1">(Out of Stock)</span>}
-                        </small>
+                        {outOfStock && <span style={{
+                          position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          color: "red", fontWeight: "bold", fontSize: 16, pointerEvents: "none"
+                        }}>✕</span>}
                       </div>
                     );
                   })}
                 </div>
               )}
 
-              {(selectedVariantType === 'all' || selectedVariantType === 'text') && groupedVariants.text.length > 0 && (
-                <div className="d-flex flex-wrap gap-2">
+              {/* Size/Text Variants Grid */}
+              {groupedVariants.text.length > 0 && (
+                <div className="d-flex flex-wrap gap-2 justify-content-start align-items-center">
                   {groupedVariants.text.map((v, i) => {
                     const isSelected = selectedShade?.sku === getSku(v);
                     const outOfStock = isOutOfStock(v);
@@ -2946,24 +2963,47 @@ const ProductDetailsHero = ({
                       <button
                         key={i}
                         className={`btn ${outOfStock ? 'out-of-stock-overlay-text-btn' : (isSelected ? "btn-dark" : "btn-outline-secondary")}`}
-                        onClick={() => { 
+                        onClick={() => {
                           if (!outOfStock) {
-                            handleVariantClick(v); 
-                            setShowVariantOverlay(false);
+                            handleVariantClick(v);
                           } else {
                             toast.warn("This variant is out of stock");
                           }
                         }}
                         disabled={outOfStock}
                         title={outOfStock ? `${getVariantDisplayText(v)} - Out of Stock` : getVariantDisplayText(v)}
+                        style={{
+                          padding: "8px 16px", borderRadius: 8,
+                          opacity: outOfStock ? 0.4 : 1
+                        }}
                       >
-                        {outOfStock && <span className="text-cross me-1">✕</span>}
                         {getVariantDisplayText(v)}
                       </button>
                     );
                   })}
                 </div>
               )}
+            </div>
+
+            {/* Dynamic Footer for Add to Cart */}
+            <div className="overlay-footer p-3 border-top bg-light d-flex flex-column gap-2 align-items-center w-100">
+              {selectedShade && (
+                <div className="small text-muted fw-semibold">
+                  Selected: <span className="text-dark fw-bold">{getVariantDisplayText(selectedShade)}</span>
+                </div>
+              )}
+              <button
+                className="btn btn-dark w-100 py-3 d-flex align-items-center justify-content-center gap-2"
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  await handleAddToCartClick();
+                  setShowVariantOverlay(false);
+                }}
+                disabled={addingToCart || !selectedShade || isOutOfStock(selectedShade)}
+              >
+                {addingToCart ? "Adding..." : (isOutOfStock(selectedShade) ? "Out of Stock" : "Add to Bag")}
+                <FaShoppingBag />
+              </button>
             </div>
           </div>
         </div>

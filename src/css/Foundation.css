@@ -41,6 +41,7 @@ box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
 
 .foundation-wrapper {
     margin-top: 80px;
+    padding-bottom: 50px !important;
 }
 
 /* Formulation Card Styling */
@@ -102,9 +103,10 @@ box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
 }
 
 @media (min-width: 1024px) {
+    .btn-for-back-buttons-bg-color,
     .btn-for-shadetones,
     .btn-for-back-buttons {
-        min-width: 245px;
+        min-width: 150px;
         height: 42px;
         font-size: 16px !important;
     }
@@ -113,15 +115,18 @@ box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
 @media (max-width: 768px) {
     .foundation-wrapper {
         margin-top: 55px !important;
-        
+
     }
+
     .margin-top-foundation {
         margin-top: 10px !important;
         font-size: 23px !important;
     }
+
     .font-size-of-Foundation .font-sizess {
         font-size: 14px;
     }
+ .btn-for-back-buttons-bg-color,
     .btn-for-shadetones,
     .btn-for-back-buttons {
         width: auto !important;
@@ -134,6 +139,7 @@ box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
 }
 
 @media (max-width: 480px) {
+.btn-for-back-buttons-bg-color, 
     .btn-for-shadetones,
     .btn-for-back-buttons {
         padding: 6px 14px !important;

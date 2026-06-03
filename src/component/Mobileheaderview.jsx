@@ -2635,9 +2635,9 @@ const Mobileheaderview = ({
               {searchText && <FaTimes className="mobile-search-clear" onClick={clearSearch} />}
               <FaMicrophone className={`mobile-search-voice ${listening ? "listening" : ""}`} onClick={startListening} />
             </form>
-            <button className="mobile-search-go page-title-main-name" onClick={handleSearchSubmit} disabled={!searchText.trim()}>
+            {/* <button className="mobile-search-go page-title-main-name" onClick={handleSearchSubmit} disabled={!searchText.trim()}>
               Go
-            </button>
+            </button> */}
           </div>
 
           <div className="mobile-search-results page-title-main-name">

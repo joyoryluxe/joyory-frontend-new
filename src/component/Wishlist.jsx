@@ -1196,10 +1196,12 @@ import { UserContext } from "./UserContext";
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import Bag from "../assets/Bag.svg";
 
 const Wishlist = () => {
   const [wishlistItems, setWishlistItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [removingItems, setRemovingItems] = useState({});
   const navigate = useNavigate();
   const { user } = useContext(UserContext);
 
@@ -1245,18 +1247,22 @@ const Wishlist = () => {
 
   // Remove from Wishlist
   const removeFromWishlist = async (productId, sku) => {
+    const itemKey = `${productId}-${sku}`;
+    if (removingItems[itemKey]) return; // debounce double click triggers
+    setRemovingItems((prev) => ({ ...prev, [itemKey]: true }));
+
     try {
       if (user && !user.guest) {
-        await fetch(`https://beauty.joyory.com/api/user/wishlist/${productId}`, {
+        const response = await fetch(`https://beauty.joyory.com/api/user/wishlist/${productId}`, {
           method: "DELETE",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ sku }),
         });
+        if (!response.ok) throw new Error("Failed to remove item");
       } else {
         // Guest
         const updated = wishlistItems.filter((item) => !(item.productId === productId && item.sku === sku));
-        setWishlistItems(updated);
         localStorage.setItem("guestWishlist", JSON.stringify(updated));
       }
 
@@ -1265,6 +1271,12 @@ const Wishlist = () => {
     } catch (err) {
       console.error(err);
       toast.error("Failed to remove item");
+    } finally {
+      setRemovingItems((prev) => {
+        const copy = { ...prev };
+        delete copy[itemKey];
+        return copy;
+      });
     }
   };
 
@@ -1303,6 +1315,7 @@ const Wishlist = () => {
       // Remove from wishlist after moving
       setWishlistItems((prev) => prev.filter((w) => w.productId !== item.productId));
       toast.success("Moved to cart successfully!");
+      navigate("/cartpage");
     } catch (err) {
       console.error(err);
       toast.error("Failed to move to cart");
@@ -1363,10 +1376,9 @@ const Wishlist = () => {
   return (
     <>
       <Header />
-      <ToastContainer position="top-right" autoClose={3000} />
 
       <div className="container py-4 mt-xl-5 pt-xl-5 mt-5 pt-5">
-        <h2 className="mb-4 fw-bold page-title-main-name">
+        <h2 className="mb-4 fw-bold page-title-main-name mt-5">
           My Wishlist ({wishlistItems.length})
         </h2>
 
@@ -1390,15 +1402,28 @@ const Wishlist = () => {
         ) : (
           <div className="row g-4">
             {wishlistItems.map((item) => (
-              <div key={`${item.productId}-${item.sku}`} className="col-12 col-sm-6 col-md-4 col-lg-3">
+              <div key={`${item.productId}-${item.sku}`} className="col-6 col-md-4 col-lg-3 px-2 mb-3">
                 <div className="card h-100 shadow-sm-none border-0 position-relative">
                   {/* Cross (Remove) Button - Top Right */}
                   <button
                     className="position-absolute top-0 end-0 m-2 bg-white border-0 rounded-circle p-1 shadow-sm"
-                    style={{ zIndex: 10, width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center" }}
+                    style={{
+                      zIndex: 10,
+                      width: "32px",
+                      height: "32px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      opacity: removingItems[`${item.productId}-${item.sku}`] ? 0.5 : 1,
+                      cursor: removingItems[`${item.productId}-${item.sku}`] ? "not-allowed" : "pointer"
+                    }}
                     onClick={() => removeFromWishlist(item.productId, item.sku)}
+                    disabled={removingItems[`${item.productId}-${item.sku}`]}
                   >
-                    <FaTimes size={16} color="#000" />
+                    {removingItems[`${item.productId}-${item.sku}`]
+                      ? <div className="spinner-border spinner-border-sm" role="status" style={{ width: "12px", height: "12px" }} />
+                      : <FaTimes size={16} color="#000" />
+                    }
                   </button>
 
                   {/* Product Image */}
@@ -1411,32 +1436,28 @@ const Wishlist = () => {
                       src={item.image || "/placeholder.png"}
                       alt={item.name}
                       className="card-img-top"
-                      style={{ height: "220px", objectFit: "cover", borderRadius: "8px 8px 0 0" }}
+                      style={{ height: "200px", objectFit: "cover", borderRadius: "8px 8px 0 0" }}
                       onError={(e) => (e.target.src = "/placeholder.png")}
                     />
 
-                    {item.discountPercent > 0 && (
+                    {/* {item.discountPercent > 0 && (
                       <div className="position-absolute top-0 start-0 bg-danger text-white px-2 py-1 m-2 rounded" style={{ fontSize: "12px", fontWeight: "bold" }}>
                         {item.discountPercent}% OFF
                       </div>
-                    )}
+                    )} */}
                   </div>
 
                   <div className="card-body d-flex flex-column p-3">
                     <h6
                       className="card-title mb-2 page-title-main-name mt-3"
-                      style={{ cursor: "pointer", fontWeight: "600", fontSize: "15px" }}
+                      style={{ cursor: "pointer", fontWeight: "600", fontSize: "14px" }}
                       onClick={() => navigate(`/product/${item.productId}`)}
                     >
-                      {item.name}
+                      {(() => {
+                        const variantText = (item.variantName || item.variant || "").trim();
+                        return variantText && variantText.toUpperCase() !== "DEFAULT" ? `${item.name} - ${item.variantName || item.variant}` : item.name;
+                      })()}
                     </h6>
-
-                    {/* Selected Variant Display */}
-                    {(item.variantName || item.variant) && (
-                      <p className="text-muted small mb-2">
-                        Variant: <strong>{item.variantName || item.variant}</strong>
-                      </p>
-                    )}
 
                     {/* Rating */}
                     <div className="d-flex align-items-center mb-2">
@@ -1462,13 +1483,19 @@ const Wishlist = () => {
                     )}
 
                     {/* Action Buttons */}
-                    <div className="d-flex gap-2 mt-auto">
+                    <div className="mt-auto">
                       <button
-                        className="btn btn-outline-danger delete-button flex-grow-1 d-flex align-items-center justify-content-center gap-2"
+                        className="btn w-100 addtocartbuttton d-flex align-items-center justify-content-center gap-2 btn-outline-dark"
+                        style={{
+                          transition: "background-color .3s ease, color .3s ease",
+                        }}
                         onClick={() => moveToCart(item)}
                         disabled={item.status === "outOfStock"}
                       >
-                        <FaShoppingCart /> Move to Cart
+                        Move to Cart
+                        {item.status !== "outOfStock" && (
+                          <img src={Bag} alt="Bag" style={{ height: 20 }} />
+                        )}
                       </button>
                     </div>
                   </div>

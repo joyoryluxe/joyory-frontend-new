@@ -145,9 +145,11 @@ aside .btn {
     .container.py-4 {
         flex-direction: column;
     }
+
     aside {
         width: 100%;
     }
+
     .filters-btnss {
         width: 50% !important;
     }
@@ -232,6 +234,7 @@ aside .btn {
     0% {
         transform: rotate(0deg);
     }
+
     100% {
         transform: rotate(360deg);
     }
@@ -316,10 +319,12 @@ aside .btn {
         flex: 0 0 100%;
         max-width: 100%;
     }
+
     .col-xl-3 {
         flex: 0 0 50%;
         max-width: 50%;
     }
+
     .filter-responsive {
         position: fixed;
         top: 88%;
@@ -342,15 +347,19 @@ aside .btn {
         flex: 0 0 100%;
         max-width: 100%;
     }
+
     .d-flex.flex-wrap {
-        gap: 4px !important;
+        gap: 0px !important;
     }
+
     .card-title {
         font-size: 0.95rem;
     }
+
     .btn-primary {
         font-size: 0.9rem;
     }
+
     .banner-images img {
         max-height: 250px;
     }
@@ -434,6 +443,7 @@ aside .btn {
     0% {
         transform: rotate(0deg);
     }
+
     100% {
         transform: rotate(360deg);
     }
@@ -501,6 +511,7 @@ aside .btn {
     from {
         opacity: 0;
     }
+
     to {
         opacity: 1;
     }
@@ -510,6 +521,7 @@ aside .btn {
     from {
         transform: translateY(100%);
     }
+
     to {
         transform: translateY(0);
     }
@@ -549,9 +561,11 @@ aside .btn {
         padding: 10px;
         margin-top: 10px;
     }
+
     .borders-right {
         border-right: 2px solid #dee2e6;
     }
+
     .brand-filter-button {
         width: 100%;
         text-align: left;
@@ -559,9 +573,11 @@ aside .btn {
         border: none;
         padding: 0;
     }
+
     .rating-bars {
         width: 100% !important;
     }
+
     .shoproduct-margin {
         margin-top: 80px !important;
     }
@@ -818,18 +834,22 @@ aside .btn {
         width: 95%;
         max-height: 85vh;
     }
+
     .variant-overlay-content .row-cols-4>.col {
         flex: 0 0 25%;
         max-width: 25%;
     }
+
     .variant-overlay-content .row-cols-3>.col {
         flex: 0 0 33.333%;
         max-width: 33.333%;
     }
+
     .color-circle {
         width: 28px;
         height: 28px;
     }
+
     .variant-text {
         padding: 6px 10px;
         font-size: 12px;
@@ -838,6 +858,8 @@ aside .btn {
 
 .page-upper-case-first {
     text-transform: capitalize;
+    font-size: 14px;
+    font-weight: 50;
 }
 
 .custom-pill {

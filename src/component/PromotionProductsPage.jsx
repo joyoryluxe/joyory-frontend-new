@@ -7145,12 +7145,15 @@ const PromotionProducts = () => {
       let payload;
 
       if (hasVar) {
-        const sel = selectedVariants[prod._id];
+        const sel = selectedVariants[prod._id] || (variants.find((v) => v.stock > 0) || variants[0]);
         if (!sel || sel.stock <= 0) {
           toast.warning("Please select an in-stock variant.");
           return;
         }
         payload = { productId: prod._id, variants: [{ variantSku: getSku(sel), quantity: 1 }] };
+        const cache = JSON.parse(localStorage.getItem("cartVariantCache") || "{}");
+        cache[prod._id] = sel;
+        localStorage.setItem("cartVariantCache", JSON.stringify(cache));
       } else {
         if (prod.stock <= 0) {
           toast.warning("Product is out of stock.");
@@ -7207,7 +7210,7 @@ const PromotionProducts = () => {
     const img = displayVariant?.images?.[0] || displayVariant?.image || prod.images?.[0] || "/placeholder.png";
     const isAdding = addingToCart[prod._id];
     const oos = hasVar ? displayVariant?.stock <= 0 : prod.stock <= 0;
-    const showSelectVariantButton = hasVar && !selectedVariants[prod._id];
+    const showSelectVariantButton = hasVar && variants.length > 1 && !selectedVariants[prod._id];
     const disabled = isAdding || (!showSelectVariantButton && oos);
 
     let btnText = "Add to Cart";
@@ -7254,15 +7257,13 @@ const PromotionProducts = () => {
             style={{ cursor: "pointer" }}
             onClick={() => navigate(`/product/${slugPr}`)}
           >
-            {prod.name}
+            {(() => {
+              const varName = displayVariant ? getVariantDisplayText(displayVariant) : "";
+              return varName && varName.toUpperCase() !== "DEFAULT" ? `${prod.name} - ${varName}` : prod.name;
+            })()}
           </h5>
 
-          {hasVar && (
-            <div className="small text-muted mb-2" style={{ cursor: "pointer" }} onClick={() => openVariantOverlay(prod._id)}>
-              {displayVariant ? getVariantDisplayText(displayVariant) : `${totalVars} Variants Available`}
-              <FaChevronDown className="ms-1" style={{ fontSize: "10px" }} />
-            </div>
-          )}
+
 
           <p className="fw-bold mb-3 mt-2 page-title-main-name" style={{ fontSize: 16 }}>
             {(() => {
@@ -7303,13 +7304,146 @@ const PromotionProducts = () => {
           </div>
         </div>
 
-        {/* Variant Overlay - Same as your original */}
         {showVariantOverlay === prod._id && (
-          /* ... Your existing variant overlay code ... */
-          // (I kept it same as your original for consistency - you can copy it from your code)
           <div className="variant-overlay" onClick={closeVariantOverlay}>
-            {/* Full variant overlay code from your original component */}
-            {/* (Omitted here for brevity - use your existing variant overlay JSX) */}
+            <div
+              className="variant-overlay-content"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="overlay-header d-flex justify-content-between align-items-center p-3 border-bottom">
+                <h5 className="m-0 page-title-main-name">Select Variant</h5>
+                <button
+                  onClick={closeVariantOverlay}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    fontSize: '40px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="variant-overlay-body">
+                {grouped.color.length > 0 && (
+                  <div className="d-flex flex-wrap gap-3 justify-content-start align-items-center mb-3">
+                    {grouped.color.map((v) => {
+                      const sel = selectedVariants[prod._id]?.sku === v.sku || displayVariant.sku === v.sku;
+                      const oosV = v.stock <= 0;
+
+                      return (
+                        <div
+                          key={getSku(v) || v._id}
+                          style={{ cursor: oosV ? "not-allowed" : "pointer", position: "relative" }}
+                          onClick={() =>
+                            !oosV &&
+                            handleVariantSelect(prod._id, v)
+                          }
+                          title={v.shadeName}
+                        >
+                          <div className="page-title-main-name"
+                            style={{
+                              width: "32px",
+                              height: "32px",
+                              borderRadius: "20%",
+                              backgroundColor: v.hex || "#ccc",
+                              border: sel ? "3px solid #000" : "1px solid #ddd",
+                              opacity: oosV ? 0.4 : 1,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
+                          >
+                            {sel && (
+                              <span style={{ color: "#fff", fontWeight: "bold", fontSize: 12 }}>
+                                ✓
+                              </span>
+                            )}
+                          </div>
+                          {oosV && (
+                            <span style={{
+                              position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
+                              display: "flex", alignItems: "center", justifyContent: "center",
+                              color: "red", fontWeight: "bold", fontSize: 16, pointerEvents: "none"
+                            }}>✕</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {grouped.text.length > 0 && (
+                  <div className="d-flex flex-wrap gap-2 justify-content-start align-items-center">
+                    {grouped.text.map((v) => {
+                      const sel = selectedVariants[prod._id]?.sku === v.sku || displayVariant.sku === v.sku;
+                      const oosV = v.stock <= 0;
+
+                      return (
+                        <div
+                          key={getSku(v) || v._id}
+                          className="variant-text-item"
+                          style={{ cursor: oosV ? "not-allowed" : "pointer" }}
+                          onClick={() =>
+                            !oosV &&
+                            handleVariantSelect(prod._id, v)
+                          }
+                        >
+                          <div
+                            style={{
+                              padding: "8px 16px",
+                              borderRadius: "8px",
+                              border: sel ? "2px solid #000" : "1px solid #ddd",
+                              background: sel ? "#f8f9fa" : "#fff",
+                              opacity: oosV ? 0.4 : 1,
+                              textDecoration: oosV ? "line-through" : "none"
+                            }}
+                          >
+                            {getVariantDisplayText(v)}
+                            {oosV && <span className="text-danger small ms-1">(OOS)</span>}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              <div className="variant-overlay-footer">
+                <div className="small text-muted fw-semibold">
+                  Selected: <span className="text-dark fw-bold">{getVariantDisplayText(displayVariant)}</span>
+                </div>
+                <button
+                  className={`page-title-main-name add-to-cart-product-page w-100 d-flex align-items-center justify-content-center gap-2 ${isAdding ? "bg-black text-white" : ""}`}
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    await handleAddToCart(prod);
+                    closeVariantOverlay();
+                  }}
+                  disabled={isAdding || (displayVariant && displayVariant.stock <= 0)}
+                  style={{
+                    transition: "background-color 0.3s ease, color 0.3s ease",
+                  }}
+                >
+                  {isAdding ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2" role="status" />
+                      Adding...
+                    </>
+                  ) : displayVariant?.stock <= 0 ? (
+                    "Out of Stock"
+                  ) : (
+                    <>
+                      Add to Bag
+                      {!isAdding && displayVariant?.stock > 0 && (
+                        <img src={Bag} alt="Bag" style={{ height: 20 }} />
+                      )}
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -7356,7 +7490,7 @@ const PromotionProducts = () => {
   return (
     <>
       <Header />
-      <ToastContainer position="top-right" autoClose={3000} />
+      {/* <ToastContainer position="top-right" autoClose={3000} /> */}
 
       {promotionMeta?.bannerImage && (
         <div className="banner-images text-center">

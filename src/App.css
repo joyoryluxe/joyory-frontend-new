@@ -24,8 +24,10 @@ font-family: "Playfair";
 
 body {
     overflow-x: hidden;
+
     background-color: #fff;
 }
+
 
 .spacing {
     letter-spacing: 0px;
@@ -43,9 +45,11 @@ body {
         margin-left: 0 !important;
         margin-right: 0 !important;
     }
+
     .varient-responsive {
         width: 50px !important;
     }
+
     /* .Virtualtryonhome-container-width {
     width: 95% !important;
   }
@@ -64,6 +68,7 @@ body {
         margin-left: auto;
         margin-right: auto;
     }
+
     .margin-left-for-Virtualtryonhome {
         margin: 15px 0 15px 0 !important;
     }
@@ -84,14 +89,17 @@ body {
     .varient-responsive {
         width: 50% !important;
     }
+
     .variant-section {
         min-height: 0px !important;
     }
+
     .loader-responsive {
         width: 400px;
         height: auto !important;
         margin-bottom: 0px;
     }
+
     .width-loader-content {
         width: 70%;
         margin-left: auto;
@@ -175,15 +183,19 @@ body {
         margin-left: 0px;
         margin-bottom: 5px !important;
     }
+
     .next-button-makeupquiz {
         margin-bottom: 80px;
     }
+
     .font-weightss {
         font-weight: 300 !important;
     }
+
     .mobile-responsive-design-text {
         font-size: 14px !important;
     }
+
     .reword-heading-responsive {
         font-size: 20px !important;
         margin-left: 6px !important;
@@ -207,7 +219,7 @@ body {
 }
 
 .addtocartbuttton {
-    height: 65px !important;
+    height: 60px !important;
     border-radius: 0 0 20px 20px !important;
 }
 
@@ -259,13 +271,13 @@ button:hover img {
 
 .btn-for-back-buttons-bg-color {
     background-color: #fff !important;
-    color: #000 !important;
-    border: 1px solid #000 !important;
+    color: #fff !important;
     border-radius: 0px !important;
+    background-color: #dc3545 !important;
 }
 
 .btn-for-back-buttons-bg-color:hover {
-    background-color: #dc3545 !important;
+    background-color: #dc071c !important;
     color: #fff !important;
 }
 
@@ -366,3 +378,313 @@ button:hover img {
 
 
 /*=================================================================Bullet-Point-slider(End)===========================================================================*/
+
+/* Push main content below the fixed header on bannerless views */
+.non-hero-spacer {
+    height: 130px;
+    /* Desktop Header (85px) + Subnav Categories (45px) */
+    width: 100%;
+    display: block;
+}
+
+@media (max-width: 1024px) {
+    .non-hero-spacer {
+        height: 85px;
+        /* Clear Tablet header height + safety gap */
+    }
+}
+
+@media (max-width: 768px) {
+    .non-hero-spacer {
+        height: 80px;
+        /* Clear Mobile header height (68px) + safety gap */
+    }
+}
+
+/* ==========================================
+   Standardized Bounded Card Variant Overlay
+   ========================================== */
+.variant-overlay {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background-color: rgba(255, 255, 255, 0.98) !important;
+    z-index: 100 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    box-sizing: border-box !important;
+}
+
+.variant-overlay-content {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    background-color: #ffffff !important;
+    /* border: 1px solid #eee !important; */
+    /* border-top:1px solid #eee !important; */
+    /* border-bottom:1px solid #000 !important; */
+    box-sizing: border-box !important;
+}
+
+/* Internal scrolling swatches body */
+.variant-overlay-body {
+    flex-grow: 1 !important;
+    overflow-y: auto !important;
+    padding: 12px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    scrollbar-width: thin;
+    box-sizing: border-box !important;
+    /* border: 1px solid #eee !important; */
+}
+
+/* Footer container holding variant name and standard button */
+.variant-overlay-footer {
+    padding: 10px 0 !important;
+    /* border-top: 1px solid #f1f1f1 !important; */
+    /* background-color: #fafafa !important; */
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    align-items: center !important;
+    width: 100% !important;
+    margin-top: auto !important;
+    box-sizing: border-box !important;
+}
+
+/* Mobile Swatch Responsive Sizing */
+@media (max-width: 576px) {
+    .variant-overlay-body {
+        padding: 8px !important;
+        gap: 8px !important;
+    }
+
+    .variant-overlay-body .color-circle,
+    .variant-overlay-body [style*="width: 32px"] {
+        width: 24px !important;
+        height: 24px !important;
+    }
+
+    .variant-overlay-body [style*="padding: 8px 16px"] {
+        padding: 4px 8px !important;
+        font-size: 11px !important;
+    }
+
+    .variant-overlay-footer {
+        padding: 8px !important;
+        gap: 4px !important;
+    }
+}
+
+/* ==========================================================================
+   Global Product Card Hover Reveal, Visual Ordering, and Sizing Updates
+   ========================================================================== */
+
+/* 1. Ensure absolute card consistency with matching aspect-ratios */
+.foryou-img-wrapper {
+    aspect-ratio: 1 / 1 !important;
+    width: 100% !important;
+    overflow: hidden !important;
+}
+
+.foryou-img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+}
+
+/* 2. Global Button Styles: Dark background, light text, white icon */
+.cart-section button {
+    background-color: #000 !important;
+    color: #fff !important;
+    border: 1px solid #000 !important;
+    font-weight: 600 !important;
+    transition: background-color 0.2s ease, opacity 0.2s ease !important;
+}
+
+.cart-section button:hover:not(:disabled) {
+    background-color: #333 !important;
+    color: #fff !important;
+}
+
+.cart-section button:disabled {
+    background-color: #cccccc !important;
+    color: #666666 !important;
+    border-color: #cccccc !important;
+}
+
+.cart-section button img {
+    filter: brightness(0) invert(1) !important;
+    /* Make bag icon white */
+}
+
+/* 3. Desktop and Tablet Hover functionality (width >= 768px) */
+@media (min-width: 768px) {
+
+    /* Set container flex order, unified height, and ensure it doesn't use absolute positioning */
+    .foryou-product-info>div {
+        position: relative !important;
+        /* Keep relative for potential other overlays, but buttons are static */
+        display: flex !important;
+        flex-direction: column !important;
+        height: 185px !important;
+        /* Unified compact height to align cards perfectly and prevent button clipping */
+        min-height: unset !important;
+    }
+
+    /* Enforce exactly 10px gap between card heading/title and price */
+    .foryou-product-info>div>.foryou-name {
+        margin-bottom: 10px !important;
+    }
+
+    /* Collapse button by default in static document flow */
+    .foryou-product-info>div>.cart-section {
+        position: static !important;
+        opacity: 0;
+        visibility: hidden;
+        max-height: 0;
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+        overflow: hidden !important;
+        order: 10 !important;
+        /* Placed last, after the price section */
+        transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+            opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+            visibility 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+            margin-top 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        will-change: max-height, opacity;
+    }
+
+    /* Price-section sits directly below product title, pushing empty space to the bottom */
+    .foryou-product-info>div>.price-section {
+        position: static !important;
+        margin-top: 0 !important;
+        margin-bottom: auto !important;
+        /* Pushes the vertical empty space to the bottom, below the price */
+        order: 9 !important;
+        /* Placed before the cart section */
+    }
+
+    /* Hover state triggers smooth static expansion below the price */
+    .foryou-card:hover .foryou-product-info>div>.cart-section,
+    .foryou-card-wrapper:hover .foryou-product-info>div>.cart-section {
+        opacity: 1 !important;
+        visibility: visible !important;
+        max-height: 70px !important;
+        /* Smoothly expands to host the button in the bottom empty space without clipping */
+        margin-top: 8px !important;
+        /* Creates neat spacing below the price */
+    }
+}
+
+/* 4. Mobile Layout (width < 768px) - Disable hover reveal, keep button visible below price */
+@media (max-width: 767px) {
+    .foryou-product-info>div {
+        display: flex !important;
+        flex-direction: column !important;
+        height: auto !important;
+        /* Wrap content naturally on mobile for maximum space optimization */
+        min-height: unset !important;
+    }
+
+    .foryou-product-info>div>.cart-section {
+        position: static !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        max-height: none !important;
+        margin-top: 8px !important;
+        /* Space below the price */
+        margin-bottom: 0px !important;
+        order: 10 !important;
+        /* Cleanly below the price section */
+    }
+
+    .foryou-product-info>div>.foryou-name {
+        margin-bottom: 5px !important;
+    }
+
+    .foryou-product-info>div>.price-section {
+        position: static !important;
+        margin-top: 0 !important;
+        /* Stacked right below product name */
+        margin-bottom: 0px !important;
+        order: 9 !important;
+        /* Price section comes before button */
+    }
+
+    /* Reduce title and price font sizes on small screens so full price remains on a single line */
+    .foryou-name {
+        font-size: 11.5px !important;
+        /* Minimized font size */
+        font-weight: 500 !important;
+        /* Less font weight */
+        line-height: 1.3 !important;
+        height: 2.6em !important;
+        margin-bottom: 10px !important;
+        /* Enforce exactly 10px gap between heading and price on mobile too */
+    }
+
+    /* Force premium compact dark button theme on mobile */
+    .cart-section button {
+        background-color: #000 !important;
+        color: #fff !important;
+        border: 1px solid #000 !important;
+        height: 32px !important;
+        /* Minimized button height */
+        padding: 0 10px !important;
+        font-size: 11px !important;
+        /* Minimized button font size */
+        font-weight: 500 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 4px !important;
+        /* border-radius: 6px !important; */
+    }
+
+    .cart-section button img {
+        height: 12px !important;
+        /* Minimized icon size */
+        width: auto !important;
+        filter: brightness(0) invert(1) !important;
+        /* Make bag icon white */
+    }
+
+    .price-section .current-price {
+        font-size: 13.5px !important;
+    }
+
+    .price-section .original-price {
+        font-size: 11.5px !important;
+    }
+
+    .price-section .discount-percent {
+        font-size: 10.5px !important;
+    }
+
+    .price-section>div {
+        white-space: nowrap !important;
+        flex-wrap: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+}
+
+
+.variant-overlay-footer span.text-dark {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 180px !important;
+    display: inline-block !important;
+    vertical-align: middle !important;
+}

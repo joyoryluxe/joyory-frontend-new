@@ -544,7 +544,7 @@ const putVariantInCache = (productId, variant) => {
     const cache = JSON.parse(localStorage.getItem(VARIANT_CACHE_KEY) || "{}");
     cache[productId] = variant;
     localStorage.setItem(VARIANT_CACHE_KEY, JSON.stringify(cache));
-  } catch {}
+  } catch { }
 };
 
 const readVariantFromCache = (productId) => {
@@ -568,7 +568,7 @@ const getGuestCart = () => {
 const saveGuestCart = (cart) => {
   try {
     localStorage.setItem(GUEST_CART_KEY, JSON.stringify(cart));
-  } catch {}
+  } catch { }
 };
 
 const CartProvider = ({ children }) => {
@@ -578,13 +578,17 @@ const CartProvider = ({ children }) => {
   // Initialize cart from localStorage for guest users
   useEffect(() => {
     const initializeCart = () => {
-      const guestCart = getGuestCart();
-      if (guestCart.length > 0) {
+      const cookies = document.cookie.split("; ");
+      const isLoggedIn =
+        cookies.some((c) => c.startsWith("token=")) ||
+        cookies.some((c) => c.startsWith("session="));
+
+      if (isLoggedIn) {
+        syncCartFromBackend();
+      } else {
+        const guestCart = getGuestCart();
         setCartItems(guestCart);
         updateCartCount(guestCart);
-      } else {
-        // Try to sync from backend for logged-in users
-        syncCartFromBackend();
       }
     };
 
@@ -597,6 +601,13 @@ const CartProvider = ({ children }) => {
   };
 
   const syncCartFromBackend = async () => {
+    const cookies = document.cookie.split("; ");
+    const isLoggedIn =
+      cookies.some((c) => c.startsWith("token=")) ||
+      cookies.some((c) => c.startsWith("session="));
+
+    if (!isLoggedIn) return;
+
     try {
       const res = await fetch(
         "https://beauty.joyory.com/api/user/cart/summary",
@@ -634,16 +645,16 @@ const CartProvider = ({ children }) => {
       // ✅ GUEST USER FLOW
       if (isGuest) {
         const guestCart = getGuestCart();
-        
+
         // Check if item already exists in guest cart
         const existingItemIndex = guestCart.findIndex(
-          (item) => 
-            item.productId === product._id && 
+          (item) =>
+            item.productId === product._id &&
             item.selectedVariant?.sku === selectedVariant.sku
         );
 
         let updatedCart;
-        
+
         if (existingItemIndex >= 0) {
           // Update quantity if item exists
           updatedCart = guestCart.map((item, index) =>
@@ -670,7 +681,7 @@ const CartProvider = ({ children }) => {
         saveGuestCart(updatedCart);
         setCartItems(updatedCart);
         updateCartCount(updatedCart);
-        
+
         console.log("Guest cart updated:", updatedCart);
         return true;
       }
@@ -698,38 +709,38 @@ const CartProvider = ({ children }) => {
 
         const updated = existing
           ? cartItems.map((i) =>
-              i.productId === product._id &&
+            i.productId === product._id &&
               i.selectedVariant?.sku === selectedVariant.sku
-                ? { ...i, quantity: i.quantity + 1 }
-                : i
-            )
+              ? { ...i, quantity: i.quantity + 1 }
+              : i
+          )
           : [
-              ...cartItems,
-              {
-                productId: product._id,
-                selectedVariant,
-                quantity: 1,
-                image: selectedVariant.image || product.images?.[0] || "/placeholder.png",
-                price: selectedVariant.discountedPrice || selectedVariant.originalPrice || product.price,
-                name: product.name,
-                brand: product.brand?.name || (typeof product.brand === "string" ? product.brand : "Unknown"),
-              },
-            ];
+            ...cartItems,
+            {
+              productId: product._id,
+              selectedVariant,
+              quantity: 1,
+              image: selectedVariant.image || product.images?.[0] || "/placeholder.png",
+              price: selectedVariant.discountedPrice || selectedVariant.originalPrice || product.price,
+              name: product.name,
+              brand: product.brand?.name || (typeof product.brand === "string" ? product.brand : "Unknown"),
+            },
+          ];
 
         setCartItems(updated);
         updateCartCount(updated);
         return true;
       }
-      
+
       return false;
     } catch (error) {
       console.error("Add to Cart error:", error?.response?.data || error);
-      
+
       if (error?.response?.status === 401) {
         // If user is not authenticated, you might want to switch to guest mode
         throw new Error("Authentication required");
       }
-      
+
       alert(error?.response?.data?.message || "Failed to add to cart");
       return false;
     }

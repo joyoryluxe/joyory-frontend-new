@@ -1551,7 +1551,7 @@ const Blog = () => {
       let payload;
 
       if (hasVariants) {
-        const selectedVariant = selectedVariants[prod._id] || prod.variant;
+        const selectedVariant = selectedVariants[prod._id] || prod.variant || (variants.find((v) => v.stock > 0) || variants[0]);
         if (!selectedVariant || selectedVariant.stock <= 0) {
           showToastMsg("Please select an in-stock variant.", "error");
           return;
@@ -1747,7 +1747,7 @@ const Blog = () => {
   return (
     <>
       <Header />
-      <ToastContainer position="top-right" autoClose={3000} />
+      {/* <ToastContainer position="top-right" autoClose={3000} /> */}
       <div className="blog-landing-container margin-topss page-title-main-name overflow-hidden">
         {/* Trending Hero Section - UNCHANGED */}
         {data.trendingBlog && (
@@ -1925,7 +1925,7 @@ const Blog = () => {
                       ? (variant?.stock <= 0)
                       : (item.stock <= 0);
                       
-                    const showSelectVariantButton = hasVariants && !isVariantSelected;
+                    const showSelectVariantButton = hasVariants && allVariants.length > 1 && !isVariantSelected;
                     const buttonDisabled = isAdding || outOfStock;
                     
                     let buttonText = "Add to Bag";
@@ -1998,12 +1998,12 @@ const Blog = () => {
                               </button>
 
                               {/* Promo Badge */}
-                              {variant.promoApplied && (
+                              {/* {variant.promoApplied && (
                                 <div className="promo-badge">
                                   <i className="bi bi-tag-fill me-1"></i>
                                   Promo
                                 </div>
-                              )}
+                              )} */}
                             </div>
 
                             {/* Product Info */}
@@ -2021,29 +2021,11 @@ const Blog = () => {
                                   onClick={() => handleProductClick(item)}
                                   style={{ cursor: 'pointer' }}
                                 >
-                                  {item.name || "Unnamed Product"}
+                                  {(() => {
+                                    const varName = variant ? getVariantDisplayText(variant) : "";
+                                    return varName && varName.toUpperCase() !== "DEFAULT" ? `${item.name} - ${varName}` : item.name;
+                                  })()}
                                 </h6>
-
-                                {/* Minimal Variant Display */}
-                                {hasVariants && (
-                                  <div className="variant-section m-0 p-0 ms-0 mt-2 mb-2">
-                                    {isVariantSelected ? (
-                                      <div 
-                                        className="selected-variant-display text-muted small" 
-                                        style={{ cursor: 'pointer', display: 'inline-block' }}
-                                        onClick={(e) => openVariantOverlay(item._id, "all", e)}
-                                        title="Click to change variant"
-                                      >
-                                        Variant: <span className="fw-bold text-dark">{getVariantDisplayText(variant)}</span>
-                                        <FaChevronDown className="ms-1" style={{ fontSize: '10px' }} />
-                                      </div>
-                                    ) : (
-                                      <div className="small text-muted" style={{ height: '20px' }}>
-                                        {allVariants.length} Variants Available
-                                      </div>
-                                    )}
-                                  </div>
-                                )}
 
                                 {/* Price Section */}
                                 <div className="price-section mb-3 mt-auto">
@@ -2103,69 +2085,33 @@ const Blog = () => {
                             </div>
                           </div>
 
-                          {/* Variant Overlay */}
+                          {/* Variant Overlay - STREAMLINED */}
                           {showVariantOverlay === item._id && (
                             <div className="variant-overlay" onClick={closeVariantOverlay}>
                               <div
-                                className="variant-overlay-content m-0 p-0 w-100"
+                                className="variant-overlay-content"
                                 onClick={(e) => e.stopPropagation()}
-                                style={{
-                                  width: '90%',
-                                  maxWidth: '500px',
-                                  maxHeight: '100%',
-                                  background: '#fff',
-                                  borderRadius: '0px',
-                                  overflow: 'hidden',
-                                  display: 'flex',
-                                  flexDirection: 'column'
-                                }}
                               >
                                 <div className="overlay-header d-flex justify-content-between align-items-center p-3 border-bottom">
-                                  <h5 className="m-0 page-title-main-name">Select Variant ({totalVariants})</h5>
+                                  <h5 className="m-0 page-title-main-name">Select Variant</h5>
                                   <button
                                     onClick={closeVariantOverlay}
                                     style={{
                                       background: 'none',
                                       border: 'none',
-                                      fontSize: '24px',
+                                      fontSize: '40px',
                                     }}
                                   >
                                     ×
                                   </button>
                                 </div>
 
-                                {/* Tabs */}
-                                <div className="variant-tabs d-flex">
-                                  <button
-                                    className={`variant-tab flex-fill py-3 page-title-main-name ${selectedVariantType === "all" ? "active" : ""}`}
-                                    onClick={() => setSelectedVariantType("all")}
-                                  >
-                                    All ({totalVariants})
-                                  </button>
+                                <div className="variant-overlay-body">
                                   {groupedVariants.color.length > 0 && (
-                                    <button
-                                      className={`variant-tab flex-fill py-3 page-title-main-name ${selectedVariantType === "color" ? "active" : ""}`}
-                                      onClick={() => setSelectedVariantType("color")}
-                                    >
-                                      Colors ({groupedVariants.color.length})
-                                    </button>
-                                  )}
-                                  {groupedVariants.text.length > 0 && (
-                                    <button
-                                      className={`variant-tab flex-fill py-3 page-title-main-name ${selectedVariantType === "text" ? "active" : ""}`}
-                                      onClick={() => setSelectedVariantType("text")}
-                                    >
-                                      Sizes ({groupedVariants.text.length})
-                                    </button>
-                                  )}
-                                </div>
-
-                                {/* Content */}
-                                <div className="p-3 overflow-auto flex-grow-1">
-                                  {(selectedVariantType === "all" || selectedVariantType === "color") && groupedVariants.color.length > 0 && (
-                                    <div className="row row-col-4">
+                                    <div className="row row-col-4 mb-4">
                                       {groupedVariants.color.map((v) => {
-                                        const isSelected = variant.sku === v.sku || (variant._id && variant._id === v._id);
+                                        const activeVar = selectedVariants[item._id] || (allVariants.find((varItem) => varItem.stock > 0) || allVariants[0]);
+                                        const isSelected = activeVar?.sku === v.sku || (activeVar?._id && activeVar?._id === v._id);
                                         const isOutOfStock = (v.stock ?? 0) <= 0;
 
                                         return (
@@ -2177,8 +2123,7 @@ const Blog = () => {
                                               }}
                                               onClick={() =>
                                                 !isOutOfStock &&
-                                                (handleVariantSelect(item._id, v),
-                                                  closeVariantOverlay())
+                                                handleVariantSelect(item._id, v)
                                               }
                                             >
                                               <div
@@ -2223,10 +2168,11 @@ const Blog = () => {
                                     </div>
                                   )}
 
-                                  {(selectedVariantType === "all" || selectedVariantType === "text") && groupedVariants.text.length > 0 && (
+                                  {groupedVariants.text.length > 0 && (
                                     <div className="row row-cols-3 g-3">
                                       {groupedVariants.text.map((v) => {
-                                        const isSelected = variant.sku === v.sku || (variant._id && variant._id === v._id);
+                                        const activeVar = selectedVariants[item._id] || (allVariants.find((varItem) => varItem.stock > 0) || allVariants[0]);
+                                        const isSelected = activeVar?.sku === v.sku || (activeVar?._id && activeVar?._id === v._id);
                                         const isOutOfStock = (v.stock ?? 0) <= 0;
 
                                         return (
@@ -2238,8 +2184,7 @@ const Blog = () => {
                                               }}
                                               onClick={() =>
                                                 !isOutOfStock &&
-                                                (handleVariantSelect(item._id, v),
-                                                  closeVariantOverlay())
+                                                handleVariantSelect(item._id, v)
                                               }
                                             >
                                               <div
@@ -2268,6 +2213,40 @@ const Blog = () => {
                                       })}
                                     </div>
                                   )}
+                                </div>
+
+                                <div className="variant-overlay-footer">
+                                  <div className="small text-muted fw-semibold">
+                                    Selected: <span className="text-dark fw-bold">{getVariantDisplayText(variant)}</span>
+                                  </div>
+                                  <button
+                                    className={`w-100 btn-add-cart d-flex align-items-center justify-content-center gap-2 ${isAdding ? "btn-dark" : "btn-outline-dark"}`}
+                                    onClick={async (e) => {
+                                      e.stopPropagation();
+                                      await handleAddToCart(item);
+                                      closeVariantOverlay();
+                                    }}
+                                    disabled={isAdding || (variant && variant.stock <= 0)}
+                                    style={{
+                                      transition: "background-color 0.3s ease, color 0.3s ease",
+                                    }}
+                                  >
+                                    {isAdding ? (
+                                      <>
+                                        <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                                        Adding...
+                                      </>
+                                    ) : variant?.stock <= 0 ? (
+                                      "Out of Stock"
+                                    ) : (
+                                      <>
+                                        Add to Bag
+                                        {!isAdding && variant?.stock > 0 && (
+                                          <img src={bagIcon} className="img-fluid ms-1" style={{ marginTop: '-3px', height: "20px" }} alt="Bag-icon" />
+                                        )}
+                                      </>
+                                    )}
+                                  </button>
                                 </div>
                               </div>
                             </div>

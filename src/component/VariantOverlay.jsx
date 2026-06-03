@@ -29,7 +29,7 @@ const VariantOverlay = ({
 
     variants.forEach(variant => {
       if (!variant) return;
-      
+
       const variantType = getVariantType(variant);
       if (variantType === 'color' || (variant.hex && isValidHexColor(variant.hex))) {
         groups.color.push(variant);
@@ -54,7 +54,6 @@ const VariantOverlay = ({
         variant.images?.[0] || product.images?.[0],
         variant.stock
       );
-      onClose();
     }
   };
 
@@ -65,124 +64,73 @@ const VariantOverlay = ({
     <div className="variant-overlay" onClick={onClose}>
       <div className="variant-overlay-content" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
-        <div className="overlay-header">
-          <h5 className="overlay-title">
-            Select A Shade ({variantGroups.all.length})
-          </h5>
+        {/* <div className="overlay-header">
+          <h5 className="overlay-title">Select Variant</h5>
           <button className="close-button" onClick={onClose}>
             <FaTimes />
           </button>
-        </div>
+        </div> */}
 
-        {/* Tabs */}
-        <div className="variant-tabs">
-          <button
-            className={`variant-tab ${activeTab === 'all' ? 'active' : ''}`}
-            onClick={() => setActiveTab('all')}
-          >
-            All ({variantGroups.all.length})
-          </button>
-          {variantGroups.color.length > 0 && (
-            <button
-              className={`variant-tab ${activeTab === 'color' ? 'active' : ''}`}
-              onClick={() => setActiveTab('color')}
-            >
-              Colors ({variantGroups.color.length})
-            </button>
-          )}
-          {variantGroups.text.length > 0 && (
-            <button
-              className={`variant-tab ${activeTab === 'text' ? 'active' : ''}`}
-              onClick={() => setActiveTab('text')}
-            >
-              Sizes ({variantGroups.text.length})
-            </button>
-          )}
+        <div className="overlay-header d-flex justify-content-between align-items-center p-3 border-bottom">
+          <h5 className="m-0 page-title-main-name">Select Variant</h5>
+          <button onClick={() => setShowVariantOverlay(false)} style={{ background: 'none', border: 'none', fontSize: '40px' }}>×</button>
         </div>
 
         {/* Variants Grid */}
-        <div className="variants-grid">
-          {activeTab === 'all' && (
-            <>
-              {variantGroups.color.length > 0 && (
-                <div className="variant-section">
-                  <h6 className="section-title">Colors</h6>
-                  <div className="variant-grid color-grid">
-                    {variantGroups.color.map((variant, idx) => (
-                      <div
-                        key={idx}
-                        className={`variant-item color-variant ${isSelected(variant) ? 'selected' : ''} ${isOutOfStock(variant) ? 'out-of-stock' : ''}`}
-                        onClick={(e) => handleVariantClick(variant, e)}
-                      >
-                        <div
-                          className="color-circle"
-                          style={{ backgroundColor: variant.hex || '#ccc' }}
-                        >
-                          {isSelected(variant) && <span className="check-mark">✓</span>}
-                        </div>
-                        <span className="variant-name">{variant.shadeName}</span>
-                        {isOutOfStock(variant) && <span className="stock-badge">Out of Stock</span>}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              
-              {variantGroups.text.length > 0 && (
-                <div className="variant-section">
-                  <h6 className="section-title">Sizes</h6>
-                  <div className="variant-grid text-grid">
-                    {variantGroups.text.map((variant, idx) => (
-                      <div
-                        key={idx}
-                        className={`variant-item text-variant ${isSelected(variant) ? 'selected' : ''} ${isOutOfStock(variant) ? 'out-of-stock' : ''}`}
-                        onClick={(e) => handleVariantClick(variant, e)}
-                      >
-                        <span className="variant-text">
-                          {getVariantDisplayText(variant, getVariantType(variant))}
-                        </span>
-                        {isOutOfStock(variant) && <span className="stock-badge">Out of Stock</span>}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-
-          {activeTab === 'color' && (
-            <div className="variant-grid color-grid">
+        <div className="variants-grid p-3 overflow-auto">
+          {/* Colors Group */}
+          {variantGroups.color.length > 0 && (
+            <div className="variant-grid color-grid d-flex flex-wrap gap-3 justify-content-start align-items-center mb-3">
               {variantGroups.color.map((variant, idx) => (
                 <div
                   key={idx}
                   className={`variant-item color-variant ${isSelected(variant) ? 'selected' : ''} ${isOutOfStock(variant) ? 'out-of-stock' : ''}`}
                   onClick={(e) => handleVariantClick(variant, e)}
+                  title={variant.shadeName}
+                  style={{ position: 'relative', cursor: isOutOfStock(variant) ? 'not-allowed' : 'pointer' }}
                 >
                   <div
                     className="color-circle"
-                    style={{ backgroundColor: variant.hex || '#ccc' }}
+                    style={{
+                      width: 32, height: 32, borderRadius: "20%",
+                      backgroundColor: variant.hex || '#ccc',
+                      border: isSelected(variant) ? "3px solid #000" : "1px solid #ddd",
+                      opacity: isOutOfStock(variant) ? 0.4 : 1, display: "flex", alignItems: "center", justifyContent: "center"
+                    }}
                   >
-                    {isSelected(variant) && <span className="check-mark">✓</span>}
+                    {isSelected(variant) && <span className="check-mark" style={{ color: "#fff", fontWeight: "bold", fontSize: 12 }}>✓</span>}
                   </div>
-                  <span className="variant-name">{variant.shadeName}</span>
-                  {isOutOfStock(variant) && <span className="stock-badge">Out of Stock</span>}
+                  {isOutOfStock(variant) && <span style={{
+                    position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    color: "red", fontWeight: "bold", fontSize: 16, pointerEvents: "none"
+                  }}>✕</span>}
                 </div>
               ))}
             </div>
           )}
 
-          {activeTab === 'text' && (
-            <div className="variant-grid text-grid">
+          {/* Sizes Group */}
+          {variantGroups.text.length > 0 && (
+            <div className="variant-grid text-grid d-flex flex-wrap gap-2 justify-content-start align-items-center">
               {variantGroups.text.map((variant, idx) => (
                 <div
                   key={idx}
                   className={`variant-item text-variant ${isSelected(variant) ? 'selected' : ''} ${isOutOfStock(variant) ? 'out-of-stock' : ''}`}
-                  onClick={(e) => handleVariantClick(variant, e)}
+                  onClick={(e) => !isOutOfStock(variant) && handleVariantClick(variant, e)}
+                  style={{ cursor: isOutOfStock(variant) ? 'not-allowed' : 'pointer' }}
                 >
-                  <span className="variant-text">
+                  <span
+                    className="variant-text"
+                    style={{
+                      padding: "8px 16px", borderRadius: 8,
+                      border: isSelected(variant) ? "2px solid #000" : "1px solid #ddd",
+                      background: isSelected(variant) ? "#f8f9fa" : "#fff",
+                      opacity: isOutOfStock(variant) ? 0.4 : 1, textDecoration: isOutOfStock(variant) ? "line-through" : "none"
+                    }}
+                  >
                     {getVariantDisplayText(variant, getVariantType(variant))}
                   </span>
-                  {isOutOfStock(variant) && <span className="stock-badge">Out of Stock</span>}
                 </div>
               ))}
             </div>
@@ -190,22 +138,28 @@ const VariantOverlay = ({
         </div>
 
         {/* Footer with View Details button */}
-        <div className="overlay-footer">
-          <button
-            className="btn btn-outline-secondary"
-            onClick={() => {
-              // Navigate to product page
-              window.location.href = `/product/${product.slugs?.[0] || product._id}`;
-            }}
-          >
-            View Details
-          </button>
-          <button
-            className="btn btn-primary"
-            onClick={onClose}
-          >
-            Add to Bag
-          </button>
+        <div className="overlay-footer p-3 border-top bg-light d-flex flex-column gap-2 align-items-center">
+          {currentVariant && (
+            <div className="small text-muted fw-semibold mb-1">
+              Selected: <span className="text-dark fw-bold">{getVariantDisplayText(currentVariant, getVariantType(currentVariant))}</span>
+            </div>
+          )}
+          <div className="d-flex gap-2 w-100">
+            <button
+              className="btn btn-outline-secondary flex-grow-1"
+              onClick={() => {
+                window.location.href = `/product/${product.slugs?.[0] || product._id}`;
+              }}
+            >
+              View Details
+            </button>
+            <button
+              className="btn btn-primary flex-grow-1"
+              onClick={onClose}
+            >
+              Add to Bag
+            </button>
+          </div>
         </div>
       </div>
     </div>

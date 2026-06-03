@@ -6143,6 +6143,7 @@
 
 
 import { useState, useEffect, useContext, useCallback, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { X, ChevronLeft, ChevronDown, ChevronUp, Edit2 } from 'lucide-react';
 import { Container, Row, Col } from 'react-bootstrap';
@@ -6164,8 +6165,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import 'react-toastify/dist/ReactToastify.css';
 import bagIcon from '../assets/bag.svg';
-import { FaChevronDown } from 'react-icons/fa';
-import { FaHeart, FaRegHeart } from 'react-icons/fa';
+import { FaChevronDown, FaHeart, FaRegHeart, FaTimes, FaCheck } from 'react-icons/fa';
 
 /* ─────────────────────────────────────────────
    SHARED CONSTANTS & HELPERS
@@ -6203,19 +6203,34 @@ function ProductCard({ product, navigate, location }) {
     const { user } = useContext(UserContext);
 
     const allVariants = useMemo(
-        () => product?.variants || product?.shadeOptions || [],
+        () => product?.variants || product?.product?.variants || product?.shadeOptions || product?.product?.shadeOptions || [],
         [product]
     );
 
+    const hasVariants = allVariants.length > 0;
+
     const [selectedVariant, setSelectedVariant] = useState(
-        () => product?.selectedVariant || allVariants[0] || {}
+        () => product?.selectedVariant || product?.product?.selectedVariant || allVariants.find((v) => v.stock > 0) || allVariants[0] || {}
     );
+    const [tempSelectedVariant, setTempSelectedVariant] = useState(null);
     const [variantSelected, setVariantSelected] = useState(false);
     const [addingToCart, setAddingToCart] = useState(false);
     const [wishlistLoading, setWishlistLoading] = useState(false);
     const [wishlistData, setWishlistData] = useState([]);
     const [showVariantOverlay, setShowVariantOverlay] = useState(false);
-    const [selectedVariantType, setSelectedVariantType] = useState('all');
+
+    // ===================== OUT OF STOCK POPUP STATE =====================
+    const [showOutOfStockPopup, setShowOutOfStockPopup] = useState(false);
+    const [outOfStockProductName, setOutOfStockProductName] = useState("");
+
+    const handleOutOfStockClick = (productName) => {
+        setOutOfStockProductName(productName || "This product");
+        setShowOutOfStockPopup(true);
+        setTimeout(() => setShowOutOfStockPopup(false), 3000);
+    };
+
+    const closeOutOfStockPopup = () => setShowOutOfStockPopup(false);
+    // ===================== END OUT OF STOCK POPUP STATE =====================
 
     /* wishlist helpers */
     const isInWishlist = useCallback(
@@ -6239,55 +6254,82 @@ function ProductCard({ product, navigate, location }) {
     useEffect(() => { fetchWishlistData(); }, [fetchWishlistData]);
 
     /* computed */
+    const displayVariant = tempSelectedVariant || selectedVariant || {};
+
     const displayPrice = parseFloat(
-        selectedVariant?.displayPrice || selectedVariant?.discountedPrice || selectedVariant?.price || product?.price || 0
+        displayVariant?.displayPrice || displayVariant?.discountedPrice || displayVariant?.price || product?.price || product?.product?.price || 0
     );
     const originalPrice = parseFloat(
-        selectedVariant?.originalPrice || selectedVariant?.mrp || product?.mrp || displayPrice
+        displayVariant?.originalPrice || displayVariant?.mrp || product?.mrp || product?.product?.mrp || displayPrice
     );
-    let discountPercent = parseFloat(selectedVariant?.discountPercent || product?.discountPercent || 0);
+    let discountPercent = parseFloat(displayVariant?.discountPercent || product?.discountPercent || product?.product?.discountPercent || 0);
     if (!discountPercent && originalPrice > displayPrice)
         discountPercent = Math.round(((originalPrice - displayPrice) / originalPrice) * 100);
 
-    const stock = parseInt(selectedVariant?.stock || product?.stock || 0);
+    const activeVar = displayVariant || (allVariants.find((v) => v.stock > 0) || allVariants[0]);
+    const stock = parseInt((hasVariants ? activeVar?.stock : (product?.stock || product?.product?.stock)) || 0);
     const outOfStock = stock <= 0;
-    const hasVariants = allVariants.length > 0;
-    const showSelectVariantBtn = hasVariants && !variantSelected;
+    
+    // Check if ALL variants are out of stock
+    const isCompletelyOutOfStock = hasVariants
+        ? allVariants.every(v => parseInt(v.stock || 0) <= 0)
+        : parseInt(product?.stock || product?.product?.stock || 0) <= 0;
 
-    const imageUrl =
-        selectedVariant?.images?.[0] || selectedVariant?.image ||
-        product?.selectedVariant?.images?.[0] || product?.images?.[0] ||
-        'https://placehold.co/400x300/ffffff/cccccc?text=Product';
+    const showSelectVariantBtn = hasVariants && allVariants.length > 1;
 
-    const sku = getSku(selectedVariant);
-    const productInWishlist = isInWishlist(product?._id, sku);
+    const imageUrl = useMemo(() => {
+        let rawImage = displayVariant?.images?.[0] || displayVariant?.image ||
+            product?.selectedVariant?.images?.[0] || product?.product?.selectedVariant?.images?.[0] ||
+            product?.images?.[0] || product?.product?.images?.[0] ||
+            product?.image || product?.product?.image ||
+            '';
+        if (rawImage) {
+            return rawImage.startsWith("http")
+                ? rawImage
+                : `https://res.cloudinary.com/dekngswix/image/upload/${rawImage}`;
+        }
+        return 'https://placehold.co/400x300/ffffff/cccccc?text=Product';
+    }, [displayVariant, product]);
+
+    const sku = getSku(displayVariant);
+    const productId = product?.product?._id || product?._id;
+    const productInWishlist = isInWishlist(productId, sku);
     const groupedVariants = groupVariantsByType(allVariants);
 
     const getBrandName = () => {
-        if (!product?.brand) return 'Unknown Brand';
-        if (typeof product.brand === 'object' && product.brand.name) return product.brand.name;
-        return typeof product.brand === 'string' ? product.brand : 'Unknown Brand';
+        const brand = product?.brand || product?.product?.brand;
+        if (!brand) return 'Unknown Brand';
+        if (typeof brand === 'object' && brand.name) return brand.name;
+        return typeof brand === 'string' ? brand : 'Unknown Brand';
     };
 
     const getProductSlug = () =>
-        product?.slugs?.[0] || product?.slug || product?._id;
+        product?.slugs?.[0] || product?.product?.slugs?.[0] || 
+        product?.slug || product?.product?.slug || 
+        productId;
 
     const showToast = (msg, type = 'error') =>
         type === 'success' ? toast.success(msg, { autoClose: 3000 }) : toast.error(msg, { autoClose: 3000 });
 
     /* actions */
-    const handleVariantSelect = (v) => { setSelectedVariant(v); setVariantSelected(true); setShowVariantOverlay(false); };
+    const handleVariantSelect = (v) => { setSelectedVariant(v); setVariantSelected(true); };
 
-    const handleAddToCart = async () => {
+    const closeVariantOverlay = () => {
+        setShowVariantOverlay(false);
+        setTempSelectedVariant(null);
+    };
+
+    const handleAddToCart = async (forceVariant = null) => {
         setAddingToCart(true);
         try {
             let payload;
             if (hasVariants) {
-                if (!selectedVariant || outOfStock) { showToast('Please select an in-stock variant.'); return; }
-                payload = { productId: product._id, variants: [{ variantSku: getSku(selectedVariant), quantity: 1 }] };
+                const sel = forceVariant || selectedVariant || (allVariants.find((v) => v.stock > 0) || allVariants[0]);
+                if (!sel || (sel.stock ?? 0) <= 0) { showToast('Please select an in-stock variant.'); return; }
+                payload = { productId: productId, variants: [{ variantSku: getSku(sel), quantity: 1 }] };
             } else {
                 if (outOfStock) { showToast('Product is out of stock.'); return; }
-                payload = { productId: product._id, quantity: 1 };
+                payload = { productId: productId, quantity: 1 };
             }
             const res = await axios.post(`${CART_API_BASE}/add`, payload, { withCredentials: true });
             if (!res.data.success) throw new Error(res.data.message || 'Failed');
@@ -6304,23 +6346,24 @@ function ProductCard({ product, navigate, location }) {
         if (!selectedVariant) { showToast('Please select a variant first'); return; }
         setWishlistLoading(true);
         try {
-            const inWl = isInWishlist(product._id, sku);
+            const inWl = isInWishlist(productId, sku);
             if (user && !user.guest) {
                 if (inWl) {
-                    await axios.delete(`https://beauty.joyory.com/api/user/wishlist/${product._id}`, { withCredentials: true, data: { sku } });
+                    await axios.delete(`https://beauty.joyory.com/api/user/wishlist/${productId}`, { withCredentials: true, data: { sku } });
                     showToast('Removed from wishlist!', 'success');
                 } else {
-                    await axios.post(`https://beauty.joyory.com/api/user/wishlist/${product._id}`, { sku }, { withCredentials: true });
+                    await axios.post(`https://beauty.joyory.com/api/user/wishlist/${productId}`, { sku }, { withCredentials: true });
                     showToast('Added to wishlist!', 'success');
                 }
                 await fetchWishlistData();
             } else {
                 const local = JSON.parse(localStorage.getItem('guestWishlist')) || [];
                 if (inWl) {
-                    localStorage.setItem('guestWishlist', JSON.stringify(local.filter((i) => !(i._id === product._id && i.sku === sku))));
+                    localStorage.setItem('guestWishlist', JSON.stringify(local.filter((i) => !(i._id === productId && i.sku === sku))));
                     showToast('Removed from wishlist!', 'success');
                 } else {
-                    local.push({ _id: product._id, name: product.name, sku, image: imageUrl, displayPrice, originalPrice });
+                    const pName = product?.product?.name || product?.name || 'Unnamed Product';
+                    local.push({ _id: productId, name: pName, sku, image: imageUrl, displayPrice, originalPrice });
                     localStorage.setItem('guestWishlist', JSON.stringify(local));
                     showToast('Added to wishlist!', 'success');
                 }
@@ -6332,85 +6375,179 @@ function ProductCard({ product, navigate, location }) {
         } finally { setWishlistLoading(false); }
     };
 
-    const buttonText = addingToCart ? 'Adding...' : showSelectVariantBtn ? 'Select Variant' : outOfStock ? 'Out of Stock' : 'Add to Bag';
-    const buttonDisabled = addingToCart || outOfStock;
+    // Determine if we should show out of stock state (entirely OOS)
+    const showOutOfStock = isCompletelyOutOfStock && !hasVariants;
+
+    const buttonDisabled = addingToCart || showOutOfStock;
+
+    let buttonText = "Add to Bag";
+    if (addingToCart) {
+        buttonText = "Adding...";
+    } else if (showOutOfStock) {
+        buttonText = "Out of Stock";
+    } else if (showSelectVariantBtn) {
+        buttonText = "Select Variant";
+    } else if (outOfStock) {
+        buttonText = "Out of Stock";
+    }
+
+    const pName = product?.product?.name || product?.name || 'Unnamed Product';
 
     return (
         <div className="foryou-card-wrapper">
             <div className="foryou-card">
-                {/* Image */}
+                {/* Product Image with Overlays */}
                 <div
                     className="foryou-img-wrapper"
-                    onClick={() => navigate(`/product/${getProductSlug()}`)}
-                    style={{ cursor: 'pointer' }}
+                    onClick={() => {
+                        if (showOutOfStock) {
+                            handleOutOfStockClick(pName);
+                        } else {
+                            navigate(`/product/${getProductSlug()}`);
+                        }
+                    }}
+                    style={{ cursor: 'pointer', position: 'relative' }}
                 >
                     <img
                         src={imageUrl}
-                        alt={product?.name || 'Product'}
+                        alt={pName}
                         className="foryou-img img-fluid"
                         loading="lazy"
                         onError={(e) => { e.currentTarget.src = 'https://placehold.co/400x300/ffffff/cccccc?text=Product'; }}
+                        style={{
+                            opacity: showOutOfStock ? 0.6 : 1,
+                            filter: showOutOfStock ? 'grayscale(0.3)' : 'none',
+                        }}
                     />
 
-                    {/* Wishlist */}
-                    <button className='bg-transparent'
-                        onClick={handleToggleWishlist}
-                        disabled={wishlistLoading}
-                        style={{
-                            position: 'absolute', top: '10px', right: '10px',
-                            cursor: wishlistLoading ? 'not-allowed' : 'pointer',
-                            color: productInWishlist ? '#dc3545' : '#ccc',
-                            fontSize: '22px', zIndex: 2,
-                            backgroundColor: 'none !important', borderRadius: '50%',
-                            width: '45px', height: '45px', display: 'flex',
-                            alignItems: 'center', justifyContent: 'center',
-                            transition: 'all 0.3s ease', border: 'none', outline: 'none',
-                        }}
-                    >
-                        {wishlistLoading
-                            ? <div className="spinner-border spinner-border-sm" role="status" />
-                            : productInWishlist ? <FaHeart /> : <FaRegHeart />}
-                    </button>
+                    {/* OUT OF STOCK OVERLAY */}
+                    {showOutOfStock && (
+                        <div
+                            style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                width: '100%',
+                                height: '100%',
+                                backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                zIndex: 3,
+                            }}
+                        >
+                            <div
+                                style={{
+                                    backgroundColor: '#dc3545',
+                                    color: '#fff',
+                                    padding: '8px 16px',
+                                    borderRadius: '20px',
+                                    fontSize: '14px',
+                                    fontWeight: 600,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '5px',
+                                }}
+                            >
+                                <FaTimes />
+                                Out of Stock
+                            </div>
+                        </div>
+                    )}
 
-                    {selectedVariant?.promoApplied && (
-                        <div className="promo-badge"><i className="bi bi-tag-fill me-1" />Promo</div>
+                    {/* Wishlist Icon - Hidden when out of stock */}
+                    {!showOutOfStock && (
+                        <button className='bg-transparent'
+                            onClick={handleToggleWishlist}
+                            disabled={wishlistLoading}
+                            style={{
+                                position: 'absolute',
+                                top: '10px',
+                                right: '10px',
+                                cursor: wishlistLoading ? 'not-allowed' : 'pointer',
+                                color: productInWishlist ? '#dc3545' : '#ccc',
+                                fontSize: '22px',
+                                zIndex: 2,
+                                backgroundColor: 'transparent !important',
+                                borderRadius: '50%',
+                                width: '34px',
+                                height: '34px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                transition: 'all 0.3s ease',
+                                border: 'none',
+                                outline: 'none',
+                            }}
+                            title={productInWishlist ? "Remove from wishlist" : "Add to wishlist"}
+                        >
+                            {wishlistLoading ? (
+                                <div className="spinner-border spinner-border-sm" role="status" />
+                            ) : productInWishlist ? (
+                                <FaHeart />
+                            ) : (
+                                <FaRegHeart />
+                            )}
+                        </button>
                     )}
                 </div>
 
-                {/* Info */}
+                {/* Product Info */}
                 <div className="foryou-product-info w-100 ps-lg-0 p-0 pt-md-0">
-                    <div className="justify-content-between d-flex flex-column" style={{ height: '220px' }}>
+                    <div className="justify-content-between d-flex flex-column" style={{ height: '200px' }}>
+                        {/* Brand Name */}
                         <div className="brand-name small text-muted mb-1 mt-2 text-start">{getBrandName()}</div>
 
+                        {/* Product Name */}
                         <h6
                             className="foryou-name font-family-Poppins m-0 p-0"
-                            onClick={() => navigate(`/product/${getProductSlug()}`)}
-                            style={{ cursor: 'pointer' }}
+                            onClick={() => {
+                                if (showOutOfStock) {
+                                    handleOutOfStockClick(pName);
+                                } else {
+                                    navigate(`/product/${getProductSlug()}`);
+                                }
+                            }}
+                            style={{
+                                cursor: 'pointer',
+                                opacity: showOutOfStock ? 0.6 : 1,
+                            }}
                         >
-                            {product?.name || 'Unnamed Product'}
+                            {(() => {
+                                const varText = displayVariant ? getVariantDisplayText(displayVariant) : "";
+                                return varText && varText.toUpperCase() !== "DEFAULT" ? `${pName} - ${varText}` : pName;
+                            })()}
                         </h6>
 
-                        {hasVariants && (
-                            <div className="variant-section m-0 p-0 ms-0 mt-2 mb-2">
-                                {variantSelected ? (
-                                    <div
-                                        className="selected-variant-display text-muted small"
-                                        style={{ cursor: 'pointer', display: 'inline-block' }}
-                                        onClick={(e) => { e.stopPropagation(); setShowVariantOverlay(true); }}
-                                    >
-                                        Variant: <span className="fw-bold text-dark">{getVariantDisplayText(selectedVariant)}</span>
-                                        <FaChevronDown className="ms-1" style={{ fontSize: '10px' }} />
-                                    </div>
-                                ) : (
-                                    <div className="small text-muted" style={{ height: '20px' }}>{allVariants.length} Variants Available</div>
-                                )}
+                        {/* Show out of stock message in variant area */}
+                        {showOutOfStock && (
+                            <div className="mt-2 mb-2">
+                                <span
+                                    style={{
+                                        color: '#dc3545',
+                                        fontSize: '13px',
+                                        fontWeight: 500,
+                                    }}
+                                >
+                                    <FaTimes style={{ fontSize: '11px', marginRight: '4px' }} />
+                                    Currently unavailable
+                                </span>
                             </div>
                         )}
 
+                        {/* Price Section */}
                         <div className="price-section mb-3 mt-auto">
                             <div className="d-flex align-items-baseline flex-wrap">
-                                <span className="current-price fw-400 fs-5">{formatPrice(displayPrice)}</span>
-                                {originalPrice > displayPrice && (
+                                <span 
+                                    className="current-price fw-400 fs-5"
+                                    style={{
+                                        textDecoration: showOutOfStock ? 'line-through' : 'none',
+                                        opacity: showOutOfStock ? 0.6 : 1,
+                                    }}
+                                >
+                                    {formatPrice(displayPrice)}
+                                </span>
+                                {originalPrice > displayPrice && !showOutOfStock && (
                                     <>
                                         <span className="original-price text-muted text-decoration-line-through ms-2 fs-6">{formatPrice(originalPrice)}</span>
                                         <span className="discount-percent text-danger fw-bold ms-2">({discountPercent}% OFF)</span>
@@ -6419,27 +6556,200 @@ function ProductCard({ product, navigate, location }) {
                             </div>
                         </div>
 
+                        {/* Add to Cart / Select Variant / Out of Stock Button */}
                         <div className="cart-section">
-                            <button
-                                className={`btn w-100 d-flex align-items-center justify-content-center gap-2 addtocartbuttton page-title-main-name ${addingToCart ? "btn-dark" : "btn-outline-dark"
+                            <div className="d-flex align-items-center justify-content-between">
+                                <button
+                                    className={`btn w-100 page-title-main-name addtocartbuttton d-flex align-items-center justify-content-center gap-2 ${
+                                        showOutOfStock
+                                            ? "btn-secondary"
+                                            : addingToCart
+                                                ? ""
+                                                : "btn-outline-dark"
                                     }`}
-                                onClick={(e) => {
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (showOutOfStock) {
+                                            handleOutOfStockClick(pName);
+                                        } else if (showSelectVariantBtn) {
+                                            setShowVariantOverlay(true);
+                                        } else {
+                                            handleAddToCart();
+                                        }
+                                    }}
+                                    disabled={buttonDisabled && !showOutOfStock}
+                                    style={{
+                                        transition: "background-color 0.3s ease, color 0.3s ease",
+                                        opacity: showOutOfStock ? 0.8 : 1,
+                                        cursor: showOutOfStock ? 'pointer' : (buttonDisabled ? 'not-allowed' : 'pointer'),
+                                    }}
+                                >
+                                    {addingToCart ? (
+                                        <>
+                                            <span className="spinner-border spinner-border-sm me-2" />
+                                            Adding...
+                                        </>
+                                    ) : showOutOfStock ? (
+                                        <>
+                                            <FaTimes style={{ fontSize: '14px' }} />
+                                            Out of Stock
+                                        </>
+                                    ) : (
+                                        <>
+                                            {buttonText}
+                                            {!buttonDisabled && !addingToCart && !showSelectVariantBtn && (
+                                                <img src={bagIcon} className="img-fluid ms-1" style={{ marginTop: '-3px', height: "20px" }} alt="Bag-icon" />
+                                            )}
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Desktop Variant Overlay */}
+            {showVariantOverlay && !showOutOfStock && (
+                <div className="variant-overlay" onClick={(e) => { e.stopPropagation(); closeVariantOverlay(); }}>
+                    <div
+                        className="variant-overlay-content"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="overlay-header d-flex justify-content-between align-items-center p-3 border-bottom">
+                            <h5 className="m-0 page-title-main-name">Select Variant</h5>
+                            <button onClick={(e) => { e.stopPropagation(); closeVariantOverlay(); }} style={{ background: 'none', border: 'none', fontSize: '40px' }}>×</button>
+                        </div>
+
+                        <div className="variant-overlay-body">
+                            {groupedVariants.color.length > 0 && (
+                                <div className="d-flex flex-wrap gap-3 justify-content-start align-items-center mb-3">
+                                    {groupedVariants.color.map((v) => {
+                                        const isSel = displayVariant.sku === v.sku;
+                                        const isOOS = (v.stock ?? 0) <= 0;
+                                        return (
+                                            <div
+                                                key={getSku(v) || v._id}
+                                                style={{ cursor: isOOS ? "not-allowed" : "pointer", position: "relative" }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    if (!isOOS) {
+                                                        handleVariantSelect(v);
+                                                        setTempSelectedVariant(v);
+                                                    }
+                                                }}
+                                                title={v.shadeName}
+                                            >
+                                                <div
+                                                    style={{
+                                                        width: "32px",
+                                                        height: "32px",
+                                                        borderRadius: "20%",
+                                                        backgroundColor: v.hex || "#ccc",
+                                                        border: isSel ? "3px solid #000" : "1px solid #ddd",
+                                                        opacity: isOOS ? 0.4 : 1,
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        justifyContent: "center",
+                                                    }}
+                                                >
+                                                    {isSel && (
+                                                        <span style={{ color: "#fff", fontWeight: "bold", fontSize: 14 }}>
+                                                            ✓
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                {isOOS && (
+                                                    <span style={{
+                                                        position: "absolute", top: 0, left: 8, right: 0, bottom: 0,
+                                                        display: "flex", alignItems: "center", justifyContent: "center",
+                                                        color: "red", fontWeight: "bold", fontSize: 16, pointerEvents: "none"
+                                                    }}>✕</span>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                            {groupedVariants.text.length > 0 && (
+                                <div className="d-flex flex-wrap gap-2 justify-content-start align-items-center">
+                                    {groupedVariants.text.map((v) => {
+                                        const isSel = displayVariant.sku === v.sku;
+                                        const isOOS = (v.stock ?? 0) <= 0;
+                                        return (
+                                            <div
+                                                key={getSku(v) || v._id}
+                                                className="variant-text-item"
+                                                style={{ cursor: isOOS ? "not-allowed" : "pointer" }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    if (!isOOS) {
+                                                        handleVariantSelect(v);
+                                                        setTempSelectedVariant(v);
+                                                    }
+                                                }}
+                                            >
+                                                <div
+                                                    style={{
+                                                        padding: "8px 16px",
+                                                        borderRadius: "8px",
+                                                        border: isSel ? "2px solid #000" : "1px solid #ddd",
+                                                        background: isSel ? "#f8f9fa" : "#fff",
+                                                        opacity: isOOS ? 0.4 : 1,
+                                                        textDecoration: isOOS ? "line-through" : "none"
+                                                    }}
+                                                >
+                                                    {getVariantDisplayText(v)}
+                                                    {isOOS && <span className="text-danger small ms-1">(OOS)</span>}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="variant-overlay-footer">
+                            <div className="small text-muted fw-semibold">
+                                Selected: <span className="text-dark fw-bold">{getVariantDisplayText(displayVariant)}</span>
+                            </div>
+                            <div className="mt-1 mb-2 text-start">
+                                <span 
+                                    onClick={(e) => { e.stopPropagation(); navigate(`/product/${getProductSlug()}`); }} 
+                                    className="text-decoration-none fw-semibold" 
+                                    style={{ cursor: 'pointer', fontSize: '12px' }}
+                                >
+                                    View Details
+                                </span>
+                            </div>
+                            <button
+                                className={`btn w-100 addtocartbuttton d-flex align-items-center justify-content-center gap-2 ${addingToCart ? "btn-dark" : "btn-outline-dark"}`}
+                                onClick={async (e) => {
                                     e.stopPropagation();
-                                    if (showSelectVariantBtn) setShowVariantOverlay(true);
-                                    else handleAddToCart();
+                                    const chosen = tempSelectedVariant || selectedVariant || (allVariants.find((v) => v.stock > 0) || allVariants[0]);
+                                    if (chosen) {
+                                        handleVariantSelect(chosen);
+                                    }
+                                    await handleAddToCart(chosen);
+                                    closeVariantOverlay();
                                 }}
-                                disabled={buttonDisabled}
+                                disabled={addingToCart || (displayVariant && displayVariant.stock <= 0)}
+                                style={{
+                                    transition: "background-color 0.3s ease, color 0.3s ease",
+                                }}
                             >
                                 {addingToCart ? (
                                     <>
                                         <span className="spinner-border spinner-border-sm me-2" />
                                         Adding...
                                     </>
+                                ) : displayVariant?.stock <= 0 ? (
+                                    "Out of Stock"
                                 ) : (
                                     <>
-                                        {buttonText}
-                                        {!buttonDisabled && !addingToCart && !showSelectVariantBtn && (
-                                            <img src={bagIcon} className="img-fluid ms-1 bag-icon" style={{ height: 20 }} />
+                                        Add to Bag
+                                        {!addingToCart && displayVariant?.stock > 0 && (
+                                            <img src={bagIcon} className="img-fluid ms-1" style={{ marginTop: '-3px', height: "20px" }} alt="Bag-icon" />
                                         )}
                                     </>
                                 )}
@@ -6447,72 +6757,264 @@ function ProductCard({ product, navigate, location }) {
                         </div>
                     </div>
                 </div>
-            </div>
+            )}
 
-            {/* Variant Overlay */}
-            {showVariantOverlay && (
-                <div className="variant-overlay" onClick={() => setShowVariantOverlay(false)}>
+            {/* Mobile Bottom Sheet Drawer using React Portal */}
+            {showVariantOverlay && !showOutOfStock && createPortal(
+                <>
                     <div
-                        className="variant-overlay-content p-0"
-                        onClick={(e) => e.stopPropagation()}
-                        style={{ width: '100%', maxWidth: '500px', maxHeight: '100vh', background: '#fff', borderRadius: '0px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
-                    >
-                        <div className="overlay-header d-flex justify-content-between align-items-center p-3 border-bottom">
-                            <h5 className="m-0 page-title-main-name">Select Variant ({allVariants.length})</h5>
-                            <button onClick={() => setShowVariantOverlay(false)} style={{ background: 'none', border: 'none', fontSize: '24px' }}>×</button>
+                        className="mobile-sheet-backdrop"
+                        onClick={(e) => { e.stopPropagation(); closeVariantOverlay(); }}
+                    />
+                    <div className="mobile-sheet-container" onClick={(e) => e.stopPropagation()}>
+                        {/* Drag grabber */}
+                        <div className="mobile-sheet-grabber" onClick={closeVariantOverlay} style={{ cursor: 'pointer' }} />
+
+                        {/* Header */}
+                        <div className="mobile-sheet-header">
+                            <h3 className="mobile-sheet-title">
+                                {groupedVariants.color.length > 0 ? "Select Shade" : "Select Variant"}
+                            </h3>
+                            <button className="mobile-sheet-close-btn" onClick={closeVariantOverlay}>
+                                &times;
+                            </button>
                         </div>
 
-                        <div className="variant-tabs d-flex">
-                            <button className={`variant-tab flex-fill py-3 page-title-main-name ${selectedVariantType === 'all' ? 'active' : ''}`} onClick={() => setSelectedVariantType('all')}>All ({allVariants.length})</button>
+                        {/* Body content */}
+                        <div className="mobile-sheet-body">
                             {groupedVariants.color.length > 0 && (
-                                <button className={`variant-tab flex-fill py-3 page-title-main-name ${selectedVariantType === 'color' ? 'active' : ''}`} onClick={() => setSelectedVariantType('color')}>Colors ({groupedVariants.color.length})</button>
+                                <div className="mobile-sheet-variants-grid">
+                                    {groupedVariants.color.map((v) => {
+                                        const isSel = displayVariant.sku === v.sku;
+                                        const isOOS = (v.stock ?? 0) <= 0;
+                                        const variantText = getVariantDisplayText(v);
+
+                                        return (
+                                            <div
+                                                key={getSku(v) || v._id}
+                                                className={`mobile-sheet-variant-item ${isSel ? "selected" : ""} ${isOOS ? "oos" : ""}`}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    if (!isOOS) {
+                                                        handleVariantSelect(v);
+                                                        setTempSelectedVariant(v);
+                                                    }
+                                                }}
+                                            >
+                                                <div
+                                                    className={`mobile-sheet-color-circle ${isSel ? "selected" : ""} ${isOOS ? "oos" : ""}`}
+                                                    style={{ backgroundColor: v.hex || "#ccc" }}
+                                                >
+                                                    {isSel && (
+                                                        <FaCheck className="mobile-sheet-check-icon" />
+                                                    )}
+                                                </div>
+                                                <span className="mobile-sheet-variant-text">
+                                                    {variantText}
+                                                </span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
                             )}
+
                             {groupedVariants.text.length > 0 && (
-                                <button className={`variant-tab flex-fill py-3 ${selectedVariantType === 'text' ? 'active' : ''}`} onClick={() => setSelectedVariantType('text')}>Sizes ({groupedVariants.text.length})</button>
+                                <div className="mobile-sheet-variants-grid">
+                                    {groupedVariants.text.map((v) => {
+                                        const isSel = displayVariant.sku === v.sku;
+                                        const isOOS = (v.stock ?? 0) <= 0;
+                                        const variantText = getVariantDisplayText(v);
+
+                                        return (
+                                            <div
+                                                key={getSku(v) || v._id}
+                                                className="mobile-sheet-variant-item"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    if (!isOOS) {
+                                                        handleVariantSelect(v);
+                                                        setTempSelectedVariant(v);
+                                                    }
+                                                }}
+                                            >
+                                                <button className={`mobile-sheet-text-pill ${isSel ? "selected" : ""} ${isOOS ? "oos" : ""}`}>
+                                                    <span>{variantText}</span>
+                                                    {isSel && <FaCheck style={{ fontSize: '10px' }} />}
+                                                </button>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
                             )}
                         </div>
 
-                        <div className="p-3 overflow-auto flex-grow-1 p-0 m-0">
-                            {(selectedVariantType === 'all' || selectedVariantType === 'color') && groupedVariants.color.length > 0 && (
-                                <div className="row row-col-4 mt-3">
-                                    {groupedVariants.color.map((v) => {
-                                        const isSel = sku === getSku(v);
-                                        const isOOS = (v.stock ?? 0) <= 0;
-                                        return (
-                                            <div className="col-lg-4 col-6" key={getSku(v)}>
-                                                <div className="text-center" style={{ cursor: isOOS ? 'not-allowed' : 'pointer' }} onClick={() => !isOOS && handleVariantSelect(v)}>
-                                                    <div style={{ width: '28px', height: '28px', borderRadius: '20%', backgroundColor: v.hex || '#ccc', margin: '0 auto 8px', border: isSel ? '2px solid #000' : '1px solid #ddd', opacity: isOOS ? 0.5 : 1, position: 'relative' }}>
-                                                        {isSel && <span style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', color: '#fff', fontWeight: 'bold' }}>✓</span>}
-                                                    </div>
-                                                    <div className="small page-title-main-name" style={{ fontSize: '12px' }}>{getVariantDisplayText(v)}</div>
-                                                    {isOOS && <div className="text-danger small">Out of Stock</div>}
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
+                        {/* Footer Price & Info */}
+                        <div className="mobile-sheet-footer">
+                            <div className="mobile-sheet-footer-left">
+                                <span className="mobile-sheet-selected-label">
+                                    {getVariantDisplayText(displayVariant)}
+                                </span>
+                                <div className="mobile-sheet-price-row">
+                                    <span className="mobile-sheet-current-price">
+                                        {formatPrice(displayVariant.displayPrice)}
+                                    </span>
+                                    {displayVariant.originalPrice > displayVariant.displayPrice && (
+                                        <>
+                                            <span className="mobile-sheet-original-price">
+                                                {formatPrice(displayVariant.originalPrice)}
+                                            </span>
+                                            <span className="mobile-sheet-discount">
+                                                ({displayVariant.discountPercent || 0}% OFF)
+                                            </span>
+                                        </>
+                                    )}
                                 </div>
-                            )}
-                            {(selectedVariantType === 'all' || selectedVariantType === 'text') && groupedVariants.text.length > 0 && (
-                                <div className="row row-cols-3 g-0">
-                                    {groupedVariants.text.map((v) => {
-                                        const isSel = sku === getSku(v);
-                                        const isOOS = (v.stock ?? 0) <= 0;
-                                        return (
-                                            <div className="col-lg-3 col-5" key={getSku(v)}>
-                                                <div className="text-center" style={{ cursor: isOOS ? 'not-allowed' : 'pointer' }} onClick={() => !isOOS && handleVariantSelect(v)}>
-                                                    <div style={{ padding: '10px', borderRadius: '8px', border: isSel ? '2px solid #000' : '1px solid #ddd', background: isSel ? '#f8f9fa' : '#fff', minHeight: '50px', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: isOOS ? 0.5 : 1 }}>
-                                                        {getVariantDisplayText(v)}
-                                                    </div>
-                                                    {isOOS && <div className="text-danger small mt-1">Out of Stock</div>}
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            )}
+                            </div>
+                            <span
+                                className="mobile-sheet-view-details"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigate(`/product/${getProductSlug()}`);
+                                    closeVariantOverlay();
+                                }}
+                            >
+                                View Details
+                            </span>
+                        </div>
+
+                        {/* Add to Bag Button */}
+                        <div className="mobile-sheet-action-wrap">
+                            <button
+                                className="mobile-sheet-btn-add"
+                                disabled={addingToCart || (displayVariant && displayVariant.stock <= 0)}
+                                onClick={async (e) => {
+                                    e.stopPropagation();
+                                    const chosen = tempSelectedVariant || selectedVariant || (allVariants.find((v) => v.stock > 0) || allVariants[0]);
+                                    if (chosen) {
+                                        handleVariantSelect(chosen);
+                                    }
+                                    await handleAddToCart(chosen);
+                                    closeVariantOverlay();
+                                }}
+                            >
+                                {addingToCart ? (
+                                    <>
+                                        <span className="spinner-border spinner-border-sm" role="status" />
+                                        Adding...
+                                    </>
+                                ) : (displayVariant && displayVariant.stock <= 0) ? (
+                                    "Out of Stock"
+                                ) : (
+                                    "Add to Bag"
+                                )}
+                            </button>
                         </div>
                     </div>
-                </div>
+                </>,
+                document.body
+            )}
+
+            {/* Out of stock popup using React Portal */}
+            {showOutOfStockPopup && createPortal(
+                <div
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                        zIndex: 99999,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    }}
+                    onClick={closeOutOfStockPopup}
+                >
+                    <div
+                        style={{
+                            backgroundColor: '#fff',
+                            borderRadius: '12px',
+                            padding: '30px 40px',
+                            maxWidth: '400px',
+                            width: '90%',
+                            textAlign: 'center',
+                            boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
+                            position: 'relative',
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <button
+                            onClick={closeOutOfStockPopup}
+                            style={{
+                                position: 'absolute',
+                                top: '10px',
+                                right: '15px',
+                                background: 'none',
+                                border: 'none',
+                                fontSize: '24px',
+                                cursor: 'pointer',
+                                color: '#666',
+                            }}
+                        >
+                            <FaTimes />
+                        </button>
+
+                        <div
+                            style={{
+                                width: '60px',
+                                height: '60px',
+                                backgroundColor: '#fee2e2',
+                                borderRadius: '50%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                margin: '0 auto 15px',
+                            }}
+                        >
+                            <FaTimes
+                                style={{
+                                    color: '#dc3545',
+                                    fontSize: '30px',
+                                }}
+                            />
+                        </div>
+
+                        <h5
+                            className="page-title-main-name"
+                            style={{
+                                fontSize: '18px',
+                                fontWeight: 600,
+                                marginBottom: '10px',
+                                color: '#333',
+                            }}
+                        >
+                            Out of Stock
+                        </h5>
+
+                        <p
+                            style={{
+                                fontSize: '14px',
+                                color: '#666',
+                                marginBottom: '20px',
+                            }}
+                        >
+                            "Oops! {outOfStockProductName} is out of stock right now. Check back soon or discover similar items."
+                        </p>
+
+                        <button
+                            onClick={closeOutOfStockPopup}
+                            className="btn btn-dark w-100"
+                            style={{
+                                borderRadius: '8px',
+                                padding: '10px',
+                            }}
+                        >
+                            Got it
+                        </button>
+                    </div>
+                </div>,
+                document.body
             )}
         </div>
     );
@@ -6597,7 +7099,7 @@ function RecommendationsPage({ onBack, onBannerClick }) {
 
     return (
         <div style={{ minHeight: '100vh', background: '#fff', fontFamily: 'var(--j-font-sans)' }}>
-            <ToastContainer position="top-right" autoClose={3000} />
+            {/* <ToastContainer position="top-right" autoClose={3000} /> */}
             <Header />
 
             <Container fluid className="py-5">
@@ -6910,8 +7412,8 @@ function HomePage({ onOpenPanel, isPanelOpen, isClosing, onClosePanel, showQuizC
                             </Col>
                         ) : introData?.length > 0 ? (
                             introData.map((item) => (
-                                <Col key={item._id} lg={5}    className="j-reveal mt-4">
-                                {/* // <Col key={item._id} xs={6} lg={5} className="j-reveal"> */}
+                                <Col key={item._id} lg={5} className="j-reveal mt-4">
+                                    {/* // <Col key={item._id} xs={6} lg={5} className="j-reveal"> */}
                                     <div className="j-cat-card" style={{ cursor: 'pointer' }} onClick={() => onCategoryClick(item.title)}>
                                         <div className="j-cat-img-wrap"><img src={item.image} alt={item.title} referrerPolicy="no-referrer" /></div>
                                         <h4 className="j-cat-label">{item.title}</h4>
@@ -7248,24 +7750,24 @@ export default function Foryoulanding() {
             //     </div>
             // </div>
 
-              <div
-        className="fullscreen-loader page-title-main-name"
-        style={{
-          minHeight: "100vh",
-          width: "100%",
-        }}
-      >
-        <div className="text-center">
-          <DotLottieReact className='foryoulanding-css'
-            src="https://lottie.host/73673e65-df58-41a5-87e7-b837c5d00fe8/dJVGVbJuYJ.lottie"
-            loop
-            autoplay
-          />
-          <p className="text-muted mb-0">
-            Please wait while we prepare the best products for you...
-          </p>
-        </div>
-      </div>
+            <div
+                className="fullscreen-loader page-title-main-name"
+                style={{
+                    minHeight: "100vh",
+                    width: "100%",
+                }}
+            >
+                <div className="text-center">
+                    <DotLottieReact className='foryoulanding-css'
+                        src="https://lottie.host/73673e65-df58-41a5-87e7-b837c5d00fe8/dJVGVbJuYJ.lottie"
+                        loop
+                        autoplay
+                    />
+                    <p className="text-muted mb-0">
+                        Please wait while we prepare the best products for you...
+                    </p>
+                </div>
+            </div>
         );
     }
 

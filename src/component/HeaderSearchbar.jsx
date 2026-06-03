@@ -505,6 +505,139 @@ import axiosInstance from "../utils/axiosInstance.js";
 import search from "../assets/search.svg";
 
 
+const getBrandName = (product) => {
+  if (!product?.brand) return "Unknown Brand";
+  if (typeof product.brand === "object" && product.brand.name) return product.brand.name;
+  if (typeof product.brand === "string") return product.brand;
+  return "Unknown Brand";
+};
+
+const getCategoryName = (product) => {
+  if (!product?.category) return "Uncategorized";
+  if (typeof product.category === "object" && product.category.name) return product.category.name;
+  if (typeof product.category === "string") return product.category;
+  return "Uncategorized";
+};
+
+const safeString = (val) => {
+  if (!val) return "";
+  if (typeof val === "string") return val;
+  if (typeof val === "object") {
+    if (val.name) return String(val.name);
+    if (val.title) return String(val.title);
+    if (val.label) return String(val.label);
+    try {
+      return JSON.stringify(val);
+    } catch (e) {
+      return "";
+    }
+  }
+  return String(val);
+};
+
+const getCategoryAndDescendantSpecs = (categoriesList, searchSlugOrName) => {
+  const term = searchSlugOrName.toLowerCase().trim();
+  const collectedIds = new Set();
+  const collectedNames = new Set();
+  const collectedSlugs = new Set();
+
+  const findCategory = (nodes) => {
+    for (const node of nodes) {
+      if (node.name?.toLowerCase().trim() === term || node.slug?.toLowerCase().trim() === term) {
+        return node;
+      }
+      if (node.children?.length) {
+        const found = findCategory(node.children);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
+
+  const collectNode = (node) => {
+    if (!node) return;
+    if (node._id) collectedIds.add(String(node._id));
+    if (node.name) collectedNames.add(node.name.toLowerCase().trim());
+    if (node.slug) collectedSlugs.add(node.slug.toLowerCase().trim());
+    if (node.children?.length) {
+      node.children.forEach(child => collectNode(child));
+    }
+  };
+
+  const targetCategory = findCategory(categoriesList);
+  if (targetCategory) {
+    collectNode(targetCategory);
+  }
+  return { ids: collectedIds, names: collectedNames, slugs: collectedSlugs };
+};
+
+const matchesCategory = (product, specs) => {
+  if (!specs || !product) return false;
+
+  const checkVal = (catVal) => {
+    if (!catVal) return false;
+    if (typeof catVal === 'object') {
+      const idStr = String(catVal._id || catVal.id || "");
+      const nameStr = String(catVal.name || "").toLowerCase().trim();
+      const slugStr = String(catVal.slug || "").toLowerCase().trim();
+
+      if (idStr && specs.ids.has(idStr)) return true;
+      if (nameStr && specs.names.has(nameStr)) return true;
+      if (slugStr && specs.slugs.has(slugStr)) return true;
+    } else if (typeof catVal === 'string') {
+      const term = catVal.toLowerCase().trim();
+      if (specs.ids.has(catVal)) return true;
+      if (specs.names.has(term)) return true;
+      if (specs.slugs.has(term)) return true;
+    }
+    return false;
+  };
+
+  return checkVal(product.category) || checkVal(product.originalCategory);
+};
+
+const getSearchableString = (p) => {
+  const productName = safeString(p.name || p.title).toLowerCase();
+  const brandName = safeString(getBrandName(p)).toLowerCase();
+  const categoryName = safeString(getCategoryName(p)).toLowerCase();
+  const descriptionText = safeString(p.description).toLowerCase();
+
+  // Variants details
+  const variants = Array.isArray(p.variants) ? p.variants : [];
+  const variantsText = variants.map(v =>
+    `${safeString(v.shadeName)} ${safeString(v.name)} ${safeString(v.size)} ${safeString(v.ml)} ${safeString(v.weight)} ${safeString(v.sku)}`.toLowerCase()
+  ).join(" ");
+
+  // Additional product details
+  const skinTypesText = Array.isArray(p.skinTypes)
+    ? p.skinTypes.map(st => safeString(st)).join(" ").toLowerCase()
+    : safeString(p.skinTypes).toLowerCase();
+
+  const ingredientsText = Array.isArray(p.ingredients)
+    ? p.ingredients.map(ing => safeString(ing)).join(" ").toLowerCase()
+    : safeString(p.ingredients).toLowerCase();
+
+  const formulationText = safeString(p.formulation).toLowerCase();
+  const finishText = safeString(p.finish).toLowerCase();
+
+  const tagsText = Array.isArray(p.tags)
+    ? p.tags.map(t => safeString(t)).join(" ").toLowerCase()
+    : safeString(p.tags).toLowerCase();
+
+  return [
+    productName,
+    brandName,
+    categoryName,
+    descriptionText,
+    variantsText,
+    skinTypesText,
+    ingredientsText,
+    formulationText,
+    finishText,
+    tagsText
+  ].filter(Boolean).join(" ");
+};
+
 const HeaderSearchBar = ({ isMobile, isTablet, showMobileSearch, setShowMobileSearch }) => {
   const navigate = useNavigate();
 
@@ -517,8 +650,9 @@ const HeaderSearchBar = ({ isMobile, isTablet, showMobileSearch, setShowMobileSe
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [isSearchLoading, setIsSearchLoading] = useState(false);
   const [recentSearches, setRecentSearches] = useState([]);
-  const [popularSearches, setPopularSearches] = useState([]);
+  const [popularSearches, setPopularSearches] = useState(["Lipstick", "Foundation", "Mascara", "Skincare", "Perfume"]);
   const [listening, setListening] = useState(false);
+  const [categories, setCategories] = useState([]);
 
   // Refs
   const searchTimeoutRef = useRef(null);
@@ -543,13 +677,23 @@ const HeaderSearchBar = ({ isMobile, isTablet, showMobileSearch, setShowMobileSe
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (headerSearchRef.current && !headerSearchRef.current.contains(event.target)) {
+      if (
+        headerSearchRef.current &&
+        !headerSearchRef.current.contains(event.target) &&
+        showSearchResults
+      ) {
         setShowSearchResults(false);
+        searchInputRef.current?.blur();
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+
+    if (showSearchResults) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showSearchResults]);
 
   /* -------------------------------------------------------------------------- */
   /* 2. DATA FETCHING */
@@ -560,31 +704,69 @@ const HeaderSearchBar = ({ isMobile, isTablet, showMobileSearch, setShowMobileSe
     const fetchData = async () => {
       try {
         setIsSearchLoading(true);
+        const catRes = await axiosInstance.get("/api/user/categories/tree");
+        setCategories(Array.isArray(catRes.data) ? catRes.data : catRes.data.categories || []);
 
-        const res = await axiosInstance.get("/api/user/products/all");
-        let products = [];
-        if (res.data.products && Array.isArray(res.data.products)) {
-          products = res.data.products;
-        } else if (Array.isArray(res.data)) {
-          products = res.data;
+        let allFetchedProducts = [];
+        let currentCursor = null;
+        let hasMore = true;
+
+        while (hasMore) {
+          const res = await axiosInstance.get("/api/user/products/all", {
+            params: { cursor: currentCursor, limit: 500 },
+            withCredentials: true
+          });
+
+          let products = [];
+          let pagination = {};
+
+          if (res.data && Array.isArray(res.data.products)) {
+            products = res.data.products;
+            pagination = res.data.pagination || {};
+          } else if (Array.isArray(res.data)) {
+            products = res.data;
+          }
+
+          if (products.length > 0) {
+            allFetchedProducts.push(...products);
+          }
+
+          if (pagination.hasMore === false || products.length === 0) {
+            hasMore = false;
+          } else if (pagination.nextCursor) {
+            currentCursor = pagination.nextCursor;
+          } else {
+            hasMore = false;
+          }
         }
+
+        // Deduplicate products by _id to avoid any duplicate listings
+        const productMap = new Map();
+        allFetchedProducts.forEach(p => {
+          const id = p._id || p.id;
+          if (id) productMap.set(id, p);
+        });
+        const products = Array.from(productMap.values());
 
         const processed = products.map(p => ({
           _id: p._id || p.id,
           name: p.name || "Unnamed Product",
           slug: p.slugs?.[0] || p.slug || p._id,
-          brand: p.brand?.name || (typeof p.brand === 'string' ? p.brand : ""),
+          brand: getBrandName(p),
+          category: getCategoryName(p),
+          originalCategory: p.category,
           price: p.selectedVariant?.displayPrice || p.price || 0,
           originalPrice: p.selectedVariant?.originalPrice || p.originalPrice || p.mrp || 0,
           image: p.selectedVariant?.images?.[0] || p.images?.[0] || "/placeholder.png",
           discountPercent: p.selectedVariant?.discountPercent || 0,
+          variants: p.variants || []
         }));
 
         setAllProducts(processed);
 
         const index = processed.map(p => ({
           product: p,
-          searchString: [p.name, p.brand].filter(Boolean).join(' ').toLowerCase()
+          searchString: getSearchableString(p)
         }));
         setSearchIndex(index);
 
@@ -620,13 +802,24 @@ const HeaderSearchBar = ({ isMobile, isTablet, showMobileSearch, setShowMobileSe
       return;
     }
     const term = debouncedSearchText.toLowerCase().trim();
-    const words = term.split(/\s+/);
-    const results = searchIndex
-      .filter(({ searchString }) => words.every(word => searchString.includes(word)))
-      .map(({ product }) => product)
-      .slice(0, 10);
-    setSearchResults(results);
-  }, [debouncedSearchText, searchIndex]);
+
+    // Check if the search term exactly matches any category in the tree hierarchically
+    const specs = getCategoryAndDescendantSpecs(categories, term);
+
+    let results;
+    if (specs.ids.size > 0) {
+      results = searchIndex
+        .filter(({ product }) => matchesCategory(product, specs))
+        .map(({ product }) => product);
+    } else {
+      const words = term.split(/\s+/);
+      results = searchIndex
+        .filter(({ searchString }) => words.every(word => searchString.includes(word)))
+        .map(({ product }) => product);
+    }
+
+    setSearchResults(results.slice(0, 10));
+  }, [debouncedSearchText, searchIndex, categories]);
 
   /* -------------------------------------------------------------------------- */
   /* 4. HANDLERS */
@@ -739,9 +932,9 @@ const HeaderSearchBar = ({ isMobile, isTablet, showMobileSearch, setShowMobileSe
               {searchText && <FaTimes className="mobile-search-clear" onClick={clearSearch} />}
               <FaMicrophone className={`mobile-search-voice ${listening ? "listening" : ""}`} onClick={startListening} />
             </form>
-            <button className="mobile-search-go page-title-main-name" onClick={handleSearchSubmit} disabled={!searchText.trim()}>
+            {/* <button className="mobile-search-go page-title-main-name" onClick={handleSearchSubmit} disabled={!searchText.trim()}>
               Go
-            </button>
+            </button> */}
           </div>
 
           <div className="mobile-search-results page-title-main-name">
@@ -833,6 +1026,7 @@ const HeaderSearchBar = ({ isMobile, isTablet, showMobileSearch, setShowMobileSe
           value={searchText}
           onChange={handleInputChange}
           onFocus={() => setShowSearchResults(true)}
+          onClick={() => setShowSearchResults(true)}
           style={{ border: "none", outline: "none", background: "transparent", flex: 1, margin: "0 10px" }}
         />
         {searchText && <FaTimes style={{ cursor: "pointer", marginRight: "10px" }} onClick={clearSearch} />}

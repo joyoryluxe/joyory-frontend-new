@@ -4091,14 +4091,16 @@
 /* ProductPage – Unified API & Full Feature Edition with Multi-Filter Support */
 import React, { useState, useEffect, useContext, useRef, useCallback, useMemo } from "react";
 import { useParams, useNavigate, useLocation, useSearchParams } from "react-router-dom";
-import { FaStar, FaHeart, FaRegHeart, FaChevronDown } from "react-icons/fa";
+import { FaStar, FaHeart, FaRegHeart, FaChevronDown, FaTimes, FaCheck } from "react-icons/fa";
 import Header from "./Header";
 import Footer from "./Footer";
-import { CartContext } from "../Context/CartContext";
+// import { CartContext } from "../Context/CartContext";
 import { UserContext } from "./UserContext.jsx";
 import BrandFilter from "./BrandFilter";
 import "../css/ProductPage.css";
+import "../css/BestSellers.css";
 import axios from "axios";
+import { toast } from "react-toastify";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination, Navigation } from "swiper/modules";
 import "swiper/css";
@@ -4108,6 +4110,125 @@ import updownarrow from "../assets/updownarrow.svg";
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import filtering from "../assets/filtering.svg";
 import Bag from "../assets/Bag.svg";
+
+// ===================== OUT OF STOCK POPUP COMPONENT =====================
+const OutOfStockPopup = ({ isOpen, onClose, productName }) => {
+    if (!isOpen) return null;
+
+    return (
+        <div
+            style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                zIndex: 9999,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+            }}
+            onClick={onClose}
+        >
+            <div
+                style={{
+                    backgroundColor: '#fff',
+                    borderRadius: '12px',
+                    padding: '30px 40px',
+                    maxWidth: '400px',
+                    width: '90%',
+                    textAlign: 'center',
+                    boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
+                    position: 'relative',
+                    animation: 'popupSlideIn 0.3s ease-out',
+                }}
+                onClick={(e) => e.stopPropagation()}
+            >
+                <button
+                    onClick={onClose}
+                    style={{
+                        position: 'absolute',
+                        top: '10px',
+                        right: '15px',
+                        background: 'none',
+                        border: 'none',
+                        fontSize: '24px',
+                        cursor: 'pointer',
+                        color: '#666',
+                    }}
+                >
+                    <FaTimes />
+                </button>
+
+                <div
+                    style={{
+                        width: '60px',
+                        height: '60px',
+                        backgroundColor: '#fee2e2',
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        margin: '0 auto 15px',
+                    }}
+                >
+                    <FaTimes
+                        style={{
+                            color: '#dc3545',
+                            fontSize: '30px',
+                        }}
+                    />
+                </div>
+
+                <h5
+                    className="page-title-main-name"
+                    style={{
+                        fontSize: '18px',
+                        fontWeight: 600,
+                        marginBottom: '10px',
+                        color: '#333',
+                    }}
+                >
+                    Out of Stock
+                </h5>
+
+                <p
+                    style={{
+                        fontSize: '14px',
+                        color: '#666',
+                        marginBottom: '20px',
+                    }}
+                >
+                    "Oops! {productName} is out of stock right now. Check back soon or discover similar items."
+                </p>
+
+                <button
+                    onClick={onClose}
+                    className="btn btn-dark w-100"
+                    style={{
+                        borderRadius: '8px',
+                        padding: '10px',
+                    }}
+                >
+                    Got it
+                </button>
+            </div>
+            <style>{`
+        @keyframes popupSlideIn {
+          from {
+            opacity: 0;
+            transform: scale(0.9);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+      `}</style>
+        </div>
+    );
+};
 
 const CART_API_BASE = "https://beauty.joyory.com/api/user/cart";
 const PRODUCT_ALL_API = "https://beauty.joyory.com/api/user/products/all";
@@ -4171,7 +4292,30 @@ export default function ProductPage() {
     const [activeCategoryName, setActiveCategoryName] = useState("");
 
     const [selectedVariants, setSelectedVariants] = useState({});
+    const [tempSelectedVariants, setTempSelectedVariants] = useState({});
     const [addingToCart, setAddingToCart] = useState({});
+    const [showOutOfStockPopup, setShowOutOfStockPopup] = useState(false);
+    const [outOfStockProductName, setOutOfStockProductName] = useState("");
+
+    const handleOutOfStockClick = (productName) => {
+        setOutOfStockProductName(productName || "This product");
+        setShowOutOfStockPopup(true);
+        setTimeout(() => {
+            setShowOutOfStockPopup(false);
+        }, 3000);
+    };
+
+    const closeOutOfStockPopup = () => {
+        setShowOutOfStockPopup(false);
+    };
+
+    const isCompletelyOutOfStock = (prod) => {
+        const vars = Array.isArray(prod.variants) ? prod.variants : [];
+        if (vars.length === 0) {
+            return (prod.stock || 0) <= 0;
+        }
+        return vars.every(v => (v.stock || 0) <= 0);
+    };
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
     const [hasMore, setHasMore] = useState(true);
@@ -4225,17 +4369,13 @@ export default function ProductPage() {
 
     /* ── toast ──────────────────────────────────────────────────────────────── */
     const showToastMsg = (msg, type = "error", dur = 3000) => {
-        const t = document.createElement("div");
-        t.className = `toast-notification toast-${type}`;
-        t.style.cssText = `
-      position:fixed;top:20px;right:20px;padding:12px 20px;
-      border-radius:8px;color:#fff;z-index:9999;
-      background:${type === "error" ? "#f56565" : "#48bb78"};
-      box-shadow:0 4px 12px rgba(0,0,0,.15);
-    `;
-        t.textContent = msg;
-        document.body.appendChild(t);
-        setTimeout(() => t.remove(), dur);
+        if (type === "success") {
+            toast.success(msg, { autoClose: dur });
+        } else if (type === "info") {
+            toast.info(msg, { autoClose: dur });
+        } else {
+            toast.error(msg, { autoClose: dur });
+        }
     };
 
     /* ── wishlist ───────────────────────────────────────────────────────────── */
@@ -4507,14 +4647,16 @@ export default function ProductPage() {
             }
             return prev;
         });
-    }, [searchParams]);   // ← Important: depend on searchParams
+    }, [searchParams]);
 
     /* ── Sync URL query parameters when filters change ──────────────────── */
     useEffect(() => {
         const newParams = new URLSearchParams();
 
         const addArrayParam = (key, arr) => {
-            if (arr && arr.length) arr.forEach(v => newParams.append(key, v));
+            if (arr && arr.length) {
+                arr.forEach(v => newParams.append(key, v));
+            }
         };
 
         addArrayParam('brandIds', filters.brandIds);
@@ -4526,13 +4668,9 @@ export default function ProductPage() {
 
         if (filters.priceRange) {
             if (filters.priceRange.min !== undefined) newParams.set('minPrice', filters.priceRange.min);
-            if (filters.priceRange.max != null) newParams.set('maxPrice', filters.priceRange.max);
+            if (filters.priceRange.max != null && filters.priceRange.max !== undefined) newParams.set('maxPrice', filters.priceRange.max);
         }
-
-        if (filters.discountMin) {
-            newParams.set('discountMin', filters.discountMin);
-        }
-
+        if (filters.discountMin) newParams.set('discountMin', filters.discountMin);
         if (filters.minRating) newParams.set('minRating', filters.minRating);
         if (filters.sort !== 'recent') newParams.set('sort', filters.sort);
 
@@ -4543,62 +4681,45 @@ export default function ProductPage() {
         }
     }, [filters, setSearchParams, searchParams]);
 
-    // Fetch products when filters or page context change
+    // Fetch products when filters change
     useEffect(() => {
-        const timer = setTimeout(() => {
-            fetchProducts(null, true);
-        }, 400); // 400ms debounce for efficiency
-
-        return () => clearTimeout(timer);
+        fetchProducts(null, true);
     }, [effectiveSlug, location.pathname, filters, activeCategorySlug]);
 
-    /* ── helpers ────────────────────────────────────────────────────────────── */
     const pageDefault = location.pathname.includes("/category/") ? effectiveSlug : null;
 
     const makeEmptyFilters = () => ({
         brandIds: [], categoryIds: [], skinTypes: [], formulations: [],
         finishes: [], ingredients: [], priceRange: null, discountMin: null,
-        minRating: "", sort: "recent",
+        minRating: "", sort: "recent"
     });
 
     /* ── CATEGORY PILL CLICK ────────────────────────────────────────────────── */
-    const handleCategoryPillClick = useCallback((cat) => {
-        if (slug && slug.includes("/")) {
-            const segments = slug.split("/");
-            // Replace the last segment with the new category slug
-            segments[segments.length - 1] = cat.slug;
-            navigate(`/category/${segments.join("/")}`);
-        } else if (slug) {
-            // If we are at /category/skin, append the subcategory to make it hierarchical
-            navigate(`/category/${slug}/${cat.slug}`);
-        } else {
-            navigate(`/category/${cat.slug}`);
-        }
-    }, [navigate, slug]);
+    const handleCategoryPillClick = useCallback(
+        (cat) => {
+            if (activeCategorySlug === cat.slug) {
+                navigate("/products");
+            } else {
+                navigate(`/category/${cat.slug}`);
+            }
+        },
+        [activeCategorySlug, navigate]
+    );
 
     const handleClearCategory = useCallback(() => {
-        if (slug && slug.includes("/")) {
-            const segments = slug.split("/");
-            segments.pop(); // Go up one level
-            const newPath = segments.join("/");
-            if (newPath) {
-                navigate(`/category/${newPath}`);
-            } else {
-                navigate("/products");
-            }
-        } else {
-            navigate("/products");
-        }
-    }, [navigate, slug]);
+        navigate("/products");
+    }, [navigate]);
 
-    /* ── Click Handlers ─────────────────────────────────────────────────────── */
+    /* ── NEW: Skin Type & Ingredient Click Handlers ─────────────────────────── */
     const handleSkinTypeClick = useCallback((skin) => {
         setFilters(prev => {
             const current = prev.skinTypes || [];
             const isActive = current.includes(skin.slug);
             return {
                 ...prev,
-                skinTypes: isActive ? current.filter(s => s !== skin.slug) : [...current, skin.slug]
+                skinTypes: isActive
+                    ? current.filter(s => s !== skin.slug)
+                    : [...current, skin.slug]
             };
         });
     }, []);
@@ -4609,53 +4730,16 @@ export default function ProductPage() {
             const isActive = current.includes(ing.slug);
             return {
                 ...prev,
-                ingredients: isActive ? current.filter(i => i !== ing.slug) : [...current, ing.slug]
+                ingredients: isActive
+                    ? current.filter(i => i !== ing.slug)
+                    : [...current, ing.slug]
             };
         });
     }, []);
 
-    /* ── Sync URL when filters change ─────────────────────────────── */
-    useEffect(() => {
-        const newParams = new URLSearchParams();
-
-        const addArray = (key, arr) => {
-            if (Array.isArray(arr) && arr.length > 0) {
-                arr.forEach(item => newParams.append(key, item));
-            }
-        };
-
-        addArray('ingredients', filters.ingredients);
-        addArray('skinTypes', filters.skinTypes);
-        addArray('brandIds', filters.brandIds);
-        addArray('categoryIds', filters.categoryIds);
-        addArray('formulations', filters.formulations);
-        addArray('finishes', filters.finishes);
-
-        if (filters.priceRange) {
-            if (filters.priceRange.min !== undefined) newParams.set('minPrice', filters.priceRange.min);
-            if (filters.priceRange.max !== null && filters.priceRange.max !== undefined) {
-                newParams.set('maxPrice', filters.priceRange.max);
-            }
-        }
-
-        if (filters.discountMin != null) newParams.set('discountMin', filters.discountMin);
-        if (filters.minRating) newParams.set('minRating', filters.minRating);
-        if (filters.sort && filters.sort !== "recent") newParams.set('sort', filters.sort);
-
-        const newQuery = newParams.toString();
-        const currentQuery = searchParams.toString();
-
-        if (newQuery !== currentQuery) {
-            setSearchParams(newParams, { replace: true });
-        }
-    }, [filters, setSearchParams, searchParams]);
-
+    /* ── SPECIAL PROMOTION CLICK ────────────────────────────────────────────── */
     const handlePromotionClick = useCallback((promo) => {
-        if (promo.scope === "brand" && promo.targetSlug) {
-            navigate(`/brand/${promo.targetSlug}`);
-        } else if (promo.scope === "category" && promo.targetSlug) {
-            navigate(`/category/${promo.targetSlug}`);
-        } else {
+        if (promo.slug) {
             navigate(`/promotion/${promo.slug}`);
         }
     }, [navigate]);
@@ -4676,19 +4760,15 @@ export default function ProductPage() {
         return () => el && obs.unobserve(el);
     }, [loadMore, hasMore, loadingMore]);
 
-    useEffect(() => {
-        window.scrollTo({ top: 0, left: 0, behavior: "instant" });
-    }, []);
-
     /* ── cart ───────────────────────────────────────────────────────────────── */
-    const handleAddToCart = async (prod) => {
+    const handleAddToCart = async (prod, forceVariant = null) => {
         setAddingToCart((p) => ({ ...p, [prod._id]: true }));
         try {
             const vars = Array.isArray(prod.variants) ? prod.variants : [];
             const hasVar = vars.length > 0;
             let payload;
             if (hasVar) {
-                const sel = selectedVariants[prod._id];
+                const sel = forceVariant || selectedVariants[prod._id] || vars.find((v) => v.stock > 0) || vars[0];
                 if (!sel || sel.stock <= 0) { showToastMsg("Please select an in-stock variant.", "error"); return; }
                 payload = { productId: prod._id, variants: [{ variantSku: getSku(sel), quantity: 1 }] };
                 const cache = JSON.parse(localStorage.getItem("cartVariantCache") || "{}");
@@ -4745,163 +4825,436 @@ export default function ProductPage() {
     const renderProductCard = (prod) => {
         const vars = Array.isArray(prod.variants) ? prod.variants : [];
         const hasVar = vars.length > 0;
-        const isVariantSelected = !!selectedVariants[prod._id];
-        const displayVariant = selectedVariants[prod._id] || (hasVar ? (vars.find((v) => v.stock > 0) || vars[0]) : null);
+
+        const displayVariant = tempSelectedVariants[prod._id] || selectedVariants[prod._id] || (hasVar ? vars.find((v) => v.stock > 0) || vars[0] : null) || {};
+
         const grouped = groupVariantsByType(vars);
         const totalVars = vars.length;
         const sku = displayVariant ? getSku(displayVariant) : null;
         const inWl = sku ? isInWishlist(prod._id, sku) : false;
         const slugPr = getProductSlug(prod);
-        const img = displayVariant?.images?.[0] || displayVariant?.image || prod.images?.[0] || "/placeholder.png";
+        const img =
+            displayVariant?.images?.[0] ||
+            displayVariant?.image ||
+            prod.images?.[0] ||
+            "/placeholder.png";
+
         const isAdding = addingToCart[prod._id];
-        const oos = hasVar ? displayVariant?.stock <= 0 : prod.stock <= 0;
-        const showSelectVariantButton = hasVar && !isVariantSelected;
-        const disabled = isAdding || (!showSelectVariantButton && oos);
-        let btnText = "Add to Cart";
+
+        // Check out of stock status
+        const completelyOutOfStock = isCompletelyOutOfStock(prod);
+        const currentVariantOutOfStock = hasVar ? displayVariant?.stock <= 0 : prod.stock <= 0;
+
+        // Show out of stock if completely out AND it has NO variants
+        const showOutOfStock = completelyOutOfStock && !hasVar;
+
+        const showSelectVariantButton = hasVar && vars.length > 1;
+        const buttonDisabled = isAdding || showOutOfStock;
+
+        let btnText = "Add to Bag";
         if (isAdding) btnText = "Adding...";
+        else if (showOutOfStock) btnText = "Out of Stock";
         else if (showSelectVariantButton) btnText = "Select Variant";
-        else if (oos) btnText = "Out of Stock";
+        else if (currentVariantOutOfStock) btnText = "Out of Stock";
 
         return (
             <div key={prod._id} className="col-6 col-md-4 col-lg-4 position-relative page-title-main-name">
-                <button
-                    onClick={() => { if (displayVariant || !hasVar) toggleWishlist(prod, displayVariant || {}); }}
-                    disabled={wishlistLoading[prod._id]}
-                    style={{
-                        position: "absolute", top: 8, right: 8,
-                        cursor: wishlistLoading[prod._id] ? "not-allowed" : "pointer",
-                        color: inWl ? "#dc3545" : "#ccc", fontSize: 22, zIndex: 2,
-                        backgroundColor: "transparent",
-                        borderRadius: "50%",
-                        width: 34, height: 34, display: "flex", alignItems: "center",
-                        justifyContent: "center",
-                        transition: "all .3s ease", border: "none",
-                    }}
-                    title={inWl ? "Remove from wishlist" : "Add to wishlist"}
-                >
-                    {wishlistLoading[prod._id]
-                        ? <div className="spinner-border spinner-border-sm" role="status" />
-                        : inWl ? <FaHeart /> : <FaRegHeart />}
-                </button>
+                <div className="foryou-card-wrapper">
+                    <div className="foryou-card">
+                        {/* Product Image with Overlays */}
+                        <div
+                            className="foryou-img-wrapper"
+                            onClick={() => {
+                                if (showOutOfStock) {
+                                    handleOutOfStockClick(prod.name);
+                                } else {
+                                    navigate(`/product/${slugPr}`);
+                                }
+                            }}
+                            style={{ cursor: showOutOfStock ? 'pointer' : 'pointer', position: 'relative' }}
+                        >
+                            <img
+                                src={img}
+                                alt={prod.name}
+                                className="foryou-img img-fluid"
+                                style={{
+                                    opacity: showOutOfStock ? 0.6 : 1,
+                                    filter: showOutOfStock ? 'grayscale(0.3)' : 'none',
+                                }}
+                                onError={(e) => {
+                                    e.currentTarget.src = "/placeholder.png";
+                                }}
+                            />
 
-                <img src={img} alt={prod.name} className="card-img-top"
-                    style={{ height: 200, objectFit: "contain", cursor: "pointer" }}
-                    onClick={() => navigate(`/product/${slugPr}`)} />
-
-                <div className="card-body p-0 d-flex flex-column" style={{ height: 265, justifyContent: 'space-between' }}>
-                    <div className="brand-name text-muted small mb-1 fw-medium mt-2 text-start">{getBrandName(prod)}</div>
-                    <h5 className="card-title mt-2 align-items-center gap-1 page-title-main-name"
-                        style={{ cursor: "pointer" }} onClick={() => navigate(`/product/${slugPr}`)}>
-                        {prod.name}
-                    </h5>
-
-                    {hasVar && (
-                        <div className="m-0 p-0 ms-0">
-                            {isVariantSelected ? (
-                                <div className="text-muted small" style={{ cursor: "pointer", display: "inline-block" }}
-                                    onClick={(e) => { e.stopPropagation(); openVariantOverlay(prod._id, "all"); }}
-                                    title="Click to change variant">
-                                    Variant: <span className="fw-bold text-dark">{getVariantDisplayText(displayVariant)}</span>
-                                    <FaChevronDown className="ms-1" style={{ fontSize: "10px" }} />
-                                </div>
-                            ) : (
-                                <div className="small text-muted" style={{ height: "20px", cursor: "pointer", display: "inline-block" }}
-                                    onClick={(e) => { e.stopPropagation(); openVariantOverlay(prod._id, "all"); }}>
-                                    {vars.length} Variants Available
-                                    <FaChevronDown className="ms-1" style={{ fontSize: "10px" }} />
+                            {/* OUT OF STOCK OVERLAY */}
+                            {showOutOfStock && (
+                                <div
+                                    style={{
+                                        position: 'absolute',
+                                        top: 0,
+                                        left: 0,
+                                        width: '100%',
+                                        height: '100%',
+                                        backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        zIndex: 3,
+                                    }}
+                                >
+                                    <div
+                                        style={{
+                                            backgroundColor: '#dc3545',
+                                            color: '#fff',
+                                            padding: '8px 16px',
+                                            borderRadius: '20px',
+                                            fontSize: '14px',
+                                            fontWeight: 600,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '5px',
+                                        }}
+                                    >
+                                        <FaTimes />
+                                        Out of Stock
+                                    </div>
                                 </div>
                             )}
+
+                            {/* Wishlist button */}
+                            {!showOutOfStock && (
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (displayVariant || !hasVar)
+                                            toggleWishlist(prod, displayVariant || {});
+                                    }}
+                                    disabled={wishlistLoading[prod._id]}
+                                    style={{
+                                        position: 'absolute',
+                                        top: '10px',
+                                        right: '10px',
+                                        cursor: wishlistLoading[prod._id] ? 'not-allowed' : 'pointer',
+                                        color: inWl ? '#dc3545' : '#ccc',
+                                        fontSize: '22px',
+                                        zIndex: 2,
+                                        backgroundColor: 'transparent !important',
+                                        borderRadius: '50%',
+                                        width: '34px',
+                                        height: '34px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        transition: 'all 0.3s ease',
+                                        border: 'none',
+                                        outline: 'none'
+                                    }}
+                                    title={inWl ? "Remove from wishlist" : "Add to wishlist"}
+                                >
+                                    {wishlistLoading[prod._id] ? (
+                                        <div className="spinner-border spinner-border-sm" role="status"></div>
+                                    ) : inWl ? (
+                                        <FaHeart />
+                                    ) : (
+                                        <FaRegHeart />
+                                    )}
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Product Info */}
+                        <div className="foryou-product-info w-100 ps-lg-0 p-0 pt-md-0">
+                            <div className="justify-content-between d-flex flex-column" style={{ height: '200px' }}>
+                                {/* Brand Name */}
+                                <div className="brand-name small text-muted text-start mb-1 mt-2">
+                                    {getBrandName(prod)}
+                                </div>
+
+                                {/* Product Name */}
+                                <h6
+                                    className="foryou-name font-family-Poppins m-0 p-0"
+                                    onClick={() => {
+                                        if (showOutOfStock) {
+                                            handleOutOfStockClick(prod.name);
+                                        } else {
+                                            navigate(`/product/${slugPr}`);
+                                        }
+                                    }}
+                                    style={{
+                                        cursor: 'pointer',
+                                        opacity: showOutOfStock ? 0.6 : 1,
+                                    }}
+                                >
+                                    {(() => {
+                                        const varName = displayVariant ? getVariantDisplayText(displayVariant) : "";
+                                        return varName && varName.toUpperCase() !== "DEFAULT" ? `${prod.name} - ${varName}` : prod.name;
+                                    })()}
+                                </h6>
+
+                                {showOutOfStock && (
+                                    <div className="mt-2 mb-2">
+                                        <span
+                                            style={{
+                                                color: '#dc3545',
+                                                fontSize: '13px',
+                                                fontWeight: 500,
+                                            }}
+                                        >
+                                            <FaTimes style={{ fontSize: '11px', marginRight: '4px' }} />
+                                            Currently unavailable
+                                        </span>
+                                    </div>
+                                )}
+
+                                {/* Price Section */}
+                                <div className="price-section mb-3 mt-auto">
+                                    <div className="d-flex align-items-baseline flex-wrap">
+                                        {(() => {
+                                            const price =
+                                                displayVariant?.displayPrice ||
+                                                displayVariant?.discountedPrice ||
+                                                prod.price ||
+                                                0;
+                                            const orig =
+                                                displayVariant?.originalPrice ||
+                                                displayVariant?.mrp ||
+                                                prod.mrp ||
+                                                price;
+                                            const disc = orig > price;
+                                            const pct = disc ? Math.round(((orig - price) / orig) * 100) : 0;
+                                            return (
+                                                <>
+                                                    <span
+                                                        className="current-price fw-400 fs-5"
+                                                        style={{
+                                                            textDecoration: showOutOfStock ? 'line-through' : 'none',
+                                                            opacity: showOutOfStock ? 0.6 : 1,
+                                                        }}
+                                                    >
+                                                        ₹{price}
+                                                    </span>
+                                                    {disc && !showOutOfStock && (
+                                                        <>
+                                                            <span className="original-price text-muted text-decoration-line-through ms-2 fs-6">
+                                                                ₹{orig}
+                                                            </span>
+                                                            <span className="discount-percent text-danger fw-bold ms-2">
+                                                                ({pct}% OFF)
+                                                            </span>
+                                                        </>
+                                                    )}
+                                                </>
+                                            );
+                                        })()}
+                                    </div>
+                                </div>
+
+                                {/* Cart Button */}
+                                <div className="cart-section">
+                                    <div className="d-flex align-items-center justify-content-between">
+                                        <button
+                                            className={`btn w-100 page-title-main-name addtocartbuttton d-flex align-items-center justify-content-center gap-2 ${showOutOfStock
+                                                ? "btn-secondary"
+                                                : isAdding
+                                                    ? ""
+                                                    : "btn-outline-dark"
+                                                }`}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (showOutOfStock) {
+                                                    handleOutOfStockClick(prod.name);
+                                                } else if (showSelectVariantButton) {
+                                                    openVariantOverlay(prod._id, "all");
+                                                } else {
+                                                    handleAddToCart(prod);
+                                                }
+                                            }}
+                                            disabled={buttonDisabled && !showOutOfStock}
+                                            style={{
+                                                transition: "background-color 0.3s ease, color 0.3s ease",
+                                                opacity: showOutOfStock ? 0.8 : 1,
+                                                cursor: showOutOfStock ? 'pointer' : (buttonDisabled ? 'not-allowed' : 'pointer'),
+                                            }}
+                                        >
+                                            {isAdding ? (
+                                                <>
+                                                    <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                                                    Adding...
+                                                </>
+                                            ) : showOutOfStock ? (
+                                                <>
+                                                    <FaTimes style={{ fontSize: '14px' }} />
+                                                    Out of Stock
+                                                </>
+                                            ) : (
+                                                <>
+                                                    {btnText}
+                                                    {!buttonDisabled && !isAdding && !showSelectVariantButton && (
+                                                        <img src={Bag} alt="Bag" className="img-fluid ms-1" style={{ marginTop: '-3px', height: "20px" }} />
+                                                    )}
+                                                </>
+                                            )}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Variant Overlay */}
+                    {showVariantOverlay === prod._id && !showOutOfStock && (
+                        <div className="variant-overlay" onClick={closeVariantOverlay}>
+                            <div
+                                className="variant-overlay-content"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <div className="overlay-header d-flex justify-content-between align-items-center p-3 border-bottom">
+                                    <h5 className="m-0 page-title-main-name">Select Variant</h5>
+                                    <button
+                                        onClick={closeVariantOverlay}
+                                        style={{ background: "none", border: "none", fontSize: "40px" }}
+                                    >
+                                        ×
+                                    </button>
+                                </div>
+
+                                <div className="variant-overlay-body">
+                                    {grouped.color.length > 0 && (
+                                        <div className="d-flex flex-wrap gap-3 justify-content-start align-items-center mb-3">
+                                            {grouped.color.map((v) => {
+                                                const sel = tempSelectedVariants[prod._id]?.sku === v.sku || displayVariant.sku === v.sku;
+                                                const oosV = v.stock <= 0;
+                                                return (
+                                                    <div
+                                                        key={v.sku || v._id}
+                                                        style={{ cursor: oosV ? "not-allowed" : "pointer", position: "relative" }}
+                                                        onClick={() => {
+                                                            if (!oosV) {
+                                                                handleVariantSelect(prod._id, v);
+                                                                setTempSelectedVariants(prev => ({ ...prev, [prod._id]: v }));
+                                                            }
+                                                        }}
+                                                        title={v.shadeName}
+                                                    >
+                                                        <div
+                                                            style={{
+                                                                width: "32px",
+                                                                height: "32px",
+                                                                borderRadius: "20%",
+                                                                backgroundColor: v.hex || "#ccc",
+                                                                border: sel ? "3px solid #000" : "1px solid #ddd",
+                                                                opacity: oosV ? 0.4 : 1,
+                                                                display: "flex",
+                                                                alignItems: "center",
+                                                                justifyContent: "center",
+                                                            }}
+                                                        >
+                                                            {sel && (
+                                                                <span style={{ color: "#fff", fontWeight: "bold", fontSize: 14 }}>
+                                                                    ✓
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        {oosV && (
+                                                            <span style={{
+                                                                position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
+                                                                display: "flex", alignItems: "center", justifyContent: "center",
+                                                                color: "red", fontWeight: "bold", fontSize: 16, pointerEvents: "none"
+                                                            }}>✕</span>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+
+                                    {grouped.text.length > 0 && (
+                                        <div className="d-flex flex-wrap gap-2 justify-content-start align-items-center">
+                                            {grouped.text.map((v) => {
+                                                const sel = tempSelectedVariants[prod._id]?.sku === v.sku || displayVariant.sku === v.sku;
+                                                const oosV = v.stock <= 0;
+                                                return (
+                                                    <div
+                                                        key={v.sku || v._id}
+                                                        className="variant-text-item"
+                                                        style={{ cursor: oosV ? "not-allowed" : "pointer" }}
+                                                        onClick={() => {
+                                                            if (!oosV) {
+                                                                handleVariantSelect(prod._id, v);
+                                                                setTempSelectedVariants(prev => ({ ...prev, [prod._id]: v }));
+                                                            }
+                                                        }}
+                                                    >
+                                                        <div
+                                                            style={{
+                                                                padding: "8px 16px",
+                                                                borderRadius: "8px",
+                                                                border: sel ? "2px solid #000" : "1px solid #ddd",
+                                                                background: sel ? "#f8f9fa" : "#fff",
+                                                                opacity: oosV ? 0.4 : 1,
+                                                                textDecoration: oosV ? "line-through" : "none"
+                                                            }}
+                                                        >
+                                                            {getVariantDisplayText(v)}
+                                                            {oosV && <span className="text-danger small ms-1">(OOS)</span>}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="variant-overlay-footer">
+                                    <div className="small text-muted fw-semibold">
+                                        Selected: <span className="text-dark fw-bold">{getVariantDisplayText(displayVariant)}</span>
+                                    </div>
+                                    <div className="mt-1 mb-2 text-start">
+                                        <span
+                                            onClick={(e) => { e.stopPropagation(); navigate(`/product/${slugPr}`); }}
+                                            className="text-decoration-none fw-semibold"
+                                            style={{ cursor: 'pointer', fontSize: '12px' }}
+                                        >
+                                            View Details
+                                        </span>
+                                    </div>
+                                    <button
+                                        className={`btn w-100 addtocartbuttton d-flex align-items-center justify-content-center gap-2 ${isAdding ? "btn-dark" : "btn-outline-dark"}`}
+                                        onClick={async (e) => {
+                                            e.stopPropagation();
+                                            const chosen = tempSelectedVariants[prod._id] || selectedVariants[prod._id] || (vars.find((v) => v.stock > 0) || vars[0]);
+                                            if (chosen) {
+                                                handleVariantSelect(prod._id, chosen);
+                                            }
+                                            await handleAddToCart(prod, chosen);
+                                            closeVariantOverlay();
+                                        }}
+                                        disabled={isAdding || (displayVariant && displayVariant.stock <= 0)}
+                                        style={{
+                                            transition: "background-color 0.3s ease, color 0.3s ease",
+                                        }}
+                                    >
+                                        {isAdding ? (
+                                            <>
+                                                <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                                                Adding...
+                                            </>
+                                        ) : displayVariant?.stock <= 0 ? (
+                                            "Out of Stock"
+                                        ) : (
+                                            <>
+                                                Add to Bag
+                                                {!isAdding && displayVariant?.stock > 0 && (
+                                                    <img src={Bag} alt="Bag" className="img-fluid ms-1" style={{ marginTop: '-3px', height: "20px" }} />
+                                                )}
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     )}
-
-                    <p className="fw-bold mb-3 mt-2 page-title-main-name" style={{ fontSize: 16 }}>
-                        {(() => {
-                            const price = displayVariant?.displayPrice || displayVariant?.discountedPrice || prod.price || 0;
-                            const orig = displayVariant?.originalPrice || displayVariant?.mrp || prod.mrp || price;
-                            const disc = orig > price;
-                            const pct = disc ? Math.round(((orig - price) / orig) * 100) : 0;
-                            return disc ? (
-                                <>₹{price}
-                                    <span style={{ textDecoration: "line-through", color: "#888", marginLeft: 8 }}>₹{orig}</span>
-                                    <span style={{ color: "#e53e3e", marginLeft: 8, fontWeight: 600 }}>({pct}% OFF)</span>
-                                </>
-                            ) : <>₹{orig}</>;
-                        })()}
-                    </p>
-
-                    <div className="mt-3">
-                        <button
-                            className={`btn w-100 d-flex align-items-center justify-content-center gap-2 addtocartbuttton page-title-main-name ${isAdding ? "btn-dark" : "btn-outline-dark"
-                                }`}
-                            onClick={(e) => { e.stopPropagation(); showSelectVariantButton ? openVariantOverlay(prod._id, "all") : handleAddToCart(prod); }}
-                            disabled={disabled}
-                            style={{ transition: "background-color .3s ease, color .3s ease" }}
-                        >
-                            {isAdding
-                                ? <><span className="spinner-border spinner-border-sm me-2" role="status" />Adding...</>
-                                : <>{btnText}{!disabled && !isAdding && !showSelectVariantButton && <img src={Bag} alt="Bag" style={{ height: 20 }} />}</>}
-                        </button>
-                    </div>
                 </div>
-
-                {/* Variant Overlay */}
-                {showVariantOverlay === prod._id && (
-                    <div className="variant-overlay" style={{ position: 'absolute' }} onClick={closeVariantOverlay}>
-                        <div className="variant-overlay-content w-100 p-0" onClick={(e) => e.stopPropagation()}
-                            style={{ width: "90%", maxWidth: 500, maxHeight: "80vh", background: "#fff", overflow: "hidden", display: "flex", flexDirection: "column" }}>
-                            <div className="overlay-header d-flex justify-content-between align-items-center p-3 border-bottom">
-                                <h5 className="m-0 page-title-main-name">Select Variant ({totalVars})</h5>
-                                <button onClick={closeVariantOverlay} style={{ background: "none", border: "none", fontSize: 24 }}>×</button>
-                            </div>
-                            <div className="variant-tabs d-flex">
-                                <button className={`variant-tab flex-fill py-3 page-title-main-name ${selectedVariantType === "all" ? "active" : ""}`} onClick={() => setSelectedVariantType("all")}>All ({totalVars})</button>
-                                {grouped.color.length > 0 && <button className={`variant-tab flex-fill py-3 page-title-main-name ${selectedVariantType === "color" ? "active" : ""}`} onClick={() => setSelectedVariantType("color")}>Colors ({grouped.color.length})</button>}
-                                {grouped.text.length > 0 && <button className={`variant-tab flex-fill py-3 ${selectedVariantType === "text" ? "active" : ""}`} onClick={() => setSelectedVariantType("text")}>Sizes ({grouped.text.length})</button>}
-                            </div>
-                            <div className="p-3 overflow-auto flex-grow-1 page-title-main-name">
-                                {(selectedVariantType === "all" || selectedVariantType === "color") && grouped.color.length > 0 && (
-                                    <div className="row row-cols-4 g-3">
-                                        {grouped.color.map((v) => {
-                                            const sel = selectedVariants[prod._id]?.sku === v.sku;
-                                            const oosV = v.stock <= 0;
-                                            return (
-                                                <div className="col-lg-4 col-6" key={v.sku || v._id}>
-                                                    <div className="text-center" style={{ cursor: oosV ? "not-allowed" : "pointer" }}
-                                                        onClick={() => !oosV && (handleVariantSelect(prod._id, v), closeVariantOverlay())}>
-                                                        <div style={{ width: 28, height: 28, borderRadius: "20%", backgroundColor: v.hex || "#ccc", margin: "0 auto 8px", border: sel ? "3px solid #000" : "1px solid #ddd", opacity: oosV ? 0.5 : 1, position: "relative" }}>
-                                                            {sel && <span style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", color: "#fff", fontWeight: "bold" }}>✓</span>}
-                                                        </div>
-                                                        <div className="small page-title-main-name" style={{ fontSize: "14px !important" }}>{getVariantDisplayText(v)}</div>
-                                                        {oosV && <div className="text-danger small">Out of Stock</div>}
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                )}
-                                {(selectedVariantType === "all" || selectedVariantType === "text") && grouped.text.length > 0 && (
-                                    <div className="row row-cols-3 g-3">
-                                        {grouped.text.map((v) => {
-                                            const sel = selectedVariants[prod._id]?.sku === v.sku;
-                                            const oosV = v.stock <= 0;
-                                            return (
-                                                <div className="col" key={v.sku || v._id}>
-                                                    <div className="text-center" style={{ cursor: oosV ? "not-allowed" : "pointer" }}
-                                                        onClick={() => !oosV && (handleVariantSelect(prod._id, v), closeVariantOverlay())}>
-                                                        <div style={{ padding: 10, borderRadius: 8, border: sel ? "3px solid #000" : "1px solid #ddd", background: sel ? "#f8f9fa" : "#fff", minHeight: 50, display: "flex", alignItems: "center", justifyContent: "center", opacity: oosV ? 0.5 : 1 }}>
-                                                            {getVariantDisplayText(v)}
-                                                        </div>
-                                                        {oosV && <div className="text-danger small mt-1">Out of Stock</div>}
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                )}
             </div>
         );
     };
@@ -4948,7 +5301,9 @@ export default function ProductPage() {
             <Header />
 
             {/* 🔥 UPDATED: HERO BANNER REPLACED WITH SWIPER SLIDER 🔥 */}
-            {bannerImages?.length > 0 && (
+            {bannerImages?.length > 0 &&
+                !location.pathname.toLowerCase().includes("/skintype") &&
+                !(filters.skinTypes && filters.skinTypes.length > 0) ? (
                 <section className="hero-slider text-center mt-xl-5 pt-xl-4 padding-left-rightss">
                     <Swiper
                         ref={swiperRef}
@@ -5000,24 +5355,38 @@ export default function ProductPage() {
                         })}
                     </Swiper>
                 </section>
+            ) : (
+                <div className="non-hero-spacer" />
             )}
 
             {/* Trending Categories */}
             {trendingCategories.length > 0 && (
                 <div className="container-lg mt-4 mb-4">
-                    <Swiper
-                        modules={[Navigation]}
-                        spaceBetween={10}
-                        slidesPerView="auto"
-                        navigation
-                        style={{ padding: "5px 0" }}
+                    <h2 className="text-center" style={{ marginBottom: "30px", textAlign: "center" }}>Top Catagories</h2>
+                    <div
+                        className="category-swiper-outer"
+                        style={{
+                            width: "100%",
+                            display: "flex",
+                            justifyContent: "center",
+                        }}
                     >
-                        {trendingCategories.map((cat) => {
-                            const isActive = activeCategorySlug === cat.slug;
+                        <Swiper
+                            modules={[Navigation]}
+                            spaceBetween={10}
+                            slidesPerView="auto"
+                            navigation
+                            style={{
+                                padding: "5px 0",
+                                width: "auto" // Swiper ko sirf apne slides ke hisab se width lene do
+                            }}
+                        >
+                            {trendingCategories.map((cat) => {
+                                const isActive = activeCategorySlug === cat.slug;
 
-                            return (
-                                <SwiperSlide key={cat.slug} className="mx-auto" style={{ width: "auto" }}>
-                                    {/* <button
+                                return (
+                                    <SwiperSlide key={cat.slug} className="mx-auto" style={{ width: "auto" }}>
+                                        {/* <button
                                         onClick={() => handleCategoryPillClick(cat)}
                                         className={`btn px-4 py-2 page-title-main-name ${isActive ? "btn-dark" : "btn-outline-secondary"
                                             }`}
@@ -5033,24 +5402,28 @@ export default function ProductPage() {
                                         {cat.name}
                                     </button> */}
 
-                                    <button
-                                        onClick={() => handleCategoryPillClick(cat)}
-                                        className={`btn px-4 py-2 page-title-main-name ${isActive ? "btn-dark custom-pill" : "custom-pill"}`}
-                                        style={{
-                                            fontSize: 13,
-                                            fontWeight: isActive ? 600 : 400,
-                                            transition: "all 0.18s ease",
-                                            transform: isActive ? "scale(1.04)" : "scale(1)",
-                                            whiteSpace: "nowrap",
-                                        }}
-                                        title={`Filter by ${cat.name}`}
-                                    >
-                                        {cat.name}
-                                    </button>
-                                </SwiperSlide>
-                            );
-                        })}
-                    </Swiper>
+                                        <button
+                                            onClick={() => handleCategoryPillClick(cat)}
+                                            className={`btn px-4 py-2 page-title-main-name ${isActive ? "btn-dark custom-pill" : "custom-pill"}`}
+                                            style={{
+                                                fontSize: 13,
+                                                fontWeight: isActive ? 600 : 400,
+                                                transition: "all 0.18s ease",
+                                                transform: isActive ? "scale(1.04)" : "scale(1)",
+                                                whiteSpace: "nowrap",
+                                                margin: "0 15px",
+                                            }}
+                                            title={`Filter by ${cat.name}`}
+                                        >
+                                            {cat.name}
+                                        </button>
+                                    </SwiperSlide>
+                                );
+                            })}
+
+                        </Swiper>
+
+                    </div>
                 </div>
             )}
 
@@ -5121,7 +5494,7 @@ export default function ProductPage() {
             )}
 
             <div className="padding-left-rightss ms-lg-0 ms-3 mx-3">
-                <h2 className="mb-4 d-none d-lg-block page-title-main-name page-upper-case-first">{pageTitle}</h2>
+                {/* <h2 className="mb-4 d-none d-lg-block page-title-main-name page-upper-case-first">{pageTitle}</h2> */}
 
                 <div className="row">
                     <div className="d-none d-lg-block col-lg-3">
@@ -5224,7 +5597,7 @@ export default function ProductPage() {
                         <div className="mb-3 d-flex justify-content-between align-items-center">
                             <span className="text-muted page-title-main-name d-lg-block d-none">
                                 {pageTitle || `Showing ${allProducts.length} products`}
-                                {hasMore && pageTitle && " (Scroll for more)"}
+                                {/* {hasMore && pageTitle && " (Scroll for more)"} */}
                             </span>
                         </div>
 
@@ -5315,6 +5688,182 @@ export default function ProductPage() {
                     </div>
                 </div>
             </div>
+            {/* ===================== OUT OF STOCK POPUP ===================== */}
+            <OutOfStockPopup
+                isOpen={showOutOfStockPopup}
+                onClose={closeOutOfStockPopup}
+                productName={outOfStockProductName}
+            />
+
+            {/* ===================== MOBILE BOTTOM SHEET DRAWER ===================== */}
+            {showVariantOverlay && (() => {
+                const item = allProducts.find(p => p._id === showVariantOverlay);
+                if (!item) return null;
+
+                const allVariants = item.variants || [];
+                const displayVariant = tempSelectedVariants[item._id] || selectedVariants[item._id] || (allVariants.find((v) => v.stock > 0) || allVariants[0]) || {};
+                const groupedVariants = groupVariantsByType(allVariants);
+                const isAdding = addingToCart[item._id];
+                const isCurrentVariantOutOfStock = displayVariant.stock <= 0;
+
+                const hasColorVariants = groupedVariants.color.length > 0;
+                const hasTextVariants = groupedVariants.text.length > 0;
+
+                return (
+                    <>
+                        <div
+                            className="mobile-sheet-backdrop"
+                            onClick={(e) => { e.stopPropagation(); closeVariantOverlay(); }}
+                        />
+                        <div className="mobile-sheet-container" onClick={(e) => e.stopPropagation()}>
+                            {/* Drag grabber */}
+                            <div className="mobile-sheet-grabber" onClick={closeVariantOverlay} style={{ cursor: 'pointer' }} />
+
+                            {/* Header */}
+                            <div className="mobile-sheet-header">
+                                <h3 className="mobile-sheet-title">
+                                    {hasColorVariants ? "Select Shade" : "Select Variant"}
+                                </h3>
+                                <button className="mobile-sheet-close-btn" onClick={closeVariantOverlay}>
+                                    &times;
+                                </button>
+                            </div>
+
+                            {/* Body content with scrolling swatches */}
+                            <div className="mobile-sheet-body">
+                                {hasColorVariants && (
+                                    <div className="mobile-sheet-variants-grid">
+                                        {groupedVariants.color.map((v) => {
+                                            const isSelected = displayVariant.sku === v.sku;
+                                            const isOutOfStock = (v.stock ?? 0) <= 0;
+                                            const variantText = getVariantDisplayText(v);
+
+                                            return (
+                                                <div
+                                                    key={getSku(v) || v._id}
+                                                    className={`mobile-sheet-variant-item ${isSelected ? "selected" : ""} ${isOutOfStock ? "oos" : ""}`}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        if (!isOutOfStock) {
+                                                            handleVariantSelect(item._id, v);
+                                                            setTempSelectedVariants(prev => ({ ...prev, [item._id]: v }));
+                                                        }
+                                                    }}
+                                                >
+                                                    <div
+                                                        className={`mobile-sheet-color-circle ${isSelected ? "selected" : ""} ${isOutOfStock ? "oos" : ""}`}
+                                                        style={{ backgroundColor: v.hex || "#ccc" }}
+                                                    >
+                                                        {isSelected && (
+                                                            <FaCheck className="mobile-sheet-check-icon" />
+                                                        )}
+                                                    </div>
+                                                    <span className="mobile-sheet-variant-text">
+                                                        {variantText}
+                                                    </span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+
+                                {hasTextVariants && !hasColorVariants && (
+                                    <div className="mobile-sheet-variants-grid">
+                                        {groupedVariants.text.map((v) => {
+                                            const isSelected = displayVariant.sku === v.sku;
+                                            const isOutOfStock = (v.stock ?? 0) <= 0;
+                                            const variantText = getVariantDisplayText(v);
+
+                                            return (
+                                                <div
+                                                    key={getSku(v) || v._id}
+                                                    className="mobile-sheet-variant-item"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        if (!isOutOfStock) {
+                                                            handleVariantSelect(item._id, v);
+                                                            setTempSelectedVariants(prev => ({ ...prev, [item._id]: v }));
+                                                        }
+                                                    }}
+                                                >
+                                                    <button className={`mobile-sheet-text-pill ${isSelected ? "selected" : ""} ${isOutOfStock ? "oos" : ""}`}>
+                                                        <span>{variantText}</span>
+                                                        {isSelected && <FaCheck style={{ fontSize: '10px' }} />}
+                                                    </button>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Footer Price & Info */}
+                            <div className="mobile-sheet-footer">
+                                <div className="mobile-sheet-footer-left">
+                                    <span className="mobile-sheet-selected-label">
+                                        {getVariantDisplayText(displayVariant)}
+                                    </span>
+                                    <div className="mobile-sheet-price-row">
+                                        <span className="mobile-sheet-current-price">
+                                            ₹{displayVariant.displayPrice}
+                                        </span>
+                                        {displayVariant.originalPrice > displayVariant.displayPrice && (
+                                            <>
+                                                <span className="mobile-sheet-original-price">
+                                                    ₹{displayVariant.originalPrice}
+                                                </span>
+                                                <span className="mobile-sheet-discount">
+                                                    ({Math.round(((displayVariant.originalPrice - displayVariant.displayPrice) / displayVariant.originalPrice) * 100)}% OFF)
+                                                </span>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+                                <span
+                                    className="mobile-sheet-view-details"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        navigate(`/product/${getProductSlug(item)}`);
+                                        closeVariantOverlay();
+                                    }}
+                                >
+                                    View Details
+                                </span>
+                            </div>
+
+                            {/* Add to Bag Button */}
+                            <div className="mobile-sheet-action-wrap">
+                                <button
+                                    className="mobile-sheet-btn-add"
+                                    disabled={isAdding || isCurrentVariantOutOfStock}
+                                    onClick={async (e) => {
+                                        e.stopPropagation();
+                                        const chosen = tempSelectedVariants[item._id] || selectedVariants[item._id] || (allVariants.find((v) => v.stock > 0) || allVariants[0]);
+                                        if (chosen) {
+                                            handleVariantSelect(item._id, chosen);
+                                        }
+                                        await handleAddToCart(item, chosen);
+                                        closeVariantOverlay();
+                                    }}
+                                >
+                                    {isAdding ? (
+                                        <>
+                                            <span className="spinner-border spinner-border-sm" role="status"></span>
+                                            Adding...
+                                        </>
+                                    ) : isCurrentVariantOutOfStock ? (
+                                        "Out of Stock"
+                                    ) : (
+                                        "Add to Bag"
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                    </>
+                );
+            })()}
+            {/* ===================== END MOBILE BOTTOM SHEET DRAWER ===================== */}
+
             <Footer />
         </>
     );

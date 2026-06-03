@@ -7649,6 +7649,7 @@ const RecommendationSlider = ({ title, products: initialProducts }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedVariants, setSelectedVariants] = useState({});
+  const [tempSelectedVariants, setTempSelectedVariants] = useState({});
   const [addingToCart, setAddingToCart] = useState({});
 
   // ===================== WISHLIST STATES =====================
@@ -7886,7 +7887,7 @@ const RecommendationSlider = ({ title, products: initialProducts }) => {
     const availableVariants = allVariants.filter(v => v && (parseInt(v.stock || 0) > 0));
     const defaultVariant = allVariants[0] || {};
 
-    const storedVariant = selectedVariants[product._id];
+    const storedVariant = tempSelectedVariants[product._id] || selectedVariants[product._id];
 
     let selectedVariant = storedVariant ||
       product.selectedVariant ||
@@ -7977,7 +7978,7 @@ const RecommendationSlider = ({ title, products: initialProducts }) => {
     };
   }, [selectedVariants, getBrandName, getVariantName, getVariantType, getProductSlug, getProductIdentifier]);
 
-  const handleAddToCart = async (prod) => {
+  const handleAddToCart = async (prod, forceVariant = null) => {
     setAddingToCart((prev) => ({ ...prev, [prod._id]: true }));
     try {
       const variants = Array.isArray(prod.variants) ? prod.variants : [];
@@ -7985,7 +7986,7 @@ const RecommendationSlider = ({ title, products: initialProducts }) => {
       let payload;
 
       if (hasVariants) {
-        const selectedVariant = selectedVariants[prod._id] || prod.variant;
+        const selectedVariant = forceVariant || selectedVariants[prod._id] || prod.variant;
         if (!selectedVariant || selectedVariant.stock <= 0) {
           showToastMsg("Please select an in-stock variant.", "error");
           return;
@@ -8327,7 +8328,6 @@ const RecommendationSlider = ({ title, products: initialProducts }) => {
 
   return (
     <div className="container-fluid position-relative">
-      <ToastContainer position="top-right" autoClose={3000} />
 
       <h2 className="fs-3 text-start foryou-heading mt-3 mb-2 mb-lg-4 mt-lg-5 spacing fw-normal">
         {title}
@@ -8410,7 +8410,7 @@ const RecommendationSlider = ({ title, products: initialProducts }) => {
                 ? (variant?.stock <= 0)
                 : (item.stock <= 0);
 
-              const showSelectVariantButton = hasVariants && !isVariantSelected;
+              const showSelectVariantButton = hasVariants;
 
               const buttonDisabled = isAdding || outOfStock;
               const buttonText = isAdding
@@ -8510,12 +8510,12 @@ const RecommendationSlider = ({ title, products: initialProducts }) => {
                         </button>
 
                         {/* Promo Badge */}
-                        {variant.promoApplied && (
+                        {/* {variant.promoApplied && (
                           <div className="promo-badge">
                             <i className="bi bi-tag-fill me-1"></i>
                             Promo
                           </div>
-                        )}
+                        )} */}
                       </div>
 
                       {/* Product Info */}
@@ -8617,7 +8617,7 @@ const RecommendationSlider = ({ title, products: initialProducts }) => {
 
                     {/* Variant Overlay */}
                     {showVariantOverlay === item._id && (
-                      <div className="variant-overlay" onClick={closeVariantOverlay}>
+                      <div className="variant-overlay" onClick={(e) => { e.stopPropagation(); closeVariantOverlay(); }}>
                         <div
                           className="variant-overlay-content"
                           onClick={(e) => e.stopPropagation()}
@@ -8635,11 +8635,11 @@ const RecommendationSlider = ({ title, products: initialProducts }) => {
                           <div className="overlay-header d-flex justify-content-between align-items-center p-3 border-bottom ">
                             <h5 className="m-0 page-title-main-name">Select Variant ({totalVariants})</h5>
                             <button
-                              onClick={closeVariantOverlay}
+                              onClick={(e) => { e.stopPropagation(); closeVariantOverlay(); }}
                               style={{
                                 background: 'none',
                                 border: 'none',
-                                fontSize: '24px',
+                                fontSize: '40px',
                               }}
                             >
                               ×
@@ -8673,11 +8673,11 @@ const RecommendationSlider = ({ title, products: initialProducts }) => {
                           </div>
 
                           {/* Content */}
-                          <div className="p-3 overflow-auto flex-grow-1">
+                          <div className="p-3 overflow-auto flex-grow-1 page-title-main-name">
                             {(selectedVariantType === "all" || selectedVariantType === "color") && groupedVariants.color.length > 0 && (
                               <div className="row row-col-4 g-3">
                                 {groupedVariants.color.map((v) => {
-                                  const isSelected = variant.sku === v.sku || (variant._id && variant._id === v._id);
+                                  const isSelected = variant.sku === v.sku;
                                   const isOutOfStock = (v.stock ?? 0) <= 0;
 
                                   return (
@@ -8687,11 +8687,13 @@ const RecommendationSlider = ({ title, products: initialProducts }) => {
                                         style={{
                                           cursor: isOutOfStock ? "not-allowed" : "pointer",
                                         }}
-                                        onClick={() =>
-                                          !isOutOfStock &&
-                                          (handleVariantSelect(item._id, v),
-                                            closeVariantOverlay())
-                                        }
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          if (!isOutOfStock) {
+                                            handleVariantSelect(item._id, v);
+                                            setTempSelectedVariants(prev => ({ ...prev, [item._id]: v }));
+                                          }
+                                        }}
                                       >
                                         <div className="page-title-main-name"
                                           style={{
@@ -8700,7 +8702,7 @@ const RecommendationSlider = ({ title, products: initialProducts }) => {
                                             borderRadius: "20%",
                                             backgroundColor: v.hex || "#ccc",
                                             margin: "0 auto 8px",
-                                            border: isSelected ? "2px solid #000" : "1px solid #ddd",
+                                            border: isSelected ? "3px solid #000" : "1px solid #ddd",
                                             opacity: isOutOfStock ? 0.5 : 1,
                                             position: "relative",
                                           }}
@@ -8738,7 +8740,7 @@ const RecommendationSlider = ({ title, products: initialProducts }) => {
                             {(selectedVariantType === "all" || selectedVariantType === "text") && groupedVariants.text.length > 0 && (
                               <div className="row row-cols-3 g-0">
                                 {groupedVariants.text.map((v) => {
-                                  const isSelected = variant.sku === v.sku || (variant._id && variant._id === v._id);
+                                  const isSelected = variant.sku === v.sku;
                                   const isOutOfStock = (v.stock ?? 0) <= 0;
 
                                   return (
@@ -8748,17 +8750,19 @@ const RecommendationSlider = ({ title, products: initialProducts }) => {
                                         style={{
                                           cursor: isOutOfStock ? "not-allowed" : "pointer",
                                         }}
-                                        onClick={() =>
-                                          !isOutOfStock &&
-                                          (handleVariantSelect(item._id, v),
-                                            closeVariantOverlay())
-                                        }
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          if (!isOutOfStock) {
+                                            handleVariantSelect(item._id, v);
+                                            setTempSelectedVariants(prev => ({ ...prev, [item._id]: v }));
+                                          }
+                                        }}
                                       >
                                         <div
                                           style={{
                                             padding: "10px",
                                             borderRadius: "8px",
-                                            border: isSelected ? "2px solid #000" : "1px solid #ddd",
+                                            border: isSelected ? "3px solid #000" : "1px solid #ddd",
                                             background: isSelected ? "#f8f9fa" : "#fff",
                                             minHeight: "50px",
                                             display: "flex",
@@ -8780,6 +8784,53 @@ const RecommendationSlider = ({ title, products: initialProducts }) => {
                                 })}
                               </div>
                             )}
+                          </div>
+
+                          <div className="variant-overlay-footer p-3 border-top">
+                            <div className="small text-muted fw-semibold">
+                              Selected: <span className="text-dark fw-bold">{getVariantDisplayText(variant)}</span>
+                            </div>
+                            <div className="mt-1 mb-2 text-start">
+                              <span 
+                                onClick={(e) => { e.stopPropagation(); handleProductClick(item); }} 
+                                className="text-decoration-none fw-semibold" 
+                                style={{ cursor: 'pointer', fontSize: '12px' }}
+                              >
+                                View Details
+                              </span>
+                            </div>
+                            <button
+                              className={`btn w-100 d-flex align-items-center justify-content-center gap-2 addtocartbuttton page-title-main-name ${isAdding ? "btn-dark" : "btn-outline-dark"}`}
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                const chosen = tempSelectedVariants[item._id] || selectedVariants[item._id] || (variantsToShow.find((v) => v.stock > 0) || variantsToShow[0]);
+                                if (chosen) {
+                                  handleVariantSelect(item._id, chosen);
+                                }
+                                await handleAddToCart(item, chosen);
+                                closeVariantOverlay();
+                              }}
+                              disabled={isAdding || (variant && variant.stock <= 0)}
+                              style={{
+                                transition: "background-color 0.3s ease, color 0.3s ease",
+                              }}
+                            >
+                              {isAdding ? (
+                                <>
+                                  <span className="spinner-border spinner-border-sm me-2" role="status" />
+                                  Adding...
+                                </>
+                              ) : variant?.stock <= 0 ? (
+                                "Out of Stock"
+                              ) : (
+                                <>
+                                  Add to Bag
+                                  {!isAdding && variant?.stock > 0 && (
+                                    <img src={bagIcon} className="img-fluid ms-1" style={{ marginTop: '-3px', height: "20px" }} alt="Bag-icon" />
+                                  )}
+                                </>
+                              )}
+                            </button>
                           </div>
                         </div>
                       </div>

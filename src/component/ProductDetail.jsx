@@ -5588,7 +5588,6 @@ const ProductDetail = () => {
   return (
     <>
       <Header />
-      <ToastContainer position="top-right" autoClose={3000} />
 
       <main className="product-detail-page page-title-main-name">
         <div className="product-detail-container">

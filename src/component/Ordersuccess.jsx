@@ -5535,14 +5535,14 @@ const OrderSuccess = () => {
                     className="img-fluid"
                     style={{ width: "100%", height: "170px", objectFit: "cover" }}
                   />
-                  {item.variant?.discountPercent && (
+                  {/* {item.variant?.discountPercent && (
                     <span
                       className="position-absolute top-0 start-0 badge bg-danger mt-1 ms-2"
                       style={{ fontSize: "14px" }}
                     >
                       -{item.variant.discountPercent}%
                     </span>
-                  )}
+                  )} */}
                 </div>
                 <div className="flex-grow-1 page-title-main-name">
                   <h6 className="fw-bold mb-1">

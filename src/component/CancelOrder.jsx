@@ -1452,14 +1452,14 @@ const CancelOrder = () => {
                   className="rounded"
                   style={{ width: "90px", height: "90px", objectFit: "cover" }}
                 />
-                {item.variant?.discountPercent && (
+                {/* {item.variant?.discountPercent && (
                   <span
                     className="position-absolute top-0 start-0 badge bg-danger mt-1 ms-1"
                     style={{ fontSize: "12px" }}
                   >
                     -{item.variant.discountPercent}%
                   </span>
-                )}
+                )} */}
               </div>
               <div>
                 <h6 className="fw-bold mb-1">{item.name}</h6>

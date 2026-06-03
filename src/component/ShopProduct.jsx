@@ -7768,6 +7768,7 @@ import { UserContext } from "./UserContext.jsx";
 import BrandFilter from "./BrandFilter";
 import "../css/ProductPage.css";
 import axios from "axios";
+import { toast } from "react-toastify";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination, Navigation } from "swiper/modules";
 import "swiper/css";
@@ -7840,6 +7841,7 @@ export default function ProductPage() {
     const [activeCategoryName, setActiveCategoryName] = useState("");
 
     const [selectedVariants, setSelectedVariants] = useState({});
+    const [tempSelectedVariants, setTempSelectedVariants] = useState({});
     const [addingToCart, setAddingToCart] = useState({});
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
@@ -8031,17 +8033,13 @@ export default function ProductPage() {
 
     /* ── toast ──────────────────────────────────────────────────────────────── */
     const showToastMsg = (msg, type = "error", dur = 3000) => {
-        const t = document.createElement("div");
-        t.className = `toast-notification toast-${type}`;
-        t.style.cssText = `
-      position:fixed;top:20px;right:20px;padding:12px 20px;
-      border-radius:8px;color:#fff;z-index:9999;
-      background:${type === "error" ? "#f56565" : "#48bb78"};
-      box-shadow:0 4px 12px rgba(0,0,0,.15);
-    `;
-        t.textContent = msg;
-        document.body.appendChild(t);
-        setTimeout(() => t.remove(), dur);
+        if (type === "success") {
+            toast.success(msg, { autoClose: dur });
+        } else if (type === "info") {
+            toast.info(msg, { autoClose: dur });
+        } else {
+            toast.error(msg, { autoClose: dur });
+        }
     };
 
     /* ── wishlist ───────────────────────────────────────────────────────────── */
@@ -8537,7 +8535,7 @@ export default function ProductPage() {
     }, []);
 
     /* ── cart ───────────────────────────────────────────────────────────────── */
-    const handleAddToCart = async (prod) => {
+    const handleAddToCart = async (prod, forceVariant = null) => {
         setAddingToCart((prev) => ({ ...prev, [prod._id]: true }));
         try {
             const vars = Array.isArray(prod.variants) ? prod.variants : [];
@@ -8545,7 +8543,7 @@ export default function ProductPage() {
             let payload;
 
             if (hasVar) {
-                const sel = selectedVariants[prod._id];
+                const sel = forceVariant || selectedVariants[prod._id] || (vars.find((v) => v.stock > 0) || vars[0]);
                 if (!sel || sel.stock <= 0) {
                     showToastMsg("Please select an in-stock variant.", "error");
                     return;
@@ -8584,7 +8582,7 @@ export default function ProductPage() {
     /* ── ui handlers ────────────────────────────────────────────────────────── */
     const handleVariantSelect = (pid, v) => setSelectedVariants((p) => ({ ...p, [pid]: v }));
     const openVariantOverlay = (pid, t = "all") => { setSelectedVariantType(t); setShowVariantOverlay(pid); };
-    const closeVariantOverlay = () => { setShowVariantOverlay(null); setSelectedVariantType("all"); };
+    const closeVariantOverlay = () => { setShowVariantOverlay(null); setSelectedVariantType("all"); setTempSelectedVariants({}); };
     const getProductSlug = (pr) => (pr.slugs?.[0] ? pr.slugs[0] : pr._id);
 
     const isAnyFilterActive =
@@ -8616,7 +8614,7 @@ export default function ProductPage() {
         const vars = Array.isArray(prod.variants) ? prod.variants : [];
         const hasVar = vars.length > 0;
         const isVariantSelected = !!selectedVariants[prod._id];
-        const displayVariant = selectedVariants[prod._id] || (hasVar ? (vars.find((v) => v.stock > 0) || vars[0]) : null);
+        const displayVariant = tempSelectedVariants[prod._id] || selectedVariants[prod._id] || (hasVar ? (vars.find((v) => v.stock > 0) || vars[0]) : null);
         const grouped = groupVariantsByType(vars);
         const totalVars = vars.length;
         const sku = displayVariant ? getSku(displayVariant) : null;
@@ -8625,7 +8623,7 @@ export default function ProductPage() {
         const img = displayVariant?.images?.[0] || displayVariant?.image || prod.images?.[0] || "/placeholder.png";
         const isAdding = addingToCart[prod._id];
         const oos = hasVar ? displayVariant?.stock <= 0 : prod.stock <= 0;
-        const showSelectVariantButton = hasVar && !isVariantSelected;
+        const showSelectVariantButton = hasVar && vars.length > 1;
         const disabled = isAdding || (!showSelectVariantButton && oos);
         let btnText = "Add to Cart";
         if (isAdding) btnText = "Adding...";
@@ -8674,34 +8672,11 @@ export default function ProductPage() {
                         style={{ cursor: "pointer" }}
                         onClick={() => navigate(`/product/${slugPr}`)}
                     >
-                        {prod.name}
+                        {(() => {
+                            const varName = displayVariant ? getVariantDisplayText(displayVariant) : "";
+                            return varName && varName.toUpperCase() !== "DEFAULT" ? `${prod.name} - ${varName}` : prod.name;
+                        })()}
                     </h5>
-
-                    {/* Variant Selection - Dropdown Style */}
-                    {hasVar && (
-                        <div className="m-0 p-0 ms-0">
-                            {isVariantSelected ? (
-                                <div
-                                    className="text-muted small"
-                                    style={{ cursor: "pointer", display: "inline-block" }}
-                                    onClick={(e) => { e.stopPropagation(); openVariantOverlay(prod._id, "all"); }}
-                                    title="Click to change variant"
-                                >
-                                    Variant: <span className="fw-bold text-dark">{getVariantDisplayText(displayVariant)}</span>
-                                    <FaChevronDown className="ms-1" style={{ fontSize: "10px" }} />
-                                </div>
-                            ) : (
-                                <div
-                                    className="small text-muted"
-                                    style={{ height: "20px", cursor: "pointer", display: "inline-block" }}
-                                    onClick={(e) => { e.stopPropagation(); openVariantOverlay(prod._id, "all"); }}
-                                >
-                                    {vars.length} Variants Available
-                                    <FaChevronDown className="ms-1" style={{ fontSize: "10px" }} />
-                                </div>
-                            )}
-                        </div>
-                    )}
 
                     {/* Price */}
                     <p className="fw-bold mb-3 mt-2 page-title-main-name" style={{ fontSize: 16 }}>
@@ -8735,54 +8710,36 @@ export default function ProductPage() {
                     </div>
                 </div>
 
-                {/* Variant Overlay */}
+                {/* Variant Overlay - STREAMLINED */}
                 {showVariantOverlay === prod._id && (
-                    <div className="variant-overlay" style={{ position: 'absolute' }} onClick={closeVariantOverlay}>
+                    <div className="variant-overlay" onClick={(e) => { e.stopPropagation(); closeVariantOverlay(); }}>
                         <div
-                            className="variant-overlay-content w-100 p-0"
-                            onClick={(e) => e.stopPropagation()}
-                            style={{ width: "90%", maxWidth: 500, maxHeight: "80vh", background: "#fff", overflow: "hidden", display: "flex", flexDirection: "column" }}
+                          className="variant-overlay-content"
+                          onClick={(e) => e.stopPropagation()}
                         >
                             <div className="overlay-header d-flex justify-content-between align-items-center p-3 border-bottom">
-                                <h5 className="m-0 page-title-main-name">Select Variant ({totalVars})</h5>
-                                <button onClick={closeVariantOverlay} style={{ background: "none", border: "none", fontSize: 24 }}>×</button>
+                                <h5 className="m-0 page-title-main-name">Select Variant</h5>
+                                <button onClick={(e) => { e.stopPropagation(); closeVariantOverlay(); }} style={{ background: "none", border: "none", fontSize: "40px" }}>×</button>
                             </div>
-                            <div className="variant-tabs d-flex">
-                                <button
-                                    className={`variant-tab flex-fill py-3 page-title-main-name ${selectedVariantType === "all" ? "active" : ""}`}
-                                    onClick={() => setSelectedVariantType("all")}
-                                >
-                                    All ({totalVars})
-                                </button>
+
+                            <div className="variant-overlay-body page-title-main-name">
                                 {grouped.color.length > 0 && (
-                                    <button
-                                        className={`variant-tab flex-fill py-3 page-title-main-name ${selectedVariantType === "color" ? "active" : ""}`}
-                                        onClick={() => setSelectedVariantType("color")}
-                                    >
-                                        Colors ({grouped.color.length})
-                                    </button>
-                                )}
-                                {grouped.text.length > 0 && (
-                                    <button
-                                        className={`variant-tab flex-fill py-3 ${selectedVariantType === "text" ? "active" : ""}`}
-                                        onClick={() => setSelectedVariantType("text")}
-                                    >
-                                        Sizes ({grouped.text.length})
-                                    </button>
-                                )}
-                            </div>
-                            <div className="p-3 overflow-auto flex-grow-1 page-title-main-name">
-                                {(selectedVariantType === "all" || selectedVariantType === "color") && grouped.color.length > 0 && (
-                                    <div className="row row-cols-4 g-3">
+                                    <div className="row row-cols-4 g-3 mb-4">
                                         {grouped.color.map((v) => {
-                                            const sel = selectedVariants[prod._id]?.sku === v.sku;
+                                            const sel = displayVariant?.sku === v.sku;
                                             const oosV = v.stock <= 0;
                                             return (
                                                 <div className="col-lg-4 col-6" key={v.sku || v._id}>
                                                     <div
                                                         className="text-center"
                                                         style={{ cursor: oosV ? "not-allowed" : "pointer" }}
-                                                        onClick={() => !oosV && (handleVariantSelect(prod._id, v), closeVariantOverlay())}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            if (!oosV) {
+                                                                handleVariantSelect(prod._id, v);
+                                                                setTempSelectedVariants(prev => ({ ...prev, [prod._id]: v }));
+                                                            }
+                                                        }}
                                                     >
                                                         <div style={{
                                                             width: 28, height: 28, borderRadius: "20%",
@@ -8805,17 +8762,23 @@ export default function ProductPage() {
                                         })}
                                     </div>
                                 )}
-                                {(selectedVariantType === "all" || selectedVariantType === "text") && grouped.text.length > 0 && (
+                                {grouped.text.length > 0 && (
                                     <div className="row row-cols-3 g-3">
                                         {grouped.text.map((v) => {
-                                            const sel = selectedVariants[prod._id]?.sku === v.sku;
+                                            const sel = displayVariant?.sku === v.sku;
                                             const oosV = v.stock <= 0;
                                             return (
                                                 <div className="col" key={v.sku || v._id}>
                                                     <div
                                                         className="text-center"
                                                         style={{ cursor: oosV ? "not-allowed" : "pointer" }}
-                                                        onClick={() => !oosV && (handleVariantSelect(prod._id, v), closeVariantOverlay())}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            if (!oosV) {
+                                                                handleVariantSelect(prod._id, v);
+                                                                setTempSelectedVariants(prev => ({ ...prev, [prod._id]: v }));
+                                                            }
+                                                        }}
                                                     >
                                                         <div style={{
                                                             padding: 10, borderRadius: 8,
@@ -8833,6 +8796,56 @@ export default function ProductPage() {
                                         })}
                                     </div>
                                 )}
+                            </div>
+
+                            <div className="variant-overlay-footer">
+                                <div className="small text-muted fw-semibold">
+                                    Selected: <span className="text-dark fw-bold">{getVariantDisplayText(displayVariant)}</span>
+                                </div>
+                                <div className="mt-1 mb-2 text-start">
+                                    <span 
+                                        onClick={(e) => { e.stopPropagation(); navigate(`/product/${slugPr}`); }} 
+                                        className="text-decoration-none fw-semibold" 
+                                        style={{ cursor: 'pointer', fontSize: '12px' }}
+                                    >
+                                        View Details
+                                    </span>
+                                </div>
+                                <button
+                                    className={`btn w-100 d-flex align-items-center justify-content-center gap-2 addtocartbuttton page-title-main-name ${isAdding ? "btn-dark" : "btn-outline-dark"}`}
+                                    onClick={async (e) => {
+                                        e.stopPropagation();
+                                        const chosen = tempSelectedVariants[prod._id] || selectedVariants[prod._id] || (vars.find((v) => v.stock > 0) || vars[0]);
+                                        if (chosen) {
+                                            handleVariantSelect(prod._id, chosen);
+                                        }
+                                        await handleAddToCart(prod, chosen);
+                                        closeVariantOverlay();
+                                    }}
+                                    disabled={isAdding || (displayVariant && displayVariant.stock <= 0)}
+                                    style={{
+                                        transition: "background-color 0.3s ease, color 0.3s ease",
+                                    }}
+                                >
+                                    {isAdding ? (
+                                        <>
+                                            <span
+                                                className="spinner-border spinner-border-sm me-2"
+                                                role="status"
+                                            />
+                                            Adding...
+                                        </>
+                                    ) : displayVariant?.stock <= 0 ? (
+                                        "Out of Stock"
+                                    ) : (
+                                        <>
+                                            Add to Bag
+                                            {!isAdding && displayVariant?.stock > 0 && (
+                                                <img src={Bag} alt="Bag" style={{ height: 20 }} />
+                                            )}
+                                        </>
+                                    )}
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -8941,9 +8954,11 @@ export default function ProductPage() {
         <>
             <Header />
 
+            <div className="non-hero-spacer" />
+
             {/* Trending Categories */}
             {trendingCategories.length > 0 && (
-                <div className="container-lg shoproduct-margin mb-4">
+                <div className="container-lg mt-4 mb-4">
                     <Swiper
                         modules={[Navigation]}
                         spaceBetween={10}
@@ -9049,7 +9064,7 @@ export default function ProductPage() {
             )}
 
             <div className="padding-left-rightss ms-lg-0 ms-3 mx-3">
-                <h2 className="mb-4 d-none d-lg-block page-title-main-name page-upper-case-first">{pageTitle}</h2>
+                {/* <h2 className="mb-4 d-none d-lg-block page-title-main-name page-upper-case-first">{pageTitle}</h2> */}
 
                 <div className="row">
                     {/* Desktop Sidebar */}
@@ -9191,7 +9206,7 @@ export default function ProductPage() {
                         <div className="mb-3 d-flex justify-content-between align-items-center">
                             <span className="text-muted page-title-main-name d-lg-block d-none">
                                 {pageTitle || `Showing ${allProducts.length} products`}
-                                {hasMore && pageTitle && " (Scroll for more)"}
+                                {/* {hasMore && pageTitle && " (Scroll for more)"} */}
                             </span>
 
                             {isAnyFilterActive && activeFilterChips.length > 0 && (

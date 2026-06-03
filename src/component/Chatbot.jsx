@@ -9845,7 +9845,7 @@ const Chatbot = ({ onAddToCart }) => {
      ══════════════════════════════════════════════════════════════════════ */
   return (
     <>
-      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
+      {/* <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} /> */}
       {!open && <button className="chat-trigger" onClick={handleOpen}>💬</button>}
 
       {open && (
