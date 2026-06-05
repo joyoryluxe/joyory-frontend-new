@@ -1,99 +1,3 @@
-/* *{
-margin: 0;
-padding: 0;
-box-sizing: border-box;
-}
-
-
-.bestSellers {
-  margin-top: 1.5rem;
-  margin-bottom: 2rem;
-}
-
-.bestSellers__heading {
-  text-align: center;
-  font-weight: 800;
-  letter-spacing: 2px;
-  margin: 0;
-}
-
-.bestSellers__sub {
-  text-align: center;
-  margin: 4px 0 18px;
-  font-size: 12px;
-  letter-spacing: 2px;
-  color: #777;
-}
-
-
-.bs-card {
-  display: flex;
-  align-items: center;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.bs-card__imgWrap {
-  width: min(360px, 90vw);
-  margin-inline: auto;
-}
-
-.bs-card__img {
-  width: 100%;
-  aspect-ratio: 1 / 1;
-  object-fit: cover;
-  border-radius: 50%;
-  display: block;
-  box-shadow: 0 8px 24px rgba(0,0,0,.12);
-}
-
-.bs-card__title {
-  text-align: center;
-  font-weight: 700;
-  font-size: 14px;
-  letter-spacing: .4px;
-  margin: 0;
-  text-transform: uppercase;
-  line-height: 1.3;
-}
-
-
-.skeleton {
-  position: relative;
-  overflow: hidden;
-  background: #eee;
-  border-radius: 50%;
-}
-.skeleton::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.6) 50%, rgba(255,255,255,0) 100%);
-  transform: translateX(-100%);
-  animation: shimmer 1.2s infinite;
-  border-radius: 50%;
-}
-@keyframes shimmer {
-  100% { transform: translateX(100%); }
-}
-
-
-.bestSellers .swiper-pagination-bullets {
-  margin-top: 10px;
-  position: static;
-}
-
-
-.productDetail {
-  margin-top: 24px;
-  padding: 16px;
-  border: 1px solid #eee;
-  border-radius: 12px;
-  text-align: center;
-  box-shadow: 0 4px 10px rgba(0,0,0,.05);
-} */
-
-
 /* Section */
 
 .bestSellers {
@@ -468,7 +372,6 @@ box-sizing: border-box;
     }
 
     .mobile-sheet-variant-item.oos .mobile-sheet-variant-text {
-        text-decoration: line-through;
         color: #999999;
     }
 
@@ -499,7 +402,6 @@ box-sizing: border-box;
 
     .mobile-sheet-text-pill.oos {
         opacity: 0.4;
-        text-decoration: line-through;
         cursor: not-allowed;
     }
 

@@ -1,114 +1,3 @@
-/* .coupons-container {
-  margin-top: 1rem;
-}
-
-.applied-coupon {
-  background-color: #28a745;
-  color: #fff;
-  font-weight: 600;
-  text-align: center;
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  margin-bottom: 1rem;
-  font-size: 0.95rem;
-}
-
-.available-coupons h6 {
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-}
-
-.available-coupons ul {
-  list-style: none;
-  padding-left: 0;
-  max-height: 200px;
-  overflow-y: auto;
-}
-
-.coupon-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.5rem 0.75rem;
-  border-radius: 6px;
-  margin-bottom: 0.5rem;
-  border: 1px solid #ddd;
-  font-size: 0.9rem;
-  transition: background 0.3s, color 0.3s;
-}
-
-.coupon-item.applicable {
-  background-color: #d4edda;
-  border-color: #c3e6cb;
-  color: #155724;
-  font-weight: 600;
-}
-
-.coupon-item:hover {
-  background-color: #f1f1f1;
-}
-
-.coupon-code {
-  background-color: #0d6efd;
-  color: #fff;
-  font-size: 0.8rem;
-  padding: 0.2rem 0.4rem;
-  border-radius: 4px;
-}
-
-.coupon-input-group {
-  display: flex;
-  gap: 0.5rem;
-  margin-top: 1rem;
-}
-
-.coupon-input {
-  flex: 1;
-  padding: 0.5rem 0.75rem;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  font-size: 0.9rem;
-}
-
-.coupon-apply-btn {
-  padding: 0.5rem 0.75rem;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  border: none;
-  background-color: #0d6efd;
-  color: #fff;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-.coupon-apply-btn:hover {
-  background-color: #0b5ed7;
-}
-
-.coupon-message {
-  margin-top: 0.5rem;
-  font-size: 0.85rem;
-}
-
-@media (max-width: 768px) {
-  .coupon-input-group {
-    flex-direction: column;
-  }
-
-  .coupon-apply-btn {
-    width: 100%;
-  }
-
-  .coupon-item {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .coupon-code {
-    margin-top: 0.25rem;
-  }
-} */
-
 .background-color {
     background-color: red !important;
 }
@@ -458,6 +347,7 @@
 
 /* Mobile bottom sheet variant overlay drawer */
 @media (max-width: 767px) {
+
     /* Hide the default desktop inline overlay on mobile */
     .variant-overlay {
         display: none !important;
@@ -562,7 +452,7 @@
         width: 20px;
         height: 20px;
         border-radius: 20%;
-        box-shadow: inset 0 0 1px rgba(0,0,0,0.2), 0 2px 4px rgba(0,0,0,0.06);
+        box-shadow: inset 0 0 1px rgba(0, 0, 0, 0.2), 0 2px 4px rgba(0, 0, 0, 0.06);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -574,7 +464,7 @@
     .mobile-sheet-color-circle.selected {
         border-color: #000000;
         transform: scale(1.05);
-        box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.15), 0 3px 6px rgba(0,0,0,0.1);
+        box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.15), 0 3px 6px rgba(0, 0, 0, 0.1);
     }
 
     .mobile-sheet-color-circle.oos {
@@ -585,7 +475,7 @@
     .mobile-sheet-check-icon {
         color: #ffffff;
         font-size: 10px;
-        text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
     }
 
     .mobile-sheet-variant-text {
@@ -606,7 +496,6 @@
     }
 
     .mobile-sheet-variant-item.oos .mobile-sheet-variant-text {
-        text-decoration: line-through;
         color: #999999;
     }
 
@@ -637,7 +526,6 @@
 
     .mobile-sheet-text-pill.oos {
         opacity: 0.4;
-        text-decoration: line-through;
         cursor: not-allowed;
     }
 
@@ -738,12 +626,61 @@
 
     /* Animations */
     @keyframes fadeInBackdrop {
-        from { opacity: 0; }
-        to { opacity: 1; }
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
     }
 
     @keyframes slideUpSheet {
-        from { transform: translateY(100%); }
-        to { transform: translateY(0); }
+        from {
+            transform: translateY(100%);
+        }
+
+        to {
+            transform: translateY(0);
+        }
     }
-}
+
+
+}
+
+/* Custom Modal Footer Buttons Styling */
+.modal-footer-btn {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    border: 1px solid #000000 !important;
+    border-radius: 10px !important;
+    padding: 8px 24px !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    transition: all 0.3s ease !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    min-width: 140px !important;
+}
+
+.modal-footer-btn:hover {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+    border-color: #000000 !important;
+}
+
+.modal-footer-btn:disabled {
+    opacity: 0.6 !important;
+    cursor: not-allowed !important;
+}
+
+
+@media (max-width: 426px) {
+    .modal-footer-btn {
+        padding: 6px 15px !important;
+        font-size: 13px !important;
+        font-weight: 500 !important;
+    }
+}
