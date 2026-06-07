@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState, useContext, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "./Header";
 import Footer from "./Footer";
@@ -8,6 +8,7 @@ import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Bag from "../assets/Bag.svg";
+import "../css/BestSellers.css";
 
 const Wishlist = () => {
   const [wishlistItems, setWishlistItems] = useState([]);
@@ -15,6 +16,16 @@ const Wishlist = () => {
   const [removingItems, setRemovingItems] = useState({});
   const navigate = useNavigate();
   const { user } = useContext(UserContext);
+
+
+  const formatPrice = useCallback((price) => {
+    const numPrice = parseFloat(price || 0);
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0
+    }).format(numPrice);
+  }, []);
 
   // Fetch Wishlist
   useEffect(() => {
@@ -188,6 +199,7 @@ const Wishlist = () => {
     <>
       <Header />
 
+
       <div className="container py-4 mt-xl-5 pt-xl-5 mt-5 pt-5">
         <h2 className="mb-4 fw-bold page-title-main-name mt-5">
           My Wishlist ({wishlistItems.length})
@@ -222,6 +234,10 @@ const Wishlist = () => {
                       zIndex: 10,
                       width: "32px",
                       height: "32px",
+                      minWidth: "32px",
+                      minHeight: "32px",
+                      maxWidth: "32px",
+                      maxHeight: "32px",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
@@ -247,66 +263,69 @@ const Wishlist = () => {
                       src={item.image || "/placeholder.png"}
                       alt={item.name}
                       className="card-img-top"
-                      style={{ height: "200px", objectFit: "cover", borderRadius: "8px 8px 0 0" }}
+                      style={{ height: "auto", objectFit: "cover", borderRadius: "8px 8px 0 0" }}
                       onError={(e) => (e.target.src = "/placeholder.png")}
                     />
-
-                    {/* {item.discountPercent > 0 && (
-                      <div className="position-absolute top-0 start-0 bg-danger text-white px-2 py-1 m-2 rounded" style={{ fontSize: "12px", fontWeight: "bold" }}>
-                        {item.discountPercent}% OFF
-                      </div>
-                    )} */}
                   </div>
 
                   <div className="card-body d-flex flex-column p-3">
+                    {/* Product Name */}
                     <h6
-                      className="card-title mb-2 page-title-main-name mt-3"
-                      style={{ cursor: "pointer", fontWeight: "600", fontSize: "14px" }}
+                      className="foryou-name font-family-Poppins m-0 p-0 mt-2"
+                      style={{ cursor: "pointer" }}
                       onClick={() => navigate(`/product/${item.productId}`)}
                     >
                       {(() => {
-                        const variantText = (item.variantName || item.variant || "").trim();
-                        return variantText && variantText.toUpperCase() !== "DEFAULT" ? `${item.name} - ${item.variantName || item.variant}` : item.name;
+                        const variantText = (item.variantName || item.variant || "").trim().toUpperCase();
+                        return variantText && variantText !== "DEFAULT" ? `${item.name} - ${variantText}` : item.name;
                       })()}
                     </h6>
 
-                    {/* Rating */}
-                    <div className="d-flex align-items-center mb-2">
-                      {renderStars(item.avgRating)}
-                      <span className="ms-2 text-muted small">
-                        ({item.totalRatings || 0})
-                      </span>
-                    </div>
+                    {/* Price Section */}
+                    <div className="price-section mb-3">
+                      <div className="d-flex align-items-baseline flex-wrap">
+                        <span className="current-price fw-400 fs-5">
+                          {formatPrice(item.displayPrice)}
+                        </span>
 
-                    {/* Price */}
-                    <div className="d-flex align-items-center gap-2 mb-3">
-                      <span className="fw-bold fs-5 text-success">
-                        ₹{item.displayPrice}
-                      </span>
-                      {item.originalPrice > item.displayPrice && (
-                        <del className="text-muted">₹{item.originalPrice}</del>
-                      )}
+                        {item.originalPrice > item.displayPrice && (
+                          <>
+                            <span className="original-price text-muted text-decoration-line-through ms-2 fs-6">
+                              {formatPrice(item.originalPrice)}
+                            </span>
+                            <span className="discount-percent text-danger fw-bold ms-2">
+                              ({(() => {
+                                const discPercent = item.discountPercent || (
+                                  item.originalPrice && item.displayPrice && item.originalPrice > item.displayPrice
+                                    ? Math.round(((item.originalPrice - item.displayPrice) / item.originalPrice) * 100)
+                                    : 0
+                                );
+                                return discPercent;
+                              })()}% OFF)
+                            </span>
+                          </>
+                        )}
+                      </div>
                     </div>
-
-                    {/* Stock Status */}
-                    {item.status === "outOfStock" && (
-                      <p className="text-danger small mb-2">Out of Stock</p>
-                    )}
 
                     {/* Action Buttons */}
-                    <div className="mt-auto">
+                    <div className="mt-md-auto mt-0">
                       <button
                         className="btn w-100 addtocartbuttton d-flex align-items-center justify-content-center gap-2 btn-outline-dark"
                         style={{
                           transition: "background-color .3s ease, color .3s ease",
                         }}
-                        onClick={() => moveToCart(item)}
-                        disabled={item.status === "outOfStock"}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (item.status === "outOfStock") {
+                            toast.error("Please select an in-stock variant.");
+                          } else {
+                            moveToCart(item);
+                          }
+                        }}
                       >
-                        Move to Cart
-                        {item.status !== "outOfStock" && (
-                          <img src={Bag} alt="Bag" style={{ height: 20 }} />
-                        )}
+                        {item.status === "outOfStock" ? "Out of Stock" : "Move to Cart"}
+                        <img src={Bag} alt="Bag" style={{ height: 20 }} />
                       </button>
                     </div>
                   </div>
