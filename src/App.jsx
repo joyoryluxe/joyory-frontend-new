@@ -90,6 +90,7 @@ import Makeupquiz from "./component/Makeupquiz";
 import AddressSections from "./component/AddressSections";
 import PageNotFound from "./component/PageNotFound";
 import ComingSoon from "./component/ComingSoon";
+import BeautyConcierge from "./component/BeautyConcierge";
 
 function App() {
   return (
@@ -219,6 +220,9 @@ function App() {
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+
+          {/* ── AI Beauty Concierge (global floating widget) ── */}
+          <BeautyConcierge />
         </CartProvider>
       </Router>
     </UserProvider>
