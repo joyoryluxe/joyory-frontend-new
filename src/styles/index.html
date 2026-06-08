@@ -1,0 +1,587 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Vanilla JS Product Gallery Slider</title>
+<style>
+  :root {
+    --slider-bg: #fff;
+    --thumb-size: 76px;           /* base thumbnail size (short side) */
+    --thumb-gap: 8px;
+    --dot-size: 8px;
+    --accent: #2d6c8d;
+    --text: #111;
+    --muted: #cfd8dc;
+    --shadow: 0 6px 24px rgba(0,0,0,.08);
+    --radius: 12px;
+    --transition: 300ms ease;
+  }
+
+  body{ margin:0; color:var(--text); background:#f7f8f9}
+  .container{max-width:1100px;margin:auto;padding:16px}
+
+  /* --- Slider shell --- */
+  .vjs-slider{
+    display:grid;
+    gap:16px;
+    background:var(--slider-bg);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    overflow:hidden;
+  }
+  /* Layout areas: we’ll change via modifier classes for thumb position */
+  .vjs-main{position:relative; overflow:hidden; background:#fff}
+  .vjs-track{display:flex; will-change:transform; height:100%}
+  .vjs-slide{
+    min-width:100%;
+    user-select:none;
+    pointer-events:auto;
+    position:relative;
+  }
+  .vjs-slide > *{display:block; width:100%; height:auto}
+  .vjs-slide iframe, .vjs-slide video{width:100%; height:100%; border:0}
+  .vjs-fade .vjs-track{display:block}
+  .vjs-fade .vjs-slide{
+    position:absolute; inset:0; opacity:0; transition:opacity var(--transition);
+  }
+  .vjs-fade .vjs-slide.is-active{opacity:1; position:absolute}
+
+  /* auto height wrapper */
+  .vjs-main-inner{position:relative}
+  .vjs-main.auto-height{transition:height var(--transition)}
+
+  /* Arrows */
+  .vjs-arrow{
+    position:absolute; top:50%; transform:translateY(-50%);
+    width:40px;height:40px;border-radius:999px;border:none;display:grid;place-items:center;
+    background:rgba(255,255,255,.9); box-shadow:0 2px 12px rgba(0,0,0,.12);
+    cursor:pointer; z-index:5;
+  }
+  .vjs-arrow:hover{background:#fff}
+  .vjs-prev{left:10px}
+  .vjs-next{right:10px}
+
+  /* Dots */
+  .vjs-dots{display:flex;gap:8px;justify-content:center;align-items:center;padding:10px}
+  .vjs-dot{width:var(--dot-size);height:var(--dot-size);border-radius:999px;background:#c8d3da;cursor:pointer;transition:transform .2s}
+  .vjs-dot.is-active{background:var(--accent); transform:scale(1.15)}
+
+  /* Thumbs shared */
+  .vjs-thumbs{display:flex;gap:var(--thumb-gap); overflow:hidden; position:relative}
+  .vjs-thumbs-track{display:flex;gap:var(--thumb-gap); will-change:transform}
+  .vjs-thumb{
+    flex:0 0 auto; display:grid; place-items:center; background:#fff; border:1px solid var(--muted);
+    cursor:pointer; border-radius:10px; overflow:hidden; position:relative;
+    transition:border-color 150ms ease, opacity 150ms ease;
+  }
+  .vjs-thumb img, .vjs-thumb video{width:100%; height:100%; object-fit:cover}
+  .vjs-thumb.is-active{border-color:var(--accent)}
+  .vjs-thumb::after{content:""; position:absolute; inset:0; box-shadow:inset 0 0 0 2px transparent; border-radius:inherit; transition:box-shadow .2s}
+  .vjs-thumb.is-active::after{box-shadow:inset 0 0 0 2px var(--accent)}
+  .vjs-thumbs.hide{display:none}
+
+  /* Horizontal thumbs (top/bottom) */
+  .pos-bottom .vjs-thumbs,
+  .pos-top .vjs-thumbs { height: calc(var(--thumb-size) + 2px); }
+  .pos-bottom .vjs-thumb,
+  .pos-top .vjs-thumb { width: calc(var(--thumb-size) * 1.6); height: var(--thumb-size); }
+
+  /* Vertical thumbs (left/right) */
+  .pos-left, .pos-right { grid-template-columns: minmax(0,1fr) auto; }
+  .pos-right{ grid-template-columns: auto minmax(0,1fr) }
+  .pos-left .vjs-thumbs, .pos-right .vjs-thumbs {
+    flex-direction:column; width: calc(var(--thumb-size) * 1.05 + 2px);
+  }
+  .pos-left .vjs-thumbs-track, .pos-right .vjs-thumbs-track{flex-direction:column}
+  .pos-left .vjs-thumb, .pos-right .vjs-thumb { width: calc(var(--thumb-size) * 1.05); height: calc(var(--thumb-size) * 1.05) }
+
+  /* Grid areas */
+  .pos-bottom{grid-template-areas:"main" "thumbs"}
+  .pos-top{grid-template-areas:"thumbs" "main"}
+  .pos-left{grid-template-areas:"thumbs main"}
+  .pos-right{grid-template-areas:"main thumbs"}
+  .vjs-main{grid-area:main}
+  .vjs-thumbs{grid-area:thumbs}
+
+  /* Graceful fallback: before JS loads, only show first main slide & the first N thumbs (set via data-fallback) */
+  .vjs-slider:not(.is-js) .vjs-track .vjs-slide{display:none}
+  .vjs-slider:not(.is-js) .vjs-track .vjs-slide:first-child{display:block}
+  .vjs-slider:not(.is-js) .vjs-thumbs-track .vjs-thumb{display:none}
+  .vjs-slider[data-fallback="3"]:not(.is-js) .vjs-thumbs-track .vjs-thumb:nth-child(-n+3){display:block}
+
+  /* Responsive helpers for demo */
+  @media (max-width: 768px){
+    :root{ --thumb-size: 64px; }
+  }
+  @media (max-width: 480px){
+    :root{ --thumb-size: 56px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h2>Vanilla JS Product Gallery Slider</h2>
+
+  <!--
+    data-fallback sets how many thumbnails are visible when JS is disabled (graceful fallback).
+  -->
+  <div id="gallery" class="vjs-slider pos-right" data-fallback="4" aria-roledescription="carousel">
+    <!-- MAIN -->
+    <div class="vjs-main auto-height" aria-live="polite">
+      <div class="vjs-main-inner">
+        <div class="vjs-track">
+          <!-- Slides — images, video, iframe supported -->
+          <div class="vjs-slide" data-type="image">
+            <img src="https://images.unsplash.com/photo-1520975922284-6c2ee4-7?auto=format&fit=crop&w=1200&q=60" alt="Image 1">
+          </div>
+          <div class="vjs-slide" data-type="image">
+            <img src="https://images.unsplash.com/photo-1520975611721-0400e?auto=format&fit=crop&w=1200&q=60" alt="Image 2">
+          </div>
+          <div class="vjs-slide" data-type="video">
+            <video src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4" muted playsinline></video>
+          </div>
+          <div class="vjs-slide" data-type="iframe">
+            <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" title="YouTube" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy"></iframe>
+          </div>
+          <div class="vjs-slide" data-type="image">
+            <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=1200&q=60" alt="Image 3">
+          </div>
+        </div>
+
+        <!-- Arrows -->
+        <button class="vjs-arrow vjs-prev" aria-label="Previous slide">&#10094;</button>
+        <button class="vjs-arrow vjs-next" aria-label="Next slide">&#10095;</button>
+      </div>
+
+      <!-- Dots -->
+      <div class="vjs-dots" role="tablist" aria-label="Slide indicators"></div>
+    </div>
+
+    <!-- THUMBS NAV -->
+    <div class="vjs-thumbs" aria-label="Thumbnails">
+      <div class="vjs-thumbs-track">
+        <button class="vjs-thumb" aria-label="Go to slide 1"><img src="https://images.unsplash.com/photo-1520975922284-6c2ee4-7?auto=format&fit=crop&w=150&q=60" alt=""></button>
+        <button class="vjs-thumb" aria-label="Go to slide 2"><img src="https://images.unsplash.com/photo-1520975611721-0400e?auto=format&fit=crop&w=150&q=60" alt=""></button>
+        <button class="vjs-thumb" aria-label="Go to slide 3"><span style="font-size:12px;padding:4px">Video</span></button>
+        <button class="vjs-thumb" aria-label="Go to slide 4"><span style="font-size:12px;padding:4px">YouTube</span></button>
+        <button class="vjs-thumb" aria-label="Go to slide 5"><img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=150&q=60" alt=""></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============== Vanilla JS Slider ============== */
+(function(){
+  class VJSSlider {
+    /**
+     * @param {HTMLElement} root
+     * @param {Object} options
+     */
+    constructor(root, options = {}) {
+      this.root = root;
+      this.main = root.querySelector('.vjs-main');
+      this.mainInner = root.querySelector('.vjs-main-inner');
+      this.track = root.querySelector('.vjs-track');
+      this.slides = Array.from(root.querySelectorAll('.vjs-slide'));
+      this.prevBtn = root.querySelector('.vjs-prev');
+      this.nextBtn = root.querySelector('.vjs-next');
+      this.dotsWrap = root.querySelector('.vjs-dots');
+      this.thumbsWrap = root.querySelector('.vjs-thumbs');
+      this.thumbsTrack = root.querySelector('.vjs-thumbs-track');
+      this.thumbs = Array.from(root.querySelectorAll('.vjs-thumb'));
+
+      // Default options
+      const defaults = {
+        effect: 'slide',               // 'slide' | 'fade'
+        thumbnails: true,              // show thumbs
+        thumbnailPosition: 'right',    // 'left'|'right'|'top'|'bottom'
+        visibleThumbnails: 4,          // number visible (center mode keeps active in view)
+        centerThumb: true,
+        autoplay: true,
+        autoDuration: 3000,
+        pauseOnHover: true,
+        infinite: true,
+        swipe: true,
+        dots: true,
+        arrows: true,
+        equalHeight: false,            // all slides equal to tallest
+        autoHeight: true,              // auto-fit current slide height
+        responsive: [
+          // { breakpoint: 768, settings: { thumbnailPosition: 'bottom', visibleThumbnails: 4 } }
+        ],
+        beforeSlideChange: null,       // fn(currentIndex, nextIndex)
+        afterSlideChange: null,        // fn(currentIndex)
+      };
+      this.opts = Object.assign({}, defaults, options);
+
+      // Internal state
+      this.index = 0;
+      this.timer = null;
+      this.isAnimating = false;
+      this.slideW = 0;
+      this.touch = { active:false, startX:0, deltaX:0, startT:0 };
+
+      // Init
+      this._applyResponsive();
+      this._setupStructure();
+      this._bind();
+      this.goTo(0, false);
+      this._autoStart();
+      this.root.classList.add('is-js');
+    }
+
+    /* ---------- Structure & Clones for infinite slide ---------- */
+    _setupStructure(){
+      // effect classes
+      if(this.opts.effect === 'fade'){
+        this.root.classList.add('vjs-fade');
+      }
+
+      // equal height pre-calc
+      if (this.opts.equalHeight) {
+        let maxH = 0;
+        this.slides.forEach(s => { maxH = Math.max(maxH, this._contentHeight(s)); });
+        this.main.style.height = maxH + 'px';
+        this.main.classList.remove('auto-height');
+        this.opts.autoHeight = false;
+      } else if (this.opts.autoHeight) {
+        this.main.classList.add('auto-height');
+      }
+
+      // infinite cloning (slide only)
+      if (this.opts.effect === 'slide' && this.opts.infinite) {
+        const first = this.slides[0].cloneNode(true);
+        const last = this.slides[this.slides.length - 1].cloneNode(true);
+        this.track.insertBefore(last, this.slides[0]);
+        this.track.appendChild(first);
+        this.slides = Array.from(this.track.children);
+        this.index = 1; // because of leading clone
+      }
+
+      // dots
+      if (this.opts.dots && this.dotsWrap) {
+        this.dotsWrap.innerHTML = '';
+        const total = this._logicalCount();
+        for (let i=0;i<total;i++){
+          const b = document.createElement('button');
+          b.className = 'vjs-dot';
+          b.setAttribute('role','tab');
+          b.addEventListener('click', ()=> this.goTo(i));
+          this.dotsWrap.appendChild(b);
+        }
+      } else if (this.dotsWrap) {
+        this.dotsWrap.style.display = 'none';
+      }
+
+      // arrows
+      if (this.prevBtn && this.nextBtn){
+        this.prevBtn.style.display = this.opts.arrows ? '' : 'none';
+        this.nextBtn.style.display = this.opts.arrows ? '' : 'none';
+      }
+
+      // thumbs visibility
+      if (!this.opts.thumbnails && this.thumbsWrap){
+        this.thumbsWrap.classList.add('hide');
+      } else {
+        this._applyThumbPosition();
+        this._sizeThumbs();
+      }
+
+      // observe resize for autoHeight
+      if (this.opts.autoHeight) {
+        this.ro = new ResizeObserver(()=> this._fitHeight());
+        this.ro.observe(this.mainInner);
+      }
+      window.addEventListener('resize', this._onResize, {passive:true});
+      this._onResize(); // initial widths
+    }
+
+    _applyThumbPosition(){
+      const p = this.opts.thumbnailPosition;
+      this.root.classList.remove('pos-left','pos-right','pos-top','pos-bottom');
+      this.root.classList.add('pos-'+p);
+    }
+
+    _sizeThumbs(){
+      if (!this.thumbsWrap || !this.opts.thumbnails) return;
+      // Center mode: we’ll translate thumbsTrack so active thumb stays centered
+      // No fixed width is necessary beyond CSS; we compute track offset as needed.
+    }
+
+    _contentHeight(slide){
+      // compute inner content height
+      if (!slide) return 0;
+      const el = slide.querySelector('img,video,iframe') || slide.firstElementChild || slide;
+      return el ? el.getBoundingClientRect().height : slide.getBoundingClientRect().height;
+    }
+
+    _fitHeight(){
+      if (!this.opts.autoHeight) return;
+      const logicalIndex = this._logicalIndex(this.index);
+      const realSlide = this._realSlideAt(this.index);
+      const h = this._contentHeight(realSlide);
+      if (h) this.main.style.height = h + 'px';
+    }
+
+    _logicalCount(){
+      return this.opts.effect === 'slide' && this.opts.infinite ? this.slides.length - 2 : this.slides.length;
+    }
+    _logicalIndex(physical){
+      if (this.opts.effect !== 'slide' || !this.opts.infinite) return physical;
+      const n = this.slides.length;
+      if (physical === 0) return n-3;             // last real
+      if (physical === n-1) return 0;             // first real
+      return physical-1;
+    }
+    _physicalIndex(logical){
+      if (this.opts.effect !== 'slide' || !this.opts.infinite) return logical;
+      return logical+1;
+    }
+    _realSlideAt(physical){
+      return this.slides[physical];
+    }
+
+    _bind(){
+      // arrows
+      if (this.prevBtn) this.prevBtn.addEventListener('click', ()=> this.prev());
+      if (this.nextBtn) this.nextBtn.addEventListener('click', ()=> this.next());
+
+      // hover pause
+      if (this.opts.pauseOnHover) {
+        this.root.addEventListener('mouseenter', ()=> this._autoStop(), {passive:true});
+        this.root.addEventListener('mouseleave', ()=> this._autoStart(), {passive:true});
+      }
+
+      // thumbs click
+      if (this.thumbs.length){
+        this.thumbs.forEach((t, i)=> t.addEventListener('click', ()=> this.goTo(i)));
+      }
+
+      // swipe
+      if (this.opts.swipe) {
+        this.track.addEventListener('pointerdown', this._onDown, {passive:true});
+        window.addEventListener('pointerup', this._onUp, {passive:true});
+        window.addEventListener('pointercancel', this._onUp, {passive:true});
+        window.addEventListener('pointermove', this._onMove, {passive:false});
+      }
+    }
+
+    _onResize = ()=>{
+      this.slideW = this.main.getBoundingClientRect().width;
+      if (this.opts.effect === 'slide') {
+        this._applyTranslate();
+      }
+      if (this.opts.centerThumb) this._centerActiveThumb();
+      this._applyResponsive();
+    }
+
+    _applyResponsive(){
+      if (!Array.isArray(this.opts.responsive)) return;
+      const ww = window.innerWidth;
+      let applied = {};
+      for (const r of this.opts.responsive){
+        if (ww <= r.breakpoint) applied = Object.assign(applied, r.settings);
+      }
+      this.currentResponsive = applied;
+      // apply just the affected keys
+      if (applied.thumbnailPosition){
+        this.opts.thumbnailPosition = applied.thumbnailPosition;
+        this._applyThumbPosition();
+      }
+      if (typeof applied.visibleThumbnails === 'number') {
+        this.opts.visibleThumbnails = applied.visibleThumbnails;
+      }
+    }
+
+    /* ---------- autoplay ---------- */
+    _autoStart(){
+      if (!this.opts.autoplay) return;
+      this._autoStop();
+      this.timer = setInterval(()=> this.next(), this.opts.autoDuration);
+    }
+    _autoStop(){ if (this.timer) { clearInterval(this.timer); this.timer = null; } }
+
+    /* ---------- swipe ---------- */
+    _onDown = (e)=>{
+      if (!this.opts.swipe || this.opts.effect !== 'slide') return;
+      this.touch.active = true;
+      this.touch.startX = e.clientX;
+      this.touch.deltaX = 0;
+      this.touch.startT = performance.now();
+      this.track.style.transition = 'none';
+    }
+    _onMove = (e)=>{
+      if (!this.touch.active) return;
+      const dx = e.clientX - this.touch.startX;
+      // prevent scrolling when dragging horizontally
+      if (Math.abs(dx) > 6) e.preventDefault();
+      this.touch.deltaX = dx;
+      this._applyTranslate(dx);
+    }
+    _onUp = ()=>{
+      if (!this.touch.active) return;
+      const {deltaX} = this.touch;
+      this.touch.active = false;
+      this.track.style.transition = '';
+      const threshold = Math.min(120, this.slideW * 0.25);
+      if (deltaX > threshold) this.prev();
+      else if (deltaX < -threshold) this.next();
+      else this._applyTranslate(0, true); // snap back
+    }
+
+    /* ---------- nav ---------- */
+    prev(){ this.goTo(this._logicalIndex(this.index)-1); }
+    next(){ this.goTo(this._logicalIndex(this.index)+1); }
+
+    goTo(logicalIndex, animate = true){
+      const count = this._logicalCount();
+      let target = logicalIndex;
+
+      if (this.opts.infinite){
+        if (target < 0) target = count-1;
+        if (target >= count) target = 0;
+      } else {
+        target = Math.max(0, Math.min(count-1, target));
+      }
+
+      const current = this._logicalIndex(this.index);
+      if (typeof this.opts.beforeSlideChange === 'function'){
+        try{ this.opts.beforeSlideChange(current, target); }catch{}
+      }
+
+      if (this.opts.effect === 'fade'){
+        this._doFade(current, target);
+      } else {
+        this._doSlide(target, animate);
+      }
+
+      this._updateDots(target);
+      this._updateThumbs(target);
+      this._centerActiveThumb();
+
+      if (typeof this.opts.afterSlideChange === 'function'){
+        try{ this.opts.afterSlideChange(target); }catch{}
+      }
+    }
+
+    _doFade(current, target){
+      const physicalTarget = this._physicalIndex(target);
+      this.slides.forEach((s, i)=> s.classList.toggle('is-active', i===physicalTarget));
+      this.index = physicalTarget;
+      this._fitHeight();
+    }
+
+    _doSlide(targetLogical, animate=true){
+      const physicalTarget = this._physicalIndex(targetLogical);
+      this.index = physicalTarget;
+      this._applyTranslate(0, animate);
+
+      if (this.opts.infinite){
+        // Handle jump after transition (from clones to real)
+        if (animate){
+          this.isAnimating = true;
+          this.track.addEventListener('transitionend', this._onTransitionEnd, {once:true});
+        }
+      }
+      this._fitHeight();
+    }
+
+    _onTransitionEnd = ()=>{
+      this.isAnimating = false;
+      const n = this.slides.length;
+      if (this.index === 0){ // we are at leading clone (real last)
+        this.index = n-2;
+        this._applyTranslate(0, false);
+      } else if (this.index === n-1){
+        this.index = 1;
+        this._applyTranslate(0, false);
+      }
+    }
+
+    _applyTranslate(dx=0, animate=true){
+      if (this.opts.effect !== 'slide') return;
+      const x = -this.index * this.slideW + dx;
+      if (animate) this.track.style.transition = 'transform var(--transition)';
+      else this.track.style.transition = 'none';
+      this.track.style.transform = `translate3d(${x}px,0,0)`;
+    }
+
+    _updateDots(targetLogical){
+      if (!this.dotsWrap) return;
+      const dots = Array.from(this.dotsWrap.children);
+      dots.forEach((d,i)=> d.classList.toggle('is-active', i===targetLogical));
+    }
+
+    _updateThumbs(targetLogical){
+      if (!this.thumbs.length) return;
+      this.thumbs.forEach((t,i)=> t.classList.toggle('is-active', i===targetLogical));
+    }
+
+    _centerActiveThumb(){
+      if (!this.opts.thumbnails || !this.opts.centerThumb || !this.thumbs.length) return;
+
+      const active = this.thumbs[this._logicalIndex(this.index)];
+      if (!active) return;
+
+      const track = this.thumbsTrack;
+      const wrap = this.thumbsWrap;
+      const wrapRect = wrap.getBoundingClientRect();
+      const actRect = active.getBoundingClientRect();
+      const isVertical = (this.opts.thumbnailPosition === 'left' || this.opts.thumbnailPosition === 'right');
+
+      const trackStyle = track.style;
+      const current = isVertical ? (parseFloat(trackStyle.transform?.match(/translate3d\(.*?,\s*(-?\d+(\.\d+)?)px/)?[1]||0)) : (parseFloat(trackStyle.transform?.match(/translate3d\(\s*(-?\d+(\.\d+)?)px/)?[1]||0));
+      const toCenter = isVertical
+        ? (wrapRect.top + wrapRect.height/2) - (actRect.top + actRect.height/2)
+        : (wrapRect.left + wrapRect.width/2) - (actRect.left + actRect.width/2);
+      let target = (current||0) + toCenter;
+
+      // Clamp so we don't reveal empty space
+      const trackRect = track.getBoundingClientRect();
+      const maxShift = isVertical ? Math.max(0, trackRect.height - wrapRect.height) : Math.max(0, trackRect.width - wrapRect.width);
+      target = Math.max(-maxShift, Math.min(0, target));
+
+      track.style.transition = 'transform var(--transition)';
+      if (isVertical) track.style.transform = `translate3d(0, ${target}px, 0)`;
+      else track.style.transform = `translate3d(${target}px, 0, 0)`;
+    }
+
+    destroy(){
+      this._autoStop();
+      window.removeEventListener('resize', this._onResize);
+      if (this.ro) this.ro.disconnect();
+    }
+  }
+
+  // ---- Instantiate with full feature set ----
+  const slider = new VJSSlider(document.getElementById('gallery'), {
+    effect: 'slide',                // 'slide' or 'fade'
+    thumbnails: true,
+    thumbnailPosition: 'right',     // 'left'|'right'|'top'|'bottom'
+    visibleThumbnails: 4,
+    centerThumb: true,
+    autoplay: true,
+    autoDuration: 3500,
+    pauseOnHover: true,
+    infinite: true,
+    swipe: true,
+    dots: true,
+    arrows: true,
+    autoHeight: true,
+    equalHeight: false,
+    responsive: [
+      { breakpoint: 900, settings: { thumbnailPosition: 'bottom', visibleThumbnails: 4 } },
+      { breakpoint: 640, settings: { thumbnailPosition: 'bottom', visibleThumbnails: 3 } },
+    ],
+    beforeSlideChange: (curr, next)=>{ /* console.log('before', curr,'->',next); */ },
+    afterSlideChange: (curr)=>{ /* console.log('after', curr); */ }
+  });
+
+  // Expose for debugging:
+  window.vjs = slider;
+})();
+</script>
+</body>
+</html>

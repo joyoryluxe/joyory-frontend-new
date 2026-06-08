@@ -1,0 +1,91 @@
+.founder-section {
+  background-color: #d2f0f8; /* light blue background */
+  position: relative;
+  border-radius: 20px;
+}
+
+.width{
+  width: 50%;
+}
+
+@media (max-width:1199px) {
+  .width{
+    width:75% !important;
+  }
+
+  .founder-title{
+    font-size: 28px !important;
+  }
+
+  .founder-text{
+    font-size: 16px !important;
+  }
+  .dott{
+  margin-top: 20px !important;
+  margin-left: 30px;
+  width: 50px;
+}
+}
+
+
+@media (max-width:992px) {
+  .width{
+    width:90% !important;
+  }
+
+  .founder-title{
+    font-size: 28px !important;
+  }
+
+  .founder-text{
+    font-size: 16px !important;
+  }
+  .dott{
+  margin-top: 20px !important;
+  margin-left: 30px;
+  width: 50px;
+}
+}
+
+.founder-box {
+  background-color: #d2f0f8;
+  border-radius: 20px;
+  position: relative;
+}
+
+.founder-title {
+  color: #2e5d88;
+  font-size: 2rem;
+}
+
+.founder-text {
+  font-size: 1.05rem !important;
+  font-weight: 500;
+  color: #1d1d1d;
+  line-height: 1.7;
+}
+
+.dott{
+  margin-top: -40px;
+  margin-left: 30px;
+  width: 50px;
+}
+
+/* Decorative stars */
+.founder-section::before,
+.founder-section::after {
+  content: "✦";
+  font-size: 1.5rem;
+  color: #7b8da5;
+  position: absolute;
+}
+
+.founder-section::before {
+  top: 15px;
+  left: 15px;
+}
+
+.founder-section::after {
+  bottom: 15px;
+  right: 15px;
+}

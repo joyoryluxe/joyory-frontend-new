@@ -1,0 +1,290 @@
+/* src/css/Login.css */
+
+.login-left {
+  flex: 1;
+  color: white;
+  display: flex;
+  font-family: "Alice", sans-serif;
+  justify-content: center;
+  align-items: center;
+  text-align: start;
+  flex-direction: column;
+}
+
+.login-bg {
+    background: url(/src/assets/Login.webp) center top;
+    background-size: cover;
+    /* height: 100%; */
+    align-items: center;
+    background-position-x: 0;
+    background-position-y: -69px;
+}
+
+.signup-btn {
+  margin-top: 10px;
+  background: rgba(255, 255, 255, 0.3);
+  border: none;
+  padding: 0.8rem 2rem;
+  border-radius: 12px;
+  color: #fff;
+  font-weight: bold;
+  margin-top: 0.5rem;
+  backdrop-filter: blur(8px);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  font-family: "roboto", sans-serif;
+  gap: 10px;
+}
+
+.font-size {
+  font-size: 20px;
+  font-family: "roboto", sans-serif;
+}
+
+.signup-redirect {
+  margin-top: 15px;
+}
+
+
+.login-left h1 {
+  font-size: 3.5rem !important;
+}
+
+.login-right {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh !important;
+  width: 100%;
+}
+
+.signup {
+  /* border: 2px solid rgba(229, 229, 229, 0.4); */
+  padding: 1rem 0 0 0;
+  border-radius: 8px 8px 0 0;
+}
+
+
+.login-card {
+  border-radius: 12px;
+  /* padding: 2rem; */
+  width: 90%;
+  max-width: 400px;
+  color: #fff;
+}
+
+.login-card h2 {
+  text-align: center;
+  margin-bottom: 1rem;
+  font-family: "Poppins", sans-serif;
+  font-weight: 600;
+}
+
+.login-card form {
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+}
+
+.login-card label {
+  margin-top: 1rem;
+  font-weight: 500;
+}
+
+.login-card input {
+  padding: 0.6rem;
+  border-radius: 8px;
+  border: none;
+  margin-top: 0.4rem;
+  background: transparent;
+  border: 2px solid #FFF;
+  height: 40px;
+  padding-bottom: 12px;
+  color: #FFF;
+}
+
+.password-field {
+  position: relative;
+}
+
+.password-field input {
+  width: 100%;
+}
+
+.password-field span {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+}
+
+.forgot {
+  font-size: 0.9rem;
+  color: #fff;
+  margin-top: 0.5rem;
+  cursor: pointer;
+}
+
+button[type="submit"] {
+  margin-top: 1.5rem;
+  padding: 0.6rem;
+  border-radius: 5px;
+  border: none;
+  /* background: linear-gradient(to right, rgba(217, 217, 217, 1), rgba(229, 229, 229, 1)) !important; */
+  background-color:#4285AC;
+  color: #FFF;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+  font-family: "Poppins", sans-serif;
+}
+
+button[type="submit"]:hover {
+  background: #4285AC;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  position: absolute;
+  height: 1px;
+  width: 25%;
+  background: #ccc;
+  top: 50%;
+}
+
+/* Add in Login.css */
+.error-msg {
+  color: #ff5b5b;
+  background-color: rgba(255, 0, 0, 0.05);
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+  text-align: center;
+}
+
+
+
+.forgot a {
+  color: #FFF;
+  text-decoration: none;
+}
+
+.forgot a:hover {
+  text-decoration: underline;
+}
+
+/* Login.css */
+.login-card {
+  color: #FFF;
+  /* Black text for everything inside */
+}
+
+
+.login-card .error-msg {
+  color: #FFF;
+}
+
+.login-card input::placeholder {
+  color: #ADADAD;
+  font-size: 12px;
+  /* Slightly gray placeholder text */
+}
+
+.big-checkbox {
+  transform: scale(1.5);   /* Increase size */
+  margin-right: 8px;
+  cursor: pointer;
+}
+
+.big-checkbox:checked {
+  accent-color: #000; /* Optional: custom tick color */
+}
+
+
+/* .signups{
+  background-color: transparent;
+  border: none;
+  text-align: center;
+  font-size: 16px;
+  margin: 0 !important;
+  padding: 0 !important;
+} */
+
+.social-icons {
+  display: none;
+}
+
+
+/*===================================================================================Font_family(Start)==========================================*/
+
+
+.alice-regular {
+  font-family: "Alice", serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+
+/*===================================================================================Font_family(End)==========================================*/
+
+
+/*===================================================================================Media-Query(Start)==========================================*/
+
+
+@media (max-width: 1024px) {
+.login-bg {
+    background: url(/src/assets/Loginr.webp) center no-repeat;
+    background-size: cover;
+    height: 100vh;
+    /* align-items: center; */
+    /* background-position-x: 0; */
+    /* background-position-y: 0  !important; */
+}
+}
+
+@media (max-width: 768px) {
+  .login-wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100vh;
+    overflow: hidden;
+    padding-top: 50px;
+  }
+
+  .social-icons {
+    display: flex;
+  }
+
+  .login-wrapper .login-left {
+    display: none;
+  }
+
+  .login-right {
+    flex: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+  }
+
+  .signup-btn {
+    font-size: 16px;
+    margin: 0;
+  }
+
+  .login-bg {
+    background: url(/src/assets/Loginr.webp) no-repeat center;
+    background-size: cover;
+    height: 100vh;
+    /* align-items: center; */
+    /* background-position-x: 0; */
+    /* background-position-y: -69px; */
+}
+
+}
+
+/*===================================================================================Media-Query(End)==========================================*/
