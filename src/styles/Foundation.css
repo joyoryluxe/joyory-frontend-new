@@ -1,0 +1,115 @@
+.foundation-wrapper {
+    margin-top: 80px;
+    padding-bottom: 50px !important;
+}
+
+/* Formulation Card Styling */
+.formulation-card {
+    border: 2px solid transparent;
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: #fff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    padding: 10px;
+}
+
+.formulation-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+}
+
+.formulation-card.selected {
+    border: 2px solid #000 !important;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+}
+
+/* Base Button Styling */
+.btn-for-shadetones {
+    background-color: #000;
+    color: #fff;
+    border-radius: 0px;
+    border: 1px solid #000;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.btn-for-shadetones:hover {
+    background-color: #fff;
+    color: #000;
+    border: 1px solid #000;
+    border-radius: 0px;
+}
+
+.btn-for-back-buttons {
+    background-color: #fff;
+    color: #000;
+    border: 1px solid #000;
+    border-radius: 0px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.btn-for-back-buttons:hover {
+    background-color: #000;
+    color: #fff;
+    border-radius: 0px;
+}
+
+@media (min-width: 1024px) {
+
+    .btn-for-back-buttons-bg-color,
+    .btn-for-shadetones,
+    .btn-for-back-buttons {
+        min-width: 150px;
+        height: 42px;
+        font-size: 16px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .foundation-wrapper {
+        margin-top: 55px !important;
+
+    }
+
+    .margin-top-foundation {
+        margin-top: 10px !important;
+        font-size: 23px !important;
+    }
+
+    .font-size-of-Foundation .font-sizess {
+        font-size: 14px;
+    }
+
+    .btn-for-back-buttons-bg-color,
+    .btn-for-shadetones,
+    .btn-for-back-buttons {
+        width: auto !important;
+        min-width: 120px !important;
+        padding: 8px 20px !important;
+        font-size: 12px !important;
+        height: auto !important;
+        border-radius: 0px !important;
+    }
+
+    .removel-cross-btn {
+        top: -4px !important;
+    }
+}
+
+@media (max-width: 480px) {
+
+    .btn-for-back-buttons-bg-color,
+    .btn-for-shadetones,
+    .btn-for-back-buttons {
+        padding: 3px 12px !important;
+        min-width: 100px !important;
+        font-size: 11px !important;
+    }
+}
