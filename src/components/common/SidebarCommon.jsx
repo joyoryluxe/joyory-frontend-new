@@ -110,6 +110,14 @@ const Sidebarcomon = () => {
           </li>
 
           <li
+            className={activeSection === "routines" ? "active" : ""}
+            onClick={() => handleNavigate("routines", "/routines")}
+          >
+            <span style={{ marginRight: "10px", fontSize: "1.2rem" }}>🧴</span>
+            Routine Builder
+          </li>
+
+          <li
             className={activeSection === "refer" ? "active" : ""}
             onClick={() => handleNavigate("refer", "/referral")}
           >

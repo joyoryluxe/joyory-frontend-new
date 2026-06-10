@@ -8,6 +8,7 @@ import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import Header from "../components/common/Header";
 import { FaTimes } from "react-icons/fa";
 import AddressSections from "./AddressSections";
+import { getUserAllergens, saveUserAllergens } from "../api/ingredientApi";
 
 const API_BASE = "https://beauty.joyory.com/api/user/profile";
 
@@ -50,6 +51,75 @@ const Useraccount = () => {
     profileImage: "",
   });
 
+  // 🧪 Allergen State & Handlers
+  const [allergens, setAllergens] = useState([]);
+  const [sensitiveIngredients, setSensitiveIngredients] = useState([]);
+  const [allergenNotes, setAllergenNotes] = useState("");
+  const [customAllergen, setCustomAllergen] = useState("");
+  const [customSensitive, setCustomSensitive] = useState("");
+  const [savingAllergens, setSavingAllergens] = useState(false);
+
+  const toggleAllergen = (item) => {
+    const val = item.toLowerCase();
+    setAllergens(prev => {
+      const lowered = prev.map(a => a.toLowerCase());
+      if (lowered.includes(val)) {
+        return prev.filter(a => a.toLowerCase() !== val);
+      } else {
+        return [...prev, item];
+      }
+    });
+  };
+
+  const toggleSensitive = (item) => {
+    const val = item.toLowerCase();
+    setSensitiveIngredients(prev => {
+      const lowered = prev.map(a => a.toLowerCase());
+      if (lowered.includes(val)) {
+        return prev.filter(a => a.toLowerCase() !== val);
+      } else {
+        return [...prev, item];
+      }
+    });
+  };
+
+  const addCustomAllergen = () => {
+    if (!customAllergen.trim()) return;
+    const val = customAllergen.trim();
+    if (!allergens.map(a => a.toLowerCase()).includes(val.toLowerCase())) {
+      setAllergens(prev => [...prev, val]);
+    }
+    setCustomAllergen("");
+  };
+
+  const addCustomSensitive = () => {
+    if (!customSensitive.trim()) return;
+    const val = customSensitive.trim();
+    if (!sensitiveIngredients.map(a => a.toLowerCase()).includes(val.toLowerCase())) {
+      setSensitiveIngredients(prev => [...prev, val]);
+    }
+    setCustomSensitive("");
+  };
+
+  const handleSaveAllergens = async () => {
+    setSavingAllergens(true);
+    try {
+      const res = await saveUserAllergens({
+        allergens,
+        sensitiveIngredients,
+        notes: allergenNotes
+      });
+      if (res.data.success) {
+        alert("Allergen preferences saved successfully! ✅");
+      }
+    } catch (err) {
+      console.error("Error saving allergens:", err);
+      alert("Failed to save allergen profile.");
+    } finally {
+      setSavingAllergens(false);
+    }
+  };
+
   // Fetch Profile
   useEffect(() => {
     const fetchProfile = async () => {
@@ -77,6 +147,18 @@ const Useraccount = () => {
         setProfile(profileData);
         setAddresses(data.addresses || []);
         setFormData({ ...profileData });
+
+        // Fetch User Allergens
+        try {
+          const allergenRes = await getUserAllergens();
+          if (allergenRes.data.success) {
+            setAllergens(allergenRes.data.allergens || []);
+            setSensitiveIngredients(allergenRes.data.sensitiveIngredients || []);
+            setAllergenNotes(allergenRes.data.notes || "");
+          }
+        } catch (err) {
+          console.error("Error fetching allergens during profile load:", err);
+        }
       } catch (err) {
         console.error("Error fetching profile:", err);
       } finally {
@@ -583,6 +665,112 @@ const Useraccount = () => {
               handleDeleteAddress={handleDeleteAddress}
               handleAddNewAddress={handleAddNewAddress}
             />
+
+            {/* 🧪 Allergen & Skin Profile Section */}
+            <section className="ua-allergen-section">
+              <h3 className="ua-title page-title-main-name">🧪 Allergen & Skin Profile</h3>
+              <p className="text-muted small">
+                Configure your skin sensitivities. When you view products in the store, we'll scan their ingredient list and warn you if they contain matches.
+              </p>
+
+              <div className="ua-allergen-group mt-4">
+                <h4 className="ua-subtitle mb-2">High-Risk Allergens (Severe Reactions)</h4>
+                <div className="d-flex flex-wrap gap-2 mb-3">
+                  {["Fragrance", "Parabens", "Sulfates", "Phthalates", "Denatured Alcohol", "Mineral Oil", "Silicones", "Coconut Oil"].map((item) => {
+                    const isActive = allergens.map(a => a.toLowerCase()).includes(item.toLowerCase());
+                    return (
+                      <button
+                        key={item}
+                        type="button"
+                        className={`ua-tag-btn ${isActive ? "active-allergen" : ""}`}
+                        onClick={() => toggleAllergen(item)}
+                      >
+                        {item} {isActive ? "✕" : "+"}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="d-flex gap-2 max-width-400">
+                  <input
+                    type="text"
+                    placeholder="Add custom allergen (e.g. Peanut Oil)..."
+                    value={customAllergen}
+                    onChange={(e) => setCustomAllergen(e.target.value)}
+                    className="form-control form-control-sm"
+                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCustomAllergen(); } }}
+                  />
+                  <button type="button" className="btn btn-dark btn-sm page-title-main-name" onClick={addCustomAllergen}>Add</button>
+                </div>
+                {allergens.length > 0 && (
+                  <div className="mt-2 text-start">
+                    <span className="small text-muted me-2">Selected Allergens:</span>
+                    {allergens.map((item, idx) => (
+                      <span key={idx} className="badge bg-danger me-1 p-2" style={{ cursor: "pointer" }} onClick={() => toggleAllergen(item)}>
+                        {item} ✕
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="ua-allergen-group mt-4 pt-2">
+                <h4 className="ua-subtitle mb-2">Sensitive Ingredients (Mild Irritants)</h4>
+                <div className="d-flex flex-wrap gap-2 mb-3">
+                  {["Essential Oils", "Salicylic Acid", "Glycolic Acid", "Retinol", "Phenoxyethanol", "Mica", "Talc"].map((item) => {
+                    const isActive = sensitiveIngredients.map(a => a.toLowerCase()).includes(item.toLowerCase());
+                    return (
+                      <button
+                        key={item}
+                        type="button"
+                        className={`ua-tag-btn ${isActive ? "active-sensitive" : ""}`}
+                        onClick={() => toggleSensitive(item)}
+                      >
+                        {item} {isActive ? "✕" : "+"}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="d-flex gap-2 max-width-400">
+                  <input
+                    type="text"
+                    placeholder="Add sensitive ingredient (e.g. Lanolin)..."
+                    value={customSensitive}
+                    onChange={(e) => setCustomSensitive(e.target.value)}
+                    className="form-control form-control-sm"
+                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCustomSensitive(); } }}
+                  />
+                  <button type="button" className="btn btn-dark btn-sm page-title-main-name" onClick={addCustomSensitive}>Add</button>
+                </div>
+                {sensitiveIngredients.length > 0 && (
+                  <div className="mt-2 text-start">
+                    <span className="small text-muted me-2">Selected Sensitive:</span>
+                    {sensitiveIngredients.map((item, idx) => (
+                      <span key={idx} className="badge bg-warning text-dark me-1 p-2" style={{ cursor: "pointer" }} onClick={() => toggleSensitive(item)}>
+                        {item} ✕
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="ua-field page-title-main-name mt-4">
+                <label className="ua-label">Skin Concerns & Allergen Notes</label>
+                <textarea
+                  placeholder="Tell us about other specific skin details or allergies..."
+                  value={allergenNotes}
+                  onChange={(e) => setAllergenNotes(e.target.value)}
+                  className="form-control"
+                  rows={3}
+                  style={{ resize: "vertical" }}
+                />
+              </div>
+
+              <div className="ua-field ua-actions page-title-main-name mt-3">
+                <button type="button" className="ua-btn edit-save-profile-button" onClick={handleSaveAllergens} disabled={savingAllergens}>
+                  {savingAllergens ? "Saving Skin Profile..." : "Save Skin Profile"}
+                </button>
+              </div>
+            </section>
 
             <div className="ua-danger mt-4">
               <button className="ua-delete page-title-main-name" onClick={handleDeleteAccount}>

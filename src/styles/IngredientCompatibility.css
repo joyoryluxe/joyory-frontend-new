@@ -1,0 +1,777 @@
+/* src/css/IngredientCompatibility.css */
+
+.ic-container {
+  max-width: 720px;
+  margin: 120px auto 60px;
+  padding: 0 16px;
+  box-sizing: border-box;
+}
+
+.ic-card {
+  background: #ffffff;
+  border: 1px solid #f2d5dc;
+  border-radius: 24px;
+  padding: 40px;
+  box-shadow: 0 16px 48px rgba(163, 118, 129, 0.08);
+}
+
+.ic-icon-header {
+  font-size: 44px;
+  display: inline-block;
+  animation: ic-float 3s ease-in-out infinite;
+}
+
+@keyframes ic-float {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.min-height-60 {
+  min-height: 60px;
+  display: flex;
+  align-content: flex-start;
+}
+
+.hover-bg-light:hover {
+  background-color: #fff2f4 !important;
+  color: #c2185b !important;
+}
+
+/* Tabs hover state */
+.ic-card button:hover {
+  opacity: 0.85;
+}
+
+/* Autocomplete scroll and layout */
+.position-absolute.w-100.bg-white.border.rounded {
+  max-height: 220px;
+  overflow-y: auto;
+  z-index: 1050;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Form input styling focus state */
+.ic-card input:focus,
+.ic-card textarea:focus {
+  border-color: #c2185b !important;
+  /* box-shadow: 0 0 0 0.2rem rgba(194, 24, 91, 0.15) !important; */
+  outline: none;
+  color: black !important;
+}
+
+/* Product compare card hover animation */
+.ic-card .shadow-sm {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ic-card .shadow-sm:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(163, 118, 129, 0.12) !important;
+}
+
+@media (max-width: 576px) {
+  .ic-container {
+    margin: 80px auto 40px;
+  }
+
+  .ic-card {
+    padding: 24px 16px;
+    border-radius: 16px;
+  }
+}
+
+/* Horizontal Scrollbar customization for bestseller shelf */
+.scrollbar-thin::-webkit-scrollbar {
+  height: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: #fdf2f4;
+  border-radius: 10px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #fae1e6;
+  border-radius: 10px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: #f5b3c2;
+}
+
+/* Popular products mini cards */
+.popular-product-mini-card {
+  transition: all 0.2s ease-in-out;
+  border-color: #fae5e9 !important;
+}
+
+.popular-product-mini-card:hover {
+  transform: translateY(-2px);
+  border-color: #c2185b !important;
+  box-shadow: 0 6px 15px rgba(163, 118, 129, 0.1) !important;
+}
+
+/* Small button utility */
+.btn-xs {
+  padding: 2px 6px;
+  font-size: 10px;
+  line-height: 1.2;
+}
+
+/* Selected Ingredients Badges / Chips */
+.ic-selected-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #ffffff;
+  color: #333333;
+  border: 1px solid #fae5e9;
+  padding: 6px 14px;
+  border-radius: 50px;
+  font-size: 13.5px;
+  font-weight: 500;
+  box-shadow: 0 2px 6px rgba(163, 118, 129, 0.04);
+  transition: all 0.2s ease;
+}
+
+.ic-selected-badge:hover {
+  border-color: #c2185b;
+  box-shadow: 0 4px 10px rgba(163, 118, 129, 0.1);
+  transform: translateY(-1px);
+}
+
+.ic-selected-badge-remove-btn {
+  border: none;
+  background: transparent;
+  color: #dc3545;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.1s ease, color 0.1s ease;
+}
+
+.ic-selected-badge-remove-btn:hover {
+  transform: scale(1.15);
+  color: #bd2130;
+}
+
+.ic-selected-list-box {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  border: 1px solid #fae5e9;
+  border-radius: 16px;
+  padding: 16px 20px;
+  background-color: #fffafb;
+  min-height: 72px;
+  align-items: center;
+  transition: all 0.2s ease-in-out;
+}
+
+/* Popular presets styling */
+.ic-preset-btn {
+  background-color: #ffffff;
+  color: #64748b;
+  border: 1px solid #fae5e9;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ic-preset-btn:hover {
+  background-color: #fff2f4;
+  color: #c2185b;
+  border-color: #f5b3c2;
+}
+
+/* Action Buttons Custom Premium */
+.ic-action-btn-primary {
+  background-color: #1e293b;
+  color: #ffffff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  flex-grow: 1;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ic-action-btn-primary:hover:not(:disabled) {
+  background-color: #0f172a;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+}
+
+.ic-action-btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.ic-action-btn-reset {
+  background-color: #ffffff;
+  color: #64748b;
+  border: 1px solid #fae5e9;
+  padding: 10px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ic-action-btn-reset:hover {
+  background-color: #f1f5f9;
+  color: #0f172a;
+  border-color: #cbd5e1;
+}
+
+/* Severity Badges */
+.ic-severity-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 20px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.ic-severity-high {
+  background-color: #fff5f5;
+  color: #e53e3e;
+  border: 1px solid #fed7d7;
+}
+
+.ic-severity-medium {
+  background-color: #fffaf0;
+  color: #dd6b20;
+  border: 1px solid #feebc8;
+}
+
+.ic-severity-low {
+  background-color: #ebf8ff;
+  color: #3182ce;
+  border: 1px solid #bee3f8;
+}
+
+/* Conflict layout flex wrapper */
+.ic-conflict-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+@media (max-width: 576px) {
+  .ic-conflict-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
+
+/* Decoded OCR Badges */
+.ic-decoded-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 12.5px;
+  font-weight: 500;
+  border-radius: 20px;
+  transition: all 0.2s ease;
+}
+
+.ic-decoded-safe {
+  background-color: #ffffff;
+  color: #333333;
+  border: 1px solid #e2e8f0;
+}
+
+.ic-decoded-safe:hover {
+  background-color: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.ic-decoded-allergen {
+  background-color: #fff5f5;
+  color: #c53030;
+  border: 1px solid #fed7d7;
+}
+
+.ic-decoded-allergen:hover {
+  background-color: #fff0f0;
+  border-color: #f5c6c6;
+}
+
+.ic-decoded-sensitive {
+  background-color: #fffaf0;
+  color: #c05621;
+  border: 1px solid #feebc8;
+}
+
+.ic-decoded-sensitive:hover {
+  background-color: #fff8eb;
+  border-color: #fbd38d;
+}
+
+/* Safe Ingredients Badge */
+.ic-safe-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 50px;
+  background-color: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #dcfce7;
+  box-shadow: 0 2px 4px rgba(22, 163, 74, 0.05);
+  transition: all 0.2s ease-in-out;
+}
+
+.ic-safe-badge:hover {
+  background-color: #dcfce7;
+  color: #166534;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(22, 163, 74, 0.1);
+}
+
+/* Product Slot Badges */
+.ic-product-slot-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  font-size: 10.5px;
+  font-weight: 600;
+  background-color: #f1f5f9;
+  color: #475569;
+  border-radius: 4px;
+  margin-top: 4px;
+  border: 1px solid #e2e8f0;
+}
+
+/* VS Comparison Dashboard */
+.ic-comparison-dashboard {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 16px;
+  position: relative;
+}
+
+.ic-comparison-slot {
+  flex: 1;
+  min-width: 0;
+  background-color: #ffffff;
+  border: 1px dashed #f2d5dc;
+  border-radius: 16px;
+  padding: 16px 24px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: all 0.2s ease;
+  min-height: 110px;
+  justify-content: center;
+}
+
+.ic-comparison-slot:hover {
+  border-color: #c2185b;
+}
+
+.ic-slot-label {
+  position: absolute;
+  top: -9px;
+  left: 16px;
+  background-color: #ffffff;
+  padding: 0 8px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #c2185b;
+  letter-spacing: 0.05em;
+  border-radius: 4px;
+  border: 1px solid #fae5e9;
+}
+
+.ic-product-compare-empty {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  position: relative;
+}
+
+.ic-empty-icon {
+  color: #94a3b8;
+  font-size: 16px;
+}
+
+.ic-compare-input {
+  border: none !important;
+  background: transparent !important;
+  font-size: 14px;
+  padding: 4px 0 !important;
+  box-shadow: none !important;
+  width: 100%;
+}
+
+.ic-compare-input:focus {
+  border-bottom: 1px solid #c2185b !important;
+  border-radius: 0 !important;
+}
+
+.ic-suggestions-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: #ffffff;
+  border: 1px solid #fae5e9;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(163, 118, 129, 0.12);
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1050;
+  margin-top: 8px;
+}
+
+.ic-suggestion-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid #fff3f5;
+  transition: all 0.2s ease;
+}
+
+.ic-suggestion-item:hover {
+  background-color: #fff2f4;
+}
+
+.ic-suggestion-item img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  border-radius: 6px;
+  background-color: #ffffff;
+  border: 1px solid #fae5e9;
+}
+
+/* Filled Compare Card */
+.ic-product-compare-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  text-align: left;
+}
+
+.ic-product-compare-image-container {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8fafc;
+  border-radius: 10px;
+  border: 1px solid #fae5e9;
+  padding: 4px;
+  flex-shrink: 0;
+}
+
+.ic-product-compare-image-container img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.ic-product-compare-details {
+  flex-grow: 1;
+  min-width: 0;
+}
+
+.ic-product-compare-name {
+  font-weight: 700;
+  color: #1e293b;
+  font-size: 13.5px;
+  line-height: 1.3;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ic-product-compare-brand {
+  font-size: 11px;
+  color: #64748b;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.ic-product-compare-remove-btn {
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 24px;
+  line-height: 1;
+  padding: 0 4px;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.ic-product-compare-remove-btn:hover {
+  color: #dc3545;
+}
+
+/* VS Badge in the center */
+.ic-vs-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+  padding: 0 12px;
+}
+
+.ic-vs-divider span {
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, #c2185b 0%, #ec4899 100%);
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 12px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(194, 24, 91, 0.25);
+  border: 2px solid #ffffff;
+}
+
+@media (max-width: 768px) {
+  .ic-comparison-dashboard {
+    flex-direction: column;
+    gap: 24px;
+  }
+  
+  .ic-vs-divider {
+    height: 10px;
+    margin: -12px 0;
+  }
+}
+
+/* Popular products mini cards container */
+.popular-products-scroll-wrapper {
+  margin-bottom: 24px;
+}
+
+.popular-product-mini-card {
+  width: 140px;
+  scroll-snap-align: start;
+  background-color: #ffffff;
+  border: 1px solid #fae5e9;
+  border-radius: 14px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.popular-product-mini-card:hover {
+  transform: translateY(-2px);
+  border-color: #c2185b;
+  box-shadow: 0 6px 15px rgba(163, 118, 129, 0.08);
+}
+
+.ic-mini-card-image-box {
+  width: 100%;
+  height: 85px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8fafc;
+  border-radius: 10px;
+  padding: 6px;
+  margin-bottom: 8px;
+  border: 1px solid #fff3f5;
+  overflow: hidden;
+}
+
+.ic-mini-card-image-box img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  transition: transform 0.2s ease;
+}
+
+.popular-product-mini-card:hover .ic-mini-card-image-box img {
+  transform: scale(1.05);
+}
+
+.ic-mini-card-title {
+  font-weight: 700;
+  color: #1e293b;
+  font-size: 11.5px;
+  line-height: 1.3;
+  margin-bottom: 2px;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ic-mini-card-brand {
+  font-size: 9.5px;
+  color: #94a3b8;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Small button utility */
+.ic-mini-slot-btn {
+  font-size: 10px;
+  font-weight: 600;
+  border: 1px solid #1e293b;
+  background-color: #ffffff;
+  color: #1e293b;
+  padding: 4px 8px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1.2;
+}
+
+.ic-mini-slot-btn:hover:not(:disabled) {
+  background-color: #1e293b;
+  color: #ffffff;
+}
+
+.ic-mini-slot-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  border-color: #cbd5e1;
+  color: #94a3b8;
+}
+
+/* Result compare cards */
+.ic-result-compare-grid {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.ic-result-compare-card {
+  flex: 1;
+  min-width: 0;
+  background-color: #ffffff;
+  border: 1px solid #fae5e9;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 4px 10px rgba(163, 118, 129, 0.04);
+}
+
+.ic-result-compare-image-box {
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8fafc;
+  border-radius: 8px;
+  padding: 4px;
+  border: 1px solid #fae5e9;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.ic-result-compare-image-box img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.ic-result-compare-info {
+  flex-grow: 1;
+  min-width: 0;
+  text-align: left;
+}
+
+.ic-result-compare-name {
+  font-weight: 700;
+  font-size: 13px;
+  color: #1e293b;
+  line-height: 1.3;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 576px) {
+  .ic-result-compare-grid {
+    flex-direction: column;
+    gap: 12px;
+  }
+}
+
+/* Autocomplete Suggestion Rows */
+.ic-suggestions-box {
+  border: 1px solid #fae5e9 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 30px rgba(163, 118, 129, 0.12) !important;
+  overflow: hidden;
+}
+
+.ic-suggestion-row {
+  padding: 10px 16px;
+  border-bottom: 1px solid #fff3f5;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 13.5px;
+}
+
+.ic-suggestion-row:hover {
+  background-color: #fff2f4;
+  color: #c2185b;
+}
+
+.ic-suggestion-category {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  font-weight: 600;
+  color: #94a3b8;
+  float: right;
+  margin-top: 2px;
+}

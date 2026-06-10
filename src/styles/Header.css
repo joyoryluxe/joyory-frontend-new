@@ -884,7 +884,7 @@
     position: relative;
 }
 
-.badge {
+.add-cart .badge {
     position: absolute;
     background-color: #000;
     margin-left: -15px;

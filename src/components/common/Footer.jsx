@@ -64,7 +64,7 @@ const Footer = () => {
             <li><Link className="page-title-main-name border-none" to="/FoundationShadeFinder">Shade_finder</Link></li>
             <li><Link className="page-title-main-name border-none" to="/virtualtryon">Virtual Try-on</Link></li>
             {/* <li><Link className="page-title-main-name border-none" to="/blogs">Blogs</Link></li> */}
-            {/* <li><Link className="page-title-main-name border-none" to="/terms">Terms & Condition</Link></li> */}
+            <li><Link className="page-title-main-name border-none" to="/terms">Terms & Condition</Link></li>
             {/* <li><Link className="page-title-main-name border-none" to="/collab">Influencer Collab</Link></li> */}
           </ul>
         </div>
@@ -102,7 +102,7 @@ const Footer = () => {
             {/* <li><Link className="page-title-main-name border-none" to="/contact">Contact Us</Link></li> */}
             <li><Link className="page-title-main-name border-none" to="/Myorders">Track Your Order</Link></li>
             {/* <li><Link className="page-title-main-name border-none" to="/returns">Returns Policy</Link></li> */}
-            {/* <li><Link className="page-title-main-name border-none" to="/privacy-policy">Privacy Policy</Link></li> */}
+            <li><Link className="page-title-main-name border-none" to="/privacy-policy">Privacy Policy</Link></li>
             <li><Link className="page-title-main-name border-none" to="/affiliate">Joyory Affiliate Program</Link></li>
             <li><Link className="page-title-main-name border-none" to="/help">Help Center</Link></li>
             {/* <li><Link className="page-title-main-name border-none" to="/shipping-policy">Shipping Policy</Link></li> */}
@@ -151,7 +151,8 @@ const Footer = () => {
 
           <div className="social-media margin-bootom-footer-responsive">
 
-            <Link className="text-white text-decoration-none" to="/">Privacy Policy</Link>
+            <Link className="text-white text-decoration-none" to="/terms">Terms & Conditions</Link>
+            <Link className="text-white text-decoration-none" to="/privacy-policy">Privacy Policy</Link>
             <Link className="text-white text-decoration-none" to="/">Return Policy</Link>
 
           </div>

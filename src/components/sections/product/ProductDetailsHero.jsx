@@ -2,10 +2,13 @@
 import React, { useState, useRef, useMemo, useEffect } from "react";
 import {
   FaStar, FaHeart, FaRegHeart, FaShoppingBag,
-  FaChevronUp, FaChevronDown, FaTimes, FaCheck
+  FaChevronUp, FaChevronDown, FaTimes, FaCheck,
+  FaExclamationTriangle
 } from "react-icons/fa";
 import "../../../styles/ProductDetailsHero.css";
 import "../../../styles/ForYou.css";
+import { ingredientScan, getProductSafetyScore } from "../../../api/ingredientApi";
+import IngredientDetailsDrawer from "../../../pages/IngredientDetailsDrawer";
 
 // --- Helper Functions ---
 const getSku = (v) => v?.sku || v?.variantSku || `sku-${v?._id || 'default'}`;
@@ -44,7 +47,7 @@ const formatPrice = (price) => {
 };
 
 // Description Accordion
-const ProductDetailDescription = ({ product }) => {
+const ProductDetailDescription = ({ product, scannedIngredients, onIngredientClick }) => {
   return (
     <section className="product-extra-section mt-5 border-none">
       <div className="details-section border-none">
@@ -55,27 +58,41 @@ const ProductDetailDescription = ({ product }) => {
           </details>
           <details>
             <summary>Ingredients</summary>
-            <p className="mt-3">
-              {product.ingredients?.length > 0
-                ? product.ingredients.join(", ")
-                : "Ingredients not provided."}
-            </p>
+            <div className="mt-3 text-start">
+              {scannedIngredients && scannedIngredients.length > 0 ? (
+                <div className="d-flex flex-wrap gap-2">
+                  {scannedIngredients.map((ing, idx) => {
+                    let badgeClass = "badge bg-light text-dark border p-2";
+                    if (ing.isAllergen) badgeClass = "badge bg-danger text-white p-2";
+                    else if (ing.isSensitive) badgeClass = "badge bg-warning text-dark p-2";
+                    
+                    return (
+                      <span
+                        key={idx}
+                        className={badgeClass}
+                        style={{ cursor: "pointer", borderRadius: "12px", transition: "all 0.15s ease", fontSize: "12px", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                        onClick={() => onIngredientClick(ing)}
+                        title={ing.isAllergen ? "High Allergen Alert!" : ing.isSensitive ? "Sensitivity Alert" : "Click to view description"}
+                      >
+                        {ing.name} {ing.isAllergen && "⚠️"} {ing.isSensitive && "⚠️"}
+                      </span>
+                    );
+                  })}
+                </div>
+              ) : product.ingredients?.length > 0 ? (
+                <p>{product.ingredients.join(", ")}</p>
+              ) : (
+                <p>Ingredients not provided.</p>
+              )}
+            </div>
           </details>
           <details>
             <summary>How To Use</summary>
-            <p className="mt-3">
-              {product.howToUse?.length > 0
-                ? product.howToUse.join(" • ")
-                : "Usage instructions not provided."}
-            </p>
+            <p className="mt-3">{product.howToUse?.length > 0 ? product.howToUse.join(" • ") : "Usage instructions not provided."}</p>
           </details>
           <details>
             <summary>Special Features</summary>
-            <p className="mt-3">
-              {product.features?.length > 0
-                ? product.features.join(" • ")
-                : "No special features listed."}
-            </p>
+            <p className="mt-3">{product.features?.length > 0 ? product.features.join(" • ") : "No special features listed."}</p>
           </details>
         </div>
       </div>
@@ -103,6 +120,47 @@ const ProductDetailsHero = ({
   const [selectedVariantType, setSelectedVariantType] = useState("all");
 
   const [mainImageIndex, setMainImageIndex] = useState(0);
+
+  // 🧪 Ingredient Intelligence & Scan States
+  const [scanResult, setScanResult] = useState(null);
+  const [selectedIngredient, setSelectedIngredient] = useState(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [safetyScore, setSafetyScore] = useState(null);
+  const [showScoreInfo, setShowScoreInfo] = useState(false);
+
+  useEffect(() => {
+    const fetchScanResult = async () => {
+      if (!product?._id) return;
+      try {
+        const res = await ingredientScan(product._id);
+        if (res.data.success) {
+          setScanResult(res.data);
+        }
+      } catch (err) {
+        console.error("Error performing ingredient scan:", err);
+      }
+    };
+
+    const fetchSafetyScore = async () => {
+      if (!product?._id) return;
+      try {
+        const res = await getProductSafetyScore(product._id);
+        if (res.data.success) {
+          setSafetyScore(res.data);
+        }
+      } catch (err) {
+        console.error("Error fetching safety score:", err);
+      }
+    };
+
+    fetchScanResult();
+    fetchSafetyScore();
+  }, [product?._id]);
+
+  const handleIngredientClick = (ing) => {
+    setSelectedIngredient(ing);
+    setIsDrawerOpen(true);
+  };
 
   const thumbnailsPerView = 4;
 
@@ -249,6 +307,139 @@ const ProductDetailsHero = ({
           </span>
         </div>
 
+        {/* Clean Beauty Safety Score Widget */}
+        {safetyScore && (
+          <div className="clean-beauty-widget-card p-3 mb-4 border rounded bg-white text-start shadow-sm" style={{ border: "1px solid #fae5e9 !important" }}>
+            <div className="d-flex align-items-center gap-3">
+              {/* SVG Circle Progress */}
+              <div className="position-relative flex-shrink-0" style={{ width: "55px", height: "55px" }}>
+                <svg width="55" height="55" viewBox="0 0 60 60" style={{ transform: "rotate(-90deg)" }}>
+                  <circle
+                    cx="30"
+                    cy="30"
+                    r="25"
+                    stroke="#f3f4f6"
+                    strokeWidth="5"
+                    fill="transparent"
+                  />
+                  <circle
+                    cx="30"
+                    cy="30"
+                    r="25"
+                    stroke={
+                      safetyScore.score >= 85
+                        ? "#10b981" // Green
+                        : safetyScore.score >= 65
+                        ? "#f59e0b" // Yellow
+                        : "#ef4444" // Red
+                    }
+                    strokeWidth="5"
+                    fill="transparent"
+                    strokeDasharray="157"
+                    strokeDashoffset={157 - (157 * safetyScore.score) / 100}
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <div
+                  className="position-absolute top-50 start-50 translate-middle fw-bold text-dark"
+                  style={{ fontSize: "11px" }}
+                >
+                  {safetyScore.score}%
+                </div>
+              </div>
+
+              {/* Text Information */}
+              <div className="flex-grow-1">
+                <div className="d-flex align-items-center justify-content-between">
+                  <span className="small text-muted fw-semibold" style={{ fontSize: "10.5px", letterSpacing: "0.5px" }}>CLEAN BEAUTY INDEX</span>
+                  <button
+                    type="button"
+                    className="btn btn-link p-0 text-muted small border-0 text-decoration-none"
+                    onClick={() => setShowScoreInfo(!showScoreInfo)}
+                    style={{ fontSize: "10.5px" }}
+                  >
+                    {showScoreInfo ? "Hide Details" : "What is this?"}
+                  </button>
+                </div>
+                <h5 className="fw-bold mb-1" style={{ fontSize: "14px", color: "#1f2937" }}>
+                  {safetyScore.ratingLabel}{" "}
+                  <span
+                    style={{
+                      display: "inline-block",
+                      width: "8px",
+                      height: "8px",
+                      borderRadius: "50%",
+                      backgroundColor:
+                        safetyScore.score >= 85
+                          ? "#10b981"
+                          : safetyScore.score >= 65
+                          ? "#f59e0b"
+                          : "#ef4444",
+                      marginLeft: "4px",
+                    }}
+                  />
+                </h5>
+                {/* Counts Bar */}
+                <div className="d-flex gap-3 mt-1" style={{ fontSize: "11px" }}>
+                  <span className="d-flex align-items-center gap-1 text-success fw-medium">
+                    <span
+                      style={{
+                        width: "6px",
+                        height: "6px",
+                        borderRadius: "50%",
+                        backgroundColor: "#10b981",
+                      }}
+                    />{" "}
+                    {safetyScore.greenCount} Safe
+                  </span>
+                  <span className="d-flex align-items-center gap-1 text-warning fw-medium">
+                    <span
+                      style={{
+                        width: "6px",
+                        height: "6px",
+                        borderRadius: "50%",
+                        backgroundColor: "#f59e0b",
+                      }}
+                    />{" "}
+                    {safetyScore.yellowCount} Mild
+                  </span>
+                  <span className="d-flex align-items-center gap-1 text-danger fw-medium">
+                    <span
+                      style={{
+                        width: "6px",
+                        height: "6px",
+                        borderRadius: "50%",
+                        backgroundColor: "#ef4444",
+                      }}
+                    />{" "}
+                    {safetyScore.redCount} Harsh
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Explanation Details collapse */}
+            {showScoreInfo && (
+              <div className="mt-3 pt-3 border-top bg-light p-2 rounded text-muted" style={{ fontSize: "11px", lineHeight: "1.4" }}>
+                <p className="mb-2">
+                  Our algorithm cross-references each ingredient with our clinical skincare library:
+                </p>
+                <ul className="ps-3 mb-0 d-flex flex-column gap-1">
+                  <li>
+                    <strong className="text-success">Safe:</strong> Standard organic conditioning agents, botanical extracts, or clinical moisturizers.
+                  </li>
+                  <li>
+                    <strong className="text-warning">Mild/Caution:</strong> Exfoliating actives, essential oil preservatives, or filters (use carefully on sensitive skin).
+                  </li>
+                  <li>
+                    <strong className="text-danger">Harsh/Avoid:</strong> Sulfates, common parabens, formaldehyde releasers, or synthetic fragrances.
+                  </li>
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="d-flex align-items-center gap-3 mb-4 text-start">
           <span className="fs-2 fw-bold text-dark">
             Rs {selectedShade?.displayPrice || product.price}
@@ -325,6 +516,27 @@ const ProductDetailsHero = ({
           })}
         </div>
 
+        {/* Allergen Alerts Banner */}
+        {scanResult && (scanResult.allergenWarnings?.length > 0 || scanResult.sensitiveWarnings?.length > 0) && (
+          <div className="alert alert-danger p-3 rounded mb-4 text-start border-0" style={{ backgroundColor: "#fef2f2", color: "#b91c1c", borderRadius: "12px" }}>
+            <h5 className="fw-bold fs-6 mb-1 d-flex align-items-center gap-2" style={{ color: "#991b1b" }}>
+              <FaExclamationTriangle /> Ingredient Warning
+            </h5>
+            <ul className="ps-3 mb-0 small" style={{ color: "#991b1b" }}>
+              {scanResult.allergenWarnings.map((w, idx) => (
+                <li key={idx} className="fw-semibold">
+                  Contains <strong>{w.ingredient}</strong> — matches your allergen profile!
+                </li>
+              ))}
+              {scanResult.sensitiveWarnings.map((w, idx) => (
+                <li key={idx}>
+                  Contains <strong>{w.ingredient}</strong> — sensitive skin concern.
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {/* Action Buttons */}
         <div className="d-flex gap-3 mb-4">
           <button
@@ -345,7 +557,11 @@ const ProductDetailsHero = ({
           </button>
         </div>
 
-        <ProductDetailDescription product={product} />
+        <ProductDetailDescription 
+          product={product} 
+          scannedIngredients={scanResult?.ingredients} 
+          onIngredientClick={handleIngredientClick} 
+        />
       </div>
 
       {/* Desktop Variant Overlay */}
@@ -656,6 +872,11 @@ const ProductDetailsHero = ({
           </>
         );
       })()}
+      <IngredientDetailsDrawer
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        ingredient={selectedIngredient}
+      />
     </article>
   );
 };

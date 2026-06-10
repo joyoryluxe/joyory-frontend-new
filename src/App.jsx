@@ -90,6 +90,11 @@ import AddressSections from "./pages/AddressSections";
 import PageNotFound from "./pages/PageNotFound";
 import ComingSoon from "./pages/ComingSoon";
 import BeautyConcierge from "./pages/BeautyConcierge";
+import IngredientCompatibility from "./pages/IngredientCompatibility";
+import IngredientDetail from "./pages/IngredientDetail";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
+import RoutineBuilder from "./pages/RoutineBuilder";
 
 function App() {
   return (
@@ -131,6 +136,8 @@ function App() {
 
             <Route path="/TeamSlider" element={<TeamSlider />} />
             <Route path="/Aboutus" element={<Aboutus />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy-policy" element={<Privacy />} />
             <Route path="/VideoSlider" element={<VideoSlider />} />
             <Route path="/MissionVisionSection" element={<MissionVisionSection />} />
             <Route path="/FoundationShadeFinder" element={<FoundationShadeFinder />} />
@@ -192,6 +199,10 @@ function App() {
             <Route path="/Offerlanding" element={<Offerlanding />} />
             <Route path="/Foryoulanding" element={<Foryoulanding />} />
             <Route path="/Makeupquiz" element={<Makeupquiz />} />
+            <Route path="/routines" element={<RoutineBuilder />} />
+            <Route path="/routines/:shareToken" element={<RoutineBuilder />} />
+            <Route path="/ingredient-compatibility" element={<IngredientCompatibility />} />
+            <Route path="/ingredient/:name" element={<IngredientDetail />} />
             <Route path="*" element={<PageNotFound />} />
             <Route path="/coming-soon" element={<ComingSoon />} />
 
