@@ -1,0 +1,51 @@
+/* OrderTrack.css */
+
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -20px;
+    top: 35%;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 12px;
+}
+
+.timeline-content {
+    padding: 10px;
+    border-left: 2px solid #dee2e6;
+    margin-left: 10px;
+}
+
+.timeline-icon.confirmed {
+    color: #28a745;
+}
+
+.timeline-icon.shipped {
+    color: #17a2b8;
+}
+
+.timeline-icon.delivered {
+    color: #007bff;
+}
+
+.timeline-icon.pending {
+    color: #6c757d;
+}
+
+.status-icon {
+    margin-right: 5px;
+}

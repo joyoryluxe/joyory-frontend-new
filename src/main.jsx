@@ -8,7 +8,7 @@ import './index.css'
 import App from './App.jsx'
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
-import Header from './component/Header.jsx';
+import Header from './components/common/Header.jsx';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 import "slick-carousel/slick/slick.css";

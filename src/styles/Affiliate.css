@@ -1,0 +1,78 @@
+.joycry-banner {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    color: white;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+}
+
+.joycry-banner h1 {
+    background: linear-gradient(90deg, #00dbde 0%, #fc00ff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.joycry-banner .description {
+    max-width: 800px;
+    font-size: 1.1rem;
+    line-height: 1.6;
+}
+
+.joycry-banner .highlight-text {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 0.5rem 1.5rem;
+    border-radius: 50px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.joycry-banner .btn-primary {
+    background: linear-gradient(90deg, #00dbde 0%, #fc00ff 100%);
+    border: none;
+    border-radius: 50px;
+    padding: 1rem 3rem;
+    font-size: 1.2rem;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.joycry-banner .btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+
+/* Responsive adjustments */
+
+@media (max-width: 768px) {
+    .joycry-banner h1 {
+        font-size: 2.5rem;
+    }
+    .joycry-banner .description {
+        font-size: 1rem;
+    }
+    .joycry-banner .btn-primary {
+        padding: 0.8rem 2rem;
+        font-size: 1.1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .joycry-banner h1 {
+        font-size: 2rem;
+    }
+    .joycry-banner .highlight-text span {
+        font-size: 1.2rem !important;
+        padding: 0.8rem 1.2rem !important;
+    }
+}
+
+.get-start-button {
+    background-color: #4491BE;
+    color: #FFF;
+}
+
+.get-start-button:hover {
+    background-color: #4491BE !important;
+    color: #FFF;
+}

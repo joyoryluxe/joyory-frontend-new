@@ -1,0 +1,49 @@
+.skin-card {
+    position: relative;
+    border-radius: 3px;
+    overflow: hidden;
+    cursor: pointer;
+    /* box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); */
+    transition: transform 0.3s ease;
+}
+
+.skin-card:hover {
+    transform: translateY(-5px);
+}
+
+.skintype-heading {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    letter-spacing: 0px;
+}
+
+.skin-card img {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+}
+
+.skin-card .overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.35);
+    color: #fff;
+    font-weight: 600;
+    font-size: 1.1rem;
+    text-align: center;
+}
+
+.main-skintype-heading {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+}
+
+@media (max-width:992px) {
+    .skintype-heading {
+        font-size: 16px !important;
+        margin-left: 9px;
+    }
+}

@@ -1,0 +1,57 @@
+/* BannerComponent.css */
+
+.banner {
+    background-color: #fff;
+    /* Light peach color, adjust as needed */
+    padding: 20px 0;
+    /* display: flex; */
+    justify-content: center;
+    align-items: center;
+}
+
+.item {
+    text-align: center;
+    flex: 1;
+    padding: 0 0 0 20px;
+}
+
+.icon {
+    font-size: 24px;
+    /* margin-bottom: 10px; */
+}
+
+.title {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.subtitle {
+    font-size: 12px;
+    color: #555;
+}
+
+.subtitle-Certificate{
+    font-size: 16px;
+}
+
+@media (max-width:568px) {
+    .subtitle-Certificate {
+        font-size: 13px !important;
+    }
+    .title-main {
+        font-size: 15px !important;
+    }
+    .item {
+        padding: 0 15px 0 30px;
+    }
+}
+
+@media (max-width:768px) {
+    .Virtualtryonhome-container-width-responsive {
+        margin: 0px;
+        padding: 0px;
+    }
+    .subtitle-Certificate {
+        font-size: 13px !important;
+    }
+}

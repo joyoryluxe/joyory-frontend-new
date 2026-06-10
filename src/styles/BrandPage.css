@@ -1,0 +1,298 @@
+.dd-flex {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+}
+
+
+/* Filter Panel */
+
+.filter-panel {
+    border-left: 1px solid #e0e0e0;
+    background-color: #fff;
+}
+
+.filter-panel .form-label {
+    font-size: 0.9rem;
+    color: #333;
+}
+
+.filter-panel select.form-select,
+.filter-panel input.form-control {
+    border-radius: 8px;
+    border: 1px solid #ced4da;
+    font-size: 0.875rem;
+}
+
+.filter-panel button {
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+.filter-panel h5 {
+    font-size: 1.15rem;
+    color: #0d6efd;
+}
+
+.btns {
+    color: #365798;
+    border: 2px solid #365798;
+}
+
+.category-card-produt-promotions {
+    height: 130px !important;
+}
+
+.filter-panel {
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+@media (max-width: 576px) {
+    .filter-panel {
+        padding: 15px !important;
+        margin-bottom: 20px;
+    }
+}
+
+.brand-filter-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+@media (max-width: 992px) {
+
+    /* .brand-filter-button{
+  position: fixed;
+  top: 90%;
+  z-index: 999;
+  right: 30px;
+} */
+    .borders-right {
+        position: relative;
+    }
+
+    .borders-right::after {
+        content: "";
+        position: absolute;
+        top: 10px;
+        height: 55px !important;
+        right: 0;
+        height: 100%;
+        border-right: 2px solid #000;
+    }
+
+    /* .borders-right::after {
+    border-right: 3px solid #000;
+  } */
+    .category-card-produt-promotions {
+        width: 100% !important;
+        /* fill the slide */
+        min-width: unset !important;
+        /* remove 120px lock */
+        max-width: 100% !important;
+        /* optional safety */
+    }
+}
+
+.mobile-filter-popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #FFF;
+    z-index: 1050;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    /* padding-top: 50px; */
+}
+
+.mobile-filter-content {
+    width: 100%;
+    /* max-width: 500px; */
+    max-width: 100%;
+    background: #f8f9fa !important;
+    border-radius: 8px;
+    overflow-y: auto;
+    max-height: 100%;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.btn-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+}
+
+.slick-track div {
+    width: 100%;
+}
+
+.category-slider-container {
+    width: 100%;
+    overflow: hidden;
+}
+
+.handmade-slider-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.slider-wrapper {
+    overflow: hidden;
+    flex-grow: 1;
+}
+
+.slider-items {
+    display: flex;
+    transition: transform 0.3s ease-in-out;
+}
+
+.category-card {
+    min-width: 100px;
+    cursor: pointer;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-right: 10px;
+    background: #fff;
+}
+
+.category-card.active {
+    border: 2px solid #365798;
+}
+
+
+/* CategorySlider.css  –  import in the component */
+
+.category-slider-wrapper {
+    width: 100%;
+    overflow: hidden;
+}
+
+.category-card-produt-promotions {
+    width: 100% !important;
+    /* fill the slide */
+    min-width: unset !important;
+    /* remove 120px lock */
+    /* max-width: 25%; */
+    max-width: 100%;
+}
+
+
+/* Brand Banner Styles */
+
+.brand-banner-section {
+    margin-top: 0;
+}
+
+.brand-banner-container {
+    position: relative;
+}
+
+.brand-banner-image {
+    filter: brightness(0.9);
+}
+
+
+/* .brand-banner-overlay {
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(2px);
+} */
+
+.brand-header {
+    padding: 2rem 0;
+}
+
+.brand-logo {
+    transition: transform 0.3s ease;
+}
+
+.brand-logo:hover {
+    transform: scale(1.05);
+}
+
+.margin-padding-brabdpage-responsive {
+    margin-top: 90px;
+}
+
+.cat-btn {
+    border: 1px solid #000 !important;
+    color: #000;
+    padding: 8px 24px;
+}
+
+.cat-btn:hover {
+    background-color: #000 !important;
+    color: #fff !important;
+}
+
+/* Responsive adjustments */
+
+@media (max-width: 768px) {
+    .brand-banner-image {
+        height: 300px !important;
+    }
+
+    .brand-banner-overlay h1 {
+        font-size: 2.5rem !important;
+    }
+
+    .brand-page-responsive-code {
+        margin-left: 20px;
+        margin-right: 20px;
+    }
+
+    .margin-padding-brabdpage-responsive {
+        margin-top: 10px;
+    }
+
+    .cat-wrap {
+        gap: 15px !important;
+    }
+
+    .cat-btn {
+        padding: 8px 12px !important;
+        min-height: unset !important;
+    }
+}
+
+@media (max-width: 576px) {
+    .brand-banner-image {
+        height: 250px !important;
+    }
+
+    .brand-banner-overlay h1 {
+        font-size: 2rem !important;
+    }
+
+    .brand-banner-overlay p {
+        font-size: 1rem !important;
+    }
+}
+
+.custom-pill {
+    background-color: transparent !important;
+    color: #000 !important;
+    border: 1px solid #000 !important;
+}
+
+/* Hover */
+
+.custom-pill:hover {
+    background-color: #000 !important;
+    color: #fff !important;
+    border-color: #000;
+}
+
+/* Active override */
+
+.btn-dark.custom-pill {
+    background-color: #000 !important;
+    color: #fff !important;
+    border-color: #000;
+}

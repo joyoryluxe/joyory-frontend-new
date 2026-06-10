@@ -1,0 +1,232 @@
+/* Custom CSS for Virtualtryon page */
+
+.virtualtryon-container {
+    color: #333;
+    background-color: #fff;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+/* Base Styles (Desktop) */
+.hero-sections {
+    width: 100%;
+    margin-top: 2rem;
+    display: flex;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.hero-image {
+    width: 100%;
+    max-height: 500px;
+    object-fit: cover;
+}
+
+.how-it-works-section {
+    width: 100%;
+    padding: 3rem 5%;
+}
+
+.section-title {
+    font-size: 1.75rem;
+    font-weight: 500;
+    margin-bottom: 2.5rem;
+    letter-spacing: 0.5px;
+    color: #222;
+}
+
+.step-image {
+    width: 100%;
+    height: auto;
+    max-height: 380px;
+    object-fit: contain;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    display: block;
+    margin-bottom: 1rem;
+}
+
+.step-number {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #222;
+    margin-top: 1rem;
+}
+
+.step-description {
+    font-size: 0.95rem;
+    color: #666;
+    line-height: 1.6;
+    margin-top: 0.5rem;
+}
+
+/* Button wrapper and button (Desktop default) */
+.next-button-makeupquiz {
+    margin-top: 3rem;
+    margin-bottom: 4rem;
+    width: 100%;
+}
+
+.next-button-makupbtns button {
+    background-color: #000;
+    width: 350px;
+    height: 60px;
+    color: #FFF;
+    border: none;
+    font-size: 1.1rem;
+    letter-spacing: 1px;
+    font-weight: 500;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.next-button-makupbtns button:hover {
+    background-color: #222;
+    cursor: pointer;
+}
+
+.next-icon {
+    font-size: 0.9rem;
+    transition: transform 0.2s ease;
+}
+
+.next-button-makupbtns button:hover .next-icon {
+    transform: translateX(4px);
+}
+
+/* Responsive styles - optimized specifically for mobile devices (max-width: 768px) */
+@media (max-width: 768px) {
+    .virtualtryon-container {
+        padding-top: 0.5rem !important;
+        margin-top: 3.7rem !important;
+    }
+
+    .hero-sections {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+        width: 100% !important;
+    }
+
+    .hero-image {
+        max-height: 220px !important;
+        object-fit: cover !important;
+    }
+
+    .how-it-works-section {
+        margin-top: 1.25rem !important;
+        padding: 0.5rem 1.25rem !important;
+    }
+
+    .section-title {
+        font-size: 1.35rem !important;
+        margin-bottom: 1.5rem !important;
+        text-align: center !important;
+        font-weight: 600 !important;
+    }
+
+    /* Stack cards neatly, center content */
+    .how-it-works-section .col-12 {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        text-align: center !important;
+        margin-bottom: 2rem !important; /* Proper vertical gap between step sections */
+    }
+
+    /* Step images: show the entire mockup vertical ratio beautifully without ugly cover crops! */
+    .step-image {
+        max-width: 250px !important;
+        width: 100% !important;
+        height: auto !important;
+        max-height: none !important;
+        object-fit: contain !important;
+        border-radius: 16px !important;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08) !important;
+        border: 1px solid rgba(0, 0, 0, 0.04) !important;
+        margin: 0 auto !important;
+    }
+
+    .step-number {
+        font-size: 1.1rem !important;
+        font-weight: 600 !important;
+        color: #222 !important;
+        margin-top: 1rem !important;
+        text-align: center !important;
+    }
+
+    .step-description {
+        font-size: 0.9rem !important;
+        line-height: 1.5 !important;
+        color: #666 !important;
+        text-align: center !important;
+        max-width: 290px !important;
+        margin: 0.35rem auto 0 auto !important;
+    }
+
+    /* Button and Container responsive override */
+    .next-button-makeupquiz.margin-bottomsss-virtus-truon {
+        margin-top: 1rem !important;
+        margin-bottom: 90px !important; /* Safe bottom margin for floating bars */
+        background-color: transparent !important; /* REMOVE UGLY BLACK BANNER AT THE BOTTOM! */
+        width: 100% !important;
+        padding: 0 1.25rem !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+    }
+
+    .next-button-makupbtns {
+        width: 100% !important;
+        display: flex !important;
+        justify-content: center !important;
+    }
+
+    .next-button-makupbtns button {
+        width: 85% !important; /* Fully responsive width */
+        max-width: 320px !important;
+        height: 52px !important; /* Sleeker, perfect for mobile */
+        border-radius: 30px !important; /* Premium capsule look */
+        background-color: #000 !important;
+        color: #fff !important;
+        border: none !important;
+        font-size: 0.95rem !important;
+        font-weight: 600 !important;
+        letter-spacing: 1px !important;
+        text-transform: uppercase;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 0.4rem !important;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15) !important;
+        transition: all 0.2s ease !important;
+    }
+
+    .next-button-makupbtns button:active {
+        transform: scale(0.97) !important;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .next-icon {
+        font-size: 0.9rem !important;
+        margin-left: 0.25rem !important;
+    }
+}
+
+/* Extra small mobile adjustments (e.g. iPhone SE) */
+@media (max-width: 380px) {
+    .step-image {
+        max-width: 220px !important;
+    }
+    
+    .next-button-makupbtns button {
+        width: 90% !important;
+    }
+}

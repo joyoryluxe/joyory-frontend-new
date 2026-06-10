@@ -1,0 +1,45 @@
+/* Fix slide shrinking issue */
+
+.slick-slide {
+    display: flex !important;
+    justify-content: center;
+}
+
+
+/* Add space between slides */
+
+.category-slide {
+    padding: 0 10px;
+}
+
+
+/* Card design */
+
+.category-card {
+    height: 150px;
+    width: 100%;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    text-align: center;
+    transition: transform 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.category-card:hover {
+    transform: translateY(-5px);
+}
+
+.category-title {
+    font-size: 1.5rem;
+    line-height: 1.4;
+}
+
+@media (max-width:768px) {
+    .category-title {
+        font-size: 18px !important;
+    }
+}
