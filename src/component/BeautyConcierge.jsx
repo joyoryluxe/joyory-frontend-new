@@ -17,15 +17,15 @@ import "../css/BeautyConcierge.css";
 import LogoImg from "../assets/Logo.png";
 
 /* ─── Icons (inline SVG to avoid extra deps) ────────────────────────────── */
-const IconWand      = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 4V2"/><path d="M15 16v-2"/><path d="M8 9h2"/><path d="M20 9h2"/><path d="M17.8 11.8L19 13"/><path d="M15 9h0"/><path d="M17.8 6.2L19 5"/><path d="M3 21l9-9"/><path d="M12.2 6.2L11 5"/></svg>;
-const IconClose     = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>;
-const IconSend      = () => <svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 2L11 13"/><path d="M22 2L15 22 11 13 2 9l20-7z" fill="currentColor"/></svg>;
-const IconTrash     = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>;
-const IconChat      = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>;
-const IconHistory   = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-5.98"/></svg>;
-const IconSpark     = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>;
-const IconBag       = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>;
-const IconAlert     = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>;
+const IconWand = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 4V2" /><path d="M15 16v-2" /><path d="M8 9h2" /><path d="M20 9h2" /><path d="M17.8 11.8L19 13" /><path d="M15 9h0" /><path d="M17.8 6.2L19 5" /><path d="M3 21l9-9" /><path d="M12.2 6.2L11 5" /></svg>;
+const IconClose = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>;
+const IconSend = () => <svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 2L11 13" /><path d="M22 2L15 22 11 13 2 9l20-7z" fill="currentColor" /></svg>;
+const IconTrash = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14H6L5 6" /><path d="M10 11v6" /><path d="M14 11v6" /><path d="M9 6V4h6v2" /></svg>;
+const IconChat = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" /></svg>;
+const IconHistory = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="1 4 1 10 7 10" /><path d="M3.51 15a9 9 0 1 0 .49-5.98" /></svg>;
+const IconSpark = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>;
+const IconBag = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" /><line x1="3" y1="6" x2="21" y2="6" /><path d="M16 10a4 4 0 01-8 0" /></svg>;
+const IconAlert = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>;
 
 /* ─── Starter Prompts ────────────────────────────────────────────────────── */
 const STARTERS = [
@@ -94,22 +94,22 @@ export default function BeautyConcierge() {
   const navigate = useNavigate();
 
   /* ── state ── */
-  const [open, setOpen]           = useState(false);
-  const [closing, setClosing]     = useState(false);
+  const [open, setOpen] = useState(false);
+  const [closing, setClosing] = useState(false);
   const [activeTab, setActiveTab] = useState("chat"); // "chat" | "discover" | "history"
-  const [messages, setMessages]   = useState([]);
-  const [inputVal, setInputVal]   = useState("");
-  const [sending, setSending]     = useState(false);
+  const [messages, setMessages] = useState([]);
+  const [inputVal, setInputVal] = useState("");
+  const [sending, setSending] = useState(false);
   const [sessionId, setSessionId] = useState(null);
   const [histLoading, setHistLoading] = useState(false);
-  const [histLoaded, setHistLoaded]   = useState(false);
-  const [unread, setUnread]       = useState(0);
+  const [histLoaded, setHistLoaded] = useState(false);
+  const [unread, setUnread] = useState(0);
 
   /* ── refs ── */
   const messagesEndRef = useRef(null);
-  const textareaRef    = useRef(null);
-  const windowRef      = useRef(null);
-  const isLoggedIn     = user && !user.guest;
+  const textareaRef = useRef(null);
+  const windowRef = useRef(null);
+  const isLoggedIn = user && !user.guest;
 
   /* ── scroll to bottom ── */
   const scrollBottom = useCallback(() => {
@@ -256,7 +256,7 @@ export default function BeautyConcierge() {
       await clearChatHistory(isLoggedIn ? null : sessionId);
       setMessages([{ id: "welcome", from: "bot", isWelcome: true, time: new Date() }]);
       setHistLoaded(false);
-    } catch {/* silent */}
+    } catch {/* silent */ }
   }
 
   /* ── Navigate to product ── */

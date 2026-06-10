@@ -385,7 +385,6 @@ const ReturnReplaceDetails = () => {
                   <span className="fw-bold text-dark">{formatDateTime(r.createdAt)}</span>
                 </div>
                 <div className="d-flex justify-content-between">
-                  <span>Last Updated</span>
                   <span className="fw-bold text-dark">{formatDateTime(r.updatedAt)}</span>
                 </div>
               </div>
