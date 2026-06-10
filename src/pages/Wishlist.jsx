@@ -2,17 +2,20 @@ import React, { useEffect, useState, useContext, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/common/Header";
 import Footer from "../components/common/Footer";
+import { WishlistContext } from "../context/WishlistContext";
+import { CartContext } from "../context/CartContext";
 import { FaStar, FaHeart, FaShoppingCart, FaTimes } from "react-icons/fa";
 import { UserContext } from "../context/UserContext";
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Bag from "../assets/Bag.svg";
+import axiosInstance from "../utils/axiosInstance.js";
 import "../styles/BestSellers.css";
 
 const Wishlist = () => {
-  const [wishlistItems, setWishlistItems] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { wishlistItems, loading, removeFromWishlist: contextRemoveFromWishlist } = useContext(WishlistContext);
+  const { addToCart, syncCartFromBackend } = useContext(CartContext);
   const [removingItems, setRemovingItems] = useState({});
   const navigate = useNavigate();
   const { user } = useContext(UserContext);
@@ -27,45 +30,7 @@ const Wishlist = () => {
     }).format(numPrice);
   }, []);
 
-  // Fetch Wishlist
-  useEffect(() => {
-    const fetchWishlist = async () => {
-      setLoading(true);
-      try {
-        if (user && !user.guest) {
-          // Logged-in user
-          const response = await fetch("https://beauty.joyory.com/api/user/wishlist", {
-            method: "GET",
-            credentials: "include",
-          });
 
-          if (response.status === 401) {
-            const localWishlist = JSON.parse(localStorage.getItem("guestWishlist") || "[]");
-            setWishlistItems(localWishlist);
-            toast.info("Session expired. Showing guest wishlist.");
-            return;
-          }
-
-          if (!response.ok) throw new Error("Failed to fetch wishlist");
-
-          const data = await response.json();
-          setWishlistItems(data.success && Array.isArray(data.wishlist) ? data.wishlist : []);
-        } else {
-          // Guest user
-          const localWishlist = JSON.parse(localStorage.getItem("guestWishlist") || "[]");
-          setWishlistItems(localWishlist);
-        }
-      } catch (err) {
-        console.error("Wishlist fetch error:", err);
-        toast.error("Failed to load wishlist");
-        setWishlistItems([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchWishlist();
-  }, [user]);
 
   // Remove from Wishlist
   const removeFromWishlist = async (productId, sku) => {
@@ -74,25 +39,9 @@ const Wishlist = () => {
     setRemovingItems((prev) => ({ ...prev, [itemKey]: true }));
 
     try {
-      if (user && !user.guest) {
-        const response = await fetch(`https://beauty.joyory.com/api/user/wishlist/${productId}`, {
-          method: "DELETE",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sku }),
-        });
-        if (!response.ok) throw new Error("Failed to remove item");
-      } else {
-        // Guest
-        const updated = wishlistItems.filter((item) => !(item.productId === productId && item.sku === sku));
-        localStorage.setItem("guestWishlist", JSON.stringify(updated));
-      }
-
-      setWishlistItems((prev) => prev.filter((item) => !(item.productId === productId && item.sku === sku)));
-      toast.success("Removed from wishlist");
+      await contextRemoveFromWishlist(productId, sku);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to remove item");
     } finally {
       setRemovingItems((prev) => {
         const copy = { ...prev };
@@ -106,36 +55,32 @@ const Wishlist = () => {
   const moveToCart = async (item) => {
     try {
       if (user && !user.guest) {
-        const response = await fetch(
-          `https://beauty.joyory.com/api/user/wishlist/${item.productId}/move-to-cart`,
-          {
-            method: "POST",
-            credentials: "include",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ sku: item.sku }),
-          }
+        const response = await axiosInstance.post(
+          `/api/user/wishlist/${item.productId}/move-to-cart`,
+          { sku: item.sku }
         );
 
-        if (!response.ok) throw new Error("Failed to move to cart");
+        if (!response.data?.success) throw new Error("Failed to move to cart");
       } else {
         // Guest - Add to local cart
-        let guestCart = JSON.parse(localStorage.getItem("guestCart") || "[]");
-        const cartItem = {
-          productId: item.productId,
-          productName: item.name,
-          variant: item.variantName || item.variant,
-          sku: item.sku,
-          image: item.image,
+        const product = {
+          _id: item.productId,
+          name: item.name,
           price: item.displayPrice,
-          originalPrice: item.originalPrice,
-          quantity: 1,
+          images: [item.image],
         };
-        guestCart.push(cartItem);
-        localStorage.setItem("guestCart", JSON.stringify(guestCart));
+        const variant = {
+          sku: item.sku,
+          displayPrice: item.displayPrice,
+          originalPrice: item.originalPrice,
+          image: item.image,
+        };
+        await addToCart(product, variant, true);
       }
 
       // Remove from wishlist after moving
-      setWishlistItems((prev) => prev.filter((w) => w.productId !== item.productId));
+      await contextRemoveFromWishlist(item.productId, item.sku);
+      await syncCartFromBackend();
       toast.success("Moved to cart successfully!");
       navigate("/cartpage");
     } catch (err) {
@@ -201,7 +146,7 @@ const Wishlist = () => {
 
 
       <div className="container py-4 mt-xl-5 pt-xl-5 mt-5 pt-5">
-        <h2 className="mb-4 fw-bold page-title-main-name mt-5">
+        <h2 className="mb-4 fw-bold page-title-main-name mt-lg-5">
           My Wishlist ({wishlistItems.length})
         </h2>
 

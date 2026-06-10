@@ -4,6 +4,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { UserProvider } from "./context/UserContext";
 import ProtectedRoute from "./components/common/ProtectedRoute";
 import CartProvider from "./context/CartContext";
+import { WishlistProvider } from "./context/WishlistContext";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -101,7 +102,8 @@ function App() {
     <UserProvider>
       <Router>
         <CartProvider>
-          <ToastContainer position="top-right" autoClose={3000} />
+          <WishlistProvider>
+            <ToastContainer position="top-right" autoClose={3000} />
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<Home />} />
@@ -233,6 +235,7 @@ function App() {
 
           {/* ── AI Beauty Concierge (global floating widget) ── */}
           <BeautyConcierge />
+          </WishlistProvider>
         </CartProvider>
       </Router>
     </UserProvider>

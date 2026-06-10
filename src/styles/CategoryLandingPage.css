@@ -38,6 +38,7 @@ body {
         cursor: pointer;
         transition: all 0.2s ease;
     }
+
     .custom-swiper-bullet-active {
         background-color: #000 !important;
         /* your brand colour */
@@ -50,7 +51,7 @@ body {
 }
 
 .bg-images {
-    background-color: #D9D9D9;
+    background-color: #f7f7f7;
     height: 300px;
     position: absolute;
     z-index: -1;
@@ -86,6 +87,7 @@ body {
         cursor: pointer;
         transition: all 0.2s ease;
     }
+
     .custom-swiper-bullet-active {
         background-color: #000 !important;
         /* your brand colour */
@@ -95,13 +97,16 @@ body {
         width: 4.5% !important;
         border-radius: 20px;
     }
+
     .margintop-sss {
         margin-top: -5px;
     }
+
     .font-size-view-all-btn {
         font-size: 14px;
         padding-top: 8px;
     }
+
     /* .banner-image-quiz {
         padding-right: 15px;
         padding-left: 15px;
@@ -110,6 +115,7 @@ body {
         padding-left: 15px;
         padding-right: 15px;
     }
+
     .produtc-common-margin-padding {
         width: 100%;
         margin-left: auto;
@@ -117,9 +123,11 @@ body {
         display: block;
         margin-top: 0;
     }
+
     .main-name-font-size {
         font-size: 16px;
     }
+
     .padding-left-right-sub-category {
         margin-left: 0px !important;
         margin-right: 0px !important;
@@ -134,6 +142,7 @@ body {
         display: block;
         margin-top: 0;
     }
+
     .bg-images {
         background-color: transparent;
         height: auto;
@@ -148,12 +157,14 @@ body {
         font-size: 16px !important;
         padding: 0 15px 0 15px;
     }
+
     .description-responsivess {
         width: 100% !important;
         display: block;
         font-size: 16px !important;
         padding: 0;
     }
+
     .quize-btn {
         margin-left: 15px;
         width: 150px;

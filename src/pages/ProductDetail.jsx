@@ -4,6 +4,7 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import { CartContext } from "../context/CartContext";
 import { UserContext } from "../context/UserContext";
+import { WishlistContext } from "../context/WishlistContext";
 import Header from "../components/common/Header";
 import Footer from "../components/common/Footer";
 import RecommendationSlider from "../components/common/RecommendationSlider";
@@ -25,6 +26,7 @@ const ProductDetail = () => {
   const location = useLocation();
   const { addToCart } = useContext(CartContext);
   const { user } = useContext(UserContext);
+  const { toggleWishlist: contextToggleWishlist, isInWishlist: contextIsInWishlist } = useContext(WishlistContext);
 
   const [product, setProduct] = useState(null);
   const [selectedShade, setSelectedShade] = useState(null);
@@ -44,9 +46,8 @@ const ProductDetail = () => {
   const [reviewImages, setReviewImages] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [likedReviews, setLikedReviews] = useState({});
-  const [isInWishlist, setIsInWishlist] = useState(false);
   const [wishlistLoading, setWishlistLoading] = useState(false);
-  const [wishlistData, setWishlistData] = useState([]);
+  const isInWishlist = product && selectedShade ? contextIsInWishlist(product._id, selectedShade.sku) : false;
   const [filters, setFilters] = useState({
     shade: "All",
     rating: "All",
@@ -56,46 +57,6 @@ const ProductDetail = () => {
   const [showReviewForm, setShowReviewForm] = useState(false);
 
   /* ===================== WISHLIST FUNCTIONS ===================== */
-  const checkWishlistStatus = async () => {
-    if (!product || !selectedShade) return false;
-    try {
-      if (user && !user.guest) {
-        const response = await axiosInstance.get(
-          `/api/user/wishlist/check/${product._id}`
-        );
-        return response.data.isInWishlist || false;
-      } else {
-        const guestWishlist =
-          JSON.parse(localStorage.getItem("guestWishlist")) || [];
-        return guestWishlist.some(
-          (item) =>
-            item._id === product._id && item.sku === selectedShade.sku
-        );
-      }
-    } catch (error) {
-      console.error("Error checking wishlist status:", error);
-      return false;
-    }
-  };
-
-  const fetchWishlistData = async () => {
-    try {
-      if (user && !user.guest) {
-        const response = await axiosInstance.get("/api/user/wishlist");
-        if (response.data.success) {
-          setWishlistData(response.data.wishlist || []);
-        }
-      } else {
-        const localWishlist =
-          JSON.parse(localStorage.getItem("guestWishlist")) || [];
-        setWishlistData(localWishlist);
-      }
-    } catch (error) {
-      console.error("Error fetching wishlist data:", error);
-      setWishlistData([]);
-    }
-  };
-
   const toggleWishlist = async () => {
     if (!product || !selectedShade) {
       toast.warn("Please select a variant first");
@@ -103,110 +64,13 @@ const ProductDetail = () => {
     }
     setWishlistLoading(true);
     try {
-      const productId = product._id;
-      const sku = selectedShade.sku;
-
-      if (user && !user.guest) {
-        if (isInWishlist) {
-          await axiosInstance.delete(`/api/user/wishlist/${productId}`, {
-            data: { sku: sku },
-          });
-          setIsInWishlist(false);
-          toast.success("Removed from wishlist!");
-        } else {
-          await axiosInstance.post(`/api/user/wishlist/${productId}`, {
-            sku: sku,
-          });
-          setIsInWishlist(true);
-          toast.success("Added to wishlist!");
-        }
-      } else {
-        const guestWishlist =
-          JSON.parse(localStorage.getItem("guestWishlist")) || [];
-        const existingIndex = guestWishlist.findIndex(
-          (item) => item._id === productId && item.sku === sku
-        );
-
-        if (existingIndex >= 0) {
-          guestWishlist.splice(existingIndex, 1);
-          setIsInWishlist(false);
-          toast.success("Removed from wishlist!");
-        } else {
-          const productData = {
-            _id: productId,
-            name: product.name,
-            brand: product.brand?.name || product.brand || "Unknown",
-            price: selectedShade.displayPrice || product.price || 0,
-            originalPrice:
-              selectedShade.originalPrice || product.mrp || product.price || 0,
-            mrp: selectedShade.originalPrice || product.mrp || product.price || 0,
-            displayPrice: selectedShade.displayPrice || product.price || 0,
-            images: displayImages || product.images || ["/placeholder.png"],
-            image:
-              displayImages?.[0] || product.images?.[0] || "/placeholder.png",
-            slug: product.slugs?.[0] || slug,
-            sku: sku,
-            variantSku: sku,
-            variantId: sku,
-            variantName:
-              selectedShade.shadeName || selectedShade.name || "Default",
-            shadeName:
-              selectedShade.shadeName || selectedShade.name || "Default",
-            variant: selectedShade.shadeName || selectedShade.name || "Default",
-            hex: selectedShade.hex || "#cccccc",
-            stock: selectedShade.stock || 0,
-            status: selectedShade.stock > 0 ? "inStock" : "outOfStock",
-            avgRating: reviewSummary.avgRating || 0,
-            totalRatings: reviewSummary.totalReviews || 0,
-            commentsCount: reviewSummary.totalReviews || 0,
-            discountPercent:
-              selectedShade.originalPrice > selectedShade.displayPrice
-                ? Math.round(
-                    ((selectedShade.originalPrice - selectedShade.displayPrice) /
-                      selectedShade.originalPrice) *
-                      100
-                  )
-                : 0,
-          };
-
-          guestWishlist.push(productData);
-          setIsInWishlist(true);
-          toast.success("Added to wishlist!");
-        }
-
-        localStorage.setItem("guestWishlist", JSON.stringify(guestWishlist));
-        setWishlistData(guestWishlist);
-      }
-
-      await fetchWishlistData();
+      await contextToggleWishlist(product, selectedShade);
     } catch (error) {
       console.error("Wishlist toggle error:", error);
-      if (error.response?.status === 401) {
-        toast.error("Please login to use wishlist");
-        navigate("/login");
-      } else {
-        toast.error(
-          error.response?.data?.message || "Failed to update wishlist"
-        );
-      }
     } finally {
       setWishlistLoading(false);
     }
   };
-
-  useEffect(() => {
-    const updateWishlistStatus = async () => {
-      if (product && selectedShade) {
-        const status = await checkWishlistStatus();
-        setIsInWishlist(status);
-      }
-    };
-    updateWishlistStatus();
-  }, [product, selectedShade, user]);
-
-  useEffect(() => {
-    fetchWishlistData();
-  }, [user]);
 
   /* ===================== PRODUCT FETCHING ===================== */
   const getVariantFromQuery = () => {

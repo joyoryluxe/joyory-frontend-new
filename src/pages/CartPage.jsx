@@ -8,7 +8,8 @@ import "../styles/CartPage.css";
 import "../styles/ForYou.css";
 import "../App.css";
 import "../styles/Foundation.css";
-import { CartContext } from "../Context/Cartcontext";
+import { CartContext } from "../context/CartContext";
+import { WishlistContext } from "../context/WishlistContext";
 import { FaTimes, FaHeart, FaRegHeart, FaChevronDown, FaCheck } from "react-icons/fa";
 import { Modal, Button, Alert } from "react-bootstrap";
 import { ToastContainer, toast } from "react-toastify";
@@ -888,6 +889,7 @@ const CartPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { syncCartFromBackend } = useContext(CartContext);
+  const { syncWishlist } = useContext(WishlistContext);
   const { user } = useContext(UserContext);
 
   const [cartData, setCartData] = useState(null);
@@ -955,6 +957,7 @@ const CartPage = () => {
 
       handleCloseConfirm();
       await syncCartFromBackend();
+      await syncWishlist();
       navigate("/Wishlist");
     } catch (err) {
       console.error("Error moving item to wishlist:", err);
@@ -1075,6 +1078,7 @@ const CartPage = () => {
       });
       if (!res.ok) throw new Error("Failed to update quantity");
       await fetchCart(appliedCoupon);
+      await syncCartFromBackend();
     } catch (err) {
       console.error(err);
       alert("Failed to update quantity. Please try again.");
@@ -1093,6 +1097,7 @@ const CartPage = () => {
       const res = await fetch(url, { method: "DELETE", credentials: "include" });
       if (!res.ok) throw new Error("Server failed to remove item");
       await fetchCart(appliedCoupon);
+      await syncCartFromBackend();
     } catch (err) {
       console.error(err);
       alert("Failed to remove item from cart.");

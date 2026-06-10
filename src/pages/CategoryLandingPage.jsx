@@ -331,15 +331,15 @@ export default function CategoryLandingPage() {
     // };
 
 
-     const showToastMsg = (message, type = "error", duration = 3000) => {
-              if (type === "success") {
-                  toast.success(message, { autoClose: duration });
-              } else if (type === "error") {
-                  toast.error(message, { autoClose: duration });
-              } else {
-                  toast.info(message, { autoClose: duration });
-              }
-          };
+    const showToastMsg = (message, type = "error", duration = 3000) => {
+        if (type === "success") {
+            toast.success(message, { autoClose: duration });
+        } else if (type === "error") {
+            toast.error(message, { autoClose: duration });
+        } else {
+            toast.info(message, { autoClose: duration });
+        }
+    };
 
     // ===================== OUT OF STOCK POPUP HANDLER =====================
     const handleOutOfStockClick = (productName) => {
@@ -769,8 +769,8 @@ export default function CategoryLandingPage() {
                                     }}
                                 >
                                     {(() => {
-                                      const varName = displayVariant ? getVariantDisplayText(displayVariant) : "";
-                                      return varName && varName.toUpperCase() !== "DEFAULT" ? `${prod.name} - ${varName}` : prod.name;
+                                        const varName = displayVariant ? getVariantDisplayText(displayVariant) : "";
+                                        return varName && varName.toUpperCase() !== "DEFAULT" ? `${prod.name} - ${varName}` : prod.name;
                                     })()}
                                 </h6>
 
@@ -837,10 +837,10 @@ export default function CategoryLandingPage() {
                                     <div className="d-flex align-items-center justify-content-between">
                                         <button
                                             className={`btn w-100 page-title-main-name addtocartbuttton d-flex align-items-center justify-content-center gap-2 ${showOutOfStock
-                                                    ? "btn-secondary"
-                                                    : isAdding
-                                                        ? ""
-                                                        : "btn-outline-dark"
+                                                ? "btn-secondary"
+                                                : isAdding
+                                                    ? ""
+                                                    : "btn-outline-dark"
                                                 }`}
                                             onClick={(e) => {
                                                 e.stopPropagation();
@@ -993,9 +993,9 @@ export default function CategoryLandingPage() {
                                         Selected: <span className="text-dark fw-bold">{getVariantDisplayText(displayVariant)}</span>
                                     </div>
                                     <div className="mt-1 mb-2 text-start">
-                                        <span 
-                                            onClick={(e) => { e.stopPropagation(); navigate(`/product/${slugPr}`); }} 
-                                            className="text-decoration-none fw-semibold" 
+                                        <span
+                                            onClick={(e) => { e.stopPropagation(); navigate(`/product/${slugPr}`); }}
+                                            className="text-decoration-none fw-semibold"
                                             style={{ cursor: 'pointer', fontSize: '12px' }}
                                         >
                                             View Details
@@ -1563,17 +1563,17 @@ export default function CategoryLandingPage() {
                                 <div key={product._id} className="bg-color-setup">
                                     <div className="bg-images"></div>
                                     <div className="border-0 row">
-                                        <div className="col-lg-4">
+                                        <div className="col-lg-5">
                                             <img
                                                 src={product.image}
                                                 alt={product.name}
                                                 className="img-fluid produtc-common-margin-padding"
-                                                style={{ borderRadius: "10px", objectFit: "contain" }}
+                                                style={{ borderRadius: "10px", objectFit: "contain", maxHeight: "400px", minWidth: "100%", objectFit: "cover" }}
                                             />
                                         </div>
 
-                                        <div className="col-lg-8">
-                                            <div className="card-body p-2">
+                                        <div className="col-lg-7">
+                                            <div className="card-body p-2 ms-lg-5 ms-0">
                                                 <div className="text-uppercase ms-lg-5 ms-0 mt-lg-5 pt-3 fs-2 ms-lg-0 ms-0 page-title-main-name ">
                                                     {product.brandName}
                                                 </div>
@@ -1732,7 +1732,7 @@ export default function CategoryLandingPage() {
             {showVariantOverlay && (() => {
                 // Search in topSellers
                 let item = topSellers?.find(p => p._id === showVariantOverlay);
-                
+
                 // Search in findsForYou sections
                 if (!item && findsForYou) {
                     for (const section of findsForYou) {

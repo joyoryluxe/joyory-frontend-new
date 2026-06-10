@@ -595,13 +595,13 @@ const DiscountProductsPage = () => {
     const isAdding = addingToCart[prod._id];
 
     // Check if product is completely out of stock (all variants OOS)
-    const isCompletelyOutOfStock = hasVar ? vars.every(v => v.stock <= 0) : prod.stock <= 0;
+    const isCompletelyOutOfStock = hasVar && vars.every(v => v.stock <= 0);
 
     // Check if current selected variant is out of stock
     const isCurrentVariantOutOfStock = displayVariant ? displayVariant.stock <= 0 : prod.stock <= 0;
 
     // Determine if we should show out of stock state
-    const showOutOfStock = isCompletelyOutOfStock;
+    const showOutOfStock = isCompletelyOutOfStock && !hasVar;
 
     // Show select variant button if product has variants but user hasn't selected one yet
     const showSelectVariantButton = hasVar && vars.length > 1;
@@ -922,7 +922,7 @@ const DiscountProductsPage = () => {
                             </div>
                             {isOutOfStock && (
                               <span style={{
-                                position: "absolute", top: 0, left: 8, right: 0, bottom: 0,
+                                position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
                                 display: "flex", alignItems: "center", justifyContent: "center",
                                 color: "red", fontWeight: "bold", fontSize: 16, pointerEvents: "none"
                               }}>✕</span>

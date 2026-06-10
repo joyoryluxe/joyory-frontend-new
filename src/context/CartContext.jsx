@@ -532,8 +532,9 @@
 
 
 
-import React, { createContext, useState, useEffect } from "react";
+import React, { createContext, useState, useEffect, useContext } from "react";
 import axios from "axios";
+import { UserContext } from "./UserContext";
 
 export const CartContext = createContext();
 const VARIANT_CACHE_KEY = "cartVariantCache";
@@ -572,28 +573,26 @@ const saveGuestCart = (cart) => {
 };
 
 const CartProvider = ({ children }) => {
+  const { user } = useContext(UserContext);
   const [cartItems, setCartItems] = useState([]);
   const [cartCount, setCartCount] = useState(0);
 
-  // Initialize cart from localStorage for guest users
+  // Initialize and sync cart based on user auth status
   useEffect(() => {
     const initializeCart = () => {
-      const cookies = document.cookie.split("; ");
-      const isLoggedIn =
-        cookies.some((c) => c.startsWith("token=")) ||
-        cookies.some((c) => c.startsWith("session="));
-
-      if (isLoggedIn) {
-        syncCartFromBackend();
-      } else {
-        const guestCart = getGuestCart();
-        setCartItems(guestCart);
-        updateCartCount(guestCart);
+      if (user) {
+        if (user.guest) {
+          const guestCart = getGuestCart();
+          setCartItems(guestCart);
+          updateCartCount(guestCart);
+        } else {
+          syncCartFromBackend();
+        }
       }
     };
 
     initializeCart();
-  }, []);
+  }, [user]);
 
   const updateCartCount = (items) => {
     const total = items.reduce((acc, item) => acc + item.quantity, 0);
