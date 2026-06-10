@@ -8,19 +8,7 @@
     border-radius: 0px !important;
 }
 
-@font-face {
-    font-family: "Playfair";
-    src: url("../css/Font/playfair-display/PlayfairDisplay-Regular.ttf") format("truetype");
-    font-weight: 400;
-    font-style: normal;
-}
 
-@font-face {
-    font-family: "Montserrat";
-    src: url("../css/Font/Montserrat/Montserrat-VariableFont_wght.ttf") format("truetype");
-    font-weight: 400;
-    font-style: normal;
-}
 
 
 /*=======================================================================Top-Share-Category(Start)============================*/

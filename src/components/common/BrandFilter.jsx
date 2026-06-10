@@ -96,11 +96,10 @@ const BrandFilter = ({
         }));
     };
 
-    // ✅ Reset to the default state (instead of empty)
+    // Reset to the default state (instead of empty)
     const clearAll = () => {
         setFilters(mergedDefault);
         setExpandedIds(new Set());
-        if (onClearCategory) onClearCategory();
     };
 
     /* ─── CATEGORY HELPERS (HIERARCHICAL) ─────────────────────── */
@@ -133,7 +132,7 @@ const BrandFilter = ({
         const chips = [];
         const sections = [
             { key: "brandIds", list: brands, field: "slug" },
-            { key: "categoryIds", list: categories, field: "_id" },
+            { key: "categoryIds", list: categories, field: "slug" },
             { key: "skinTypes", list: skinTypes, field: "slug" },
             { key: "formulations", list: formulations, field: "name" },
             { key: "finishes", list: finishes, field: "slug" },
@@ -142,7 +141,7 @@ const BrandFilter = ({
 
         sections.forEach((sec) => {
             (filters[sec.key] || []).forEach((v) => {
-                const item = sec.list.find((i) => i[sec.field] === v || i._id === v);
+                const item = sec.list.find((i) => i[sec.field] === v || i._id === v || (i.slug && i.slug === v));
                 if (item) {
                     chips.push({ group: sec.key, val: v, label: item.name || v });
                 }
@@ -213,7 +212,7 @@ const BrandFilter = ({
         const isExpanded = expandedIds.has(cat._id);
         const isChecked = (filters.categoryIds || []).includes(cat._id) ||
             (filters.categoryIds || []).includes(cat.slug) ||
-            activeCategorySlug === cat.slug;
+            ((filters.categoryIds || []).length === 0 && activeCategorySlug === cat.slug);
 
         return (
             <div key={cat._id} className="mb-1">
@@ -229,19 +228,19 @@ const BrandFilter = ({
                         <input
                             className="form-check-input"
                             type="checkbox"
-                            id={`cat-${cat._id || cat.slug}`}
+                            id={`cat-${cat.slug || cat._id}`}
                             checked={isChecked}
                             onChange={() => {
                                 if (onCategoryPillClick) {
                                     onCategoryPillClick(cat);
                                 } else {
-                                    handleToggleFilter("categoryIds", cat._id || cat.slug);
+                                    handleToggleFilter("categoryIds", cat.slug || cat._id);
                                 }
                             }}
                         />
                         <label
                             className={`form-check-label d-flex justify-content-between ${isChecked ? "fw-bold text-primary" : ""}`}
-                            htmlFor={`cat-${cat._id || cat.slug}`}
+                            htmlFor={`cat-${cat.slug || cat._id}`}
                             style={{ cursor: "pointer", fontSize: "14px", fontWeight: depth === 0 ? "600" : "400" }}
                             onClick={(e) => {
                                 if (onCategoryPillClick) {

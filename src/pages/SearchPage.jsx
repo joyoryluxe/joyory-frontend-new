@@ -506,7 +506,7 @@ const SearchPage = () => {
 
     filters.brandIds?.forEach((id) => p.append("brandIds", id));
     filters.categoryIds?.forEach((id) => p.append("categoryIds", id));
-    filters.skinTypes?.forEach((n) => p.append("skinTypes", n));
+    filters.skinTypes?.forEach((n) => p.append("skinTypes", n.replace(/\+/g, " ")));
     filters.formulations?.forEach((id) => p.append("formulations", id));
     filters.finishes?.forEach((s) => p.append("finishes", s));
     filters.ingredients?.forEach((s) => p.append("ingredients", s));
@@ -1019,6 +1019,20 @@ const SearchPage = () => {
     });
   }, []);
 
+  const handleCategoryCheckboxToggle = useCallback((cat) => {
+    setFilters(prev => {
+      const current = prev.categoryIds || [];
+      const value = cat.slug || cat._id;
+      const isActive = current.includes(value);
+      return {
+        ...prev,
+        categoryIds: isActive
+          ? current.filter(id => id !== value)
+          : [...current, value]
+      };
+    });
+  }, []);
+
   const brandFilterProps = {
     filters,
     setFilters,
@@ -1027,7 +1041,7 @@ const SearchPage = () => {
     activeCategorySlug: null,
     activeCategoryName: "",
     onClearCategory: handleClearAllFilters,
-    onCategoryPillClick: () => { },
+    onCategoryPillClick: handleCategoryCheckboxToggle,
   };
 
   const renderProductCard = (prod) => {

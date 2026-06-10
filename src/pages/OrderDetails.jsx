@@ -332,7 +332,7 @@
 //   const getEffectiveStatus = () => {
 //     const activeReturn = shipmentData?.activeReturn;
 //     const returns = shipmentData?.returns || [];
-    
+
 //     // Check if there's an active return
 //     if (activeReturn && activeReturn.status) {
 //       return {
@@ -341,7 +341,7 @@
 //         type: activeReturn.type || "return"
 //       };
 //     }
-    
+
 //     // Check if any return has tracking (return in progress)
 //     const returnWithTracking = returns.find(r => r.trackingTimeline?.length > 0);
 //     if (returnWithTracking) {
@@ -351,7 +351,7 @@
 //         type: returnWithTracking.type
 //       };
 //     }
-    
+
 //     // Fall back to shipment status
 //     return {
 //       status: shipmentData?.shipmentStatus,
@@ -364,7 +364,7 @@
 //   const getStatusIcon = (st, returnType) => {
 //     if (!st) return <FaClock className="status-icon pending" />;
 //     const status = st.toLowerCase();
-    
+
 //     // Return/Replace specific icons
 //     if (returnType === "return" || returnType === "replace") {
 //       if (status === "requested" || status === "return_requested") return <FaUndo className="status-icon warning" />;
@@ -373,7 +373,7 @@
 //       if (status === "qc_passed" || status === "completed") return <FaCheckCircle className="status-icon success" />;
 //       if (status === "qc_failed" || status === "rejected") return <FaTimesCircle className="status-icon danger" />;
 //     }
-    
+
 //     // Shipment status icons
 //     if (status === "delivered") return <FaTruck className="status-icon delivered" />;
 //     if (status === "shipped" || status === "in transit") return <FaShippingFast className="status-icon shipped" />;
@@ -382,14 +382,14 @@
 //     if (status === "out for delivery") return <FaTruck className="status-icon delivered" />;
 //     if (status === "pickup scheduled" || status === "shipment created") return <FaBox className="status-icon pending" />;
 //     if (status === "picked up") return <FaShippingFast className="status-icon shipped" />;
-    
+
 //     return <FaClock className="status-icon pending" />;
 //   };
 
 //   const getStatusColor = (st, returnType) => {
 //     if (!st) return "secondary";
 //     const status = st.toLowerCase();
-    
+
 //     // Return status colors
 //     if (returnType === "return" || returnType === "replace") {
 //       if (status === "requested" || status === "return_requested") return "warning";
@@ -398,7 +398,7 @@
 //       if (status === "qc_passed" || status === "completed") return "success";
 //       if (status === "qc_failed" || status === "rejected") return "danger";
 //     }
-    
+
 //     // Shipment status colors
 //     if (status === "delivered") return "success";
 //     if (status === "shipped" || status === "in transit" || status === "picked up") return "info";
@@ -406,14 +406,14 @@
 //     if (status === "cancelled" || status === "rto initiated" || status === "rto delivered") return "danger";
 //     if (status === "out for delivery") return "success";
 //     if (status === "pickup scheduled" || status === "shipment created") return "secondary";
-    
+
 //     return "secondary";
 //   };
 
 //   const getTrackingStatusIcon = (st) => {
 //     if (!st) return <FaInfoCircle className="text-secondary" />;
 //     const status = st.toLowerCase();
-    
+
 //     if (status === "delivered") return <FaTruck className="text-success" />;
 //     if (status === "in transit" || status === "shipped") return <FaShippingFast className="text-info" />;
 //     if (status === "cancelled" || status === "rto initiated" || status === "rto delivered") return <FaTimesCircle className="text-danger" />;
@@ -422,13 +422,13 @@
 //     if (status === "picked up") return <FaCheckCircle className="text-success" />;
 //     if (status === "out for delivery") return <FaTruck className="text-success" />;
 //     if (status === "confirmed" || status === "processing") return <FaCheckCircle className="text-warning" />;
-    
+
 //     // Return specific tracking icons
 //     if (status === "requested" || status === "return_requested") return <FaUndo className="text-warning" />;
 //     if (status === "pickup_pending") return <FaClock className="text-warning" />;
 //     if (status === "qc_passed") return <FaCheckCircle className="text-success" />;
 //     if (status === "qc_failed") return <FaTimesCircle className="text-danger" />;
-    
+
 //     return <FaInfoCircle className="text-secondary" />;
 //   };
 
@@ -464,11 +464,11 @@
 //   const returns = shipmentData.returns || [];
 //   const otherItems = shipmentData.otherItems || [];
 //   const invoice = shipmentData.invoice || {};
-  
+
 //   // Get effective status (prioritizing return status over shipment status)
 //   const effectiveStatus = getEffectiveStatus();
 //   const displayStatus = effectiveStatus.statusLabel || effectiveStatus.status;
-  
+
 //   // Determine if return is active
 //   const isReturnActive = effectiveStatus.type === "return" || effectiveStatus.type === "replace";
 
@@ -1328,7 +1328,7 @@ const OrderDetails = () => {
   const getEffectiveStatus = () => {
     const activeReturn = shipmentData?.activeReturn;
     const returns = shipmentData?.returns || [];
-    
+
     // Check if there's an active return
     if (activeReturn && activeReturn.status) {
       return {
@@ -1337,7 +1337,7 @@ const OrderDetails = () => {
         type: activeReturn.type || "return"
       };
     }
-    
+
     // Check if any return has tracking (return in progress)
     const returnWithTracking = returns.find(r => r.trackingTimeline?.length > 0);
     if (returnWithTracking) {
@@ -1347,7 +1347,7 @@ const OrderDetails = () => {
         type: returnWithTracking.type
       };
     }
-    
+
     // Fall back to shipment status
     return {
       status: shipmentData?.shipmentStatus,
@@ -1360,7 +1360,7 @@ const OrderDetails = () => {
   const getStatusIcon = (st, returnType) => {
     if (!st) return <FaClock className="status-icon pending" />;
     const status = st.toLowerCase();
-    
+
     // Return/Replace specific icons
     if (returnType === "return" || returnType === "replace") {
       if (status === "requested" || status === "return_requested") return <FaUndo className="status-icon warning" />;
@@ -1369,7 +1369,7 @@ const OrderDetails = () => {
       if (status === "qc_passed" || status === "completed") return <FaCheckCircle className="status-icon success" />;
       if (status === "qc_failed" || status === "rejected") return <FaTimesCircle className="status-icon danger" />;
     }
-    
+
     // Shipment status icons
     if (status === "delivered") return <FaTruck className="status-icon delivered" />;
     if (status === "shipped" || status === "in transit") return <FaShippingFast className="status-icon shipped" />;
@@ -1378,14 +1378,14 @@ const OrderDetails = () => {
     if (status === "out for delivery") return <FaTruck className="status-icon delivered" />;
     if (status === "pickup scheduled" || status === "shipment created") return <FaBox className="status-icon pending" />;
     if (status === "picked up") return <FaShippingFast className="status-icon shipped" />;
-    
+
     return <FaClock className="status-icon pending" />;
   };
 
   const getStatusColor = (st, returnType) => {
     if (!st) return "secondary";
     const status = st.toLowerCase();
-    
+
     // Return status colors
     if (returnType === "return" || returnType === "replace") {
       if (status === "requested" || status === "return_requested") return "warning";
@@ -1394,7 +1394,7 @@ const OrderDetails = () => {
       if (status === "qc_passed" || status === "completed") return "success";
       if (status === "qc_failed" || status === "rejected") return "danger";
     }
-    
+
     // Shipment status colors
     if (status === "delivered") return "success";
     if (status === "shipped" || status === "in transit" || status === "picked up") return "info";
@@ -1402,14 +1402,14 @@ const OrderDetails = () => {
     if (status === "cancelled" || status === "rto initiated" || status === "rto delivered") return "danger";
     if (status === "out for delivery") return "success";
     if (status === "pickup scheduled" || status === "shipment created") return "secondary";
-    
+
     return "secondary";
   };
 
   const getTrackingStatusIcon = (st) => {
     if (!st) return <FaInfoCircle className="text-secondary" />;
     const status = st.toLowerCase();
-    
+
     if (status === "delivered") return <FaTruck className="text-success" />;
     if (status === "in transit" || status === "shipped") return <FaShippingFast className="text-info" />;
     if (status === "cancelled" || status === "rto initiated" || status === "rto delivered") return <FaTimesCircle className="text-danger" />;
@@ -1418,13 +1418,13 @@ const OrderDetails = () => {
     if (status === "picked up") return <FaCheckCircle className="text-success" />;
     if (status === "out for delivery") return <FaTruck className="text-success" />;
     if (status === "confirmed" || status === "processing") return <FaCheckCircle className="text-warning" />;
-    
+
     // Return specific tracking icons
     if (status === "requested" || status === "return_requested") return <FaUndo className="text-warning" />;
     if (status === "pickup_pending") return <FaClock className="text-warning" />;
     if (status === "qc_passed") return <FaCheckCircle className="text-success" />;
     if (status === "qc_failed") return <FaTimesCircle className="text-danger" />;
-    
+
     return <FaInfoCircle className="text-secondary" />;
   };
 
@@ -1460,22 +1460,22 @@ const OrderDetails = () => {
   const returns = shipmentData.returns || [];
   const otherItems = shipmentData.otherItems || [];
   const invoice = shipmentData.invoice || {};
-  
+
   // Get effective status (prioritizing return status over shipment status)
   const effectiveStatus = getEffectiveStatus();
   const displayStatus = effectiveStatus.statusLabel || effectiveStatus.status;
-  
+
   // Determine if return is active
   const isReturnActive = effectiveStatus.type === "return" || effectiveStatus.type === "replace";
 
   return (
     <div className="order-details-page">
       <Header />
-      <div className="container py-4 mt-5 pt-5">
-        
+      <div className="container py-4 mt-3 pt-0">
+
         {/* Navigation / Back Button */}
         <div className="mb-3">
-          <button className="btn back-btn mt-lg-5" onClick={() => navigate(-1)}>
+          <button className="btn back-btn" onClick={() => navigate(-1)}>
             <FaArrowLeft className="me-2" /> Back to Orders
           </button>
         </div>
@@ -1486,7 +1486,7 @@ const OrderDetails = () => {
             <h4>Order Details</h4>
             <span>Order ID: <strong>{orderInfo.orderId}</strong></span>
           </div>
-          
+
           <div className="details-header-actions">
             {/* Status Badge */}
             <div className={`status-badge-pill ${getStatusColor(effectiveStatus.status, effectiveStatus.type)}`}>
@@ -1528,13 +1528,13 @@ const OrderDetails = () => {
         <div className="row g-4">
           {/* Left Column (Primary Details) */}
           <div className="col-lg-8">
-            
+
             {/* Shipment Metadata & Tracking history Card */}
             <div className="od-card">
               <h5 className="od-card-title">
                 <FaTruck className="me-2" /> Shipment & Tracking Info
               </h5>
-              
+
               <div className="metadata-grid mb-4">
                 <div className="metadata-item">
                   <strong>Shipment ID:</strong> <span>{shipmentData.shipmentId}</span>
@@ -1550,7 +1550,7 @@ const OrderDetails = () => {
                 </div>
                 {getWaybill(shipmentData) && (
                   <div className="metadata-item col-span-2">
-                    <strong>Waybill / AWB:</strong> 
+                    <strong>Waybill / AWB:</strong>
                     <span className=" text-dark border ms-2 px-1">{getWaybill(shipmentData)}</span>
                     {/* {courier.trackingUrl && (
                       <a
@@ -1572,7 +1572,7 @@ const OrderDetails = () => {
                 <div className="border-top pt-4 mt-3">
                   <h6 className="fw-bold mb-3" style={{ fontSize: "0.95rem" }}>Tracking Timeline</h6>
                   <div className="timeline" style={{ maxHeight: "350px", overflowY: "auto", paddingRight: "10px" }}>
-                    
+
                     {/* Shipment tracking events - reversed to show newest first */}
                     {trackingTimeline.slice().reverse().map((evt, i) => (
                       <div key={`ship-${i}`} className="timeline-item">
@@ -1580,37 +1580,37 @@ const OrderDetails = () => {
                         <div className="timeline-content">
                           <h6 className="text-capitalize">{evt.status}</h6>
                           <p>{evt.description || evt.courierStatus}</p>
-                           <span className="timestamp">
-                             {formatDateTime(evt.timestamp)} {evt.location ? `| ${evt.location}` : ""}
-                           </span>
+                          <span className="timestamp">
+                            {formatDateTime(evt.timestamp)} {evt.location ? `| ${evt.location}` : ""}
+                          </span>
                         </div>
                       </div>
                     ))}
 
                     {/* Return tracking events */}
-                     {returns.map((ret, retIdx) => (
-                       ret.trackingTimeline?.length > 0 && (
-                         <React.Fragment key={`ret-${retIdx}`}>
-                           <div className="my-3 py-1 px-3 bg-light rounded text-uppercase tracking-header-label">
-                             <small className="fw-bold text-muted" style={{ fontSize: 10 }}>
-                               {ret.type} Tracking — {ret.statusLabel || ret.status}
-                             </small>
-                           </div>
-                           {ret.trackingTimeline.slice().reverse().map((evt, i) => (
-                             <div key={`ret-${retIdx}-${i}`} className="timeline-item">
-                               <div className="timeline-marker">{getTrackingStatusIcon(evt.status)}</div>
-                               <div className="timeline-content">
-                                 <h6 className="text-capitalize">{evt.status.replace(/_/g, ' ')}</h6>
-                                 <p>{evt.description}</p>
-                                 <span className="timestamp">
-                                   {formatDateTime(evt.timestamp)} {evt.location ? `| ${evt.location}` : ""}
-                                 </span>
-                               </div>
-                             </div>
-                           ))}
-                         </React.Fragment>
-                       )
-                     ))}
+                    {returns.map((ret, retIdx) => (
+                      ret.trackingTimeline?.length > 0 && (
+                        <React.Fragment key={`ret-${retIdx}`}>
+                          <div className="my-3 py-1 px-3 bg-light rounded text-uppercase tracking-header-label">
+                            <small className="fw-bold text-muted" style={{ fontSize: 10 }}>
+                              {ret.type} Tracking — {ret.statusLabel || ret.status}
+                            </small>
+                          </div>
+                          {ret.trackingTimeline.slice().reverse().map((evt, i) => (
+                            <div key={`ret-${retIdx}-${i}`} className="timeline-item">
+                              <div className="timeline-marker">{getTrackingStatusIcon(evt.status)}</div>
+                              <div className="timeline-content">
+                                <h6 className="text-capitalize">{evt.status.replace(/_/g, ' ')}</h6>
+                                <p>{evt.description}</p>
+                                <span className="timestamp">
+                                  {formatDateTime(evt.timestamp)} {evt.location ? `| ${evt.location}` : ""}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </React.Fragment>
+                      )
+                    ))}
                   </div>
                 </div>
               )}
@@ -1621,7 +1621,7 @@ const OrderDetails = () => {
               <h5 className="od-card-title">
                 <FaBox className="me-2" /> Items in Shipment
               </h5>
-              
+
               <div className="product-rows-list">
                 {shipmentData.products?.map((p, idx) => {
                   const form = returnForms[idx];
@@ -1641,7 +1641,7 @@ const OrderDetails = () => {
                       <div className="od-img-wrap">
                         <img src={p.image} alt={p.name} />
                       </div>
-                      
+
                       <div className="product-details">
                         <h6>{p.name}</h6>
                         <div className="variant-label">
@@ -1735,7 +1735,7 @@ const OrderDetails = () => {
                                 <small className="text-muted d-block mt-1">Required for damaged or quality issues (Max 5)</small>
                               </div>
                               <input id={`ret-img-${idx}`} type="file" multiple accept="image/*" className="d-none" onChange={(e) => handleReturnImages(idx, e.target.files)} />
-                              
+
                               {form.images?.length > 0 && (
                                 <div className="od-preview-grid">
                                   {form.images.map((img, i) => (
@@ -1827,12 +1827,12 @@ const OrderDetails = () => {
                             <span className="ms-2 badge bg-white text-dark border">AWB: {ret.courier.waybill}</span>
                           )}
                         </div>
-                       )}
+                      )}
 
                       {ret.refund && (
                         <div className="mb-2 small text-muted">
                           <strong>Refund Amount:</strong> ₹{formatCurrency(ret.refund.amount)}
-                          <span className={`badge ms-2 bg-${ret.refund.status === 'completed' ? 'success' : ret.refund.status === 'failed' ? 'danger' : 'warning'}`}>
+                          <span className={`badge ml ms-2 bg-${ret.refund.status === 'completed' ? 'success' : ret.refund.status === 'failed' ? 'danger' : 'warning'}`}>
                             {ret.refund.status}
                           </span>
                           {ret.refund.refundedAt && (
@@ -1875,13 +1875,13 @@ const OrderDetails = () => {
 
           {/* Right Column (Sidebar Transactional Info) */}
           <div className="col-lg-4">
-            
+
             {/* Price Summary Card */}
             <div className="od-card">
               <h5 className="od-card-title">
                 <FaInfoCircle className="me-2" /> Price Summary
               </h5>
-              
+
               <div className="price-rows-wrap mt-3">
                 <div className="price-row-item">
                   <span>Total MRP</span>
@@ -1920,10 +1920,10 @@ const OrderDetails = () => {
                 )}
 
                 {Number(priceDetails.breakdown?.couponDiscount) > 0 && (
-                   <div className="price-row-item">
-                     <span>Coupon Discount</span>
-                     <span className="text-success">-₹{formatCurrency(priceDetails.breakdown.couponDiscount)}</span>
-                   </div>
+                  <div className="price-row-item">
+                    <span>Coupon Discount</span>
+                    <span className="text-success">-₹{formatCurrency(priceDetails.breakdown.couponDiscount)}</span>
+                  </div>
                 )}
 
                 {Number(priceDetails.breakdown?.pointsDiscount) > 0 && (
@@ -1976,7 +1976,7 @@ const OrderDetails = () => {
               <h5 className="od-card-title">
                 <FaShippingFast className="me-2" /> Shipping Address
               </h5>
-              
+
               <div className="address-details mt-3">
                 <div className="contact-detail-row">
                   <div className="contact-text">
@@ -1986,7 +1986,7 @@ const OrderDetails = () => {
                     <div>{shipmentData.shippingAddress?.city}, {shipmentData.shippingAddress?.state} - {shipmentData.shippingAddress?.pincode}</div>
                   </div>
                 </div>
-                
+
                 <div className="border-top pt-3 mt-3">
                   <div className="contact-detail-row">
                     <i className="bi bi-telephone me-2"></i>

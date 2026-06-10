@@ -12,7 +12,7 @@ import {
   sendChatMessage,
   getChatHistory,
   clearChatHistory,
-} from "../api/beautyConciergeApi";
+} from "../api/beautyConciergeApi.js";
 import "../styles/BeautyConcierge.css";
 import LogoImg from "../assets/Logo.png";
 

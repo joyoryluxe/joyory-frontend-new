@@ -165,7 +165,7 @@ const PromotionProducts = () => {
     // Multi-select filters
     filters.brandIds?.forEach((id) => p.append("brandIds", id));
     filters.categoryIds?.forEach((id) => p.append("categoryIds", id));
-    filters.skinTypes?.forEach((n) => p.append("skinTypes", n));
+    filters.skinTypes?.forEach((n) => p.append("skinTypes", n.replace(/\+/g, " ")));
     filters.formulations?.forEach((id) => p.append("formulations", id));
     filters.finishes?.forEach((s) => p.append("finishes", s));
     filters.ingredients?.forEach((s) => p.append("ingredients", s));
@@ -581,6 +581,20 @@ const PromotionProducts = () => {
     );
   };
 
+  const handleCategoryCheckboxToggle = useCallback((cat) => {
+    setFilters(prev => {
+      const current = prev.categoryIds || [];
+      const value = cat.slug || cat._id;
+      const isActive = current.includes(value);
+      return {
+        ...prev,
+        categoryIds: isActive
+          ? current.filter(id => id !== value)
+          : [...current, value]
+      };
+    });
+  }, []);
+
   /* ===================== BRANDFILTER PROPS ===================== */
   const brandFilterProps = {
     filters,
@@ -590,7 +604,7 @@ const PromotionProducts = () => {
     activeCategorySlug: null,        // Not used in promotion usually
     activeCategoryName: "",
     onClearCategory: () => { },       // Not needed for promotion
-    onCategoryPillClick: () => { },   // Not needed for promotion
+    onCategoryPillClick: handleCategoryCheckboxToggle,
     onClose: () => setShowFilterOffcanvas(false),
   };
 

@@ -3,6 +3,10 @@ import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../utils/axiosInstance.js";
 import "../../styles/HeaderCategories.css";
 
+const CATEGORY_PLACEHOLDER = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='400' viewBox='0 0 300 400'><rect width='100%' height='100%' fill='%23f3f4f6'/><text x='50%' y='50%' font-family='sans-serif' font-size='16' fill='%239ca3af' dominant-baseline='middle' text-anchor='middle'>Shop Now</text></svg>";
+
+const BRAND_PLACEHOLDER = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='150' height='80' viewBox='0 0 150 80'><rect width='100%' height='100%' fill='%23f3f4f6'/><text x='50%' y='50%' font-family='sans-serif' font-size='14' fill='%239ca3af' dominant-baseline='middle' text-anchor='middle'>Brand</text></svg>";
+
 const STATIC_MENU_ITEMS = [
   { label: "Brands", path: "/", hasDropdown: true },
   { label: "Offers", path: "/offerlanding" },
@@ -102,14 +106,14 @@ const HeaderCategories = () => {
     if (cat.headerImage && typeof cat.headerImage === 'string') return cat.headerImage;
     if (Array.isArray(cat.bannerImage) && cat.bannerImage.length > 0) return cat.bannerImage[0];
     if (Array.isArray(cat.thumbnailImage) && cat.thumbnailImage.length > 0) return cat.thumbnailImage[0];
-    return "https://via.placeholder.com/300x400?text=Shop+Now";
+    return CATEGORY_PLACEHOLDER;
   };
 
   const getBrandImage = (brand) => {
     if (brand.logo && typeof brand.logo === 'string') return brand.logo;
     if (brand.image && typeof brand.image === 'string') return brand.image;
     if (Array.isArray(brand.images) && brand.images.length > 0) return brand.images[0];
-    return "https://via.placeholder.com/150x80?text=Brand";
+    return BRAND_PLACEHOLDER;
   };
 
   const renderBrandsDropdown = () => {
@@ -132,7 +136,15 @@ const HeaderCategories = () => {
                   }}
                 >
                   <div className="brand-image-wrapper">
-                    <img src={getBrandImage(brand)} alt={brand.name} className="w-100 img-fluid" />
+                    <img 
+                      src={getBrandImage(brand)} 
+                      alt={brand.name} 
+                      className="w-100 img-fluid" 
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = BRAND_PLACEHOLDER;
+                      }}
+                    />
                   </div>
                   {/* <span className="brand-name">{brand.name}</span> */}
                 </div>
@@ -210,6 +222,10 @@ const HeaderCategories = () => {
                       onClick={() => {
                         navigate(`/category/${cat.slug}`);
                         setActiveCategoryId(null);
+                      }}
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = CATEGORY_PLACEHOLDER;
                       }}
                     />
                   </div>

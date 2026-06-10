@@ -170,6 +170,7 @@ function App() {
             <Route path="/Chatbot" element={<Chatbot />} />
             <Route path="/Virtualtryonhome" element={<Virtualtryonhome />} />
             <Route path="/Help" element={<Help />} />
+            <Route path="/Help/category/:categoryId" element={<Help />} />
             <Route path="/affiliate" element={<Affiliate />} />
             <Route path="/Affiliatesignup" element={<AffiliateSignup />} />
             <Route path="/Affiliatelogin" element={<Affiliatelogin />} />

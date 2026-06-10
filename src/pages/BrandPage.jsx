@@ -5,6 +5,7 @@ import React, {
   useContext,
   useRef,
   useCallback,
+  useMemo,
 } from "react";
 import {
   useParams,
@@ -79,9 +80,6 @@ export default function BrandPage() {
   const [trendingCategories, setTrendingCategories] = useState([]);
   const [filterData, setFilterData] = useState(null);
 
-  const [activeCategorySlug, setActiveCategorySlug] = useState(null);
-  const [activeCategoryName, setActiveCategoryName] = useState("");
-
   const [selectedVariants, setSelectedVariants] = useState({});
   const [addingToCart, setAddingToCart] = useState({});
   const [loading, setLoading] = useState(true);
@@ -108,15 +106,15 @@ export default function BrandPage() {
     };
 
     const getMultiParam = (key) => {
-      const vals = searchParams.getAll(key);
-      if (vals.length) return vals;
-      const comma = searchParams.get(key);
-      return comma
-        ? comma
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean)
-        : [];
+      let vals = searchParams.getAll(key);
+      if (!vals.length) {
+        const comma = searchParams.get(key);
+        if (comma) vals = comma.split(",").map((s) => s.trim()).filter(Boolean);
+      }
+      if (key === "skinTypes") {
+        return vals.map(v => v.replace(/\s+/g, "+"));
+      }
+      return vals;
     };
 
     [
@@ -155,6 +153,43 @@ export default function BrandPage() {
     return initial;
   });
 
+  const activeCategorySlug = useMemo(() => {
+    return filters.categoryIds?.[0] || null;
+  }, [filters.categoryIds]);
+
+  const activeCategoryName = useMemo(() => {
+    if (!activeCategorySlug) return "";
+    const found = trendingCategories.find((c) => c.slug === activeCategorySlug)
+      || filterData?.categories?.find((c) => c.slug === activeCategorySlug || c._id === activeCategorySlug);
+    return found ? found.name : "";
+  }, [activeCategorySlug, trendingCategories, filterData]);
+
+  const handleCategoryCheckboxToggle = useCallback((cat) => {
+    setFilters(prev => {
+      const current = prev.categoryIds || [];
+      const value = cat.slug || cat._id;
+      const isActive = current.includes(value);
+      return {
+        ...prev,
+        categoryIds: isActive
+          ? current.filter(id => id !== value)
+          : [...current, value]
+      };
+    });
+  }, []);
+
+  const handleTopCategoryClick = useCallback((cat) => {
+    setFilters(prev => {
+      const current = prev.categoryIds || [];
+      const value = cat.slug || cat._id;
+      const isActive = current.includes(value);
+      return {
+        ...prev,
+        categoryIds: isActive ? [] : [value]
+      };
+    });
+  }, []);
+
   const [showFilterOffcanvas, setShowFilterOffcanvas] = useState(false);
   const [showSortOffcanvas, setShowSortOffcanvas] = useState(false);
   const [showVariantOverlay, setShowVariantOverlay] = useState(null);
@@ -167,6 +202,7 @@ export default function BrandPage() {
   // ===================== END OUT OF STOCK POPUP STATE =====================
 
   const loaderRef = useRef(null);
+  const lastBrandSlugRef = useRef(null);
 
   /* ── toast ──────────────────────────────────────────────────────────────── */
   // const showToastMsg = (msg, type = "error", dur = 3000) => {
@@ -312,11 +348,10 @@ export default function BrandPage() {
   const buildQueryParams = (cursor = null) => {
     const p = new URLSearchParams();
     if (brandSlug) p.append("brandIds", brandSlug);
-    if (activeCategorySlug) p.append("categoryIds", activeCategorySlug);
 
     filters.brandIds?.forEach((id) => p.append("brandIds", id));
     filters.categoryIds?.forEach((id) => p.append("categoryIds", id));
-    filters.skinTypes?.forEach((n) => p.append("skinTypes", n));
+    filters.skinTypes?.forEach((n) => p.append("skinTypes", n.replace(/\+/g, " ")));
     filters.formulations?.forEach((id) => p.append("formulations", id));
     filters.finishes?.forEach((s) => p.append("finishes", s));
     filters.ingredients?.forEach((s) => p.append("ingredients", s));
@@ -403,11 +438,13 @@ export default function BrandPage() {
   //   }
   // };
 
-  const fetchProducts = async (cursor = null, reset = false) => {
+  const fetchProducts = async (cursor = null, reset = false, clearProducts = false) => {
     try {
       if (reset) {
         setLoading(true);
-        setAllProducts([]);
+        if (clearProducts) {
+          setAllProducts([]);
+        }
         setNextCursor(null);
         setHasMore(true);
       } else {
@@ -423,53 +460,49 @@ export default function BrandPage() {
       else if (data.brand?.name) setPageTitle(data.brand.name);
       else if (data.category?.name) setPageTitle(data.category.name);
 
-      /*** FIXED BANNER HANDLING - Handles nested array ***/
-      let banners = [];
+      if (clearProducts) {
+        /*** FIXED BANNER HANDLING - Handles nested array ***/
+        let banners = [];
 
-      if (data.bannerImage) {
-        // Case 1: Backend returns [[{url}, {url}]] → flatten it
-        if (Array.isArray(data.bannerImage)) {
-          if (Array.isArray(data.bannerImage[0])) {
-            banners = data.bannerImage[0]; // Flatten nested array
-          } else {
-            banners = data.bannerImage; // Normal array
+        if (data.bannerImage) {
+          // Case 1: Backend returns [[{url}, {url}]] → flatten it
+          if (Array.isArray(data.bannerImage)) {
+            if (Array.isArray(data.bannerImage[0])) {
+              banners = data.bannerImage[0]; // Flatten nested array
+            } else {
+              banners = data.bannerImage; // Normal array
+            }
           }
+          // Case 2: Single string
+          else if (typeof data.bannerImage === "string") {
+            banners = [{ url: data.bannerImage }];
+          }
+          // Case 3: Single object
+          else if (data.bannerImage.url) {
+            banners = [data.bannerImage];
+          }
+        } else if (data.brand?.banner) {
+          banners = [{ url: data.brand.banner }];
+        } else if (data.category?.bannerImage) {
+          banners = Array.isArray(data.category.bannerImage)
+            ? data.category.bannerImage
+            : [{ url: data.category.bannerImage }];
         }
-        // Case 2: Single string
-        else if (typeof data.bannerImage === "string") {
-          banners = [{ url: data.bannerImage }];
+
+        console.log("✅ Final banners set to state:", banners); // For debugging
+
+        setBannerImages(banners);
+
+        // Trending Categories
+        if (data.trendingCategories && Array.isArray(data.trendingCategories)) {
+          setTrendingCategories(data.trendingCategories);
+        } else {
+          setTrendingCategories([]);
         }
-        // Case 3: Single object
-        else if (data.bannerImage.url) {
-          banners = [data.bannerImage];
+
+        if (reset && data.filters) {
+          setFilterData(data.filters);
         }
-      } else if (data.brand?.banner) {
-        banners = [{ url: data.brand.banner }];
-      } else if (data.category?.bannerImage) {
-        banners = Array.isArray(data.category.bannerImage)
-          ? data.category.bannerImage
-          : [{ url: data.category.bannerImage }];
-      }
-
-      console.log("✅ Final banners set to state:", banners); // For debugging
-
-      setBannerImages(banners);
-
-      // Trending Categories
-      if (data.trendingCategories && Array.isArray(data.trendingCategories)) {
-        setTrendingCategories(data.trendingCategories);
-        if (activeCategorySlug && !activeCategoryName) {
-          const found = data.trendingCategories.find(
-            (c) => c.slug === activeCategorySlug,
-          );
-          if (found) setActiveCategoryName(found.name);
-        }
-      } else {
-        setTrendingCategories([]);
-      }
-
-      if (reset && data.filters) {
-        setFilterData(data.filters);
       }
 
       const prods = Array.isArray(data.products) ? data.products : [];
@@ -490,27 +523,15 @@ export default function BrandPage() {
   };
 
   useEffect(() => {
-    if (brandSlug) fetchProducts(null, true);
-  }, [brandSlug, filters, activeCategorySlug]);
+    if (brandSlug) {
+      const isBrandChanged = lastBrandSlugRef.current !== brandSlug;
+      lastBrandSlugRef.current = brandSlug;
+      fetchProducts(null, true, isBrandChanged);
+    }
+  }, [brandSlug, filters]);
 
   /* ── category pill logic ────────────────────────────────────────────────── */
-  const handleCategoryPillClick = useCallback(
-    (cat) => {
-      if (activeCategorySlug === cat.slug) {
-        setActiveCategorySlug(null);
-        setActiveCategoryName("");
-      } else {
-        setActiveCategorySlug(cat.slug);
-        setActiveCategoryName(cat.name);
-        setFilters((prev) => ({ ...prev, categoryIds: [] }));
-      }
-    },
-    [activeCategorySlug],
-  );
-
   const handleClearCategory = useCallback(() => {
-    setActiveCategorySlug(null);
-    setActiveCategoryName("");
     setFilters((prev) => ({ ...prev, categoryIds: [] }));
   }, []);
 
@@ -1106,7 +1127,7 @@ export default function BrandPage() {
     activeCategorySlug,
     activeCategoryName,
     onClearCategory: handleClearCategory,
-    onCategoryPillClick: handleCategoryPillClick,
+    onCategoryPillClick: handleCategoryCheckboxToggle,
     isSubCategoryView: !!activeCategorySlug,
   };
 
@@ -1343,12 +1364,15 @@ export default function BrandPage() {
             }}
           >
             {trendingCategories.map((cat) => {
-              const isActive = activeCategorySlug === cat.slug;
+              const isActive = (filters.categoryIds || []).includes(cat._id) ||
+                  (filters.categoryIds || []).includes(cat.slug) ||
+                  ((filters.categoryIds || []).length === 0 && activeCategorySlug === cat.slug);
+
               return (
                 <button
                   key={cat.slug}
-                  onClick={() => handleCategoryPillClick(cat)}
-                  className={`btn cat-btn rounded-3 page-title-main-name flex-shrink-0 ${isActive ? "btn-dark" : "btn-outline-secondary"}`}
+                  onClick={() => handleTopCategoryClick(cat)}
+                  className={`btn page-title-main-name flex-shrink-0 ${isActive ? "btn-dark custom-pill" : "custom-pill"}`}
                   style={{
                     fontSize: 13,
                     fontWeight: isActive ? 600 : 400,
@@ -1465,10 +1489,6 @@ export default function BrandPage() {
                     onClose={() => setShowFilterOffcanvas(false)}
                     onClearCategory={() => {
                       handleClearCategory();
-                      setShowFilterOffcanvas(false);
-                    }}
-                    onCategoryPillClick={(cat) => {
-                      handleCategoryPillClick(cat);
                       setShowFilterOffcanvas(false);
                     }}
                   />

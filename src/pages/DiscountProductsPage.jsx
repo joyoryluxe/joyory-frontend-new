@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useRef, useCallback } from "react";
+import React, { useState, useEffect, useContext, useRef, useCallback, useMemo } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import Header from "../components/common/Header";
 import Footer from "../components/common/Footer";
@@ -122,8 +122,18 @@ const DiscountProductsPage = () => {
 
   // Trending categories for pills (like ProductPage)
   const [trendingCategories, setTrendingCategories] = useState([]);
-  const [activeCategorySlug, setActiveCategorySlug] = useState(null);
-  const [activeCategoryName, setActiveCategoryName] = useState("");
+  const lastCouponRef = useRef(null);
+
+  const activeCategorySlug = useMemo(() => {
+    return filters.categoryIds?.[0] || null;
+  }, [filters.categoryIds]);
+
+  const activeCategoryName = useMemo(() => {
+    if (!activeCategorySlug) return "";
+    const found = trendingCategories.find((c) => c.slug === activeCategorySlug)
+      || filterData?.categories?.find((c) => c.slug === activeCategorySlug || c._id === activeCategorySlug);
+    return found ? found.name : "";
+  }, [activeCategorySlug, trendingCategories, filterData]);
 
   // Context
   const { addToCart } = useContext(CartContext);
@@ -302,32 +312,43 @@ const DiscountProductsPage = () => {
       filters.discountMin ||
       filters.minRating ||
       filters.sort !== "recent" ||
-      (activeCategorySlug && activeCategorySlug !== null)
+      !!activeCategorySlug
     );
   };
 
   const handleClearAllFilters = () => {
     setFilters(makeEmptyFilters());
-    setActiveCategorySlug(null);
-    setActiveCategoryName("");
   };
 
-  // Category pill click handler (same as ProductPage)
-  const handleCategoryPillClick = useCallback((cat) => {
-    if (activeCategorySlug === cat.slug) {
-      setActiveCategorySlug(null);
-      setActiveCategoryName("");
-      setFilters(prev => ({ ...prev, categoryIds: [] }));
-    } else {
-      setActiveCategorySlug(cat.slug);
-      setActiveCategoryName(cat.name);
-      setFilters(prev => ({ ...prev, categoryIds: [cat.slug] }));
-    }
-  }, [activeCategorySlug]);
+  // Sidebar checkbox toggle handler (multi-select, like BrandPage)
+  const handleCategoryCheckboxToggle = useCallback((cat) => {
+    setFilters(prev => {
+      const current = prev.categoryIds || [];
+      const value = cat.slug || cat._id;
+      const isActive = current.includes(value);
+      return {
+        ...prev,
+        categoryIds: isActive
+          ? current.filter(id => id !== value)
+          : [...current, value]
+      };
+    });
+  }, []);
+
+  // Top category pills single-select toggle handler (like BrandPage)
+  const handleTopCategoryClick = useCallback((cat) => {
+    setFilters(prev => {
+      const current = prev.categoryIds || [];
+      const value = cat.slug || cat._id;
+      const isActive = current.includes(value);
+      return {
+        ...prev,
+        categoryIds: isActive ? [] : [value]
+      };
+    });
+  }, []);
 
   const handleClearCategory = useCallback(() => {
-    setActiveCategorySlug(null);
-    setActiveCategoryName("");
     setFilters(prev => ({ ...prev, categoryIds: [] }));
   }, []);
 
@@ -355,7 +376,7 @@ const DiscountProductsPage = () => {
     // Add filters to query params - MATCHING ProductPage structure exactly
     filters.brandIds?.forEach((id) => params.append("brandIds", id));
     filters.categoryIds?.forEach((id) => params.append("categoryIds", id));
-    filters.skinTypes?.forEach((n) => params.append("skinTypes", n));
+    filters.skinTypes?.forEach((n) => params.append("skinTypes", n.replace(/\+/g, " ")));
     filters.formulations?.forEach((id) => params.append("formulations", id));
     filters.finishes?.forEach((s) => params.append("finishes", s));
     filters.ingredients?.forEach((s) => params.append("ingredients", s));
@@ -384,11 +405,13 @@ const DiscountProductsPage = () => {
   };
 
   // ===================== DISCOUNT PRODUCTS FETCH (INFINITE SCROLL API) =====================
-  const fetchDiscountProducts = async (cursor = null, reset = false) => {
+  const fetchDiscountProducts = async (cursor = null, reset = false, clearProducts = false) => {
     try {
       if (reset) {
         setLoadingDiscountProducts(true);
-        setDiscountProducts([]);
+        if (clearProducts) {
+          setDiscountProducts([]);
+        }
         setNextCursor(null);
         setHasMore(true);
       } else {
@@ -427,13 +450,15 @@ const DiscountProductsPage = () => {
       setNextCursor(pg.nextCursor || null);
 
       // Set filter data if available
-      if (data.filters) {
-        setFilterData(data.filters);
-      }
+      if (clearProducts) {
+        if (data.filters) {
+          setFilterData(data.filters);
+        }
 
-      // Set trending categories if available
-      if (data.trendingCategories && Array.isArray(data.trendingCategories)) {
-        setTrendingCategories(data.trendingCategories);
+        // Set trending categories if available
+        if (data.trendingCategories && Array.isArray(data.trendingCategories)) {
+          setTrendingCategories(data.trendingCategories);
+        }
       }
 
     } catch (error) {
@@ -568,7 +593,7 @@ const DiscountProductsPage = () => {
     const img = displayVariant?.images?.[0] || displayVariant?.image || prod.images?.[0] || "/placeholder.png";
 
     const isAdding = addingToCart[prod._id];
-    
+
     // Check if product is completely out of stock (all variants OOS)
     const isCompletelyOutOfStock = hasVar ? vars.every(v => v.stock <= 0) : prod.stock <= 0;
 
@@ -1010,7 +1035,9 @@ const DiscountProductsPage = () => {
     if (coupon) {
       const discountCode = coupon.code;
       if (discountCode) {
-        fetchDiscountProducts(null, true);
+        const isCouponChanged = lastCouponRef.current !== discountCode;
+        lastCouponRef.current = discountCode;
+        fetchDiscountProducts(null, true, isCouponChanged);
       } else {
         setError("Error: Invalid coupon data");
       }
@@ -1034,27 +1061,7 @@ const DiscountProductsPage = () => {
   // }
 
 
-  if (loadingDiscountProducts)
-    return (
-      <div
-        className="d-flex flex-column align-items-center justify-content-center bg-white"
-        style={{
-          minHeight: "100vh",
-          width: "100%",
-        }}
-      >
-        <div className="text-center">
-          <DotLottieReact
-            src="https://lottie.host/73673e65-df58-41a5-87e7-b837c5d00fe8/dJVGVbJuYJ.lottie"
-            loop
-            autoplay
-          />
-          <p className="text-muted mb-0">
-            Please wait while we prepare the best products for you...
-          </p>
-        </div>
-      </div>
-    );
+  // Loader logic handled in JSX return
 
   // ===================== ERROR STATE =====================
   if (error) {
@@ -1087,11 +1094,36 @@ const DiscountProductsPage = () => {
     activeCategorySlug,
     activeCategoryName,
     onClearCategory: handleClearCategory,
-    onCategoryPillClick: handleCategoryPillClick,
+    onCategoryPillClick: handleCategoryCheckboxToggle,
   };
 
   return (
     <>
+      {loadingDiscountProducts && discountProducts.length === 0 && (
+        <div
+          className="d-flex flex-column align-items-center justify-content-center bg-white"
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100vh",
+            zIndex: 9999,
+            overflow: "hidden",
+          }}
+        >
+          <div className="text-center">
+            <DotLottieReact
+              src="https://lottie.host/73673e65-df58-41a5-87e7-b837c5d00fe8/dJVGVbJuYJ.lottie"
+              loop
+              autoplay
+            />
+            <p className="text-muted mb-0">
+              Please wait while we prepare the best products for you...
+            </p>
+          </div>
+        </div>
+      )}
       <Header />
 
       {/* Banner Image Section - MATCHING ProductPage */}
@@ -1106,15 +1138,19 @@ const DiscountProductsPage = () => {
 
       {/* Trending Categories - MATCHING ProductPage */}
       {trendingCategories.length > 0 && (
-        <div className="container-lg mt-4">
-          <div className="d-flex overflow-auto py-2"
+        <div className="container-lg mt-5">
+          <h2 className="mt-5 pt-5 page-title-main-name text-center">Shop By Category</h2>
+
+          <div className="d-flex mt-4 overflow-auto align-items-center justify-content-center"
             style={{ gap: "0.75rem", whiteSpace: "nowrap", scrollbarWidth: "none" }}>
             {trendingCategories.map((cat) => {
-              const isActive = activeCategorySlug === cat.slug;
+              const isActive = (filters.categoryIds || []).includes(cat._id) ||
+                (filters.categoryIds || []).includes(cat.slug) ||
+                ((filters.categoryIds || []).length === 0 && activeCategorySlug === cat.slug);
               return (
                 <button key={cat.slug}
-                  onClick={() => handleCategoryPillClick(cat)}
-                  className={`btn rounded-pill px-4 py-2 page-title-main-name flex-shrink-0 ${isActive ? "btn-dark" : "btn-outline-secondary"}`}
+                  onClick={() => handleTopCategoryClick(cat)}
+                  className={`btn px-4  page-title-main-name flex-shrink-0 ${isActive ? "btn-dark custom-pill" : "custom-pill"}`}
                   style={{ fontSize: 13, fontWeight: isActive ? 600 : 400, transition: "all 0.18s ease", transform: isActive ? "scale(1.04)" : "scale(1)" }}
                   title={`Filter by ${cat.name}`}
                 >
@@ -1128,9 +1164,9 @@ const DiscountProductsPage = () => {
 
       <div className="padding-left-rightss ms-lg-0 ms-4 mx-4">
         {/* Page Title - MATCHING ProductPage */}
-        <h2 className="mb-4 d-none d-lg-block page-title-main-name">
+        {/* <h2 className="mb-4 d-none d-lg-block page-title-main-name">
           {coupon?.code || 'Discount Products'}
-        </h2>
+        </h2> */}
 
         <div className="row">
           {/* Desktop Sidebar - EXACTLY LIKE PRODUCTPAGE */}
@@ -1210,10 +1246,6 @@ const DiscountProductsPage = () => {
                     {...brandFilterProps}
                     onClose={() => setShowFilterOffcanvas(false)}
                     onClearCategory={() => { handleClearCategory(); setShowFilterOffcanvas(false); }}
-                    onCategoryPillClick={(cat) => {
-                      handleCategoryPillClick(cat);
-                      setShowFilterOffcanvas(false);
-                    }}
                   />
                 </div>
               </div>
@@ -1279,8 +1311,8 @@ const DiscountProductsPage = () => {
 
           {/* Product Grid - MATCHING ProductPage structure exactly */}
           <div className="col-12 col-lg-9">
-            <div className="mb-3 d-flex justify-content-between align-items-center mt-4">
-              <span className="text-muted page-title-main-name">
+            <div className="mb-3 d-flex justify-content-between align-items-center mt-5">
+              <span className="text-muted page-title-main-name mt-5">
                 {coupon?.code || `Showing ${discountProducts.length} products`}
                 {/* {hasMore && " (Scroll for more)"} */}
               </span>
@@ -1294,7 +1326,7 @@ const DiscountProductsPage = () => {
               )}
             </div>
 
-            <div className="row g-4">
+            <div className="row g-4" style={{ opacity: loadingDiscountProducts ? 0.6 : 1, transition: "opacity 0.2s ease" }}>
               {discountProducts.length > 0 ? (
                 discountProducts.map(renderProductCard)
               ) : (

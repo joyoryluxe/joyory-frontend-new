@@ -95,6 +95,15 @@
 .order-details-page {
     background-color: #ffffff;
     min-height: 100vh;
+    padding-top: 150px;
+    /* Offset for fixed desktop header + categories */
+}
+
+@media (max-width: 1024px) {
+    .order-details-page {
+        padding-top: 80px;
+        /* Offset for fixed mobile header */
+    }
 }
 
 /* Sleek back to orders button */
@@ -204,7 +213,7 @@
     align-items: center;
     gap: 6px;
     padding: 6px 16px;
-    border-radius: 30px;
+    border-radius: 8px;
     font-weight: 600;
     font-size: 0.85rem;
     text-transform: capitalize;
@@ -218,6 +227,7 @@
 .status-badge-pill.warning {
     background-color: var(--accent-warning-bg);
     color: var(--accent-warning);
+    margin: auto 5px !important;
 }
 
 .status-badge-pill.danger {
@@ -598,18 +608,24 @@
     /* background-color: var(--accent-success-bg); */
     border: 1px dashed rgba(29, 155, 76, 0.3);
     border-radius: var(--border-radius-sm);
-    padding: 10px 14px;
+    padding: 12px 14px;
     color: var(--accent-success);
     font-weight: 600;
-    font-size: 0.9rem;
-    margin-top: 14px;
+    font-size: 0.95rem;
+    margin-top: 16px;
     text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 2px 8px rgba(29, 155, 76, 0.05);
 }
 
 /* Contact / Shipping Details details */
 .contact-detail-row {
     display: flex;
-    gap: 12px;
+    align-items: center;
+    gap: 2px;
     margin-bottom: 12px;
     font-size: 0.92rem;
     color: var(--text-muted);
@@ -623,7 +639,7 @@
 .contact-detail-row i {
     flex-shrink: 0;
     color: var(--text-light);
-    margin-top: 3px;
+    /* margin-top: 3px; */
 }
 
 .contact-detail-row .contact-text {
@@ -708,7 +724,8 @@
 
     .details-header-actions {
         width: 100%;
-        justify-content: space-between;
+        gap: 5px !important;
+        /* justify-content: space-between; */
     }
 
     .metadata-grid {
@@ -740,9 +757,9 @@
 
     .back-btn,
     .downl-inv {
-        padding: 8px 15px !important;
+        padding: 7px 10px !important;
         font-weight: 400 !important;
-        font-size: 12px !important;
+        font-size: 11px !important;
         border: 1px solid #ddd !important;
         background-color: #ffffff !important;
         color: var(--text-main) !important;
@@ -762,6 +779,15 @@
 
     .metadata-item strong {
         font-size: 14px;
+    }
+
+    .status-badge-pill.warning {
+        font-size: 10px !important;
+        padding: 5px 10px !important;
+    }
+
+    .contact-detail-row .contact-text {
+        font-size: 12px;
     }
 }
 
@@ -786,4 +812,66 @@
         transform: translateY(0);
         opacity: 1;
     }
+}
+
+/* Reset global .badge absolute position override from Header.css on this page */
+.order-details-page .badge {
+    position: static !important;
+    /* margin: auto 5px !important; */
+    display: inline-block !important;
+    padding: 0.35em 0.65em !important;
+    font-size: 0.8em !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    vertical-align: baseline !important;
+    border-radius: 20px !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    color: #000000 !important;
+    /* border: 1px solid #000000 !important; */
+}
+
+/* Remove background color and set text color to black for status-badge-pill */
+.order-details-page .status-badge-pill {
+    background: transparent !important;
+    background-color: transparent !important;
+    color: #222222 !important;
+    border: 1px solid #ddd !important;
+}
+
+/* Sticky Sidebar for desktop layout */
+@media (min-width: 992px) {
+    .order-details-page .col-lg-4 {
+        position: sticky;
+        top: 155px;
+        /* Sits perfectly below the sticky header + nav gap */
+        height: fit-content;
+        z-index: 10;
+    }
+}
+
+/* Premium Return Item Styling */
+.od-return-item {
+    background: #fafafa;
+    border: 1px solid #eaeaea;
+    border-radius: var(--border-radius-md);
+    padding: 18px;
+    margin-bottom: 16px;
+    transition: all 0.2s ease-in-out;
+}
+
+.od-return-item:hover {
+    border-color: #dcdcdc;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.03);
+}
+
+.od-return-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    gap: 8px;
 }

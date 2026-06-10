@@ -50,6 +50,52 @@ const getBrandName = (p) => {
     return "Unknown Brand";
 };
 
+const parseFiltersFromSearchParams = (searchParams) => {
+    const initialFilters = {
+        brandIds: [], categoryIds: [], skinTypes: [], formulations: [],
+        finishes: [], ingredients: [], priceRange: null, discountMin: null,
+        minRating: "", sort: "recent"
+    };
+
+    const getMultiParam = (key) => {
+        let values = searchParams.getAll(key);
+        if (values.length === 0) {
+            const commaValue = searchParams.get(key);
+            if (commaValue) values = commaValue.split(',').map(s => s.trim()).filter(Boolean);
+        }
+        if (key === "skinTypes") {
+            return values.map(v => v.replace(/\s+/g, "+"));
+        }
+        return values;
+    };
+
+    ['ingredients', 'skinTypes', 'brandIds', 'categoryIds', 'formulations', 'finishes'].forEach(key => {
+        initialFilters[key] = getMultiParam(key);
+    });
+
+    const minPrice = searchParams.get('minPrice');
+    const maxPrice = searchParams.get('maxPrice');
+    if (minPrice !== null || maxPrice !== null) {
+        initialFilters.priceRange = {
+            min: minPrice ? parseFloat(minPrice) : 0,
+            max: maxPrice ? parseFloat(maxPrice) : null,
+        };
+    }
+
+    const discountMin = searchParams.get('discountMin');
+    if (discountMin !== null) initialFilters.discountMin = parseFloat(discountMin);
+
+    const minRating = searchParams.get('minRating');
+    if (minRating !== null) initialFilters.minRating = minRating;
+
+    const sortParam = searchParams.get('sort');
+    if (sortParam !== null && ['recent', 'priceHighToLow', 'priceLowToHigh'].includes(sortParam)) {
+        initialFilters.sort = sortParam;
+    }
+
+    return initialFilters;
+};
+
 export default function ProductPage() {
     const params = useParams();
     const slug = params.slug || params["*"];
@@ -65,6 +111,7 @@ export default function ProductPage() {
 
     /* ── state ──────────────────────────────────────────────────────────────── */
     const [allProducts, setAllProducts] = useState([]);
+    const [totalCount, setTotalCount] = useState(0);
     const [pageTitle, setPageTitle] = useState("Products");
     const [bannerImages, setBannerImages] = useState([]);
     const swiperRef = useRef(null);
@@ -75,6 +122,7 @@ export default function ProductPage() {
     const [promotions, setPromotions] = useState([]);
 
     const [filterData, setFilterData] = useState(null);
+    const lastContextRef = useRef("");
 
     const activeCategorySlug = useMemo(() => {
         return location.pathname.includes("/category/") && effectiveSlug ? effectiveSlug : null;
@@ -92,40 +140,18 @@ export default function ProductPage() {
     const [wishlistLoading, setWishlistLoading] = useState({});
     const [wishlistData, setWishlistData] = useState([]);
 
-    const [filters, setFilters] = useState(() => {
-        const initial = {
-            brandIds: [], categoryIds: [], skinTypes: [], formulations: [],
-            finishes: [], ingredients: [], priceRange: null, discountMin: null,
-            minRating: "", sort: "recent"
-        };
-        const getMultiParam = (key) => {
-            const values = searchParams.getAll(key);
-            if (values.length > 0) return values;
-            const commaValue = searchParams.get(key);
-            if (commaValue) return commaValue.split(',').map(s => s.trim()).filter(Boolean);
-            return [];
-        };
-        ['ingredients', 'skinTypes', 'brandIds', 'categoryIds', 'formulations', 'finishes'].forEach(key => {
-            initial[key] = getMultiParam(key);
-        });
-        const minPrice = searchParams.get('minPrice');
-        const maxPrice = searchParams.get('maxPrice');
-        if (minPrice !== null || maxPrice !== null) {
-            initial.priceRange = {
-                min: minPrice ? parseFloat(minPrice) : 0,
-                max: maxPrice ? parseFloat(maxPrice) : null,
-            };
+    const [filters, setFilters] = useState(() => parseFiltersFromSearchParams(searchParams));
+
+    const currentUrlKey = `${location.pathname}${location.search}`;
+    const [prevUrlKey, setPrevUrlKey] = useState(currentUrlKey);
+
+    if (currentUrlKey !== prevUrlKey) {
+        setPrevUrlKey(currentUrlKey);
+        const parsed = parseFiltersFromSearchParams(searchParams);
+        if (JSON.stringify(filters) !== JSON.stringify(parsed)) {
+            setFilters(parsed);
         }
-        const discountMin = searchParams.get('discountMin');
-        if (discountMin !== null) initial.discountMin = parseFloat(discountMin);
-        const minRating = searchParams.get('minRating');
-        if (minRating !== null) initial.minRating = minRating;
-        const sortParam = searchParams.get('sort');
-        if (sortParam !== null && ['recent', 'priceHighToLow', 'priceLowToHigh'].includes(sortParam)) {
-            initial.sort = sortParam;
-        }
-        return initial;
-    });
+    }
 
     const [showFilterOffcanvas, setShowFilterOffcanvas] = useState(false);
     const [showSortOffcanvas, setShowSortOffcanvas] = useState(false);
@@ -434,12 +460,17 @@ export default function ProductPage() {
         const p = new URLSearchParams();
         const path = location.pathname.toLowerCase();
 
-        if (activeCategorySlug) {
-            p.append("categoryIds", activeCategorySlug);
-        } else if (path.includes("/category/")) {
-            p.append("categoryIds", effectiveSlug);
-        } else if (path.includes("/skintype/")) {
-            p.append("skinTypes", effectiveSlug);
+        const hasCategoryFilters = filters.categoryIds && filters.categoryIds.length > 0;
+        if (!hasCategoryFilters) {
+            if (activeCategorySlug) {
+                p.append("categoryIds", activeCategorySlug);
+            } else if (path.includes("/category/")) {
+                p.append("categoryIds", effectiveSlug);
+            }
+        }
+
+        if (path.includes("/skintype/")) {
+            p.append("skinTypes", effectiveSlug.replace(/\+/g, " "));
         } else if (path.includes("/ingredients/")) {
             p.append("ingredients", effectiveSlug);
         } else if (path.includes("/promotion/")) {
@@ -451,7 +482,7 @@ export default function ProductPage() {
 
         filters.brandIds?.forEach((id) => p.append("brandIds", id));
         filters.categoryIds?.forEach((id) => p.append("categoryIds", id));
-        filters.skinTypes?.forEach((n) => p.append("skinTypes", n));
+        filters.skinTypes?.forEach((n) => p.append("skinTypes", n.replace(/\+/g, " ")));
         filters.formulations?.forEach((id) => p.append("formulations", id));
         filters.finishes?.forEach((s) => p.append("finishes", s));
         filters.ingredients?.forEach((s) => p.append("ingredients", s));
@@ -490,67 +521,91 @@ export default function ProductPage() {
                 { withCredentials: true }
             );
 
-            // title & banner
-            const q = searchParams.get("q") || searchParams.get("search");
-            if (q) setPageTitle(`Search Results for "${q}"`);
-            else if (data.titleMessage) setPageTitle(data.titleMessage);
-            else if (data.category?.name) setPageTitle(data.category.name);
-            else if (data.promoMeta?.name) setPageTitle(data.promoMeta.name);
-            else if (data.skinType?.name) setPageTitle(data.skinType.name);
-            else setPageTitle("Shop Products");
+            const currentContext = `${location.pathname}-${effectiveSlug}-${searchParams.get("q") || searchParams.get("search") || ""}`;
+            const isContextChanged = lastContextRef.current !== currentContext;
 
-            // Extract banner array
-            let extractedBanners = [];
-            if (data.bannerImage && Array.isArray(data.bannerImage)) {
-                extractedBanners = data.bannerImage;
-            } else if (data.category?.bannerImage && Array.isArray(data.category.bannerImage)) {
-                extractedBanners = data.category.bannerImage;
-            } else if (data.promoMeta?.bannerImage && Array.isArray(data.promoMeta.bannerImage)) {
-                extractedBanners = data.promoMeta.bannerImage;
-            } else if (data.skinType?.bannerImage && Array.isArray(data.skinType.bannerImage)) {
-                extractedBanners = data.skinType.bannerImage;
-            } else if (data.bannerImage) {
-                extractedBanners = [data.bannerImage];
-            } else if (data.category?.bannerImage) {
-                extractedBanners = [data.category.bannerImage];
-            } else if (data.promoMeta?.bannerImage) {
-                extractedBanners = [data.promoMeta.bannerImage];
-            } else if (data.skinType?.bannerImage) {
-                extractedBanners = [data.skinType.bannerImage];
-            }
-            setBannerImages(extractedBanners);
-
-            // Shop By Sections
-            if (data.skinTypes && Array.isArray(data.skinTypes)) {
-                setShopBySkinTypes(data.skinTypes);
-            }
-            if (data.shopByIngredients && Array.isArray(data.shopByIngredients)) {
-                setShopByIngredients(data.shopByIngredients);
-            }
-            if (data.promotions && Array.isArray(data.promotions)) {
-                setPromotions(data.promotions);
-            }
-
-            if (data.trendingCategories && Array.isArray(data.trendingCategories)) {
-                setTrendingCategories(data.trendingCategories);
-                if (effectiveSlug && !activeCategoryName) {
-                    const found = data.trendingCategories.find((c) => c.slug === effectiveSlug);
-                    if (found) setActiveCategoryName(found.name);
+            if (isContextChanged) {
+                // title & banner
+                const q = searchParams.get("q") || searchParams.get("search");
+                if (q) setPageTitle(`Search Results for "${q}"`);
+                else if (data.titleMessage) setPageTitle(data.titleMessage);
+                else if (data.category?.name) setPageTitle(data.category.name);
+                else if (data.promoMeta?.name) setPageTitle(data.promoMeta.name);
+                else if (data.skinType?.name) setPageTitle(data.skinType.name);
+                else if (activeCategoryName) setPageTitle(activeCategoryName);
+                else setPageTitle("Shop Products");
+                // Extract banner array
+                let extractedBanners = [];
+                if (data.bannerImage && Array.isArray(data.bannerImage)) {
+                    extractedBanners = data.bannerImage;
+                } else if (data.category?.bannerImage && Array.isArray(data.category.bannerImage)) {
+                    extractedBanners = data.category.bannerImage;
+                } else if (data.promoMeta?.bannerImage && Array.isArray(data.promoMeta.bannerImage)) {
+                    extractedBanners = data.promoMeta.bannerImage;
+                } else if (data.skinType?.bannerImage && Array.isArray(data.skinType.bannerImage)) {
+                    extractedBanners = data.skinType.bannerImage;
+                } else if (data.bannerImage) {
+                    extractedBanners = [data.bannerImage];
+                } else if (data.category?.bannerImage) {
+                    extractedBanners = [data.category.bannerImage];
+                } else if (data.promoMeta?.bannerImage) {
+                    extractedBanners = [data.promoMeta.bannerImage];
+                } else if (data.skinType?.bannerImage) {
+                    extractedBanners = [data.skinType.bannerImage];
                 }
-            } else {
-                setTrendingCategories([]);
-            }
+                setBannerImages(extractedBanners);
 
-            if (data.category?.name && !activeCategoryName && effectiveSlug) {
-                setActiveCategoryName(data.category.name);
-            }
+                // Shop By Sections
+                if (data.skinTypes && Array.isArray(data.skinTypes)) {
+                    setShopBySkinTypes(data.skinTypes);
+                } else {
+                    setShopBySkinTypes([]);
+                }
+                if (data.shopByIngredients && Array.isArray(data.shopByIngredients)) {
+                    setShopByIngredients(data.shopByIngredients);
+                } else {
+                    setShopByIngredients([]);
+                }
+                if (data.promotions && Array.isArray(data.promotions)) {
+                    setPromotions(data.promotions);
+                } else {
+                    setPromotions([]);
+                }
 
-            if (reset && data.filters) {
-                setFilterData(data.filters);
+                if (data.trendingCategories && Array.isArray(data.trendingCategories)) {
+                    setTrendingCategories(data.trendingCategories);
+                    if (effectiveSlug && !activeCategoryName) {
+                        const found = data.trendingCategories.find((c) => c.slug === effectiveSlug);
+                        if (found) setActiveCategoryName(found.name);
+                    }
+                } else {
+                    setTrendingCategories([]);
+                }
+
+                if (data.category?.name && !activeCategoryName && effectiveSlug) {
+                    setActiveCategoryName(data.category.name);
+                }
+
+                if (reset && data.filters) {
+                    setFilterData(data.filters);
+                }
+
+                lastContextRef.current = currentContext;
             }
 
             const prods = data.products || [];
             const pg = data.pagination || {};
+
+            if (data.titleMessage) {
+                const match = data.titleMessage.match(/\d+/);
+                if (match) {
+                    setTotalCount(parseInt(match[0], 10));
+                } else {
+                    setTotalCount((prev) => reset ? prods.length : prev + prods.length);
+                }
+            } else {
+                setTotalCount((prev) => reset ? prods.length : prev + prods.length);
+            }
 
             if (reset) {
                 setAllProducts(prods);
@@ -580,52 +635,7 @@ export default function ProductPage() {
         }
     }, [effectiveSlug, location.pathname, trendingCategories]);
 
-    /* ── Parse URL query parameters on mount ──────────────────────────────── */
-    useEffect(() => {
-        const initialFilters = {
-            brandIds: [], categoryIds: [], skinTypes: [], formulations: [],
-            finishes: [], ingredients: [], priceRange: null, discountMin: null,
-            minRating: "", sort: "recent"
-        };
 
-        const getMultiParam = (key) => {
-            const values = searchParams.getAll(key);
-            if (values.length > 0) return values;
-            const commaValue = searchParams.get(key);
-            if (commaValue) return commaValue.split(',').map(s => s.trim()).filter(Boolean);
-            return [];
-        };
-
-        ['ingredients', 'skinTypes', 'brandIds', 'categoryIds', 'formulations', 'finishes'].forEach(key => {
-            initialFilters[key] = getMultiParam(key);
-        });
-
-        const minPrice = searchParams.get('minPrice');
-        const maxPrice = searchParams.get('maxPrice');
-        if (minPrice !== null || maxPrice !== null) {
-            initialFilters.priceRange = {
-                min: minPrice ? parseFloat(minPrice) : 0,
-                max: maxPrice ? parseFloat(maxPrice) : null,
-            };
-        }
-
-        const discountMin = searchParams.get('discountMin');
-        if (discountMin !== null) initialFilters.discountMin = parseFloat(discountMin);
-        const minRating = searchParams.get('minRating');
-        if (minRating !== null) initialFilters.minRating = minRating;
-        const sortParam = searchParams.get('sort');
-        if (sortParam !== null && ['recent', 'priceHighToLow', 'priceLowToHigh'].includes(sortParam)) {
-            initialFilters.sort = sortParam;
-        }
-
-        setFilters(prev => {
-            if (JSON.stringify(prev) !== JSON.stringify(initialFilters)) {
-                console.log("Filters restored from URL:", initialFilters);
-                return initialFilters;
-            }
-            return prev;
-        });
-    }, [searchParams]);
 
     /* ── Sync URL query parameters when filters change ──────────────────── */
     useEffect(() => {
@@ -653,6 +663,10 @@ export default function ProductPage() {
 
         if (filters.minRating) newParams.set('minRating', filters.minRating);
         if (filters.sort !== 'recent') newParams.set('sort', filters.sort);
+
+        // Preserve search queries
+        const q = searchParams.get("q") || searchParams.get("search");
+        if (q) newParams.set("q", q);
 
         const currentQuery = searchParams.toString();
         const newQuery = newParams.toString();
@@ -691,6 +705,32 @@ export default function ProductPage() {
             navigate(`/category/${cat.slug}`);
         }
     }, [navigate, slug]);
+
+    const handleCategoryCheckboxToggle = useCallback((cat) => {
+        setFilters(prev => {
+            const current = prev.categoryIds || [];
+            const value = cat.slug || cat._id;
+            const isActive = current.includes(value);
+            return {
+                ...prev,
+                categoryIds: isActive
+                    ? current.filter(id => id !== value)
+                    : [...current, value]
+            };
+        });
+    }, []);
+
+    const handleTopCategoryClick = useCallback((cat) => {
+        setFilters(prev => {
+            const current = prev.categoryIds || [];
+            const value = cat.slug || cat._id;
+            const isActive = current.includes(value);
+            return {
+                ...prev,
+                categoryIds: isActive ? [] : [value]
+            };
+        });
+    }, []);
 
     const handleClearCategory = useCallback(() => {
         if (slug && slug.includes("/")) {
@@ -836,18 +876,6 @@ export default function ProductPage() {
 
     const handleClearAllFilters = () => {
         setFilters(makeEmptyFilters());
-        if (slug && slug.includes("/")) {
-            const segments = slug.split("/");
-            segments.pop();
-            const newPath = segments.join("/");
-            if (newPath) {
-                navigate(`/category/${newPath}`);
-            } else {
-                navigate("/products");
-            }
-        } else {
-            navigate("/products");
-        }
     };
 
     /* ── product card ───────────────────────────────────────────────────────── */
@@ -1166,7 +1194,7 @@ export default function ProductPage() {
         activeCategorySlug,
         activeCategoryName,
         onClearCategory: handleClearCategory,
-        onCategoryPillClick: handleCategoryPillClick,
+        onCategoryPillClick: handleCategoryCheckboxToggle,
     };
 
     // Keep loader for initial loading
@@ -1208,11 +1236,13 @@ export default function ProductPage() {
                         style={{ padding: "5px 0" }}
                     >
                         {trendingCategories.map((cat) => {
-                            const isActive = activeCategorySlug === cat.slug;
+                            const isActive = (filters.categoryIds || []).includes(cat._id) ||
+                                (filters.categoryIds || []).includes(cat.slug) ||
+                                ((filters.categoryIds || []).length === 0 && activeCategorySlug === cat.slug);
                             return (
                                 <SwiperSlide key={cat.slug} className="mx-auto" style={{ width: "auto" }}>
                                     <button
-                                        onClick={() => handleCategoryPillClick(cat)}
+                                        onClick={() => handleTopCategoryClick(cat)}
                                         className={`btn px-4 py-2 page-title-main-name ${isActive ? "btn-dark custom-pill" : "custom-pill"}`}
                                         style={{
                                             fontSize: 13,
@@ -1381,10 +1411,6 @@ export default function ProductPage() {
                                         {...brandFilterProps}
                                         onClose={() => setShowFilterOffcanvas(false)}
                                         onClearCategory={() => { handleClearCategory(); setShowFilterOffcanvas(false); }}
-                                        onCategoryPillClick={(cat) => {
-                                            handleCategoryPillClick(cat);
-                                            setShowFilterOffcanvas(false);
-                                        }}
                                     />
                                 </div>
                             </div>
@@ -1446,8 +1472,7 @@ export default function ProductPage() {
 
                         <div className="mb-3 d-flex justify-content-between align-items-center">
                             <span className="text-muted page-title-main-name d-lg-block d-none">
-                                {pageTitle || `Showing ${allProducts.length} products`}
-                                {/* {hasMore && pageTitle && " (Scroll for more)"} */}
+                                Showing {totalCount} products
                             </span>
 
                             {isAnyFilterActive && activeFilterChips.length > 0 && (
