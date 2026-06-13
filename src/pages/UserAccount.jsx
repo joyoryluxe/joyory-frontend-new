@@ -14,9 +14,25 @@ const API_BASE = "https://beauty.joyory.com/api/user/profile";
 
 const toInputDate = (value) => {
   if (!value) return "";
-  if (/^\d{4}-\d{2}-\d{2}/.test(value)) return value.slice(0, 10);
-  const d = new Date(value);
-  if (!isNaN(d)) {
+  const strVal = String(value).trim();
+  
+  // If value is already in YYYY-MM-DD format, return it
+  if (/^\d{4}-\d{2}-\d{2}/.test(strVal)) return strVal.slice(0, 10);
+  
+  // If value is in DD-MM-YYYY format, convert it to YYYY-MM-DD 
+  if (/^\d{2}-\d{2}-\d{4}/.test(strVal)) {
+    const [day, month, year] = strVal.split("-");
+    return `${year}-${month}-${day}`;
+  }
+
+  // If value is in DD/MM/YYYY format, convert it to YYYY-MM-DD
+  if (/^\d{2}\/\d{2}\/\d{4}/.test(strVal)) {
+    const [day, month, year] = strVal.split("/");
+    return `${year}-${month}-${day}`;
+  }
+
+  const d = new Date(strVal);
+  if (!isNaN(d.getTime())) {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
       d.getDate()
     ).padStart(2, "0")}`;
@@ -450,127 +466,79 @@ const Useraccount = () => {
 
       <div className="ua-page mt-lg-5 pt-lg-5 mt-md-0 pt-md-5">
         <section className="Heading-Name mt-lg-5 pt-lg-3 mt-md-0 pt-md-0">
-          <h3 className="ua-title ms-4 page-title-main-name">Personal Details</h3>
+          <h3 className="ua-title ms-4 page-title-main-name d-lg-none">Personal Details</h3>
           <Sidebarcomon />
         </section>
 
         <main className="ua-content mt-lg-5 pt-lg-3 mt-md-0 pt-md-0">
-          <section className="ua-card">
-            <h3 className="ua-title page-title-main-name">Personal Details</h3>
+          <h2 className="ua-page-title page-title-main-name mb-4 d-none d-lg-block" style={{ fontSize: "24px", fontWeight: "600", color: "#222" }}>Personal Details</h2>
 
-            {/* ✅ FIXED: Avatar with remove button and proper loading state */}
-            <div className="ua-avatar-row">
-              <div className="ua-avatar-wrapper" style={{ position: 'relative', display: 'inline-block' }}>
-                <div className="ua-avatar" style={{ position: 'relative' }}>
-  {imageLoading ? (
-    <div className="ua-avatar-loading" style={{
-      width: '120px',
-      height: '120px',
-      borderRadius: '50%',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: '#f5f5f5'
-    }}>
-      <div className="spinner-border text-primary" role="status">
-        <span className="visually-hidden">Loading...</span>
-      </div>
-    </div>
-  ) : profile.profileImage ? (
-    <img
-      src={getImageUrl(profile.profileImage)}
-      alt="avatar"
-      style={{
-        width: '120px',
-        height: '120px',
-        borderRadius: '50%',
-        objectFit: 'cover',
-        border: '2px solid #e0e0e0'
-      }}
-      onError={(e) => {
-        e.currentTarget.src = "/default-avatar.png";
-        e.currentTarget.onerror = null;
-      }}
-    />
-  ) : (
-    <div style={{
-      width: '120px',
-      height: '120px',
-      borderRadius: '50%',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: '#f0f0f0',
-      border: '2px solid #e0e0e0'
-    }}>
-      <svg 
-        width="60" 
-        height="60" 
-        viewBox="0 0 24 24" 
-        fill="none" 
-        xmlns="http://www.w3.org/2000/svg"
-        style={{ opacity: 0.6 }}
-      >
-        <circle cx="12" cy="8" r="4" fill="#999999" />
-        <path 
-          d="M12 14C8.68629 14 6 16.6863 6 20H18C18 16.6863 15.3137 14 12 14Z" 
-          fill="#999999" 
-        />
-      </svg>
-    </div>
-  )}
-  
-  {/* Remove image button - only show if image exists and in edit mode */}
-  {editMode && profile.profileImage && !imageLoading && (
-    <button
-      className="ua-avatar-remove"
-      onClick={handleRemoveImage}
-      style={{
-        position: 'absolute',
-        top: '5px',
-        right: '5px',
-        background: '#ff4444',
-        color: 'white',
-        border: 'none',
-        borderRadius: '50%',
-        width: '28px',
-        height: '28px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        cursor: 'pointer',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-        transition: 'all 0.2s ease'
-      }}
-      title="Remove profile picture"
-    >
-      <FaTimes size={14} />
-    </button>
-  )}
-</div>
+          <section className="ua-card">
+
+            {/* Beautiful Premium Profile Header Banner */}
+            <div className="ua-profile-header-banner">
+              <div className="ua-profile-avatar-container">
+                <div className="ua-profile-avatar-circle">
+                  {imageLoading ? (
+                    <div className="spinner-border text-primary" role="status" style={{ width: "24px", height: "24px" }} />
+                  ) : profile.profileImage ? (
+                    <img
+                      src={getImageUrl(profile.profileImage)}
+                      alt="avatar"
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover"
+                      }}
+                      onError={(e) => {
+                        e.currentTarget.src = "/default-avatar.png";
+                        e.currentTarget.onerror = null;
+                      }}
+                    />
+                  ) : (
+                    <div style={{
+                      width: "100%",
+                      height: "100%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      backgroundColor: "#f0f0f0"
+                    }}>
+                      <svg 
+                        width="50" 
+                        height="50" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        xmlns="http://www.w3.org/2000/svg"
+                        style={{ opacity: 0.5 }}
+                      >
+                        <circle cx="12" cy="8" r="4" fill="#999" />
+                        <path 
+                          d="M12 14C8.68629 14 6 16.6863 6 20H18C18 16.6863 15.3137 14 12 14Z" 
+                          fill="#999" 
+                        />
+                      </svg>
+                    </div>
+                  )}
+                </div>
                 
-                {editMode && (
-                  <label 
-                    className="ua-avatar-edit" 
-                    style={{
-                      position: 'absolute',
-                      bottom: '5px',
-                      right: '5px',
-                      background: '#000',
-                      color: 'white',
-                      borderRadius: '50%',
-                      width: '32px',
-                      height: '32px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                    }}
+                {/* Remove image button (pencil) */}
+                {editMode && profile.profileImage && !imageLoading && (
+                  <button
+                    type="button"
+                    className="ua-avatar-remove-btn"
+                    onClick={handleRemoveImage}
+                    title="Remove profile picture"
                   >
+                    <FaTimes />
+                  </button>
+                )}
+
+                {/* Edit overlay */}
+                {editMode && (
+                  <label className="ua-avatar-edit-btn">
                     <input 
                       ref={fileInputRef}
-                      className="page-title-main-name" 
                       type="file" 
                       accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
                       onChange={handleImageChange} 
@@ -579,6 +547,43 @@ const Useraccount = () => {
                     />
                     ✎
                   </label>
+                )}
+              </div>
+
+              {/* User Details side in Banner */}
+              <div className="ua-profile-banner-details flex-grow-1">
+                <h4 className="page-title-main-name">
+                  {profile.fullName || "Joyory Luxe Member"}
+                </h4>
+                <p className="text-muted">
+                  {profile.email}
+                </p>
+                {profile.phone && (
+                  <p className="text-muted">
+                    📱 {profile.phone}
+                  </p>
+                )}
+                {editMode && (
+                  <div className="d-flex gap-2 mt-2">
+                    <button
+                      type="button"
+                      className="ua-banner-upload-btn"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={imageLoading}
+                    >
+                      Upload New
+                    </button>
+                    {profile.profileImage && (
+                      <button
+                        type="button"
+                        className="ua-banner-remove-btn"
+                        onClick={handleRemoveImage}
+                        disabled={imageLoading}
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
@@ -665,112 +670,6 @@ const Useraccount = () => {
               handleDeleteAddress={handleDeleteAddress}
               handleAddNewAddress={handleAddNewAddress}
             />
-
-            {/* 🧪 Allergen & Skin Profile Section */}
-            <section className="ua-allergen-section">
-              <h3 className="ua-title page-title-main-name">🧪 Allergen & Skin Profile</h3>
-              <p className="text-muted small">
-                Configure your skin sensitivities. When you view products in the store, we'll scan their ingredient list and warn you if they contain matches.
-              </p>
-
-              <div className="ua-allergen-group mt-4">
-                <h4 className="ua-subtitle mb-2">High-Risk Allergens (Severe Reactions)</h4>
-                <div className="d-flex flex-wrap gap-2 mb-3">
-                  {["Fragrance", "Parabens", "Sulfates", "Phthalates", "Denatured Alcohol", "Mineral Oil", "Silicones", "Coconut Oil"].map((item) => {
-                    const isActive = allergens.map(a => a.toLowerCase()).includes(item.toLowerCase());
-                    return (
-                      <button
-                        key={item}
-                        type="button"
-                        className={`ua-tag-btn ${isActive ? "active-allergen" : ""}`}
-                        onClick={() => toggleAllergen(item)}
-                      >
-                        {item} {isActive ? "✕" : "+"}
-                      </button>
-                    );
-                  })}
-                </div>
-                <div className="d-flex gap-2 max-width-400">
-                  <input
-                    type="text"
-                    placeholder="Add custom allergen (e.g. Peanut Oil)..."
-                    value={customAllergen}
-                    onChange={(e) => setCustomAllergen(e.target.value)}
-                    className="form-control form-control-sm"
-                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCustomAllergen(); } }}
-                  />
-                  <button type="button" className="btn btn-dark btn-sm page-title-main-name" onClick={addCustomAllergen}>Add</button>
-                </div>
-                {allergens.length > 0 && (
-                  <div className="mt-2 text-start">
-                    <span className="small text-muted me-2">Selected Allergens:</span>
-                    {allergens.map((item, idx) => (
-                      <span key={idx} className="badge bg-danger me-1 p-2" style={{ cursor: "pointer" }} onClick={() => toggleAllergen(item)}>
-                        {item} ✕
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="ua-allergen-group mt-4 pt-2">
-                <h4 className="ua-subtitle mb-2">Sensitive Ingredients (Mild Irritants)</h4>
-                <div className="d-flex flex-wrap gap-2 mb-3">
-                  {["Essential Oils", "Salicylic Acid", "Glycolic Acid", "Retinol", "Phenoxyethanol", "Mica", "Talc"].map((item) => {
-                    const isActive = sensitiveIngredients.map(a => a.toLowerCase()).includes(item.toLowerCase());
-                    return (
-                      <button
-                        key={item}
-                        type="button"
-                        className={`ua-tag-btn ${isActive ? "active-sensitive" : ""}`}
-                        onClick={() => toggleSensitive(item)}
-                      >
-                        {item} {isActive ? "✕" : "+"}
-                      </button>
-                    );
-                  })}
-                </div>
-                <div className="d-flex gap-2 max-width-400">
-                  <input
-                    type="text"
-                    placeholder="Add sensitive ingredient (e.g. Lanolin)..."
-                    value={customSensitive}
-                    onChange={(e) => setCustomSensitive(e.target.value)}
-                    className="form-control form-control-sm"
-                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCustomSensitive(); } }}
-                  />
-                  <button type="button" className="btn btn-dark btn-sm page-title-main-name" onClick={addCustomSensitive}>Add</button>
-                </div>
-                {sensitiveIngredients.length > 0 && (
-                  <div className="mt-2 text-start">
-                    <span className="small text-muted me-2">Selected Sensitive:</span>
-                    {sensitiveIngredients.map((item, idx) => (
-                      <span key={idx} className="badge bg-warning text-dark me-1 p-2" style={{ cursor: "pointer" }} onClick={() => toggleSensitive(item)}>
-                        {item} ✕
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="ua-field page-title-main-name mt-4">
-                <label className="ua-label">Skin Concerns & Allergen Notes</label>
-                <textarea
-                  placeholder="Tell us about other specific skin details or allergies..."
-                  value={allergenNotes}
-                  onChange={(e) => setAllergenNotes(e.target.value)}
-                  className="form-control"
-                  rows={3}
-                  style={{ resize: "vertical" }}
-                />
-              </div>
-
-              <div className="ua-field ua-actions page-title-main-name mt-3">
-                <button type="button" className="ua-btn edit-save-profile-button" onClick={handleSaveAllergens} disabled={savingAllergens}>
-                  {savingAllergens ? "Saving Skin Profile..." : "Save Skin Profile"}
-                </button>
-              </div>
-            </section>
 
             <div className="ua-danger mt-4">
               <button className="ua-delete page-title-main-name" onClick={handleDeleteAccount}>

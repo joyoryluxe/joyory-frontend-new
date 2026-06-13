@@ -89,62 +89,25 @@ const FeatureBanners = () => {
             style={{ cursor: "pointer" }}
           >
             <div className="border-0 overflow-hidden">
-              <div className="row g-0 align-items-center flex-row-reverse">
-
-
-
-                 {/* Image Side */}
-                <div className="col-lg-6 order-1 order-lg-2">
-                  <div className="">
-                    <img
-                      src={getBannerImage(banner)}
-                      alt={banner.title || "Feature"}
-                      className="img-fluid banner-image-quiz-margin-padding"
-                      // style={{
-                      //   height: "auto",
-                      //   objectFit: "cover",
-                      // }}
-                      onError={(e) => {
-                        e.target.src = "/placeholder-banner.jpg";
-                        e.target.style.objectFit = "contain";
-                        e.target.style.padding = "40px";
-                        e.target.style.background = "#f8f9fa";
-                      }}
-                    />
-                    
-                    {/* Subtle overlay gradient for better text readability on mobile */}
-                    {/* <div className="d-lg-none position-absolute bottom-0 start-0 w-100 h-50" 
-                    /> */}
-                  </div>
+              <div className="row g-0">
+                <div className="col-12">
+                  <img
+                    src={getBannerImage(banner)}
+                    alt={banner.title || "Feature"}
+                    className="w-100 img-fluid"
+                    style={{
+                      width: "100%",
+                      height: "auto",
+                      display: "block",
+                    }}
+                    onError={(e) => {
+                      e.target.src = "/placeholder-banner.jpg";
+                      e.target.style.objectFit = "contain";
+                      e.target.style.padding = "40px";
+                      e.target.style.background = "#f8f9fa";
+                    }}
+                  />
                 </div>
-
-
-
-
-                
-                {/* Content Side */}
-                <div className="col-lg-6 pt-lg-4 pt-3 p-lg-5 order-2 order-lg-1">
-
-                  {banner.description && (
-                    <p className="description-responsive text-black mb-4 page-title-main-name ms-lg-4 ms-2 build-font-size w-100" style={{ fontWeight:'500', lineHeight: 1.6 }}>
-                      {banner.description}
-                    </p>
-                  )}
-
-                  {(banner.buttonText || banner.link) && (
-                    <button 
-                      // className="btn btn-dark btn-lg px-5 py-3 fw-semibold"
-                      className="quize-btn quize-btn-responsive mb-0 cursor-pointer mt-2 ms-lg-4 mt-lg-5 ms-lg-0 ms-4 page-title-main-name"
-                      style={{ fontSize: "1.05rem" }}
-                    >
-                      {banner.buttonText}
-                    </button>
-                  )}
-                </div>
-
-
-
-
               </div>
             </div>
           </div>

@@ -1064,7 +1064,16 @@ const Header = ({ hideCategories = false }) => {
               )}
             </Link>
 
-            <div style={{ position: "relative", cursor: "pointer" }} onClick={() => setUserDropdown(!userDropdown)}>
+            <div
+              style={{ position: "relative", cursor: "pointer" }}
+              onClick={() => {
+                if (user && !user.guest) {
+                  setUserDropdown(!userDropdown);
+                } else {
+                  navigate("/login");
+                }
+              }}
+            >
               <img src={users} className="icon" alt="user" />
               {userDropdown && (
                 <div style={{ position: "absolute", top: "100%", right: 0, background: "white", border: "1px solid #ddd", borderRadius: "8px", boxShadow: "0 4px 15px rgba(0,0,0,0.1)", zIndex: 1000, minWidth: "180px", marginTop: "20px" }}>
