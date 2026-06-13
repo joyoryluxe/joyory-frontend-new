@@ -18,108 +18,108 @@ import BrandFilter from "../components/common/BrandFilter";
 
 // ===================== OUT OF STOCK POPUP COMPONENT =====================
 const OutOfStockPopup = ({ isOpen, onClose, productName }) => {
-    if (!isOpen) return null;
+  if (!isOpen) return null;
 
-    return (
-        <div
-            style={{
-                position: 'fixed',
-                top: 0,
-                left: 0,
-                width: '100%',
-                height: '100%',
-                backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                zIndex: 9999,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-            }}
-            onClick={onClose}
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        zIndex: 9999,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+      onClick={onClose}
+    >
+      <div
+        style={{
+          backgroundColor: '#fff',
+          borderRadius: '12px',
+          padding: '30px 40px',
+          maxWidth: '400px',
+          width: '90%',
+          textAlign: 'center',
+          boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
+          position: 'relative',
+          animation: 'popupSlideIn 0.3s ease-out',
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          style={{
+            position: 'absolute',
+            top: '10px',
+            right: '15px',
+            background: 'none',
+            border: 'none',
+            fontSize: '24px',
+            cursor: 'pointer',
+            color: '#666',
+          }}
         >
-            <div
-                style={{
-                    backgroundColor: '#fff',
-                    borderRadius: '12px',
-                    padding: '30px 40px',
-                    maxWidth: '400px',
-                    width: '90%',
-                    textAlign: 'center',
-                    boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
-                    position: 'relative',
-                    animation: 'popupSlideIn 0.3s ease-out',
-                }}
-                onClick={(e) => e.stopPropagation()}
-            >
-                <button
-                    onClick={onClose}
-                    style={{
-                        position: 'absolute',
-                        top: '10px',
-                        right: '15px',
-                        background: 'none',
-                        border: 'none',
-                        fontSize: '24px',
-                        cursor: 'pointer',
-                        color: '#666',
-                    }}
-                >
-                    <FaTimes />
-                </button>
+          <FaTimes />
+        </button>
 
-                <div
-                    style={{
-                        width: '60px',
-                        height: '60px',
-                        backgroundColor: '#fee2e2',
-                        borderRadius: '50%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        margin: '0 auto 15px',
-                    }}
-                >
-                    <FaTimes
-                        style={{
-                            color: '#dc3545',
-                            fontSize: '30px',
-                        }}
-                    />
-                </div>
+        <div
+          style={{
+            width: '60px',
+            height: '60px',
+            backgroundColor: '#fee2e2',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 15px',
+          }}
+        >
+          <FaTimes
+            style={{
+              color: '#dc3545',
+              fontSize: '30px',
+            }}
+          />
+        </div>
 
-                <h5
-                    className="page-title-main-name"
-                    style={{
-                        fontSize: '18px',
-                        fontWeight: 600,
-                        marginBottom: '10px',
-                        color: '#333',
-                    }}
-                >
-                    Out of Stock
-                </h5>
+        <h5
+          className="page-title-main-name"
+          style={{
+            fontSize: '18px',
+            fontWeight: 600,
+            marginBottom: '10px',
+            color: '#333',
+          }}
+        >
+          Out of Stock
+        </h5>
 
-                <p
-                    style={{
-                        fontSize: '14px',
-                        color: '#666',
-                        marginBottom: '20px',
-                    }}
-                >
-                    "Oops! {productName} is out of stock right now. Check back soon or discover similar items."
-                </p>
+        <p
+          style={{
+            fontSize: '14px',
+            color: '#666',
+            marginBottom: '20px',
+          }}
+        >
+          "Oops! {productName} is out of stock right now. Check back soon or discover similar items."
+        </p>
 
-                <button
-                    onClick={onClose}
-                    className="btn btn-dark w-100"
-                    style={{
-                        borderRadius: '8px',
-                        padding: '10px',
-                    }}
-                >
-                    Got it
-                </button>
-            </div>
-            <style>{`
+        <button
+          onClick={onClose}
+          className="btn btn-dark w-100"
+          style={{
+            borderRadius: '8px',
+            padding: '10px',
+          }}
+        >
+          Got it
+        </button>
+      </div>
+      <style>{`
         @keyframes popupSlideIn {
           from {
             opacity: 0;
@@ -131,8 +131,8 @@ const OutOfStockPopup = ({ isOpen, onClose, productName }) => {
           }
         }
       `}</style>
-        </div>
-    );
+    </div>
+  );
 };
 
 const CART_API_BASE = "/api/user/cart";
@@ -1056,10 +1056,10 @@ const SearchPage = () => {
     const inWl = sku ? isInWishlist(prod._id, sku) : false;
     const slugPr = getProductSlug(prod);
     const img =
-        displayVariant?.images?.[0] ||
-        displayVariant?.image ||
-        prod.images?.[0] ||
-        "/placeholder.png";
+      displayVariant?.images?.[0] ||
+      displayVariant?.image ||
+      prod.images?.[0] ||
+      "/placeholder.png";
 
     const isAdding = addingToCart[prod._id];
 
@@ -1107,6 +1107,31 @@ const SearchPage = () => {
                   e.currentTarget.src = "/placeholder.png";
                 }}
               />
+
+              {prod?.supportsVTO && (
+                <div 
+                  className="support-beauty-badge" 
+                  title="Try It On" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/product/${slugPr}`);
+                  }}
+                  onTouchStart={(e) => e.stopPropagation()}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M3 7V5a2 2 0 0 1 2-2h2" />
+                    <path d="M17 3h2a2 2 0 0 1 2 2v2" />
+                    <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+                    <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
+                    <path d="M8 10a4 4 0 1 1 8 0c0 2.2-1.8 4-4 4s-4-1.8-4-4z" />
+                    <path d="M10 10h.01" />
+                    <path d="M14 10h.01" />
+                    <path d="M10 13c.5.5 1.5.7 2 .7s1.5-.2 2-.7" />
+                    <path d="M6 19c0-1.5 1.5-2.5 6-2.5s6 1 6 2.5" />
+                  </svg>
+                  <span className="vto-text">TRY IT ON</span>
+                </div>
+              )}
 
               {/* OUT OF STOCK OVERLAY */}
               {showOutOfStock && (
@@ -1260,7 +1285,7 @@ const SearchPage = () => {
                               <span className="original-price text-muted text-decoration-line-through ms-2 fs-6">
                                 {formatPrice(orig)}
                               </span>
-                              <span className="discount-percent text-danger fw-bold ms-2">
+                              <span className="discount-percent fw-bold ms-2">
                                 ({pct}% OFF)
                               </span>
                             </>
@@ -1276,10 +1301,10 @@ const SearchPage = () => {
                   <div className="d-flex align-items-center justify-content-between">
                     <button
                       className={`btn w-100 page-title-main-name addtocartbuttton d-flex align-items-center justify-content-center gap-2 ${showOutOfStock
-                          ? "btn-secondary"
-                          : isAdding
-                            ? ""
-                            : "btn-outline-dark"
+                        ? "btn-secondary"
+                        : isAdding
+                          ? ""
+                          : "btn-outline-dark"
                         }`}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -1434,9 +1459,9 @@ const SearchPage = () => {
                     Selected: <span className="text-dark fw-bold">{getVariantDisplayText(displayVariant)}</span>
                   </div>
                   <div className="mt-1 mb-2 text-start">
-                    <span 
-                      onClick={(e) => { e.stopPropagation(); navigate(`/product/${slugPr}`); }} 
-                      className="text-decoration-none fw-semibold" 
+                    <span
+                      onClick={(e) => { e.stopPropagation(); navigate(`/product/${slugPr}`); }}
+                      className="text-decoration-none fw-semibold"
                       style={{ cursor: 'pointer', fontSize: '12px' }}
                     >
                       View Details

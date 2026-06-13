@@ -1,16 +1,20 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef, useCallback, useContext } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import Webcam from 'react-webcam';
 import axios from 'axios';
 import {
   FaCamera, FaImage, FaDownload, FaChevronLeft, FaChevronRight,
-  FaTimes, FaSpinner, FaHistory, FaCheckCircle, FaArrowLeft
+  FaTimes, FaSpinner, FaHistory, FaCheckCircle, FaArrowLeft,
+  FaHeart, FaRegHeart
 } from 'react-icons/fa';
 import { FaceMesh } from '@mediapipe/face_mesh';
 import { Camera } from '@mediapipe/camera_utils';
 import '../styles/MainVirtualTryOn.css';
 
 import Header from '../components/common/Header';
+import { UserContext } from '../context/UserContext.jsx';
+import axiosInstance from '../utils/axiosInstance.js';
+import { toast } from 'react-toastify';
 import vtoHero from "../assets/Virtual-tryon-new.png";
 import vtoFirst from '../assets/vto_new.png';
 import vtoMobile from '../assets/vto_mobile.png';
@@ -272,12 +276,17 @@ function applyAdaptiveSmoothing(newLms, prevLms, w, h) {
 
 const MainVirtualTryon = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [vtoStep, setVtoStep] = useState('landing');
   const [mode, setMode] = useState(null);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [activeType, setActiveType] = useState(null);
   const [activeProduct, setActiveProduct] = useState(null);
   const [activeShade, setActiveShade] = useState(null);
+  const { user } = useContext(UserContext);
+  const [activeShadeObj, setActiveShadeObj] = useState(null);
+  const [wishlistData, setWishlistData] = useState([]);
+  const [addingToCart, setAddingToCart] = useState(false);
   const [intensity, setIntensity] = useState(80);
   const [compareMode, setCompareMode] = useState(false);
   const [baPos, setBaPos] = useState(0.5);
@@ -320,7 +329,115 @@ const MainVirtualTryon = () => {
   const faceMeshRef = useRef(null);
   const cameraRef = useRef(null);
 
-  // Load types
+  const fetchWishlistData = useCallback(async () => {
+    try {
+      if (user && !user.guest) {
+        const { data } = await axiosInstance.get("/api/user/wishlist");
+        if (data.success) setWishlistData(data.wishlist || []);
+      } else {
+        const local = JSON.parse(localStorage.getItem("guestWishlist") || "[]");
+        setWishlistData(local.map((it) => ({ ...it, productId: it._id })));
+      }
+    } catch (e) {
+      console.error("Error fetching wishlist", e);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    fetchWishlistData();
+  }, [fetchWishlistData]);
+
+  const isInWishlist = (pid, sku) => {
+    if (!pid || !sku) return false;
+    return wishlistData.some((it) => (it.productId === pid || it._id === pid) && it.sku === sku);
+  };
+
+  const toggleWishlist = async (prod, shade) => {
+    if (!user || user.guest) {
+      toast.error("Please login to use wishlist");
+      navigate("/login", { state: { from: window.location.pathname } });
+      return;
+    }
+    if (!prod || !shade) return toast.error("Select a shade first");
+    const pid = prod._id;
+    const sku = shade.sku || shade.variantSku || shade._id;
+    if (!sku) return toast.error("Selected shade has no SKU");
+
+    try {
+      const inWl = isInWishlist(pid, sku);
+      if (inWl) {
+        await axiosInstance.delete(`/api/user/wishlist/${pid}`, { data: { sku } });
+        toast.success("Removed from wishlist!");
+      } else {
+        await axiosInstance.post(`/api/user/wishlist/${pid}`, { sku });
+        toast.success("Added to wishlist!");
+      }
+      await fetchWishlistData();
+    } catch (e) {
+      toast.error(e.response?.data?.message || "Wishlist error");
+    }
+  };
+
+  const handleAddToCart = async () => {
+    if (!activeProduct || !activeShadeObj) {
+      toast.error("Please select a product and shade first.");
+      return;
+    }
+
+    setAddingToCart(true);
+    const sku = activeShadeObj.sku || activeShadeObj.variantSku || activeShadeObj._id;
+    const pid = activeProduct._id;
+
+    try {
+      const payload = {
+        productId: pid,
+        variants: [{ variantSku: sku, quantity: 1 }]
+      };
+      
+      const { data } = await axiosInstance.post("/api/user/cart/add", payload);
+      if (!data.success) throw new Error(data.message || "Cart add failed");
+      
+      toast.success("Product added to cart!");
+      // navigate("/cartpage");
+    } catch (e) {
+      toast.error(e.response?.data?.message || "Failed to add to cart");
+      if (e.response?.status === 401) {
+        navigate("/login", { state: { from: window.location.pathname } });
+      }
+    } finally {
+      setAddingToCart(false);
+    }
+  };
+
+  const removeShade = () => {
+    setActiveShade(null);
+    setActiveShadeObj(null);
+    
+    const type = (activeType || '').toLowerCase();
+    if (type.includes('lip')) { S.current.lipC = 'none'; }
+    else if (type.includes('eye') && !type.includes('brow')) { S.current.linerC = 'none'; }
+    else if (type.includes('found')) { S.current.foundC = 'none'; S.current.fOn = false; }
+    else if (type.includes('blush')) { S.current.blushC = null; }
+    else if (type.includes('brow')) { S.current.browC = 'none'; }
+
+    if (mode === 'photo' && faceMeshRef.current && uploadedImage) {
+      const img = new Image();
+      img.onload = async () => { await faceMeshRef.current.send({ image: img }); };
+      img.src = uploadedImage;
+    }
+  };
+
+  const getShadeThumbnail = () => {
+    if (activeShadeObj) {
+      if (activeShadeObj.image) return activeShadeObj.image;
+      if (activeShadeObj.images && activeShadeObj.images.length > 0) return activeShadeObj.images[0];
+    }
+    if (activeProduct) {
+      if (activeProduct.image) return activeProduct.image;
+      if (activeProduct.images && activeProduct.images.length > 0) return activeProduct.images[0];
+    }
+    return "https://via.placeholder.com/56";
+  };
   useEffect(() => {
     const fetchTypes = async () => {
       setLoadingTypes(true);
@@ -336,6 +453,101 @@ const MainVirtualTryon = () => {
     };
     fetchTypes();
   }, []);
+
+  // Load product directly from query parameters if present (supports both ID and slug)
+  const queryProductId = searchParams.get('productId');
+  const queryProductSlug = searchParams.get('productSlug');
+  const querySku = searchParams.get('sku');
+
+  useEffect(() => {
+    const targetProductIdentifier = queryProductSlug || queryProductId;
+    if (targetProductIdentifier) {
+      console.log("[VTO DEBUG] loadProductFromQuery triggered. identifier:", targetProductIdentifier, "querySku:", querySku);
+      const loadProductFromQuery = async () => {
+        setStatusMsg('Loading your product...');
+        setVtoStep('engine');
+        setMode('live');
+        setSidePanel('shades');
+        setLoadingShades(true);
+        try {
+          const isObjectId = /^[0-9a-fA-F]{24}$/.test(targetProductIdentifier);
+          let product = null;
+          let shadesList = [];
+
+          if (isObjectId) {
+            // Fetch shades and info for this specific product by ID
+            const res = await axios.get(`https://beauty.joyory.com/api/vto/workflow?productId=${targetProductIdentifier}`);
+            product = res.data.product;
+            shadesList = product?.shades || [];
+          } else {
+            // Fetch product details by slug
+            const res = await axiosInstance.get(`/api/user/products/${targetProductIdentifier}`);
+            product = res.data;
+            if (product) {
+              // Map variants list to VTO shades format
+              shadesList = (product.variants || product.shadeOptions || []).map(v => ({
+                shadeName: v.shadeName || v.name || "Default",
+                hex: v.hex || v.color,
+                image: v.image || (v.images && v.images[0]) || product.image || (product.images && product.images[0]),
+                sku: v.sku || v.variantSku || v._id,
+                displayPrice: v.displayPrice || product.price,
+                originalPrice: v.originalPrice || product.mrp || product.price
+              }));
+            }
+          }
+
+          console.log("[VTO DEBUG] fetched product:", product);
+          if (product) {
+            setActiveProduct(product);
+            setShades(shadesList);
+
+            // Determine VTO category type
+            const rawType = product.type || product.vtoType || (typeof product.category === 'object' ? product.category.name : product.category) || 'lipstick';
+            const normalizedType = rawType.toLowerCase();
+            setActiveType(normalizedType);
+
+            // Select active shade (either matching SKU or first available)
+            let chosenShade = null;
+            if (querySku) {
+              chosenShade = shadesList.find(s => (s.sku === querySku || s.variantSku === querySku || s._id === querySku));
+            }
+            if (!chosenShade && shadesList.length > 0) {
+              chosenShade = shadesList[0];
+            }
+
+            console.log("[VTO DEBUG] chosenShade determined:", chosenShade);
+            if (chosenShade) {
+              setActiveShade(chosenShade.sku || chosenShade._id || chosenShade.name);
+              setActiveShadeObj(chosenShade);
+              let hex = chosenShade.hex || chosenShade.color;
+              if (hex) {
+                if (!hex.startsWith('#')) hex = '#' + hex;
+                const typeLower = normalizedType.toLowerCase();
+                if (typeLower.includes('lip')) { S.current.lipC = hex; }
+                else if (typeLower.includes('eye') && !typeLower.includes('brow')) { S.current.linerC = hex; }
+                else if (typeLower.includes('found')) { S.current.foundC = hex; S.current.fOn = true; }
+                else if (typeLower.includes('blush')) { S.current.blushC = hex; }
+                else if (typeLower.includes('brow')) { S.current.browC = hex; }
+              }
+            }
+
+            // Also fetch the product list for this category to keep sidebar working
+            setLoadingProducts(true);
+            const pRes = await axios.get(`https://beauty.joyory.com/api/vto/workflow?type=${normalizedType}`);
+            setProducts(pRes.data.products || []);
+          }
+        } catch (err) {
+          console.error("Error loading direct VTO product", err);
+          setStatusMsg('Error loading product');
+        } finally {
+          setLoadingShades(false);
+          setLoadingProducts(false);
+          setStatusMsg('Ready ✓');
+        }
+      };
+      loadProductFromQuery();
+    }
+  }, [queryProductId, queryProductSlug, querySku]);
 
   // ── FETCH DYNAMIC LANDING IMAGES FROM BACKEND ───────────────────────
   useEffect(() => {
@@ -365,17 +577,20 @@ const MainVirtualTryon = () => {
     prevStepRef.current = vtoStep;
   }, [vtoStep]);
 
-  // Scroll to the landing card every time we come BACK to landing
+  // Prevent vertical scrolling on HTML/Body during the entire VTO flow
   useEffect(() => {
-    if (vtoStep === 'landing' && prevStepRef.current !== 'landing') {
-      setTimeout(() => {
-        const el = document.getElementById('main-backe-2');
-        if (el) {
-          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      }, 50);
-    }
-  }, [vtoStep]);
+    window.scrollTo(0, 0);
+    document.body.style.overflow = 'hidden';
+    document.body.style.height = '100%';
+    document.documentElement.style.overflow = 'hidden';
+    document.documentElement.style.height = '100%';
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.height = '';
+      document.documentElement.style.overflow = '';
+      document.documentElement.style.height = '';
+    };
+  }, []);
 
   useEffect(() => {
     const handlePopState = () => {
@@ -530,7 +745,9 @@ const MainVirtualTryon = () => {
   };
 
   const applyShade = (shade) => {
+    console.log("[VTO DEBUG] applyShade clicked:", shade);
     setActiveShade(shade.sku || shade._id || shade.name);
+    setActiveShadeObj(shade);
     let hex = shade.hex || shade.color;
     if (!hex) return;
     if (!hex.startsWith('#')) hex = '#' + hex;
@@ -740,15 +957,16 @@ const MainVirtualTryon = () => {
     setActiveType(null);
     setActiveProduct(null);
     setActiveShade(null);
+    setActiveShadeObj(null);
     setSidePanel('types');
+    setSearchParams({}, { replace: true });
     setVtoStep('landing');
     setTimeout(() => {
-      const el = document.getElementById('main-backe-2');
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    }, 300);
-  }, []);
+      window.scrollTo(0, 0);
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+    }, 100);
+  }, [setSearchParams]);
 
   // Back button: go one step back in the instructions flow
   const handleInstrBack = useCallback(() => {
@@ -784,10 +1002,6 @@ const MainVirtualTryon = () => {
     <div className={`vto-main-wrapper d-flex ${vtoStep === 'landing' ? 'vto-landing-mode-wrapper' : ''}`}>
       <div className={`vto-app-container ${vtoStep === 'landing' ? 'vto-landing-mode' : ''}`}>
 
-        {/* 🟢 HEADER */}
-        <div className="vto-landing-header-container">
-          <Header hideCategories={true} />
-        </div>
 
         {/* LANDING CONTENT – only when step === 'landing' */}
         {vtoStep === 'landing' && (
@@ -867,29 +1081,33 @@ const MainVirtualTryon = () => {
                     className="vto-bg-img img-fluid"
                   />
                 </picture>
-                {/* <div className="vto-phone-overlay">
-                  <div className="vto-phone-frame">
-                    <div className="vto-phone-notch"></div>
-                    <img
-                      src={getImageSrc(landingImages.phoneView, vtoFirst)}
-                      alt="VTO Phone View"
-                      className="vto-phone-img-zoomed"
-                    />
-                    <div className="vto-phone-scan-corners"></div>
-                    <div className="vto-phone-bottom-strip">
-                      <div className="vto-mini-prod vto-mini-prod-1"></div>
-                      <div className="vto-mini-prod vto-mini-prod-2"></div>
-                      <div className="vto-mini-prod vto-mini-prod-3"></div>
-                      <div className="vto-mini-prod vto-mini-prod-4"></div>
-                      <div className="vto-mini-prod vto-mini-prod-5"></div>
-                    </div>
+
+                {/* Close Button at top right of image */}
+                <button 
+                  className="vto-landing-close-btn" 
+                  onClick={() => navigate(-1)}
+                  aria-label="Close Virtual Try-On"
+                >
+                  <FaTimes />
+                </button>
+
+                {/* Centered Brand Overlay */}
+                <div className="vto-landing-brand-overlay">
+                  JOYORY
+                </div>
+
+                {/* Split Slider Line & Handle Overlay */}
+                <div className="vto-landing-slider-line">
+                  <div className="vto-landing-slider-handle">
+                    <FaChevronLeft size={8} style={{ marginRight: '-1px' }} />
+                    <FaChevronRight size={8} style={{ marginLeft: '-1px' }} />
                   </div>
-                </div> */}
+                </div>
               </div>
               <div className="vto-landing-content-box">
                 <h1 className="vto-title-landing">VIRTUAL TRY ON</h1>
-                <p className="vto-subtitle-landing">    Find the perfect match for your style with a realistic virtual beauty experience.
-
+                <p className="vto-subtitle-landing">
+                  For the best Virtual Try-On experience, please use Safari on iOS and Chrome on Android.
                 </p>
                 <div className="vto-actions-landing">
                   <button
@@ -899,8 +1117,15 @@ const MainVirtualTryon = () => {
                       setMode('live');
                       setVtoStep('engine');
                     }}
-                  >SELFIE MODE</button>
-                  <button className="vto-btn-black" onClick={() => { setMode('photo'); setVtoStep('instructions'); }}>UPLOAD PHOTO</button>
+                  >
+                    SELFIE MODE
+                  </button>
+                  <button 
+                    className="vto-btn-black" 
+                    onClick={() => { setMode('photo'); setVtoStep('instructions'); }}
+                  >
+                    UPLOAD PHOTO
+                  </button>
                 </div>
               </div>
             </div>
@@ -942,14 +1167,41 @@ const MainVirtualTryon = () => {
                         <div className="vto-sidebar-icon-box" style={{ background: 'transparent', border: 'none', color: '#fff' }}><FaChevronLeft size={24} /></div>
                       </div>
                       {loadingProducts ? <div className="vto-spinner-wrap-small"><FaSpinner className="vto-spin" /></div> :
-                        products.map((p, i) => (
-                          <div key={p._id || i} className={`vto-sidebar-item ${activeProduct?._id === p._id ? 'active' : ''}`} onClick={() => handleProductSelect(p)}>
-                            <div className="vto-sidebar-icon-box">
-                              <img src={p.image || "https://via.placeholder.com/56"} alt={p.name} className="vto-cat-thumb-img" style={{ borderRadius: '8px' }} />
-                            </div>
-                            <span className="vto-sidebar-label">{p.name || p.brand}</span>
-                          </div>
-                        ))
+                        (() => {
+                          const activeProductIdx = products.findIndex(p => p._id === activeProduct?._id);
+                          const visibleProducts = (activeProductIdx === -1 || activeProductIdx < 5)
+                            ? products.slice(0, 5)
+                            : [products[activeProductIdx], ...products.filter(p => p._id !== activeProduct?._id).slice(0, 4)];
+
+                          return (
+                            <>
+                              {visibleProducts.map((p, i) => (
+                                <div key={p._id || i} className={`vto-sidebar-item ${activeProduct?._id === p._id ? 'active' : ''}`} onClick={() => handleProductSelect(p)}>
+                                  <div className="vto-sidebar-icon-box">
+                                    <img src={p.image || "https://via.placeholder.com/56"} alt={p.name} className="vto-cat-thumb-img" style={{ borderRadius: '8px' }} />
+                                  </div>
+                                  <span className="vto-sidebar-label">{p.name || p.brand}</span>
+                                </div>
+                              ))}
+                              {products.length > 0 && (
+                                <div className="vto-sidebar-item vto-sidebar-more-item" onClick={() => navigate('/vto-products')}>
+                                  <div
+                                    className="vto-sidebar-icon-box d-flex align-items-center justify-content-center"
+                                    style={{
+                                      background: 'rgba(255, 255, 255, 0.1)',
+                                      border: '2px dashed rgba(255, 255, 255, 0.4)',
+                                      color: '#fff',
+                                      borderRadius: '8px'
+                                    }}
+                                  >
+                                    <span style={{ fontSize: '24px', fontWeight: '300', marginTop: '-2px' }}>+</span>
+                                  </div>
+                                  <span className="vto-sidebar-label" style={{ opacity: 0.8 }}>More</span>
+                                </div>
+                              )}
+                            </>
+                          );
+                        })()
                       }
                     </div>
                   )}
@@ -961,8 +1213,8 @@ const MainVirtualTryon = () => {
                       </div>
                       {loadingShades ? <div className="vto-spinner-wrap-small"><FaSpinner className="vto-spin" /></div> :
                         shades.map((shade, idx) => (
-                          <div key={shade.sku || idx} className={`vto-sidebar-item ${activeShade === shade.sku ? 'active' : ''}`} onClick={() => applyShade(shade)}>
-                            <div className="vto-sidebar-shade-square" style={{ backgroundColor: shade.hex.startsWith('#') ? shade.hex : '#' + shade.hex }} />
+                          <div key={shade.sku || idx} className={`vto-sidebar-item ${activeShade === shade.sku || activeShade === shade.variantSku || activeShade === shade._id || activeShade === shade.name ? 'active' : ''}`} onClick={() => applyShade(shade)}>
+                            <div className="vto-sidebar-shade-square" style={{ backgroundColor: (shade.hex && typeof shade.hex === 'string' && shade.hex.startsWith('#')) ? shade.hex : '#' + (shade.hex || shade.color || '000000') }} />
                             <span className="vto-sidebar-label">{shade.shadeName}</span>
                           </div>
                         ))
@@ -982,7 +1234,17 @@ const MainVirtualTryon = () => {
                 onTouchStart={compareMode ? handleBaDragStart : undefined}
                 onTouchMove={compareMode ? handleBaDragMove : undefined}
                 onTouchEnd={compareMode ? handleBaDragEnd : undefined}
-                style={{ position: 'relative', overflow: 'hidden', cursor: compareMode ? (isDragging ? 'ew-resize' : 'col-resize') : 'default', flex: 1, minHeight: 0 }}
+                style={{
+                  position: 'relative',
+                  overflow: 'hidden',
+                  cursor: compareMode ? (isDragging ? 'ew-resize' : 'col-resize') : 'default',
+                  flex: 1,
+                  minHeight: 0,
+                  '--bottom-controls-pos': activeShadeObj ? '110px' : '30px',
+                  '--bottom-controls-pos-mobile': activeShadeObj ? '100px' : '10px',
+                  '--status-pos': activeShadeObj ? '110px' : '30px',
+                  '--status-pos-mobile': activeShadeObj ? '100px' : '10px'
+                }}
               >
                 {/* BEFORE Layer – Original camera/image (no makeup) */}
                 <div
@@ -1218,13 +1480,13 @@ const MainVirtualTryon = () => {
                 </div>
               )}
 
-              {!compareMode && (
+              {/* {!compareMode && (
                 <div className="vto-top-left-controls">
                   <button className="vto-back-btn-v2" onClick={goBackToLandingWithScroll} title="Go Back">
                     <FaChevronLeft />
                   </button>
                 </div>
-              )}
+              )} */}
 
               {!compareMode && (
                 <div className="vto-top-controls-v2">
@@ -1241,6 +1503,39 @@ const MainVirtualTryon = () => {
                 </button>
               </div>
             </div>
+            {(() => {
+              console.log("[VTO DEBUG] Render block check - activeProduct:", activeProduct?.name, "activeShadeObj:", activeShadeObj?.shadeName);
+              return null;
+            })()}
+            {activeShadeObj && activeProduct && (
+              <div className="vto-shade-popup">
+                <div className="vto-shade-popup-left">
+                  <img className="vto-shade-popup-thumb" src={getShadeThumbnail()} alt={activeShadeObj.shadeName || activeProduct.name} />
+                </div>
+                <div className="vto-shade-popup-middle">
+                  <div className="vto-shade-popup-product-name">{activeProduct.name}</div>
+                  <div className="vto-shade-popup-shade-name">{activeShadeObj.shadeName}</div>
+                  <div className="vto-shade-popup-price">
+                    ₹{activeShadeObj.displayPrice || activeShadeObj.price || activeProduct.price}
+                  </div>
+                </div>
+                <div className="vto-shade-popup-actions">
+                  <button className="vto-shade-popup-btn vto-shade-popup-btn-clear" onClick={removeShade} title="Remove Shade">
+                    <FaTimes />
+                  </button>
+                  <button 
+                    className={`vto-shade-popup-btn vto-shade-popup-btn-wishlist ${isInWishlist(activeProduct._id, activeShadeObj.sku || activeShadeObj.variantSku || activeShadeObj._id) ? 'active' : ''}`} 
+                    onClick={() => toggleWishlist(activeProduct, activeShadeObj)} 
+                    title="Wishlist"
+                  >
+                    {isInWishlist(activeProduct._id, activeShadeObj.sku || activeShadeObj.variantSku || activeShadeObj._id) ? <FaHeart /> : <FaRegHeart />}
+                  </button>
+                  <button className="vto-shade-popup-btn-buy" onClick={handleAddToCart} disabled={addingToCart}>
+                    {addingToCart ? 'Adding...' : 'Add to Bag'}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -1320,7 +1615,43 @@ const MainVirtualTryon = () => {
   );
 };
 
-export default MainVirtualTryon;
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, errorInfo) {
+    console.error("ErrorBoundary caught VTO error", error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: '40px 20px', color: '#b91c1c', background: '#fff', zIndex: 10000, position: 'fixed', inset: 0, overflow: 'auto', fontFamily: 'sans-serif' }}>
+          <h2 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '10px' }}>Something went wrong.</h2>
+          <p style={{ fontSize: '14px', color: '#555', marginBottom: '20px' }}>Please see the error details below:</p>
+          <pre style={{ background: '#f5f5f5', padding: '15px', borderRadius: '8px', overflowX: 'auto', fontSize: '12px', border: '1px solid #e0e0e0', lineHeight: '1.5' }}>
+            {this.state.error?.stack || this.state.error?.toString()}
+          </pre>
+          <button onClick={() => window.location.reload()} style={{ marginTop: '20px', padding: '12px 24px', background: '#000', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>
+            Reload Page
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+export default function MainVirtualTryOnWithErrorBoundary(props) {
+  return (
+    <ErrorBoundary>
+      <MainVirtualTryon {...props} />
+    </ErrorBoundary>
+  );
+}
 
 
 

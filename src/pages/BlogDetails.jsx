@@ -287,7 +287,7 @@ const BlogDetail = () => {
   return (
     <>
 
-    <Header />
+      <Header />
       {/* <ToastContainer position="top-right" autoClose={3000} /> */}
 
       {/* Hero Section */}
@@ -367,337 +367,362 @@ const BlogDetail = () => {
                   }}
                   className="foryou-swiper"
                 >
-                   {relatedProducts.map((item) => {
-                      if (!item) return null;
+                  {relatedProducts.map((item) => {
+                    if (!item) return null;
 
-                      const variant = item.variant || {};
-                      const allVariants = item.allVariants || [];
-                      const groupedVariants = groupVariantsByType(allVariants);
-                      const totalVariants = allVariants.length;
-                      const isVariantSelected = !!selectedVariants[item._id];
-                      const isAdding = addingToCart[item._id];
-                      const hasVariants = allVariants.length > 0;
-                      const outOfStock = hasVariants
-                        ? (variant?.stock <= 0)
-                        : (item.stock <= 0);
-                      const showSelectVariantButton = hasVariants && !isVariantSelected;
-                      // const buttonDisabled = isAdding || outOfStock;
-                      const buttonText = isAdding
-                        ? "Adding..."
-                        : showSelectVariantButton
-                          ? "Select Variant"
-                          : outOfStock
-                            ? "Out of Stock"
-                            : "Add to Bag";
+                    const variant = item.variant || {};
+                    const allVariants = item.allVariants || [];
+                    const groupedVariants = groupVariantsByType(allVariants);
+                    const totalVariants = allVariants.length;
+                    const isVariantSelected = !!selectedVariants[item._id];
+                    const isAdding = addingToCart[item._id];
+                    const hasVariants = allVariants.length > 0;
+                    const outOfStock = hasVariants
+                      ? (variant?.stock <= 0)
+                      : (item.stock <= 0);
+                    const showSelectVariantButton = hasVariants && !isVariantSelected;
+                    // const buttonDisabled = isAdding || outOfStock;
+                    const buttonText = isAdding
+                      ? "Adding..."
+                      : showSelectVariantButton
+                        ? "Select Variant"
+                        : outOfStock
+                          ? "Out of Stock"
+                          : "Add to Bag";
 
-                      let imageUrl = item.image;
-                      if (imageUrl && !imageUrl.startsWith("http") && !imageUrl.startsWith("data:")) {
-                        imageUrl = `https://res.cloudinary.com/dekngswix/image/upload/${imageUrl}`;
-                      }
-                      if (!imageUrl) imageUrl = "https://placehold.co/400x300/ffffff/cccccc?text=Product";
+                    let imageUrl = item.image;
+                    if (imageUrl && !imageUrl.startsWith("http") && !imageUrl.startsWith("data:")) {
+                      imageUrl = `https://res.cloudinary.com/dekngswix/image/upload/${imageUrl}`;
+                    }
+                    if (!imageUrl) imageUrl = "https://placehold.co/400x300/ffffff/cccccc?text=Product";
 
-                      const selectedSku = getSku(variant);
-                      const isProductInWishlist = isInWishlist(item._id, selectedSku);
+                    const selectedSku = getSku(variant);
+                    const isProductInWishlist = isInWishlist(item._id, selectedSku);
 
-                      return (
-                        <SwiperSlide key={item._id}>
-                          <div className="foryou-card-wrapper">
-                            <div className="foryou-card">
-                              {/* Product Image with Overlays */}
-                              <div
-                                className="foryou-img-wrapper"
-                                onClick={() => navigate(`/product/${item.slug || item._id}`)}
-                                style={{ cursor: 'pointer' }}
+                    return (
+                      <SwiperSlide key={item._id}>
+                        <div className="foryou-card-wrapper">
+                          <div className="foryou-card">
+                            {/* Product Image with Overlays */}
+                            <div
+                              className="foryou-img-wrapper"
+                              onClick={() => navigate(`/product/${item.slug || item._id}`)}
+                              style={{ cursor: 'pointer' }}
+                            >
+                              <img
+                                src={imageUrl}
+                                alt={item.name}
+                                className="foryou-img img-fluid"
+                                loading="lazy"
+                                onError={(e) => {
+                                  e.currentTarget.src = "https://placehold.co/400x300/ffffff/cccccc?text=Product";
+                                }}
+                              />
+
+                              {item?.supportsVTO && (
+                                 <div 
+                                   className="support-beauty-badge" 
+                                   title="Try It On" 
+                                   onClick={(e) => {
+                                     e.stopPropagation();
+                                     navigate(`/product/${getProductSlug(item)}`);
+                                   }}
+                                   onTouchStart={(e) => e.stopPropagation()}
+                                 >
+                                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                     <path d="M3 7V5a2 2 0 0 1 2-2h2" />
+                                     <path d="M17 3h2a2 2 0 0 1 2 2v2" />
+                                     <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+                                     <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
+                                     <path d="M8 10a4 4 0 1 1 8 0c0 2.2-1.8 4-4 4s-4-1.8-4-4z" />
+                                     <path d="M10 10h.01" />
+                                     <path d="M14 10h.01" />
+                                     <path d="M10 13c.5.5 1.5.7 2 .7s1.5-.2 2-.7" />
+                                     <path d="M6 19c0-1.5 1.5-2.5 6-2.5s6 1 6 2.5" />
+                                   </svg>
+                                   <span className="vto-text">TRY IT ON</span>
+                                 </div>
+                              )}
+
+                              {/* Wishlist Icon */}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (variant) toggleWishlist(item, variant);
+                                }}
+                                disabled={wishlistLoading[item._id]}
+                                style={{
+                                  position: 'absolute',
+                                  top: '10px',
+                                  right: '10px',
+                                  cursor: wishlistLoading[item._id] ? 'not-allowed' : 'pointer',
+                                  color: isProductInWishlist ? '#dc3545' : '#000000',
+                                  fontSize: '22px',
+                                  zIndex: 2,
+                                  backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                  borderRadius: '50%',
+                                  width: '34px',
+                                  height: '34px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                                  transition: 'all 0.3s ease',
+                                  border: 'none',
+                                  outline: 'none'
+                                }}
+                                title={isProductInWishlist ? "Remove from wishlist" : "Add to wishlist"}
                               >
-                                <img
-                                  src={imageUrl}
-                                  alt={item.name}
-                                  className="foryou-img img-fluid"
-                                  loading="lazy"
-                                  onError={(e) => {
-                                    e.currentTarget.src = "https://placehold.co/400x300/ffffff/cccccc?text=Product";
-                                  }}
-                                />
+                                {wishlistLoading[item._id] ? (
+                                  <div className="spinner-border spinner-border-sm" role="status"></div>
+                                ) : isProductInWishlist ? (
+                                  <FaHeart />
+                                ) : (
+                                  <FaRegHeart />
+                                )}
+                              </button>
 
-                                {/* Wishlist Icon */}
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (variant) toggleWishlist(item, variant);
-                                  }}
-                                  disabled={wishlistLoading[item._id]}
-                                  style={{
-                                    position: 'absolute',
-                                    top: '10px',
-                                    right: '10px',
-                                    cursor: wishlistLoading[item._id] ? 'not-allowed' : 'pointer',
-                                    color: isProductInWishlist ? '#dc3545' : '#000000',
-                                    fontSize: '22px',
-                                    zIndex: 2,
-                                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                                    borderRadius: '50%',
-                                    width: '34px',
-                                    height: '34px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                                    transition: 'all 0.3s ease',
-                                    border: 'none',
-                                    outline: 'none'
-                                  }}
-                                  title={isProductInWishlist ? "Remove from wishlist" : "Add to wishlist"}
-                                >
-                                  {wishlistLoading[item._id] ? (
-                                    <div className="spinner-border spinner-border-sm" role="status"></div>
-                                  ) : isProductInWishlist ? (
-                                    <FaHeart />
-                                  ) : (
-                                    <FaRegHeart />
-                                  )}
-                                </button>
-
-                                {/* Promo Badge */}
-                                {/* {variant.promoApplied && (
+                              {/* Promo Badge */}
+                              {/* {variant.promoApplied && (
                                   <div className="promo-badge">
                                     <i className="bi bi-tag-fill me-1"></i>
                                     Promo
                                   </div>
                                 )} */}
-                              </div>
+                            </div>
 
-                              {/* Product Info */}
-                              <div className="foryou-product-info w-100 ps-lg-0 p-0 pt-md-0">
-                                <div className="justify-content-between d-flex flex-column" style={{ height: '260px' }}>
-                                  <div className="brand-name small text-muted mb-1 mt-2 text-start">
-                                    {item.brandName}
+                            {/* Product Info */}
+                            <div className="foryou-product-info w-100 ps-lg-0 p-0 pt-md-0">
+                              <div className="justify-content-between d-flex flex-column" style={{ height: '260px' }}>
+                                <div className="brand-name small text-muted mb-1 mt-2 text-start">
+                                  {item.brandName}
+                                </div>
+                                <h6
+                                  className="foryou-name font-family-Poppins m-0 p-0"
+                                  onClick={() => navigate(`/product/${item.slug || item._id}`)}
+                                  style={{ cursor: 'pointer' }}
+                                >
+                                  {item.name}
+                                </h6>
+
+                                {/* Minimal Variant Display */}
+                                {hasVariants && (
+                                  <div className="variant-section m-0 p-0 ms-0 mt-2 mb-2">
+                                    {isVariantSelected ? (
+                                      <div
+                                        className="selected-variant-display text-muted small"
+                                        style={{ cursor: 'pointer', display: 'inline-block' }}
+                                        onClick={(e) => openVariantOverlay(item._id, "all", e)}
+                                        title="Click to change variant"
+                                      >
+                                        Variant: <span className="fw-bold text-dark">{getVariantDisplayText(variant)}</span>
+                                        <FaChevronDown className="ms-1" style={{ fontSize: '10px' }} />
+                                      </div>
+                                    ) : (
+                                      <div className="small text-muted" style={{ height: '20px' }}>
+                                        {allVariants.length} Variants Available
+                                      </div>
+                                    )}
                                   </div>
-                                  <h6
-                                    className="foryou-name font-family-Poppins m-0 p-0"
-                                    onClick={() => navigate(`/product/${item.slug || item._id}`)}
-                                    style={{ cursor: 'pointer' }}
-                                  >
-                                    {item.name}
-                                  </h6>
+                                )}
 
-                                  {/* Minimal Variant Display */}
-                                  {hasVariants && (
-                                    <div className="variant-section m-0 p-0 ms-0 mt-2 mb-2">
-                                      {isVariantSelected ? (
-                                        <div
-                                          className="selected-variant-display text-muted small"
-                                          style={{ cursor: 'pointer', display: 'inline-block' }}
-                                          onClick={(e) => openVariantOverlay(item._id, "all", e)}
-                                          title="Click to change variant"
-                                        >
-                                          Variant: <span className="fw-bold text-dark">{getVariantDisplayText(variant)}</span>
-                                          <FaChevronDown className="ms-1" style={{ fontSize: '10px' }} />
-                                        </div>
-                                      ) : (
-                                        <div className="small text-muted" style={{ height: '20px' }}>
-                                          {allVariants.length} Variants Available
-                                        </div>
-                                      )}
-                                    </div>
-                                  )}
+                                {/* Price Section */}
+                                <div className="price-section mb-3">
+                                  <div className="d-flex align-items-baseline flex-wrap">
+                                    <span className="current-price fw-400 fs-5">
+                                      {formatPrice(variant.displayPrice)}
+                                    </span>
+                                    {variant.originalPrice > variant.displayPrice && (
+                                      <>
+                                        <span className="original-price text-muted text-decoration-line-through ms-2 fs-6">
+                                          {formatPrice(variant.originalPrice)}
+                                        </span>
+                                        <span className="discount-percent fw-bold ms-2">
+                                          ({variant.discountPercent || 0}% OFF)
+                                        </span>
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
 
-                                  {/* Price Section */}
-                                  <div className="price-section mb-3">
-                                    <div className="d-flex align-items-baseline flex-wrap">
-                                      <span className="current-price fw-400 fs-5">
-                                        {formatPrice(variant.displayPrice)}
-                                      </span>
-                                      {variant.originalPrice > variant.displayPrice && (
+                                {/* Add to Cart Button */}
+                                <div className="cart-section">
+                                  <div className="d-flex align-items-center justify-content-between">
+                                    <button
+                                      className={`w-100 btn-add-cart`}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (showSelectVariantButton) {
+                                          openVariantOverlay(item._id, "all", e);
+                                        } else {
+                                          handleAddToCart(item);
+                                        }
+                                      }}
+                                      // disabled={buttonDisabled}
+                                      style={{
+                                        transition: "background-color 0.3s ease, color 0.3s ease",
+                                      }}
+                                    >
+                                      {isAdding ? (
                                         <>
-                                          <span className="original-price text-muted text-decoration-line-through ms-2 fs-6">
-                                            {formatPrice(variant.originalPrice)}
-                                          </span>
-                                          <span className="discount-percent text-danger fw-bold ms-2">
-                                            ({variant.discountPercent || 0}% OFF)
-                                          </span>
+                                          <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                                          Adding...
+                                        </>
+                                      ) : (
+                                        <>
+                                          {buttonText}
+                                          {!isAdding && !showSelectVariantButton && (
+                                            <img src={bagIcon} className="img-fluid ms-1" style={{ marginTop: '-3px', height: "20px" }} alt="Bag-icon" />
+                                          )}
                                         </>
                                       )}
-                                    </div>
-                                  </div>
-
-                                  {/* Add to Cart Button */}
-                                  <div className="cart-section">
-                                    <div className="d-flex align-items-center justify-content-between">
-                                      <button
-                                        className={`w-100 btn-add-cart`}
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          if (showSelectVariantButton) {
-                                            openVariantOverlay(item._id, "all", e);
-                                          } else {
-                                            handleAddToCart(item);
-                                          }
-                                        }}
-                                        // disabled={buttonDisabled}
-                                        style={{
-                                          transition: "background-color 0.3s ease, color 0.3s ease",
-                                        }}
-                                      >
-                                        {isAdding ? (
-                                          <>
-                                            <span className="spinner-border spinner-border-sm me-2" role="status"></span>
-                                            Adding...
-                                          </>
-                                        ) : (
-                                          <>
-                                            {buttonText}
-                                            {!isAdding && !showSelectVariantButton && (
-                                              <img src={bagIcon} className="img-fluid ms-1" style={{ marginTop: '-3px', height: "20px" }} alt="Bag-icon" />
-                                            )}
-                                          </>
-                                        )}
-                                      </button>
-                                    </div>
+                                    </button>
                                   </div>
                                 </div>
                               </div>
                             </div>
+                          </div>
 
-                            {/* Variant Overlay */}
-                            {showVariantOverlay === item._id && (
-                              <div className="variant-overlay" onClick={closeVariantOverlay}>
-                                <div
-                                  className="variant-overlay-content m-0 p-0 w-100"
-                                  onClick={(e) => e.stopPropagation()}
-                                  style={{
-                                    width: '90%',
-                                    maxWidth: '500px',
-                                    maxHeight: '100%',
-                                    background: '#fff',
-                                    borderRadius: '0px',
-                                    overflow: 'hidden',
-                                    display: 'flex',
-                                    flexDirection: 'column'
-                                  }}
-                                >
-                                  <div className="overlay-header d-flex justify-content-between align-items-center p-3 border-bottom">
-                                    <h5 className="m-0 page-title-main-name">Select Variant ({totalVariants})</h5>
-                                    <button onClick={closeVariantOverlay} style={{ background: 'none', border: 'none', fontSize: '40px' }}>×</button>
-                                  </div>
+                          {/* Variant Overlay */}
+                          {showVariantOverlay === item._id && (
+                            <div className="variant-overlay" onClick={closeVariantOverlay}>
+                              <div
+                                className="variant-overlay-content m-0 p-0 w-100"
+                                onClick={(e) => e.stopPropagation()}
+                                style={{
+                                  width: '90%',
+                                  maxWidth: '500px',
+                                  maxHeight: '100%',
+                                  background: '#fff',
+                                  borderRadius: '0px',
+                                  overflow: 'hidden',
+                                  display: 'flex',
+                                  flexDirection: 'column'
+                                }}
+                              >
+                                <div className="overlay-header d-flex justify-content-between align-items-center p-3 border-bottom">
+                                  <h5 className="m-0 page-title-main-name">Select Variant ({totalVariants})</h5>
+                                  <button onClick={closeVariantOverlay} style={{ background: 'none', border: 'none', fontSize: '40px' }}>×</button>
+                                </div>
 
-                                  <div className="variant-tabs d-flex">
+                                <div className="variant-tabs d-flex">
+                                  <button
+                                    className={`variant-tab flex-fill py-3 page-title-main-name ${selectedVariantType === "all" ? "active" : ""}`}
+                                    onClick={() => setSelectedVariantType("all")}
+                                  >
+                                    All ({totalVariants})
+                                  </button>
+                                  {groupedVariants.color.length > 0 && (
                                     <button
-                                      className={`variant-tab flex-fill py-3 page-title-main-name ${selectedVariantType === "all" ? "active" : ""}`}
-                                      onClick={() => setSelectedVariantType("all")}
+                                      className={`variant-tab flex-fill py-3 page-title-main-name ${selectedVariantType === "color" ? "active" : ""}`}
+                                      onClick={() => setSelectedVariantType("color")}
                                     >
-                                      All ({totalVariants})
+                                      Colors ({groupedVariants.color.length})
                                     </button>
-                                    {groupedVariants.color.length > 0 && (
-                                      <button
-                                        className={`variant-tab flex-fill py-3 page-title-main-name ${selectedVariantType === "color" ? "active" : ""}`}
-                                        onClick={() => setSelectedVariantType("color")}
-                                      >
-                                        Colors ({groupedVariants.color.length})
-                                      </button>
-                                    )}
-                                    {groupedVariants.text.length > 0 && (
-                                      <button
-                                        className={`variant-tab flex-fill py-3 page-title-main-name ${selectedVariantType === "text" ? "active" : ""}`}
-                                        onClick={() => setSelectedVariantType("text")}
-                                      >
-                                        Sizes ({groupedVariants.text.length})
-                                      </button>
-                                    )}
-                                  </div>
+                                  )}
+                                  {groupedVariants.text.length > 0 && (
+                                    <button
+                                      className={`variant-tab flex-fill py-3 page-title-main-name ${selectedVariantType === "text" ? "active" : ""}`}
+                                      onClick={() => setSelectedVariantType("text")}
+                                    >
+                                      Sizes ({groupedVariants.text.length})
+                                    </button>
+                                  )}
+                                </div>
 
-                                  <div className="p-3 overflow-auto flex-grow-1">
-                                    {(selectedVariantType === "all" || selectedVariantType === "color") && groupedVariants.color.length > 0 && (
-                                      <div className="row row-col-4 g-3">
-                                        {groupedVariants.color.map((v) => {
-                                          const isSelected = variant.sku === v.sku || (variant._id && variant._id === v._id);
-                                          const isOutOfStock = (v.stock ?? 0) <= 0;
-                                          return (
-                                            <div className="col-lg-4 mt-2 col-5" key={getSku(v) || v._id}>
+                                <div className="p-3 overflow-auto flex-grow-1">
+                                  {(selectedVariantType === "all" || selectedVariantType === "color") && groupedVariants.color.length > 0 && (
+                                    <div className="row row-col-4 g-3">
+                                      {groupedVariants.color.map((v) => {
+                                        const isSelected = variant.sku === v.sku || (variant._id && variant._id === v._id);
+                                        const isOutOfStock = (v.stock ?? 0) <= 0;
+                                        return (
+                                          <div className="col-lg-4 mt-2 col-5" key={getSku(v) || v._id}>
+                                            <div
+                                              className="text-center"
+                                              style={{ cursor: isOutOfStock ? "not-allowed" : "pointer" }}
+                                              onClick={() => !isOutOfStock && (handleVariantSelect(item._id, v), closeVariantOverlay())}
+                                            >
                                               <div
-                                                className="text-center"
-                                                style={{ cursor: isOutOfStock ? "not-allowed" : "pointer" }}
-                                                onClick={() => !isOutOfStock && (handleVariantSelect(item._id, v), closeVariantOverlay())}
+                                                style={{
+                                                  width: "28px",
+                                                  height: "28px",
+                                                  borderRadius: "20%",
+                                                  backgroundColor: v.hex || "#ccc",
+                                                  margin: "0 auto 8px",
+                                                  border: isSelected ? "2px solid #000" : "1px solid #ddd",
+                                                  opacity: isOutOfStock ? 0.5 : 1,
+                                                  position: "relative",
+                                                }}
                                               >
-                                                <div
-                                                  style={{
-                                                    width: "28px",
-                                                    height: "28px",
-                                                    borderRadius: "20%",
-                                                    backgroundColor: v.hex || "#ccc",
-                                                    margin: "0 auto 8px",
-                                                    border: isSelected ? "2px solid #000" : "1px solid #ddd",
-                                                    opacity: isOutOfStock ? 0.5 : 1,
-                                                    position: "relative",
-                                                  }}
-                                                >
-                                                  {isSelected && (
-                                                    <span
-                                                      style={{
-                                                        position: "absolute",
-                                                        top: "50%",
-                                                        left: "50%",
-                                                        transform: "translate(-50%, -50%)",
-                                                        color: "#fff",
-                                                        fontWeight: "bold",
-                                                      }}
-                                                    >
-                                                      ✓
-                                                    </span>
-                                                  )}
-                                                </div>
-                                                <div className="small page-title-main-name" style={{fontSize: '12px'}}>
-                                                  {getVariantDisplayText(v)}
-                                                </div>
-                                                {isOutOfStock && <div className="text-danger small">Out of Stock</div>}
+                                                {isSelected && (
+                                                  <span
+                                                    style={{
+                                                      position: "absolute",
+                                                      top: "50%",
+                                                      left: "50%",
+                                                      transform: "translate(-50%, -50%)",
+                                                      color: "#fff",
+                                                      fontWeight: "bold",
+                                                    }}
+                                                  >
+                                                    ✓
+                                                  </span>
+                                                )}
                                               </div>
+                                              <div className="small page-title-main-name" style={{ fontSize: '12px' }}>
+                                                {getVariantDisplayText(v)}
+                                              </div>
+                                              {isOutOfStock && <div className="text-danger small">Out of Stock</div>}
                                             </div>
-                                          );
-                                        })}
-                                      </div>
-                                    )}
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  )}
 
-                                    {(selectedVariantType === "all" || selectedVariantType === "text") && groupedVariants.text.length > 0 && (
-                                      <div className="row row-cols-3 g-3">
-                                        {groupedVariants.text.map((v) => {
-                                          const isSelected = variant.sku === v.sku || (variant._id && variant._id === v._id);
-                                          const isOutOfStock = (v.stock ?? 0) <= 0;
-                                          return (
-                                            <div className="col" key={getSku(v) || v._id}>
+                                  {(selectedVariantType === "all" || selectedVariantType === "text") && groupedVariants.text.length > 0 && (
+                                    <div className="row row-cols-3 g-3">
+                                      {groupedVariants.text.map((v) => {
+                                        const isSelected = variant.sku === v.sku || (variant._id && variant._id === v._id);
+                                        const isOutOfStock = (v.stock ?? 0) <= 0;
+                                        return (
+                                          <div className="col" key={getSku(v) || v._id}>
+                                            <div
+                                              className="text-center"
+                                              style={{ cursor: isOutOfStock ? "not-allowed" : "pointer" }}
+                                              onClick={() => !isOutOfStock && (handleVariantSelect(item._id, v), closeVariantOverlay())}
+                                            >
                                               <div
-                                                className="text-center"
-                                                style={{ cursor: isOutOfStock ? "not-allowed" : "pointer" }}
-                                                onClick={() => !isOutOfStock && (handleVariantSelect(item._id, v), closeVariantOverlay())}
+                                                style={{
+                                                  padding: "10px",
+                                                  borderRadius: "8px",
+                                                  border: isSelected ? "2px solid #000" : "1px solid #ddd",
+                                                  background: isSelected ? "#f8f9fa" : "#fff",
+                                                  minHeight: "50px",
+                                                  display: "flex",
+                                                  alignItems: "center",
+                                                  justifyContent: "center",
+                                                  opacity: isOutOfStock ? 0.5 : 1,
+                                                }}
                                               >
-                                                <div
-                                                  style={{
-                                                    padding: "10px",
-                                                    borderRadius: "8px",
-                                                    border: isSelected ? "2px solid #000" : "1px solid #ddd",
-                                                    background: isSelected ? "#f8f9fa" : "#fff",
-                                                    minHeight: "50px",
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    justifyContent: "center",
-                                                    opacity: isOutOfStock ? 0.5 : 1,
-                                                  }}
-                                                >
-                                                  {getVariantDisplayText(v)}
-                                                </div>
-                                                {isOutOfStock && <div className="text-danger small mt-1">Out of Stock</div>}
+                                                {getVariantDisplayText(v)}
                                               </div>
+                                              {isOutOfStock && <div className="text-danger small mt-1">Out of Stock</div>}
                                             </div>
-                                          );
-                                        })}
-                                      </div>
-                                    )}
-                                  </div>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  )}
                                 </div>
                               </div>
-                            )}
-                          </div>
-                        </SwiperSlide>
-                      );
-                    })}
+                            </div>
+                          )}
+                        </div>
+                      </SwiperSlide>
+                    );
+                  })}
                 </Swiper>
               </div>
             )}
@@ -729,7 +754,7 @@ const BlogDetail = () => {
                 {/* Read More Button */}
                 {blog.relatedArticles.length > 4 && !showAllArticles && (
                   <div className="text-center mt-4">
-                    <button 
+                    <button
                       className="btn-read-more"
                       onClick={() => setShowAllArticles(true)}
                     >

@@ -275,13 +275,13 @@ aside .btn {
 
 /* Shades */
 
-.d-flex.flex-wrap div[title] {
+/* .d-flex.flex-wrap div[title] {
     transition: 0.2s;
 }
 
 .d-flex.flex-wrap div[title]:hover {
     transform: scale(1.2);
-}
+} */
 
 
 /* Add to cart button */

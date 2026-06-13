@@ -38,6 +38,7 @@ import Shadefinderundertone from "./pages/ShadeFinderUndertone";
 import Shadetone from "./pages/ShadeTone";
 import Foundation from "./pages/Foundation";
 import Virtualtryon from "./pages/VirtualTryOn";
+import VtoProducts from "./pages/VtoProducts";
 import Recommendations from "./pages/Recommendations";
 import Skintypes from "./components/sections/home/SkinTypes";
 import Allsaleproduct from "./pages/AllSaleProduct";
@@ -149,6 +150,7 @@ function App() {
             <Route path="/Foundation" element={<Foundation />} />
             <Route path="/Mainvirtualtryon" element={<Mainvirtualtryon />} />
             <Route path="/Virtualtryon" element={<Virtualtryon />} />
+            <Route path="/vto-products" element={<VtoProducts />} />
             <Route path="/Recommendations" element={<Recommendations />} />
             <Route path="/Skintypes" element={<Skintypes />} />
             <Route path="/productpage/:slug" element={<PromotionProductsPage />} />

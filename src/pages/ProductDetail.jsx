@@ -101,6 +101,9 @@ const ProductDetail = () => {
 
         const res = await axiosInstance.get(url);
         const data = res.data;
+        if (location.state?.supportsVTO !== undefined) {
+          data.supportsVTO = location.state.supportsVTO;
+        }
         setProduct(data);
 
         if (data.reviewSummary) {
@@ -244,13 +247,10 @@ const ProductDetail = () => {
   const fetchFilteredReviews = async () => {
     if (!product?._id) return;
     try {
-      let query = `?sort=${
+      // Fetch all reviews; filtering by shade, rating, and photos is done on the frontend to ensure 100% reliability
+      const query = `?sort=${
         filters.sort === "Most Helpful" ? "helpful" : "recent"
       }`;
-      if (filters.rating !== "All") query += `&stars=${filters.rating}`;
-      if (filters.photosOnly) query += `&photosOnly=true`;
-      if (filters.shade !== "All")
-        query += `&shadeName=${encodeURIComponent(filters.shade)}`;
 
       const res = await axiosInstance.get(
         `/api/reviews/product/${product._id}${query}`

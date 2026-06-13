@@ -330,7 +330,7 @@ body {
 }
 .review-card {
     padding: 0.75rem;
-    border: 1px solid #eee;
+    /* border: 1px solid #eee; */
     border-radius: 6px;
     background: #fafafa;
 }
@@ -569,7 +569,7 @@ details[open] summary::after {
     /* border: 1px solid #eee; */
 }
 .reviews-section h2 {
-    font-size: 22px;
+    font-size: 26px;
     font-weight: 600;
     margin-bottom: 20px;
 }
@@ -602,7 +602,7 @@ details[open] summary::after {
 /* Review Card */
 .review-card {
     background: #fff;
-    border: 1px solid #eee;
+    /* border: 1px solid #eee; */
     border-radius: 12px;
     padding: 15px;
     margin-bottom: 20px;

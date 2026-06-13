@@ -94,11 +94,11 @@ export default function BeautyConcierge() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const hideFab = ["/login", "/signup", "/affiliatelogin", "/affiliatesignup"].includes(
+  const hideFab = ["/login", "/signup", "/affiliatelogin", "/affiliatesignup", "/mainvirtualtryon"].includes(
     location.pathname.toLowerCase()
   );
 
-  if (hideFab) return null;
+
 
   /* ── state ── */
   const [open, setOpen] = useState(false);
@@ -296,6 +296,8 @@ export default function BeautyConcierge() {
   }
 
   /* ─────────────────────────────────────────────────────────────────────── */
+  if (hideFab) return null;
+
   return (
     <>
       {/* ── Floating Action Button ── */}

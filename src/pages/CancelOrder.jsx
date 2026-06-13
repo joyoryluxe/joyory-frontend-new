@@ -293,6 +293,31 @@ const RecoProductCard = ({ product, navigate, user, onAddToCartSuccess }) => {
             }}
           />
 
+          {(product?.supportsVTO || product?.product?.supportsVTO) && (
+            <div 
+              className="support-beauty-badge" 
+              title="Try It On" 
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/product/${getProductSlug()}`);
+              }}
+              onTouchStart={(e) => e.stopPropagation()}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 7V5a2 2 0 0 1 2-2h2" />
+                <path d="M17 3h2a2 2 0 0 1 2 2v2" />
+                <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+                <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
+                <path d="M8 10a4 4 0 1 1 8 0c0 2.2-1.8 4-4 4s-4-1.8-4-4z" />
+                <path d="M10 10h.01" />
+                <path d="M14 10h.01" />
+                <path d="M10 13c.5.5 1.5.7 2 .7s1.5-.2 2-.7" />
+                <path d="M6 19c0-1.5 1.5-2.5 6-2.5s6 1 6 2.5" />
+              </svg>
+              <span className="vto-text">TRY IT ON</span>
+            </div>
+          )}
+
           {/* OUT OF STOCK OVERLAY */}
           {showOutOfStock && (
             <div
@@ -423,7 +448,7 @@ const RecoProductCard = ({ product, navigate, user, onAddToCartSuccess }) => {
                 {originalPrice > displayPrice && !showOutOfStock && (
                   <>
                     <span className="original-price text-muted text-decoration-line-through ms-2 fs-6">{formatPrice(originalPrice)}</span>
-                    <span className="discount-percent text-danger fw-bold ms-2">({discountPercent}% OFF)</span>
+                    <span className="discount-percent fw-bold ms-2">({discountPercent}% OFF)</span>
                   </>
                 )}
               </div>

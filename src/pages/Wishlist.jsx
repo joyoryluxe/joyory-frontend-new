@@ -238,7 +238,7 @@ const Wishlist = () => {
                             <span className="original-price text-muted text-decoration-line-through ms-2 fs-6">
                               {formatPrice(item.originalPrice)}
                             </span>
-                            <span className="discount-percent text-danger fw-bold ms-2">
+                            <span className="discount-percent fw-bold ms-2">
                               ({(() => {
                                 const discPercent = item.discountPercent || (
                                   item.originalPrice && item.displayPrice && item.originalPrice > item.displayPrice
