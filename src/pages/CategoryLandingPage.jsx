@@ -331,15 +331,15 @@ export default function CategoryLandingPage() {
     // };
 
 
-     const showToastMsg = (message, type = "error", duration = 3000) => {
-              if (type === "success") {
-                  toast.success(message, { autoClose: duration });
-              } else if (type === "error") {
-                  toast.error(message, { autoClose: duration });
-              } else {
-                  toast.info(message, { autoClose: duration });
-              }
-          };
+    const showToastMsg = (message, type = "error", duration = 3000) => {
+        if (type === "success") {
+            toast.success(message, { autoClose: duration });
+        } else if (type === "error") {
+            toast.error(message, { autoClose: duration });
+        } else {
+            toast.info(message, { autoClose: duration });
+        }
+    };
 
     // ===================== OUT OF STOCK POPUP HANDLER =====================
     const handleOutOfStockClick = (productName) => {
@@ -669,6 +669,31 @@ export default function CategoryLandingPage() {
                                 }}
                             />
 
+                            {prod?.supportsVTO && (
+                                <div 
+                                    className="support-beauty-badge" 
+                                    title="Try It On" 
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        navigate(`/product/${slugPr}`);
+                                    }}
+                                    onTouchStart={(e) => e.stopPropagation()}
+                                >
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                      <path d="M3 7V5a2 2 0 0 1 2-2h2" />
+                                      <path d="M17 3h2a2 2 0 0 1 2 2v2" />
+                                      <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+                                      <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
+                                      <path d="M8 10a4 4 0 1 1 8 0c0 2.2-1.8 4-4 4s-4-1.8-4-4z" />
+                                      <path d="M10 10h.01" />
+                                      <path d="M14 10h.01" />
+                                      <path d="M10 13c.5.5 1.5.7 2 .7s1.5-.2 2-.7" />
+                                      <path d="M6 19c0-1.5 1.5-2.5 6-2.5s6 1 6 2.5" />
+                                    </svg>
+                                    <span className="vto-text">TRY IT ON</span>
+                                </div>
+                            )}
+
                             {/* OUT OF STOCK OVERLAY */}
                             {showOutOfStock && (
                                 <div
@@ -769,8 +794,8 @@ export default function CategoryLandingPage() {
                                     }}
                                 >
                                     {(() => {
-                                      const varName = displayVariant ? getVariantDisplayText(displayVariant) : "";
-                                      return varName && varName.toUpperCase() !== "DEFAULT" ? `${prod.name} - ${varName}` : prod.name;
+                                        const varName = displayVariant ? getVariantDisplayText(displayVariant) : "";
+                                        return varName && varName.toUpperCase() !== "DEFAULT" ? `${prod.name} - ${varName}` : prod.name;
                                     })()}
                                 </h6>
 
@@ -821,7 +846,7 @@ export default function CategoryLandingPage() {
                                                             <span className="original-price text-muted text-decoration-line-through ms-2 fs-6">
                                                                 ₹{orig}
                                                             </span>
-                                                            <span className="discount-percent text-danger fw-bold ms-2">
+                                                            <span className="discount-percent fw-bold ms-2">
                                                                 ({pct}% OFF)
                                                             </span>
                                                         </>
@@ -837,10 +862,10 @@ export default function CategoryLandingPage() {
                                     <div className="d-flex align-items-center justify-content-between">
                                         <button
                                             className={`btn w-100 page-title-main-name addtocartbuttton d-flex align-items-center justify-content-center gap-2 ${showOutOfStock
-                                                    ? "btn-secondary"
-                                                    : isAdding
-                                                        ? ""
-                                                        : "btn-outline-dark"
+                                                ? "btn-secondary"
+                                                : isAdding
+                                                    ? ""
+                                                    : "btn-outline-dark"
                                                 }`}
                                             onClick={(e) => {
                                                 e.stopPropagation();
@@ -993,9 +1018,9 @@ export default function CategoryLandingPage() {
                                         Selected: <span className="text-dark fw-bold">{getVariantDisplayText(displayVariant)}</span>
                                     </div>
                                     <div className="mt-1 mb-2 text-start">
-                                        <span 
-                                            onClick={(e) => { e.stopPropagation(); navigate(`/product/${slugPr}`); }} 
-                                            className="text-decoration-none fw-semibold" 
+                                        <span
+                                            onClick={(e) => { e.stopPropagation(); navigate(`/product/${slugPr}`); }}
+                                            className="text-decoration-none fw-semibold"
                                             style={{ cursor: 'pointer', fontSize: '12px' }}
                                         >
                                             View Details
@@ -1551,43 +1576,45 @@ export default function CategoryLandingPage() {
 
                 {/* In Focus Section - Slider */}
                 {inFocus?.length > 0 && (
-                    <section className="mb-lg-5 mb-4 padding-left-right-sub-category">
-                        <div className="d-flex justify-content-between align-items-center mb-3">
+                    <section className="in-focus-section padding-left-right-sub-category">
+                        <div className="d-flex justify-content-between align-items-center mb-4">
                             <h3 className="top-categories-title p-1 mb-0 page-title-main-name fw-normal">
                                 {inFocusTitle || "In Focus"}
                             </h3>
                         </div>
 
-                        <div>
+                        <div className="in-focus-wrapper">
                             {inFocus.map((product) => (
-                                <div key={product._id} className="bg-color-setup">
-                                    <div className="bg-images"></div>
-                                    <div className="border-0 row">
-                                        <div className="col-lg-4">
-                                            <img
-                                                src={product.image}
-                                                alt={product.name}
-                                                className="img-fluid produtc-common-margin-padding"
-                                                style={{ borderRadius: "10px", objectFit: "contain" }}
-                                            />
+                                <div key={product._id} className="in-focus-card">
+                                    <div className="in-focus-row">
+                                        <div className="in-focus-image-col">
+                                            <div className="in-focus-image-container">
+                                                <img
+                                                    src={product.image}
+                                                    alt={product.name}
+                                                    className="in-focus-image"
+                                                    onClick={() => navigate(`/product/${product.slug}`)}
+                                                />
+                                            </div>
                                         </div>
 
-                                        <div className="col-lg-8">
-                                            <div className="card-body p-2">
-                                                <div className="text-uppercase ms-lg-5 ms-0 mt-lg-5 pt-3 fs-2 ms-lg-0 ms-0 page-title-main-name ">
-                                                    {product.brandName}
-                                                </div>
-
-                                                <h6 className="ms-lg-5 ms-0 mt-2 ms-lg-0 playfair-font-bold main-name-font-size">
-                                                    {product.name}
-                                                </h6>
-
+                                        <div className="in-focus-content-col">
+                                            <div className="in-focus-content">
+                                                <span className="in-focus-subtitle">IN FOCUS</span>
+                                                <h4 className="in-focus-title">
+                                                    {product.brandName && (
+                                                        <span className="brand-highlight">{product.brandName}</span>
+                                                    )}
+                                                    {product.brandName && product.name && " : "}
+                                                    {product.name && (
+                                                        <span className="product-name-highlight">{product.name}</span>
+                                                    )}
+                                                </h4>
                                                 <button
                                                     onClick={() => navigate(`/product/${product.slug}`)}
-                                                    className="bg-transparent page-title-main-name fs-3 cursor-pointer ms-lg-5 ms-0 mt-lg-5 ms-lg-0"
-                                                    style={{ border: "none" }}
+                                                    className="in-focus-btn"
                                                 >
-                                                    SHOP NOW{" "}
+                                                    Shop Now <span className="arrow">→</span>
                                                 </button>
                                             </div>
                                         </div>
@@ -1597,6 +1624,7 @@ export default function CategoryLandingPage() {
                         </div>
                     </section>
                 )}
+
 
                 {/* Top Brands - Slider */}
                 {brands?.length > 0 && (
@@ -1732,7 +1760,7 @@ export default function CategoryLandingPage() {
             {showVariantOverlay && (() => {
                 // Search in topSellers
                 let item = topSellers?.find(p => p._id === showVariantOverlay);
-                
+
                 // Search in findsForYou sections
                 if (!item && findsForYou) {
                     for (const section of findsForYou) {

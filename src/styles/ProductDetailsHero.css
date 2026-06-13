@@ -1,4 +1,106 @@
 /* ProductDetailsHero.css */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
+
+.product-brand-name {
+    font-family: 'Montserrat', sans-serif !important;
+    font-size: 13px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1.5px !important;
+    color: #888888 !important;
+    font-weight: 500 !important;
+    margin-bottom: 6px !important;
+    text-align: left !important;
+    margin-top: 1.5rem !important;
+}
+
+.product-title-text {
+    font-family: 'Montserrat', sans-serif !important;
+    font-size: 24px !important;
+    font-weight: 600 !important;
+    color: #1a1a1a !important;
+    line-height: 1.3 !important;
+    margin-bottom: 8px !important;
+    text-align: left !important;
+    flex-grow: 1 !important;
+}
+
+.product-title-wrapper {
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    margin-bottom: 8px !important;
+    width: 100% !important;
+}
+
+.product-share-btn {
+    background: none !important;
+    border: none !important;
+    padding: 6px !important;
+    cursor: pointer !important;
+    color: #666666 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 50% !important;
+    transition: all 0.2s ease !important;
+    width: 36px !important;
+    height: 36px !important;
+    background-color: #f8f8f8 !important;
+    flex-shrink: 0 !important;
+    margin-top: -4px !important;
+}
+
+.product-share-btn:hover {
+    color: #000000 !important;
+    background-color: #eeeeee !important;
+    transform: scale(1.05) !important;
+}
+
+.product-share-btn svg {
+    width: 16px !important;
+    height: 16px !important;
+}
+
+.product-rating-container {
+    font-family: 'Montserrat', sans-serif !important;
+    font-size: 13px !important;
+    color: #666666 !important;
+    margin-bottom: 16px !important;
+}
+
+.product-price-container {
+    font-family: 'Montserrat', sans-serif !important;
+    margin-bottom: 24px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 2px !important;
+}
+
+.product-current-price {
+    font-size: 22px !important;
+    font-weight: 600 !important;
+    color: #1a1a1a !important;
+}
+
+.product-original-price {
+    font-size: 18px !important;
+    text-decoration: line-through !important;
+    color: #999999 !important;
+    margin-left: 4px !important;
+    font-weight: 500;
+}
+
+.product-discount-label {
+    font-size: 15px !important;
+    font-weight: 500 !important;
+    color: #333333 !important;
+    /* color: #03a685 !important; */
+    /* background-color: #e6f7f4 !important; */
+    /* padding: 2px 8px !important; */
+    border-radius: 4px !important;
+    margin-left: 4px !important;
+}
 
 .product-hero-container {
     display: flex;
@@ -103,6 +205,7 @@
     justify-content: center;
 }
 
+.color-swatch-cross,
 .color-swatch-check {
     color: white;
     font-size: 10px;
@@ -110,15 +213,17 @@
 }
 
 .more-variants-btn {
-    width: 30px;
-    height: 30px;
+    width: 32px;
+    height: 32px;
+    border-radius: 4px !important;
     padding: 0 !important;
     margin: 0 !important;
     font-size: 14px !important;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
     background-color: #fdfdfd !important;
+    line-height: 1 !important;
 }
 
 .text-variant-btn {
@@ -182,6 +287,7 @@
         opacity: 0;
         transform: scale(0.9) translateY(20px);
     }
+
     to {
         opacity: 1;
         transform: scale(1) translateY(0);
@@ -209,6 +315,10 @@
 @media (max-width:768px) {
     .product-hero-container .variant-overlay {
         display: none !important;
+    }
+
+    .d-flex.flex-wrap {
+        gap: 2px !important;
     }
 
     .product-hero-container {
@@ -248,4 +358,668 @@
         position: relative;
         margin-top: 50px !important;
     }
+}
+
+/* Lightbox Styles */
+.lightbox-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: #ffffff;
+    z-index: 9999999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.2s ease-in-out;
+}
+
+.lightbox-close-btn {
+    position: absolute;
+    top: 24px;
+    left: 24px;
+    background: none;
+    border: none;
+    font-size: 44px;
+    color: #333333;
+    cursor: pointer;
+    line-height: 1;
+    z-index: 10000000;
+    transition: color 0.15s ease;
+}
+
+
+
+.lightbox-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 1200px;
+    padding: 0 40px;
+    height: 70vh;
+    box-sizing: border-box;
+}
+
+.lightbox-image-wrapper {
+    flex-grow: 1;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.lightbox-image-wrapper img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    user-select: none;
+}
+
+.lightbox-nav-btn {
+    background: none;
+    border: none;
+    font-size: 48px;
+    color: #888888;
+    cursor: pointer;
+    transition: color 0.15s ease, transform 0.15s ease;
+    padding: 20px;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.lightbox-nav-btn:hover {
+    color: #000000;
+    background: #fff !important;
+}
+
+.lightbox-thumbnails-container {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 30px;
+    width: 100%;
+    max-width: 600px;
+    overflow-x: auto;
+    padding: 10px;
+}
+
+.lightbox-thumbnail {
+    width: 65px;
+    height: 65px;
+    object-fit: cover;
+    border: 1px solid #dddddd;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.lightbox-thumbnail:hover {
+    transform: translateY(-2px);
+}
+
+
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* Responsive adjust for mobile */
+@media (max-width: 768px) {
+    .lightbox-content {
+        padding: 0 10px;
+        height: 60vh;
+    }
+
+    .lightbox-nav-btn {
+        font-size: 32px;
+        padding: 10px;
+    }
+
+    .lightbox-close-btn {
+        top: 16px;
+        left: 16px;
+        font-size: 36px;
+    }
+
+    .lightbox-thumbnail {
+        width: 50px;
+        height: 50px;
+    }
+}
+
+/* Customer Reviews Styling (Mars Cosmetics style) */
+.reviews-section {
+    font-family: 'Montserrat', sans-serif !important;
+}
+
+.text-center-heading-review-setion {
+    font-family: 'Montserrat', sans-serif !important;
+    font-size: 26px !important;
+    font-weight: 600 !important;
+    color: #1a1a1a !important;
+    text-align: center !important;
+    margin-bottom: 2rem !important;
+}
+
+.rating-summary-card {
+    /* border: 1px solid #f0f0f0 !important; */
+    border-radius: 12px !important;
+    padding: 30px 20px !important;
+    background-color: #ffffff !important;
+    margin-bottom: 2rem !important;
+}
+
+.review-write-pill-btn {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+    font-family: 'Montserrat', sans-serif !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    padding: 12px 32px !important;
+    border-radius: 10px !important;
+    border: none !important;
+    transition: background-color 0.2s ease, transform 0.2s ease !important;
+    cursor: pointer !important;
+    outline: none !important;
+}
+
+.review-write-pill-btn:hover {
+    background-color: #222222 !important;
+    transform: scale(1.02) !important;
+}
+
+.rating-summary-card .border-end {
+    border-right: 1px solid #f0f0f0 !important;
+}
+
+.rating-summary-card .border-start {
+    border-left: 1px solid #f0f0f0 !important;
+}
+
+@media (max-width: 768px) {
+    .product-title-text {
+        font-size: 21px !important;
+    }
+
+    .product-current-price {
+        font-size: 20px !important;
+    }
+
+    .product-original-price {
+        font-size: 16px !important;
+    }
+
+    .product-discount-label {
+        font-size: 13px !important;
+    }
+
+    .details-action {
+        font-size: 12px !important;
+    }
+
+    .rating-summary-card {
+        padding: 20px !important;
+    }
+
+    .rating-summary-card .border-end {
+        border-right: none !important;
+        border-bottom: 1px solid #f0f0f0 !important;
+        padding-bottom: 20px !important;
+        margin-bottom: 20px !important;
+    }
+
+    .rating-summary-card .border-start {
+        border-left: none !important;
+        border-top: 1px solid #f0f0f0 !important;
+        padding-top: 20px !important;
+        margin-top: 20px !important;
+    }
+
+    .review-write-pill-btn {
+        width: 60% !important;
+        font-size: 12px !important;
+        padding: 6px 8px !important;
+    }
+}
+
+/* Premium Review Form Styles */
+.review-form-container {
+    font-family: 'Montserrat', sans-serif !important;
+}
+
+.review-form-card {
+    max-width: 800px !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+    /* background-color: #ffffff !important;
+    border: 1px solid #f0f0f0 !important; */
+    border-radius: 16px !important;
+    padding: 40px !important;
+    /* box-shadow: 0 10px 40px rgba(0, 0, 0, 0.03) !important; */
+    animation: formSlideDown 0.3s ease-out !important;
+}
+
+.review-form-title {
+    font-family: 'Montserrat', sans-serif !important;
+    font-size: 22px !important;
+    font-weight: 600 !important;
+    color: #1a1a1a !important;
+}
+
+.btn-close-form {
+    background: none !important;
+    border: none !important;
+    font-size: 30px !important;
+    line-height: 1 !important;
+    color: #999999 !important;
+    cursor: pointer !important;
+    transition: color 0.15s ease !important;
+}
+
+.btn-close-form:hover {
+    color: #000000 !important;
+}
+
+.review-field-label {
+    font-family: 'Montserrat', sans-serif !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    color: #666666 !important;
+    margin-bottom: 8px !important;
+    display: block !important;
+    text-align: left !important;
+}
+
+.review-select-input {
+    font-family: 'Montserrat', sans-serif !important;
+    border: 1px solid #e0e0e0 !important;
+    border-radius: 8px !important;
+    padding: 10px 14px !important;
+    font-size: 14px !important;
+    color: #333333 !important;
+    background-color: #fafafa !important;
+    transition: border-color 0.15s ease, background-color 0.15s ease !important;
+}
+
+.review-select-input:focus {
+    border-color: #000000 !important;
+    background-color: #ffffff !important;
+    box-shadow: none !important;
+}
+
+/* Custom Dropdown Styles */
+.review-custom-select-wrapper {
+    position: relative !important;
+}
+
+.review-form-card .review-custom-select-wrapper {
+    width: 100% !important;
+}
+
+.review-custom-select-trigger {
+    width: 100% !important;
+    text-align: left !important;
+    cursor: pointer !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+}
+
+.review-custom-select-options {
+    position: absolute !important;
+    top: 100% !important;
+    left: 0 !important;
+    width: 100% !important;
+    background-color: #ffffff !important;
+    border: 1px solid #e0e0e0 !important;
+    border-radius: 8px !important;
+    margin-top: 4px !important;
+    padding: 0 !important;
+    list-style: none !important;
+    z-index: 1050 !important;
+    max-height: 250px !important;
+    overflow-y: auto !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+}
+
+.review-custom-select-options li {
+    padding: 10px 14px !important;
+    font-family: 'Montserrat', sans-serif !important;
+    font-size: 14px !important;
+    color: #333333 !important;
+    cursor: pointer !important;
+    transition: background-color 0.15s ease, color 0.15s ease !important;
+    text-align: left !important;
+}
+
+.review-custom-select-options li:hover {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+}
+
+.review-custom-select-options li.selected {
+    background-color: #f5f5f5 !important;
+    font-weight: 600 !important;
+}
+
+.review-custom-select-options li.selected:hover {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+}
+
+.review-filter-shade {
+    width: 220px !important;
+}
+
+.review-filter-rating {
+    width: 140px !important;
+}
+
+.review-filter-sort {
+    width: 160px !important;
+}
+
+.review-textarea {
+    width: 100% !important;
+    font-family: 'Montserrat', sans-serif !important;
+    border: 1px solid #e0e0e0 !important;
+    border-radius: 8px !important;
+    padding: 14px !important;
+    font-size: 14px !important;
+    color: #333333 !important;
+    resize: vertical !important;
+    transition: border-color 0.15s ease !important;
+}
+
+.review-textarea:focus {
+    border-color: #000000 !important;
+    box-shadow: none !important;
+    color: #333333 !important;
+}
+
+.review-textarea::placeholder {
+    color: #333333 !important;
+}
+
+.review-file-upload-zone {
+    border: 2px dashed #e0e0e0 !important;
+    border-radius: 10px !important;
+    padding: 24px 16px !important;
+    text-align: center !important;
+    background-color: #fafafa !important;
+    transition: border-color 0.15s ease, background-color 0.15s ease !important;
+    position: relative !important;
+    cursor: pointer !important;
+}
+
+.review-file-upload-zone:hover {
+    border-color: #000000 !important;
+    background-color: #f5f5f5 !important;
+}
+
+.review-file-input {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    opacity: 0 !important;
+    cursor: pointer !important;
+    z-index: 10 !important;
+}
+
+.review-file-upload-label {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    font-family: 'Montserrat', sans-serif !important;
+    font-size: 14px !important;
+    color: #555555 !important;
+    user-select: none !important;
+}
+
+.review-form-cancel-btn,
+.review-form-submit-btn {
+    width: 170px !important;
+    height: 48px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+}
+
+.review-form-cancel-btn {
+    font-family: 'Montserrat', sans-serif !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    color: #555555 !important;
+    background: none !important;
+    border: 1px solid #e0e0e0 !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+}
+
+.review-form-cancel-btn:hover {
+    background-color: #fafafa !important;
+    border-color: #999999 !important;
+    color: #333333 !important;
+}
+
+.review-form-submit-btn {
+    font-family: 'Montserrat', sans-serif !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    color: #ffffff !important;
+    background-color: #000000 !important;
+    border: none !important;
+    border-radius: 8px !important;
+    margin-top: 0 !important;
+    cursor: pointer !important;
+    transition: background-color 0.15s ease, opacity 0.15s ease !important;
+}
+
+.review-form-submit-btn:hover:not(:disabled) {
+    background-color: #222222 !important;
+}
+
+.review-form-submit-btn:disabled {
+    background-color: #cccccc !important;
+    color: #666666 !important;
+    cursor: not-allowed !important;
+}
+
+@keyframes formSlideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.font-montserrat {
+    font-family: 'Montserrat', sans-serif !important;
+}
+
+/* Review Filters Styles */
+.review-filter-item {
+    height: 40px !important;
+    border: 1px solid #d9d9d9 !important;
+    border-radius: 10px !important;
+    padding: 0 20px !important;
+    font-family: 'Montserrat', sans-serif !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    background-color: #ffffff !important;
+    color: #333333 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* Customize dropdown select style to override bootstrap defaults */
+select.review-filter-item {
+    padding-right: 32px !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23333333' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 14px center !important;
+    background-size: 12px 12px !important;
+}
+
+.review-filter-item:hover {
+    border-color: #000000 !important;
+    color: #000000 !important;
+}
+
+.review-filter-item.active {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+    border-color: #000000 !important;
+}
+
+.review-filter-item.active:hover {
+    background-color: #222222 !important;
+    color: #ffffff !important;
+}
+
+@media (max-width: 768px) {
+    .review-form-card {
+        padding: 24px 16px !important;
+    }
+
+    .review-textarea {
+        max-height: 80px !important;
+        min-height: 90px !important;
+        padding: 10px !important;
+        font-size: 13px !important;
+    }
+
+    .review-file-upload-zone {
+        padding: 12px 10px !important;
+    }
+
+    .review-file-upload-label {
+        font-size: 12px !important;
+    }
+
+    .review-file-upload-label svg {
+        width: 20px !important;
+        height: 20px !important;
+        margin-bottom: 4px !important;
+    }
+
+    .review-form-cancel-btn,
+    .review-form-submit-btn {
+        flex-grow: 1 !important;
+        width: auto !important;
+        height: 40px !important;
+        min-height: 40px !important;
+        font-size: 13px !important;
+        padding: 2px 5px !important;
+        width: 100px !important;
+    }
+
+    .review-filter-item {
+        height: 35px !important;
+        min-height: 35px !important;
+        padding: 0 8px !important;
+        font-size: 11px !important;
+    }
+
+    .review-custom-select-trigger {
+        padding-right: 18px !important;
+        background-position: right 6px center !important;
+        background-size: 8px 8px !important;
+    }
+
+    .review-filter-shade {
+        width: 110px !important;
+    }
+
+    .review-filter-rating {
+        width: 100px !important;
+    }
+
+    .review-filter-sort {
+        width: 105px !important;
+    }
+
+    .filter-bar {
+        position: relative !important;
+        gap: 8px !important;
+    }
+
+    .filter-bar .review-custom-select-wrapper {
+        position: static !important;
+    }
+
+    .filter-bar .review-custom-select-options {
+        left: 0 !important;
+        width: 100% !important;
+        z-index: 1100 !important;
+    }
+}
+
+/* Premium Empty State Styles */
+.empty-reviews-container {
+    background-color: #ffffff !important;
+    border: 1px solid #f0f0f0 !important;
+    border-radius: 16px !important;
+    padding: 50px 30px !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02) !important;
+}
+
+.empty-reviews-container:hover {
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04) !important;
+}
+
+.empty-reviews-icon svg {
+    stroke: #888888 !important;
+    transition: transform 0.3s ease !important;
+}
+
+.empty-reviews-container:hover .empty-reviews-icon svg {
+    transform: scale(1.08) rotate(-5deg) !important;
+    stroke: #1a1a1a !important;
+}
+
+.empty-reviews-heading {
+    font-size: 19px !important;
+    font-weight: 600 !important;
+    color: #1a1a1a !important;
+}
+
+.empty-reviews-text {
+    color: #666666 !important;
+    font-size: 14px !important;
+    max-width: 420px !important;
+    margin: 0 auto 24px auto !important;
+    line-height: 1.6 !important;
 }

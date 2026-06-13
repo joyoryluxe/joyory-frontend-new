@@ -6,7 +6,7 @@
  *              DEL  /api/user/beauty-concierge/history
  */
 import React, { useState, useEffect, useRef, useCallback, useContext } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
 import {
   sendChatMessage,
@@ -92,6 +92,13 @@ function ProductCard({ product, onClick }) {
 export default function BeautyConcierge() {
   const { user } = useContext(UserContext);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const hideFab = ["/login", "/signup", "/affiliatelogin", "/affiliatesignup", "/mainvirtualtryon"].includes(
+    location.pathname.toLowerCase()
+  );
+
+
 
   /* ── state ── */
   const [open, setOpen] = useState(false);
@@ -289,6 +296,8 @@ export default function BeautyConcierge() {
   }
 
   /* ─────────────────────────────────────────────────────────────────────── */
+  if (hideFab) return null;
+
   return (
     <>
       {/* ── Floating Action Button ── */}

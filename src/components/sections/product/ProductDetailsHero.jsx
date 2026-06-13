@@ -1,14 +1,16 @@
 // src/components/ProductDetailsHero.jsx
 import React, { useState, useRef, useMemo, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   FaStar, FaHeart, FaRegHeart, FaShoppingBag,
   FaChevronUp, FaChevronDown, FaTimes, FaCheck,
-  FaExclamationTriangle
+  FaExclamationTriangle, FaShareAlt
 } from "react-icons/fa";
 import "../../../styles/ProductDetailsHero.css";
 import "../../../styles/ForYou.css";
 import { ingredientScan, getProductSafetyScore } from "../../../api/ingredientApi";
 import IngredientDetailsDrawer from "../../../pages/IngredientDetailsDrawer";
+import axiosInstance from "../../../utils/axiosInstance";
 
 // --- Helper Functions ---
 const getSku = (v) => v?.sku || v?.variantSku || `sku-${v?._id || 'default'}`;
@@ -65,7 +67,7 @@ const ProductDetailDescription = ({ product, scannedIngredients, onIngredientCli
                     let badgeClass = "badge bg-light text-dark border p-2";
                     if (ing.isAllergen) badgeClass = "badge bg-danger text-white p-2";
                     else if (ing.isSensitive) badgeClass = "badge bg-warning text-dark p-2";
-                    
+
                     return (
                       <span
                         key={idx}
@@ -114,10 +116,15 @@ const ProductDetailsHero = ({
   setDisplayImages,
   toast
 }) => {
+  const navigate = useNavigate();
   const [addingToCart, setAddingToCart] = useState(false);
   const [thumbnailStartIndex, setThumbnailStartIndex] = useState(0);
   const [showVariantOverlay, setShowVariantOverlay] = useState(false);
   const [selectedVariantType, setSelectedVariantType] = useState("all");
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [lightboxImageIndex, setLightboxImageIndex] = useState(0);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   const [mainImageIndex, setMainImageIndex] = useState(0);
 
@@ -127,6 +134,59 @@ const ProductDetailsHero = ({
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [safetyScore, setSafetyScore] = useState(null);
   const [showScoreInfo, setShowScoreInfo] = useState(false);
+
+  const [dbSupportsVTO, setDbSupportsVTO] = useState(() => {
+    if (product?.supportsVTO) return true;
+    const nameLower = (product?.name || "").toLowerCase();
+    const slugLower = (product?.slug || "").toLowerCase();
+    const slugs = (product?.slugs || []).map(s => s.toLowerCase());
+
+    const knownVtoPrefixes = [
+      "modern-matte-lipstick",
+      "modern matte lipstick",
+      "peptide-glaws-gloss",
+      "peptide glaws gloss",
+      "stay-on-matte-liquid-lipstick",
+      "stay on matte liquid lipstick",
+      "dip-tint-lip-oil",
+      "dip tint lip oil",
+      "smooth-glide-kajal",
+      "smooth glide kajal",
+      "xtraordin-airy-lip-mousse",
+      "xtraordin airy lip mousse",
+      "beyond-matte-lip-liquid",
+      "beyond matte lip liquid",
+      "cc-mousse",
+      "cc mousse"
+    ];
+
+    const matchNameOrSlug = (str) => {
+      if (!str) return false;
+      const clean = str.replace(/[–—_]/g, " ").replace(/-/g, " ").replace(/\s+/g, " ").trim();
+      return knownVtoPrefixes.some(prefix => {
+        const cleanPrefix = prefix.replace(/[–—_]/g, " ").replace(/-/g, " ").replace(/\s+/g, " ").trim();
+        return clean.startsWith(cleanPrefix) || cleanPrefix.startsWith(clean);
+      });
+    };
+
+    if (matchNameOrSlug(nameLower) || matchNameOrSlug(slugLower)) return true;
+    if (slugs.some(s => matchNameOrSlug(s))) return true;
+
+    return false;
+  });
+
+  useEffect(() => {
+    if (!product?._id) return;
+    axiosInstance.get("/api/vto/enabled")
+      .then((res) => {
+        const productsList = res.data.products || res.data || [];
+        const isVtoEnabled = productsList.some((p) => p._id === product._id);
+        if (isVtoEnabled) {
+          setDbSupportsVTO(true);
+        }
+      })
+      .catch((err) => console.error("Error fetching VTO status:", err));
+  }, [product?._id]);
 
   useEffect(() => {
     const fetchScanResult = async () => {
@@ -190,6 +250,29 @@ const ProductDetailsHero = ({
     setMainImageIndex(index);
   };
 
+  useEffect(() => {
+    if (!isLightboxOpen) return;
+
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        setIsLightboxOpen(false);
+      } else if (e.key === "ArrowLeft") {
+        setLightboxImageIndex((prev) => 
+          prev === 0 ? initialDisplayImages.length - 1 : prev - 1
+        );
+      } else if (e.key === "ArrowRight") {
+        setLightboxImageIndex((prev) => 
+          prev === initialDisplayImages.length - 1 ? 0 : prev + 1
+        );
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isLightboxOpen, initialDisplayImages.length]);
+
   const handleAddToCartClick = async () => {
     if (!selectedShade) {
       toast.warn("Please select a variant first");
@@ -209,12 +292,63 @@ const ProductDetailsHero = ({
     }
   };
 
+  const handleShareClick = async () => {
+    const shareData = {
+      title: product?.name || "Product",
+      text: `Check out ${product?.name || "this product"} on Joyory!`,
+      url: window.location.href,
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          console.error('Error sharing:', err);
+        }
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        if (toast && typeof toast.success === 'function') {
+          toast.success("Product link copied to clipboard!");
+        } else {
+          alert("Product link copied to clipboard!");
+        }
+      } catch (err) {
+        console.error('Failed to copy link:', err);
+      }
+    }
+  };
+
+  useEffect(() => {
+    setIsExpanded(false);
+  }, [product?._id]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const handleVariantClick = (variant) => {
     if (isOutOfStock(variant)) {
       toast.warn("This variant is out of stock");
       return;
     }
     handleVariantSelect(variant);
+  };
+
+  const handleMoreVariantsClick = () => {
+    if (window.innerWidth > 768) {
+      setIsExpanded(true);
+    } else {
+      setSelectedVariantType("color");
+      setShowVariantOverlay(true);
+    }
   };
 
   const visibleThumbnails = initialDisplayImages.slice(
@@ -226,6 +360,14 @@ const ProductDetailsHero = ({
   const canScrollDown = thumbnailStartIndex + thumbnailsPerView < initialDisplayImages.length;
 
   const currentMainImage = initialDisplayImages[mainImageIndex] || initialDisplayImages[0] || "/placeholder.png";
+
+  const originalPrice = selectedShade?.originalPrice || product.originalPrice;
+  const displayPrice = selectedShade?.displayPrice || product.price;
+
+  let discountPercent = parseFloat(selectedShade?.discountPercent || product.discountPercent || 0);
+  if (!discountPercent && originalPrice > displayPrice) {
+    discountPercent = Math.round(((originalPrice - displayPrice) / originalPrice) * 100);
+  }
 
   return (
     <article className="product-hero-container pb-lg-0 pb-0">
@@ -271,8 +413,41 @@ const ProductDetailsHero = ({
               src={currentMainImage}
               alt={product?.name || "Product"}
               loading="lazy"
+              style={{ cursor: "zoom-in" }}
+              onClick={() => {
+                setLightboxImageIndex(mainImageIndex);
+                setIsLightboxOpen(true);
+              }}
               onError={(e) => { e.currentTarget.src = "/placeholder.png"; }}
             />
+
+            {(product?.supportsVTO || dbSupportsVTO) && (
+              <div 
+                className="support-beauty-badge" 
+                title="Try It On" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const sku = selectedShade ? getSku(selectedShade) : null;
+                  navigate(`/Mainvirtualtryon?productId=${product.slug || product._id}${sku ? `&sku=${sku}` : ''}`);
+                }}
+                onTouchStart={(e) => e.stopPropagation()}
+                style={{ cursor: "pointer" }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 7V5a2 2 0 0 1 2-2h2" />
+                  <path d="M17 3h2a2 2 0 0 1 2 2v2" />
+                  <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+                  <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
+                  <path d="M8 10a4 4 0 1 1 8 0c0 2.2-1.8 4-4 4s-4-1.8-4-4z" />
+                  <path d="M10 10h.01" />
+                  <path d="M14 10h.01" />
+                  <path d="M10 13c.5.5 1.5.7 2 .7s1.5-.2 2-.7" />
+                  <path d="M6 19c0-1.5 1.5-2.5 6-2.5s6 1 6 2.5" />
+                </svg>
+                <span className="vto-text">TRY IT ON</span>
+              </div>
+            )}
+
             <button
               className="product-hero-wishlist-btn"
               onClick={toggleWishlist}
@@ -283,35 +458,45 @@ const ProductDetailsHero = ({
           </div>
         </div>
       </div>
-
       {/* RIGHT SIDE - INFO */}
       <div className="product-hero-right">
-        <p className="text-muted mb-1 text-start mt-lg-2 mt-4">
+        <p className="product-brand-name">
           {product.brand?.name || product.brand || "Brand Name"}
         </p>
-        {(() => {
-          const varText = selectedShade ? getVariantDisplayText(selectedShade) : "";
-          const mainTitleName = varText && varText.toUpperCase() !== "DEFAULT" ? `${product.name} - ${varText}` : product.name;
-          return <h1 className="fs-3 fw-bold mb-2 text-start">{mainTitleName}</h1>;
-        })()}
+        <div className="product-title-wrapper">
+          {(() => {
+            const varText = selectedShade ? getVariantDisplayText(selectedShade) : "";
+            const mainTitleName = varText && varText.toUpperCase() !== "DEFAULT" ? `${product.name} - ${varText}` : product.name;
+            return <h1 className="product-title-text">{mainTitleName}</h1>;
+          })()}
+          <button 
+            type="button" 
+            className="product-share-btn" 
+            onClick={handleShareClick}
+            title="Share Product"
+            aria-label="Share Product"
+          >
+            <FaShareAlt />
+          </button>
+        </div>
 
-        <div className="d-flex align-items-center gap-1 mb-3 text-start">
+        <div className="product-rating-container d-flex align-items-center gap-1">
           {[...Array(5)].map((_, i) => (
             <FaStar
               key={i}
               color={i < Math.round(reviewSummary.avgRating || 0) ? "#ffc107" : "#e4e5e9"}
             />
           ))}
-          <span className="text-muted ms-2">
+          <span className="ms-2">
             ({reviewSummary.totalReviews || 0} reviews)
           </span>
         </div>
 
         {/* Clean Beauty Safety Score Widget */}
-        {safetyScore && (
+        {/* {safetyScore && (
           <div className="clean-beauty-widget-card p-3 mb-4 border rounded bg-white text-start shadow-sm" style={{ border: "1px solid #fae5e9 !important" }}>
             <div className="d-flex align-items-center gap-3">
-              {/* SVG Circle Progress */}
+            
               <div className="position-relative flex-shrink-0" style={{ width: "55px", height: "55px" }}>
                 <svg width="55" height="55" viewBox="0 0 60 60" style={{ transform: "rotate(-90deg)" }}>
                   <circle
@@ -330,8 +515,8 @@ const ProductDetailsHero = ({
                       safetyScore.score >= 85
                         ? "#10b981" // Green
                         : safetyScore.score >= 65
-                        ? "#f59e0b" // Yellow
-                        : "#ef4444" // Red
+                          ? "#f59e0b" // Yellow
+                          : "#ef4444" // Red
                     }
                     strokeWidth="5"
                     fill="transparent"
@@ -348,7 +533,7 @@ const ProductDetailsHero = ({
                 </div>
               </div>
 
-              {/* Text Information */}
+             
               <div className="flex-grow-1">
                 <div className="d-flex align-items-center justify-content-between">
                   <span className="small text-muted fw-semibold" style={{ fontSize: "10.5px", letterSpacing: "0.5px" }}>CLEAN BEAUTY INDEX</span>
@@ -373,13 +558,13 @@ const ProductDetailsHero = ({
                         safetyScore.score >= 85
                           ? "#10b981"
                           : safetyScore.score >= 65
-                          ? "#f59e0b"
-                          : "#ef4444",
+                            ? "#f59e0b"
+                            : "#ef4444",
                       marginLeft: "4px",
                     }}
                   />
                 </h5>
-                {/* Counts Bar */}
+              
                 <div className="d-flex gap-3 mt-1" style={{ fontSize: "11px" }}>
                   <span className="d-flex align-items-center gap-1 text-success fw-medium">
                     <span
@@ -418,7 +603,7 @@ const ProductDetailsHero = ({
               </div>
             </div>
 
-            {/* Explanation Details collapse */}
+        
             {showScoreInfo && (
               <div className="mt-3 pt-3 border-top bg-light p-2 rounded text-muted" style={{ fontSize: "11px", lineHeight: "1.4" }}>
                 <p className="mb-2">
@@ -438,30 +623,32 @@ const ProductDetailsHero = ({
               </div>
             )}
           </div>
-        )}
+        )} */}
 
-        <div className="d-flex align-items-center gap-3 mb-4 text-start">
-          <span className="fs-2 fw-bold text-dark">
-            Rs {selectedShade?.displayPrice || product.price}
+        <div className="product-price-container">
+          <span className="product-current-price">
+            Rs {displayPrice}
           </span>
-          {selectedShade?.originalPrice > selectedShade?.displayPrice && (
-            <del className="text-muted fs-5">Rs {selectedShade.originalPrice}</del>
+          {originalPrice > displayPrice && (
+            <span className="product-original-price">Rs {originalPrice}</span>
           )}
-          <span className="text-success fw-bold">10% off</span>
+          {discountPercent > 0 && (
+            <span className="product-discount-label">({discountPercent}% off)</span>
+          )}
         </div>
 
         {/* Selected Variant Display */}
         {selectedShade && (
           <div className="text-muted small text-start mb-3">
-            Selected Option: <span className="fw-bold text-dark">{getVariantDisplayText(selectedShade)}</span>
+            Selected: <span className="fw-bold text-dark">{getVariantDisplayText(selectedShade)}</span>
           </div>
         )}
 
         {/* Color Variants */}
         <div className="mb-4 text-start">
           <p className="fw-bold mb-2">Color</p>
-          <div className="d-flex flex-wrap gap-2">
-            {groupedVariants.color.slice(0, 4).map((v, i) => {
+          <div className="d-flex flex-wrap align-items-center gap-2">
+            {((!isMobile || isExpanded) ? groupedVariants.color : groupedVariants.color.slice(0, 4)).map((v, i) => {
               const isSelected = selectedShade?.sku === getSku(v);
               const outOfStock = isOutOfStock(v);
               return (
@@ -482,16 +669,16 @@ const ProductDetailsHero = ({
                 </div>
               );
             })}
-            {groupedVariants.color.length > 4 && (
-              <button
+            {groupedVariants.color.length > 4 && isMobile && !isExpanded && (
+              <div
                 className="btn border fw-normal more-variants-btn"
-                onClick={() => {
-                  setSelectedVariantType("color");
-                  setShowVariantOverlay(true);
-                }}
+                onClick={handleMoreVariantsClick}
+                role="button"
+                tabIndex={0}
+                style={{ cursor: "pointer" }}
               >
                 +{groupedVariants.color.length - 4}
-              </button>
+              </div>
             )}
           </div>
         </div>
@@ -540,7 +727,7 @@ const ProductDetailsHero = ({
         {/* Action Buttons */}
         <div className="d-flex gap-3 mb-4">
           <button
-            className="btn btn-dark flex-grow-1 py-3 fw-normal action-btn page-title-main-name"
+            className="btn btn-dark flex-grow-1 py-3 fw-normal action-btn page-title-main-name details-action"
             onClick={handleAddToCartClick}
             disabled={addingToCart || !selectedShade || isOutOfStock(selectedShade)}
           >
@@ -549,7 +736,7 @@ const ProductDetailsHero = ({
           </button>
 
           <button
-            className="btn btn-outline-dark flex-grow-1 py-3 fw-normal action-btn"
+            className="btn btn-outline-dark flex-grow-1 py-3 fw-normal action-btn details-action"
             onClick={toggleWishlist}
             disabled={wishlistLoading}
           >
@@ -557,10 +744,10 @@ const ProductDetailsHero = ({
           </button>
         </div>
 
-        <ProductDetailDescription 
-          product={product} 
-          scannedIngredients={scanResult?.ingredients} 
-          onIngredientClick={handleIngredientClick} 
+        <ProductDetailDescription
+          product={product}
+          scannedIngredients={scanResult?.ingredients}
+          onIngredientClick={handleIngredientClick}
         />
       </div>
 
@@ -603,7 +790,7 @@ const ProductDetailsHero = ({
                         <div style={{
                           width: "32px",
                           height: "32px",
-                          borderRadius: "20%",
+                          borderRadius: "4px",
                           backgroundColor: v.hex || "#ccc",
                           border: isSelected ? "3px solid #000" : "1px solid #ddd",
                           opacity: outOfStock ? 0.4 : 1,
@@ -754,16 +941,19 @@ const ProductDetailsHero = ({
                             }
                           }}
                         >
-                          <button
+                          <div
                             className={`mobile-sheet-color-circle ${isSelected ? "selected" : ""} ${outOfStock ? "oos" : ""}`}
                             style={{
                               backgroundColor: v.hex || "#ccc",
                               border: isSelected ? "3px solid #000" : "1px solid #e0e0e0",
-                              width: "48px",
-                              height: "48px",
-                              borderRadius: "50%",
+                              width: "32px",
+                              height: "32px",
+                              borderRadius: "20%",
                               position: "relative",
-                              cursor: outOfStock ? "not-allowed" : "pointer"
+                              cursor: outOfStock ? "not-allowed" : "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center"
                             }}
                           >
                             {isSelected && <FaCheck style={{ color: "#fff", fontSize: "14px" }} />}
@@ -774,7 +964,7 @@ const ProductDetailsHero = ({
                                 color: "red", fontWeight: "bold", fontSize: 18, pointerEvents: "none"
                               }}>✕</span>
                             )}
-                          </button>
+                          </div>
                           <span className="mobile-sheet-variant-name" style={{ fontSize: "11px", marginTop: "4px" }}>
                             {v.shadeName || v.name}
                           </span>
@@ -877,6 +1067,73 @@ const ProductDetailsHero = ({
         onClose={() => setIsDrawerOpen(false)}
         ingredient={selectedIngredient}
       />
+
+      {/* Lightbox Modal */}
+      {isLightboxOpen && (
+        <div className="lightbox-overlay" onClick={() => setIsLightboxOpen(false)}>
+          <button 
+            className="lightbox-close-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsLightboxOpen(false);
+            }}
+            aria-label="Close"
+          >
+            &times;
+          </button>
+          
+          <div className="lightbox-content" onClick={(e) => e.stopPropagation()}>
+            <button
+              className="lightbox-nav-btn prev"
+              onClick={(e) => {
+                e.stopPropagation();
+                setLightboxImageIndex((prev) => 
+                  prev === 0 ? initialDisplayImages.length - 1 : prev - 1
+                );
+              }}
+              aria-label="Previous image"
+            >
+              &#10094;
+            </button>
+            
+            <div className="lightbox-image-wrapper">
+              <img
+                src={initialDisplayImages[lightboxImageIndex] || "/placeholder.png"}
+                alt={`product-large-${lightboxImageIndex}`}
+                onError={(e) => { e.currentTarget.src = "/placeholder.png"; }}
+              />
+            </div>
+            
+            <button
+              className="lightbox-nav-btn next"
+              onClick={(e) => {
+                e.stopPropagation();
+                setLightboxImageIndex((prev) => 
+                  prev === initialDisplayImages.length - 1 ? 0 : prev + 1
+                );
+              }}
+              aria-label="Next image"
+            >
+              &#10095;
+            </button>
+          </div>
+
+          {/* Thumbnail list at the bottom */}
+          {initialDisplayImages.length > 1 && (
+            <div className="lightbox-thumbnails-container" onClick={(e) => e.stopPropagation()}>
+              {initialDisplayImages.map((img, idx) => (
+                <img
+                  key={idx}
+                  src={img}
+                  alt={`lightbox-thumb-${idx}`}
+                  className={`lightbox-thumbnail ${idx === lightboxImageIndex ? 'active' : ''}`}
+                  onClick={() => setLightboxImageIndex(idx)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </article>
   );
 };

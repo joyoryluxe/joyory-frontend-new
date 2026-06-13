@@ -8,7 +8,8 @@ import "../styles/CartPage.css";
 import "../styles/ForYou.css";
 import "../App.css";
 import "../styles/Foundation.css";
-import { CartContext } from "../Context/Cartcontext";
+import { CartContext } from "../context/CartContext";
+import { WishlistContext } from "../context/WishlistContext";
 import { FaTimes, FaHeart, FaRegHeart, FaChevronDown, FaCheck } from "react-icons/fa";
 import { Modal, Button, Alert } from "react-bootstrap";
 import { ToastContainer, toast } from "react-toastify";
@@ -298,6 +299,31 @@ const RecoProductCard = ({ product, navigate, user, onAddToCartSuccess }) => {
             }}
           />
 
+          {(product?.supportsVTO || product?.product?.supportsVTO) && (
+            <div 
+              className="support-beauty-badge" 
+              title="Try It On" 
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/product/${getProductSlug()}`);
+              }}
+              onTouchStart={(e) => e.stopPropagation()}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 7V5a2 2 0 0 1 2-2h2" />
+                <path d="M17 3h2a2 2 0 0 1 2 2v2" />
+                <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+                <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
+                <path d="M8 10a4 4 0 1 1 8 0c0 2.2-1.8 4-4 4s-4-1.8-4-4z" />
+                <path d="M10 10h.01" />
+                <path d="M14 10h.01" />
+                <path d="M10 13c.5.5 1.5.7 2 .7s1.5-.2 2-.7" />
+                <path d="M6 19c0-1.5 1.5-2.5 6-2.5s6 1 6 2.5" />
+              </svg>
+              <span className="vto-text">TRY IT ON</span>
+            </div>
+          )}
+
           {/* OUT OF STOCK OVERLAY */}
           {showOutOfStock && (
             <div
@@ -428,7 +454,7 @@ const RecoProductCard = ({ product, navigate, user, onAddToCartSuccess }) => {
                 {originalPrice > displayPrice && !showOutOfStock && (
                   <>
                     <span className="original-price text-muted text-decoration-line-through ms-2 fs-6">{formatPrice(originalPrice)}</span>
-                    <span className="discount-percent text-danger fw-bold ms-2">({discountPercent}% OFF)</span>
+                    <span className="discount-percent fw-bold ms-2">({discountPercent}% OFF)</span>
                   </>
                 )}
               </div>
@@ -439,10 +465,10 @@ const RecoProductCard = ({ product, navigate, user, onAddToCartSuccess }) => {
               <div className="d-flex align-items-center justify-content-between">
                 <button
                   className={`btn w-100 page-title-main-name addtocartbuttton d-flex align-items-center justify-content-center gap-2 ${showOutOfStock
-                      ? "btn-secondary"
-                      : addingToCart
-                        ? ""
-                        : "btn-outline-dark"
+                    ? "btn-secondary"
+                    : addingToCart
+                      ? ""
+                      : "btn-outline-dark"
                     }`}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -888,6 +914,7 @@ const CartPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { syncCartFromBackend } = useContext(CartContext);
+  const { syncWishlist } = useContext(WishlistContext);
   const { user } = useContext(UserContext);
 
   const [cartData, setCartData] = useState(null);
@@ -955,6 +982,7 @@ const CartPage = () => {
 
       handleCloseConfirm();
       await syncCartFromBackend();
+      await syncWishlist();
       navigate("/Wishlist");
     } catch (err) {
       console.error("Error moving item to wishlist:", err);
@@ -1075,6 +1103,7 @@ const CartPage = () => {
       });
       if (!res.ok) throw new Error("Failed to update quantity");
       await fetchCart(appliedCoupon);
+      await syncCartFromBackend();
     } catch (err) {
       console.error(err);
       alert("Failed to update quantity. Please try again.");
@@ -1093,6 +1122,7 @@ const CartPage = () => {
       const res = await fetch(url, { method: "DELETE", credentials: "include" });
       if (!res.ok) throw new Error("Server failed to remove item");
       await fetchCart(appliedCoupon);
+      await syncCartFromBackend();
     } catch (err) {
       console.error(err);
       alert("Failed to remove item from cart.");
@@ -1468,7 +1498,7 @@ const CartPage = () => {
                           {variant.originalPrice && variant.originalPrice > item.price ? (
                             <>
                               <span className="text-muted text-decoration-line-through me-1">₹{variant.originalPrice}</span>
-                              <span className="fw-bold text-danger">₹{item.price}</span>
+                              <span className="fw-bold">₹{item.price}</span>
                             </>
                           ) : (
                             <span className="fw-400 page-title-main-name">₹{item.price}</span>
@@ -1749,8 +1779,8 @@ const CartPage = () => {
         </Modal.Header>
         <Modal.Body className="page-title-main-name">Are you sure you want to remove "{itemToRemove?.name}" from your cart?</Modal.Body>
         <Modal.Footer>
-          <button 
-            className="modal-footer-btn" 
+          <button
+            className="modal-footer-btn"
             onClick={handleConfirmRemove}
             disabled={movingToWishlist}
           >

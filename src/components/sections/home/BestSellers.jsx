@@ -850,6 +850,31 @@ const BestSellers = () => {
                                                     }}
                                                 />
 
+                                                {item?.supportsVTO && (
+                                                    <div 
+                                                        className="support-beauty-badge" 
+                                                        title="Try It On" 
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleProductClick(item);
+                                                        }}
+                                                        onTouchStart={(e) => e.stopPropagation()}
+                                                    >
+                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                                            <path d="M3 7V5a2 2 0 0 1 2-2h2" />
+                                                            <path d="M17 3h2a2 2 0 0 1 2 2v2" />
+                                                            <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+                                                            <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
+                                                            <path d="M8 10a4 4 0 1 1 8 0c0 2.2-1.8 4-4 4s-4-1.8-4-4z" />
+                                                            <path d="M10 10h.01" />
+                                                            <path d="M14 10h.01" />
+                                                            <path d="M10 13c.5.5 1.5.7 2 .7s1.5-.2 2-.7" />
+                                                            <path d="M6 19c0-1.5 1.5-2.5 6-2.5s6 1 6 2.5" />
+                                                        </svg>
+                                                        <span className="vto-text">TRY IT ON</span>
+                                                    </div>
+                                                )}
+
                                                 {/* OUT OF STOCK OVERLAY */}
                                                 {showOutOfStock && (
                                                     <div
@@ -1003,7 +1028,7 @@ const BestSellers = () => {
                                                                     <span className="original-price text-muted text-decoration-line-through ms-2 fs-6">
                                                                         {formatPrice(displayVariant.originalPrice)}
                                                                     </span>
-                                                                    <span className="discount-percent text-danger fw-bold ms-2">
+                                                                    <span className="discount-percent fw-bold ms-2">
                                                                         ({displayVariant.discountPercent || 0}% OFF)
                                                                     </span>
                                                                 </>
@@ -1299,7 +1324,7 @@ const BestSellers = () => {
                                                         }
                                                     }}
                                                 >
-                                                                                                    <div
+                                                    <div
                                                         className={`mobile-sheet-color-circle ${isSelected ? "selected" : ""} ${isOutOfStock ? "oos" : ""}`}
                                                         style={{ backgroundColor: v.hex || "#ccc", position: "relative" }}
                                                     >
@@ -1330,40 +1355,40 @@ const BestSellers = () => {
                                             );
                                         })}
                                     </div>
-                                  )}
+                                )}
 
-                                 {hasTextVariants && !hasColorVariants && (
+                                {hasTextVariants && !hasColorVariants && (
                                     <div className="mobile-sheet-variants-grid">
                                         {groupedVariants.text.map((v) => {
-                                             const isSelected = displayVariant.sku === v.sku;
-                                             const isOutOfStock = (v.stock ?? 0) <= 0;
-                                             const variantText = getVariantDisplayText(v);
+                                            const isSelected = displayVariant.sku === v.sku;
+                                            const isOutOfStock = (v.stock ?? 0) <= 0;
+                                            const variantText = getVariantDisplayText(v);
 
-                                             return (
-                                                 <div
-                                                     key={getSku(v) || v._id}
-                                                     className="mobile-sheet-variant-item"
-                                                     onClick={(e) => {
-                                                         e.stopPropagation();
-                                                         if (!isOutOfStock) {
-                                                             handleVariantSelect(item._id, v);
-                                                             setTempSelectedVariants(prev => ({ ...prev, [item._id]: v }));
-                                                         }
-                                                     }}
-                                                 >
-                                                     <button className={`mobile-sheet-text-pill ${isSelected ? "selected" : ""} ${isOutOfStock ? "oos" : ""}`}>
-                                                         <span>{variantText}</span>
-                                                         {isSelected && <FaCheck style={{ fontSize: '10px' }} />}
-                                                         {isOutOfStock && (
-                                                             <span style={{
-                                                                 color: 'red',
-                                                                 fontWeight: 'bold',
-                                                                 marginLeft: '6px',
-                                                                 fontSize: '12px',
-                                                             }}>✕</span>
-                                                         )}
-                                                     </button>
-                                                 </div>
+                                            return (
+                                                <div
+                                                    key={getSku(v) || v._id}
+                                                    className="mobile-sheet-variant-item"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        if (!isOutOfStock) {
+                                                            handleVariantSelect(item._id, v);
+                                                            setTempSelectedVariants(prev => ({ ...prev, [item._id]: v }));
+                                                        }
+                                                    }}
+                                                >
+                                                    <button className={`mobile-sheet-text-pill ${isSelected ? "selected" : ""} ${isOutOfStock ? "oos" : ""}`}>
+                                                        <span>{variantText}</span>
+                                                        {isSelected && <FaCheck style={{ fontSize: '10px' }} />}
+                                                        {isOutOfStock && (
+                                                            <span style={{
+                                                                color: 'red',
+                                                                fontWeight: 'bold',
+                                                                marginLeft: '6px',
+                                                                fontSize: '12px',
+                                                            }}>✕</span>
+                                                        )}
+                                                    </button>
+                                                </div>
                                             );
                                         })}
                                     </div>

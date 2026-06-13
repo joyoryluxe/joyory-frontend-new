@@ -1,147 +1,22 @@
-/* ProductPage – Unified API & Full Feature Edition with Multi-Filter Support */
 import React, { useState, useEffect, useContext, useRef, useCallback, useMemo } from "react";
-import { useParams, useNavigate, useLocation, useSearchParams } from "react-router-dom";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { FaStar, FaHeart, FaRegHeart, FaChevronDown, FaTimes, FaCheck } from "react-icons/fa";
 import Header from "../components/common/Header";
 import Footer from "../components/common/Footer";
-// import { CartContext } from "../Context/CartContext";
 import { UserContext } from "../context/UserContext.jsx";
 import BrandFilter from "../components/common/BrandFilter";
-import "../styles/ProductPage.css";
-import "../styles/BestSellers.css";
-import axios from "axios";
-import { toast } from "react-toastify";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay, Pagination, Navigation } from "swiper/modules";
-import "swiper/css";
-import "swiper/css/pagination";
-import "swiper/css/navigation";
-import updownarrow from "../assets/updownarrow.svg";
+import axiosInstance from "../utils/axiosInstance.js";
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import updownarrow from "../assets/updownarrow.svg";
 import filtering from "../assets/filtering.svg";
 import Bag from "../assets/Bag.svg";
+import { toast } from "react-toastify";
+import "../styles/ProductPage.css";
+import "../styles/BestSellers.css";
+import "../styles/ForYou.css";
 
-// ===================== OUT OF STOCK POPUP COMPONENT =====================
-const OutOfStockPopup = ({ isOpen, onClose, productName }) => {
-    if (!isOpen) return null;
-
-    return (
-        <div
-            style={{
-                position: 'fixed',
-                top: 0,
-                left: 0,
-                width: '100%',
-                height: '100%',
-                backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                zIndex: 9999,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-            }}
-            onClick={onClose}
-        >
-            <div
-                style={{
-                    backgroundColor: '#fff',
-                    borderRadius: '12px',
-                    padding: '30px 40px',
-                    maxWidth: '400px',
-                    width: '90%',
-                    textAlign: 'center',
-                    boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
-                    position: 'relative',
-                    animation: 'popupSlideIn 0.3s ease-out',
-                }}
-                onClick={(e) => e.stopPropagation()}
-            >
-                <button
-                    onClick={onClose}
-                    style={{
-                        position: 'absolute',
-                        top: '10px',
-                        right: '15px',
-                        background: 'none',
-                        border: 'none',
-                        fontSize: '24px',
-                        cursor: 'pointer',
-                        color: '#666',
-                    }}
-                >
-                    <FaTimes />
-                </button>
-
-                <div
-                    style={{
-                        width: '60px',
-                        height: '60px',
-                        backgroundColor: '#fee2e2',
-                        borderRadius: '50%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        margin: '0 auto 15px',
-                    }}
-                >
-                    <FaTimes
-                        style={{
-                            color: '#dc3545',
-                            fontSize: '30px',
-                        }}
-                    />
-                </div>
-
-                <h5
-                    className="page-title-main-name"
-                    style={{
-                        fontSize: '18px',
-                        fontWeight: 600,
-                        marginBottom: '10px',
-                        color: '#333',
-                    }}
-                >
-                    Out of Stock
-                </h5>
-
-                <p
-                    style={{
-                        fontSize: '14px',
-                        color: '#666',
-                        marginBottom: '20px',
-                    }}
-                >
-                    "Oops! {productName} is out of stock right now. Check back soon or discover similar items."
-                </p>
-
-                <button
-                    onClick={onClose}
-                    className="btn btn-dark w-100"
-                    style={{
-                        borderRadius: '8px',
-                        padding: '10px',
-                    }}
-                >
-                    Got it
-                </button>
-            </div>
-            <style>{`
-        @keyframes popupSlideIn {
-          from {
-            opacity: 0;
-            transform: scale(0.9);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1);
-          }
-        }
-      `}</style>
-        </div>
-    );
-};
-
-const CART_API_BASE = "https://beauty.joyory.com/api/user/cart";
-const PRODUCT_ALL_API = "https://beauty.joyory.com/api/user/products/all";
+const CART_API_BASE = "/api/user/cart";
+const PRODUCT_ALL_API = "/api/user/products/all";
 
 /* ─── helpers ───────────────────────────────────────────────────────────── */
 const getSku = (v) => v?.sku || v?.variantSku || `sku-${v?._id || "default"}`;
@@ -216,38 +91,16 @@ const parseFiltersFromSearchParams = (searchParams) => {
     return initialFilters;
 };
 
-export default function ProductPage() {
-    const params = useParams();
-    const slug = params.slug || params["*"];
+export default function VtoProducts() {
     const navigate = useNavigate();
     const location = useLocation();
     const [searchParams, setSearchParams] = useSearchParams();
 
-    let effectiveSlug = slug;
-    if (slug && slug.includes("/")) {
-        const segments = slug.split("/");
-        effectiveSlug = segments[segments.length - 1];
-    }
-
     /* ── state ──────────────────────────────────────────────────────────────── */
     const [allProducts, setAllProducts] = useState([]);
     const [totalCount, setTotalCount] = useState(0);
-    const [pageTitle, setPageTitle] = useState("Products");
-    const [bannerImages, setBannerImages] = useState([]); // 🔥 Changed to array
-    const swiperRef = useRef(null); // 🔥 Added for Swiper
-
-    const [trendingCategories, setTrendingCategories] = useState([]);
-    const [shopBySkinTypes, setShopBySkinTypes] = useState([]);
-    const [shopByIngredients, setShopByIngredients] = useState([]);
-    const [promotions, setPromotions] = useState([]);
-
     const [filterData, setFilterData] = useState(null);
     const lastContextRef = useRef("");
-
-    const activeCategorySlug = useMemo(() => {
-        return location.pathname.includes("/category/") && effectiveSlug ? effectiveSlug : null;
-    }, [location.pathname, effectiveSlug]);
-    const [activeCategoryName, setActiveCategoryName] = useState("");
 
     const [selectedVariants, setSelectedVariants] = useState({});
     const [tempSelectedVariants, setTempSelectedVariants] = useState({});
@@ -274,6 +127,7 @@ export default function ProductPage() {
         }
         return vars.every(v => (v.stock || 0) <= 0);
     };
+
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
     const [hasMore, setHasMore] = useState(true);
@@ -303,17 +157,6 @@ export default function ProductPage() {
     const { user } = useContext(UserContext);
     const loaderRef = useRef(null);
 
-    /* ── toast ──────────────────────────────────────────────────────────────── */
-    const showToastMsg = (msg, type = "error", dur = 3000) => {
-        if (type === "success") {
-            toast.success(msg, { autoClose: dur });
-        } else if (type === "info") {
-            toast.info(msg, { autoClose: dur });
-        } else {
-            toast.error(msg, { autoClose: dur });
-        }
-    };
-
     /* ── wishlist ───────────────────────────────────────────────────────────── */
     const isInWishlist = (pid, sku) => {
         if (!pid || !sku) return false;
@@ -323,7 +166,7 @@ export default function ProductPage() {
     const fetchWishlistData = async () => {
         try {
             if (user && !user.guest) {
-                const { data } = await axios.get("https://beauty.joyory.com/api/user/wishlist", { withCredentials: true });
+                const { data } = await axiosInstance.get("/api/user/wishlist");
                 if (data.success) setWishlistData(data.wishlist || []);
             } else {
                 const local = JSON.parse(localStorage.getItem("guestWishlist") || "[]");
@@ -336,11 +179,11 @@ export default function ProductPage() {
 
     const toggleWishlist = async (prod, variant) => {
         if (!user || user.guest) {
-            showToastMsg("Please login to use wishlist", "error");
+            toast.error("Please login to use wishlist");
             navigate("/login", { state: { from: location.pathname } });
             return;
         }
-        if (!prod || !variant) return showToastMsg("Select a variant first", "error");
+        if (!prod || !variant) return toast.error("Select a variant first");
         const pid = prod._id;
         const sku = getSku(variant);
         setWishlistLoading((p) => ({ ...p, [pid]: true }));
@@ -348,62 +191,48 @@ export default function ProductPage() {
             const inWl = isInWishlist(pid, sku);
             if (user && !user.guest) {
                 if (inWl) {
-                    await axios.delete(`https://beauty.joyory.com/api/user/wishlist/${pid}`, { withCredentials: true, data: { sku } });
-                    showToastMsg("Removed from wishlist!", "success");
+                    await axiosInstance.delete(`/api/user/wishlist/${pid}`, { data: { sku } });
+                    toast.success("Removed from wishlist!");
                 } else {
-                    await axios.post(`https://beauty.joyory.com/api/user/wishlist/${pid}`, { sku }, { withCredentials: true });
-                    showToastMsg("Added to wishlist!", "success");
+                    await axiosInstance.post(`/api/user/wishlist/${pid}`, { sku });
+                    toast.success("Added to wishlist!");
                 }
                 await fetchWishlistData();
             } else {
                 let g = JSON.parse(localStorage.getItem("guestWishlist") || "[]");
                 if (inWl) {
                     g = g.filter((it) => !(it._id === pid && it.sku === sku));
-                    showToastMsg("Removed from wishlist!", "success");
+                    toast.success("Removed from wishlist!");
                 } else {
                     g.push({
-                        _id: pid, name: prod.name, brand: getBrandName(prod),
+                        _id: pid,
+                        name: prod.name,
+                        brand: getBrandName(prod),
                         displayPrice: variant.displayPrice || variant.discountedPrice || prod.price,
                         originalPrice: variant.originalPrice || variant.mrp || prod.price,
                         image: variant.images?.[0] || prod.images?.[0],
-                        sku, variantName: variant.shadeName || "Default", stock: variant.stock,
+                        sku,
+                        variantName: variant.shadeName || "Default",
+                        stock: variant.stock,
                     });
-                    showToastMsg("Added to wishlist!", "success");
+                    toast.success("Added to wishlist!");
                 }
                 localStorage.setItem("guestWishlist", JSON.stringify(g));
                 await fetchWishlistData();
             }
         } catch (e) {
-            showToastMsg(e.response?.data?.message || "Wishlist error", "error");
+            toast.error(e.response?.data?.message || "Wishlist error");
         } finally {
             setWishlistLoading((p) => ({ ...p, [pid]: false }));
         }
     };
 
-    /* ── fetch products ─────────────────────────────────────────────────────── */
+    /* ── fetch ──────────────────────────────────────────────────────────────── */
     const buildQueryParams = (cursor = null) => {
         const p = new URLSearchParams();
-        const path = location.pathname.toLowerCase();
 
-        const hasCategoryFilters = filters.categoryIds && filters.categoryIds.length > 0;
-        if (!hasCategoryFilters) {
-            if (activeCategorySlug) {
-                p.append("categoryIds", activeCategorySlug);
-            } else if (path.includes("/category/")) {
-                p.append("categoryIds", effectiveSlug);
-            }
-        }
-
-        if (path.includes("/skintype/")) {
-            p.append("skinTypes", effectiveSlug.replace(/\+/g, " "));
-        } else if (path.includes("/ingredients/")) {
-            p.append("ingredients", effectiveSlug);
-        } else if (path.includes("/promotion/")) {
-            p.append("promoSlug", effectiveSlug);
-        }
-
-        const q = searchParams.get("q") || searchParams.get("search");
-        if (q) p.append("q", q);
+        // Enforce Virtual Try-On products
+        p.append("supportsVTO", "true");
 
         filters.brandIds?.forEach((id) => p.append("brandIds", id));
         filters.categoryIds?.forEach((id) => p.append("categoryIds", id));
@@ -413,13 +242,11 @@ export default function ProductPage() {
         filters.ingredients?.forEach((s) => p.append("ingredients", s));
         if (filters.minRating) p.append("minRating", filters.minRating);
 
-        // Handle price range filter
         if (filters.priceRange) {
             p.append("minPrice", filters.priceRange.min);
             if (filters.priceRange.max != null) p.append("maxPrice", filters.priceRange.max);
         }
 
-        // Handle discount filter - using discountMin parameter
         if (filters.discountMin && filters.discountMin > 0) {
             p.append("discountMin", filters.discountMin);
         }
@@ -428,139 +255,61 @@ export default function ProductPage() {
         if (cursor) p.append("cursor", cursor);
         p.append("limit", "9");
 
-        const queryString = p.toString();
-        console.log("API Query →", `${PRODUCT_ALL_API}?${queryString}`);
-        return queryString;
+        return p.toString();
     };
 
     const fetchProducts = async (cursor = null, reset = false) => {
         try {
             if (reset) {
                 setLoading(true);
-                // Keep allProducts as is until fetch completes for a smoother feel
                 setNextCursor(null);
                 setHasMore(true);
             } else {
                 setLoadingMore(true);
             }
 
-            const { data } = await axios.get(
-                `${PRODUCT_ALL_API}?${buildQueryParams(cursor)}`,
-                { withCredentials: true }
+            const { data } = await axiosInstance.get(
+                `${PRODUCT_ALL_API}?${buildQueryParams(cursor)}`
             );
 
-            const currentContext = `${location.pathname}-${effectiveSlug}-${searchParams.get("q") || searchParams.get("search") || ""}`;
-            const isContextChanged = lastContextRef.current !== currentContext;
-
-            if (isContextChanged) {
-                // title & banner
-                const q = searchParams.get("q") || searchParams.get("search");
-                if (q) setPageTitle(`Search Results for "${q}"`);
-                else if (data.titleMessage) setPageTitle(data.titleMessage);
-                else if (data.category?.name) setPageTitle(data.category.name);
-                else if (data.promoMeta?.name) setPageTitle(data.promoMeta.name);
-                else if (data.skinType?.name) setPageTitle(data.skinType.name);
-                else if (activeCategoryName) setPageTitle(activeCategoryName);
-                else setPageTitle("Products");
-                // Extract banner array
-                let extractedBanners = [];
-                if (data.bannerImage && Array.isArray(data.bannerImage)) {
-                    extractedBanners = data.bannerImage;
-                } else if (data.category?.bannerImage && Array.isArray(data.category.bannerImage)) {
-                    extractedBanners = data.category.bannerImage;
-                } else if (data.promoMeta?.bannerImage && Array.isArray(data.promoMeta.bannerImage)) {
-                    extractedBanners = data.promoMeta.bannerImage;
-                } else if (data.skinType?.bannerImage && Array.isArray(data.skinType.bannerImage)) {
-                    extractedBanners = data.skinType.bannerImage;
-                } else if (data.bannerImage) {
-                    extractedBanners = [data.bannerImage];
-                } else if (data.category?.bannerImage) {
-                    extractedBanners = [data.category.bannerImage];
-                } else if (data.promoMeta?.bannerImage) {
-                    extractedBanners = [data.promoMeta.bannerImage];
-                } else if (data.skinType?.bannerImage) {
-                    extractedBanners = [data.skinType.bannerImage];
-                }
-                setBannerImages(extractedBanners);
-
-                // Shop By Sections
-                if (data.skinTypes && Array.isArray(data.skinTypes)) {
-                    setShopBySkinTypes(data.skinTypes);
-                } else {
-                    setShopBySkinTypes([]);
-                }
-                if (data.shopByIngredients && Array.isArray(data.shopByIngredients)) {
-                    setShopByIngredients(data.shopByIngredients);
-                } else {
-                    setShopByIngredients([]);
-                }
-                if (data.promotions && Array.isArray(data.promotions)) {
-                    setPromotions(data.promotions);
-                } else {
-                    setPromotions([]);
-                }
-
-                if (data.trendingCategories && Array.isArray(data.trendingCategories)) {
-                    setTrendingCategories(data.trendingCategories);
-                    if (effectiveSlug && !activeCategoryName) {
-                        const found = data.trendingCategories.find((c) => c.slug === effectiveSlug);
-                        if (found) setActiveCategoryName(found.name);
-                    }
-                } else {
-                    setTrendingCategories([]);
-                }
-
-                if (data.category?.name && !activeCategoryName && effectiveSlug) {
-                    setActiveCategoryName(data.category.name);
-                }
-
-                if (reset && data.filters) {
-                    setFilterData(data.filters);
-                }
-
-                lastContextRef.current = currentContext;
-            }
-
-            const prods = data.products || [];
+            const newProducts = data.products || [];
             const pg = data.pagination || {};
 
-            if (data.titleMessage) {
-                const match = data.titleMessage.match(/\d+/);
-                if (match) {
-                    setTotalCount(parseInt(match[0], 10));
-                } else {
-                    setTotalCount((prev) => reset ? prods.length : prev + prods.length);
-                }
+            if (reset) {
+                setAllProducts(newProducts);
+                setTotalCount(data.totalProducts || newProducts.length);
             } else {
-                setTotalCount((prev) => reset ? prods.length : prev + prods.length);
+                setAllProducts((prev) => [...prev, ...newProducts]);
             }
-
-            if (reset) setAllProducts(prods);
-            else setAllProducts((prev) => [...prev, ...prods]);
 
             setHasMore(pg.hasMore || false);
             setNextCursor(pg.nextCursor || null);
-        } catch (e) {
-            console.error(e);
-            showToastMsg("Failed to fetch products", "error");
+
+            const currentContext = `${location.pathname}-${searchParams.get("q") || searchParams.get("search") || ""}`;
+            const isContextChanged = lastContextRef.current !== currentContext;
+
+            if (isContextChanged) {
+                if (reset && data.filters) {
+                    setFilterData(data.filters);
+                }
+                lastContextRef.current = currentContext;
+            }
+
+            // Default variant selection
+            const def = {};
+            newProducts.forEach((pr) => {
+                const av = (pr.variants || []).find((v) => v.stock > 0) || pr.variants?.[0];
+                if (av) def[pr._id] = av;
+            });
+            setSelectedVariants((prev) => ({ ...prev, ...def }));
+        } catch (err) {
+            console.error(err);
+            toast.error("Failed to load products");
         } finally {
             setLoading(false);
             setLoadingMore(false);
         }
     };
-
-    useEffect(() => {
-        if (location.pathname.includes("/category/") && effectiveSlug) {
-            if (trendingCategories.length > 0) {
-                const found = trendingCategories.find(c => c.slug === effectiveSlug);
-                if (found) setActiveCategoryName(found.name);
-            }
-        } else {
-            setActiveCategoryName("");
-        }
-    }, [effectiveSlug, location.pathname, trendingCategories]);
-
-
 
     /* ── Sync URL query parameters when filters change ──────────────────── */
     useEffect(() => {
@@ -598,30 +347,9 @@ export default function ProductPage() {
         }
     }, [filters, setSearchParams, searchParams]);
 
-    // Fetch products when filters change
     useEffect(() => {
         fetchProducts(null, true);
-    }, [effectiveSlug, location.pathname, filters, activeCategorySlug]);
-
-    const pageDefault = location.pathname.includes("/category/") ? effectiveSlug : null;
-
-    const makeEmptyFilters = () => ({
-        brandIds: [], categoryIds: [], skinTypes: [], formulations: [],
-        finishes: [], ingredients: [], priceRange: null, discountMin: null,
-        minRating: "", sort: "recent"
-    });
-
-    /* ── CATEGORY PILL CLICK ────────────────────────────────────────────────── */
-    const handleCategoryPillClick = useCallback(
-        (cat) => {
-            if (activeCategorySlug === cat.slug) {
-                navigate("/products");
-            } else {
-                navigate(`/category/${cat.slug}`);
-            }
-        },
-        [activeCategorySlug, navigate]
-    );
+    }, [filters]);
 
     const handleCategoryCheckboxToggle = useCallback((cat) => {
         setFilters(prev => {
@@ -637,55 +365,9 @@ export default function ProductPage() {
         });
     }, []);
 
-    const handleTopCategoryClick = useCallback((cat) => {
-        setFilters(prev => {
-            const current = prev.categoryIds || [];
-            const value = cat.slug || cat._id;
-            const isActive = current.includes(value);
-            return {
-                ...prev,
-                categoryIds: isActive ? [] : [value]
-            };
-        });
-    }, []);
-
     const handleClearCategory = useCallback(() => {
-        navigate("/products");
-    }, [navigate]);
-
-    /* ── NEW: Skin Type & Ingredient Click Handlers ─────────────────────────── */
-    const handleSkinTypeClick = useCallback((skin) => {
-        setFilters(prev => {
-            const current = prev.skinTypes || [];
-            const isActive = current.includes(skin.slug);
-            return {
-                ...prev,
-                skinTypes: isActive
-                    ? current.filter(s => s !== skin.slug)
-                    : [...current, skin.slug]
-            };
-        });
+        setFilters((prev) => ({ ...prev, categoryIds: [] }));
     }, []);
-
-    const handleIngredientClick = useCallback((ing) => {
-        setFilters(prev => {
-            const current = prev.ingredients || [];
-            const isActive = current.includes(ing.slug);
-            return {
-                ...prev,
-                ingredients: isActive
-                    ? current.filter(i => i !== ing.slug)
-                    : [...current, ing.slug]
-            };
-        });
-    }, []);
-
-    /* ── SPECIAL PROMOTION CLICK ────────────────────────────────────────────── */
-    const handlePromotionClick = useCallback((promo) => {
-        if (promo.slug) {
-            navigate(`/promotion/${promo.slug}`);
-        }
-    }, [navigate]);
 
     /* ── infinite scroll ────────────────────────────────────────────────────── */
     const loadMore = useCallback(() => {
@@ -712,45 +394,60 @@ export default function ProductPage() {
             let payload;
             if (hasVar) {
                 const sel = forceVariant || selectedVariants[prod._id] || vars.find((v) => v.stock > 0) || vars[0];
-                if (!sel || sel.stock <= 0) { showToastMsg("Please select an in-stock variant.", "error"); return; }
+                if (!sel || sel.stock <= 0) { toast.warning("Please select an in-stock variant."); return; }
                 payload = { productId: prod._id, variants: [{ variantSku: getSku(sel), quantity: 1 }] };
                 const cache = JSON.parse(localStorage.getItem("cartVariantCache") || "{}");
                 cache[prod._id] = sel;
                 localStorage.setItem("cartVariantCache", JSON.stringify(cache));
             } else {
-                if (prod.stock <= 0) { showToastMsg("Product is out of stock.", "error"); return; }
+                if (prod.stock <= 0) { toast.warning("Product is out of stock."); return; }
                 payload = { productId: prod._id, quantity: 1 };
             }
-            const { data } = await axios.post(`${CART_API_BASE}/add`, payload, { withCredentials: true });
+            const { data } = await axiosInstance.post(`${CART_API_BASE}/add`, payload);
             if (!data.success) throw new Error(data.message || "Cart add failed");
-            showToastMsg("Product added to cart!", "success");
+            toast.success("Product added to cart!");
             navigate("/cartpage");
         } catch (e) {
-            const msg = e.response?.data?.message || e.message || "Failed to add to cart";
-            showToastMsg(msg, "error");
+            toast.error(e.response?.data?.message || "Failed to add to cart");
             if (e.response?.status === 401) navigate("/login", { state: { from: location.pathname } });
         } finally {
             setAddingToCart((p) => ({ ...p, [prod._id]: false }));
         }
     };
 
-    /* ── ui handlers ────────────────────────────────────────────────────────── */
     const handleVariantSelect = (pid, v) => setSelectedVariants((p) => ({ ...p, [pid]: v }));
-    const openVariantOverlay = (pid, t = "all") => { setSelectedVariantType(t); setShowVariantOverlay(pid); };
-    const closeVariantOverlay = () => { setShowVariantOverlay(null); setSelectedVariantType("all"); };
-    const getProductSlug = (pr) => (pr.slugs?.[0] ? pr.slugs[0] : pr._id);
-
-    const isAnyFilterActive =
-        filters.brandIds.length > 0 || filters.categoryIds.length > 0 ||
-        filters.skinTypes.length > 0 || filters.formulations.length > 0 ||
-        filters.finishes.length > 0 || filters.ingredients.length > 0 ||
-        filters.priceRange || filters.discountMin || filters.minRating ||
-        filters.sort !== "recent" ||
-        (activeCategorySlug && activeCategorySlug !== pageDefault);
+    const openVariantOverlay = (pid, t = "all", e = null) => {
+        if (e && e.stopPropagation) e.stopPropagation();
+        setSelectedVariantType(t);
+        setShowVariantOverlay(pid);
+    };
+    const closeVariantOverlay = () => {
+        setShowVariantOverlay(null);
+        setSelectedVariantType("all");
+        setTempSelectedVariants({});
+    };
 
     const handleClearAllFilters = () => {
-        setFilters(makeEmptyFilters());
+        setFilters({
+            brandIds: [], categoryIds: [], skinTypes: [], formulations: [],
+            finishes: [], ingredients: [], priceRange: null, discountMin: null,
+            minRating: "", sort: "recent"
+        });
     };
+
+    const isAnyFilterActive =
+        filters.brandIds.length > 0 ||
+        filters.categoryIds.length > 0 ||
+        filters.skinTypes.length > 0 ||
+        filters.formulations.length > 0 ||
+        filters.finishes.length > 0 ||
+        filters.ingredients.length > 0 ||
+        filters.priceRange ||
+        filters.discountMin ||
+        filters.minRating ||
+        filters.sort !== "recent";
+
+    const getProductSlug = (pr) => pr.slugs?.[0] || pr._id;
 
     /* ── product card ───────────────────────────────────────────────────────── */
     const renderProductCard = (prod) => {
@@ -764,19 +461,11 @@ export default function ProductPage() {
         const sku = displayVariant ? getSku(displayVariant) : null;
         const inWl = sku ? isInWishlist(prod._id, sku) : false;
         const slugPr = getProductSlug(prod);
-        const img =
-            displayVariant?.images?.[0] ||
-            displayVariant?.image ||
-            prod.images?.[0] ||
-            "/placeholder.png";
-
+        const img = displayVariant?.images?.[0] || displayVariant?.image || prod.images?.[0] || "/placeholder.png";
         const isAdding = addingToCart[prod._id];
 
-        // Check out of stock status
         const completelyOutOfStock = isCompletelyOutOfStock(prod);
         const currentVariantOutOfStock = hasVar ? displayVariant?.stock <= 0 : prod.stock <= 0;
-
-        // Show out of stock if completely out AND it has NO variants
         const showOutOfStock = completelyOutOfStock && !hasVar;
 
         const showSelectVariantButton = hasVar && vars.length > 1;
@@ -802,7 +491,7 @@ export default function ProductPage() {
                                     navigate(`/product/${slugPr}`);
                                 }
                             }}
-                            style={{ cursor: showOutOfStock ? 'pointer' : 'pointer', position: 'relative' }}
+                            style={{ cursor: 'pointer', position: 'relative' }}
                         >
                             <img
                                 src={img}
@@ -828,15 +517,15 @@ export default function ProductPage() {
                                     onTouchStart={(e) => e.stopPropagation()}
                                 >
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                                      <path d="M3 7V5a2 2 0 0 1 2-2h2" />
-                                      <path d="M17 3h2a2 2 0 0 1 2 2v2" />
-                                      <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
-                                      <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
-                                      <path d="M8 10a4 4 0 1 1 8 0c0 2.2-1.8 4-4 4s-4-1.8-4-4z" />
-                                      <path d="M10 10h.01" />
-                                      <path d="M14 10h.01" />
-                                      <path d="M10 13c.5.5 1.5.7 2 .7s1.5-.2 2-.7" />
-                                      <path d="M6 19c0-1.5 1.5-2.5 6-2.5s6 1 6 2.5" />
+                                        <path d="M3 7V5a2 2 0 0 1 2-2h2" />
+                                        <path d="M17 3h2a2 2 0 0 1 2 2v2" />
+                                        <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+                                        <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
+                                        <path d="M8 10a4 4 0 1 1 8 0c0 2.2-1.8 4-4 4s-4-1.8-4-4z" />
+                                        <path d="M10 10h.01" />
+                                        <path d="M14 10h.01" />
+                                        <path d="M10 13c.5.5 1.5.7 2 .7s1.5-.2 2-.7" />
+                                        <path d="M6 19c0-1.5 1.5-2.5 6-2.5s6 1 6 2.5" />
                                     </svg>
                                     <span className="vto-text">TRY IT ON</span>
                                 </div>
@@ -898,6 +587,8 @@ export default function ProductPage() {
                                         borderRadius: '50%',
                                         width: '34px',
                                         height: '34px',
+                                        minHeight: '34px',
+                                        maxHeight: '34px',
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',
@@ -966,16 +657,8 @@ export default function ProductPage() {
                                 <div className="price-section mb-3 mt-auto">
                                     <div className="d-flex align-items-baseline flex-wrap">
                                         {(() => {
-                                            const price =
-                                                displayVariant?.displayPrice ||
-                                                displayVariant?.discountedPrice ||
-                                                prod.price ||
-                                                0;
-                                            const orig =
-                                                displayVariant?.originalPrice ||
-                                                displayVariant?.mrp ||
-                                                prod.mrp ||
-                                                price;
+                                            const price = displayVariant?.displayPrice || displayVariant?.discountedPrice || prod.price || 0;
+                                            const orig = displayVariant?.originalPrice || displayVariant?.mrp || prod.mrp || price;
                                             const disc = orig > price;
                                             const pct = disc ? Math.round(((orig - price) / orig) * 100) : 0;
                                             return (
@@ -1020,7 +703,7 @@ export default function ProductPage() {
                                                 if (showOutOfStock) {
                                                     handleOutOfStockClick(prod.name);
                                                 } else if (showSelectVariantButton) {
-                                                    openVariantOverlay(prod._id, "all");
+                                                    openVariantOverlay(prod._id, "all", e);
                                                 } else {
                                                     handleAddToCart(prod);
                                                 }
@@ -1186,25 +869,8 @@ export default function ProductPage() {
                                             closeVariantOverlay();
                                         }}
                                         disabled={isAdding || (displayVariant && displayVariant.stock <= 0)}
-                                        style={{
-                                            transition: "background-color 0.3s ease, color 0.3s ease",
-                                        }}
                                     >
-                                        {isAdding ? (
-                                            <>
-                                                <span className="spinner-border spinner-border-sm me-2" role="status"></span>
-                                                Adding...
-                                            </>
-                                        ) : displayVariant?.stock <= 0 ? (
-                                            "Out of Stock"
-                                        ) : (
-                                            <>
-                                                Add to Bag
-                                                {!isAdding && displayVariant?.stock > 0 && (
-                                                    <img src={Bag} alt="Bag" className="img-fluid ms-1" style={{ marginTop: '-3px', height: "20px" }} />
-                                                )}
-                                            </>
-                                        )}
+                                        {isAdding ? "Adding..." : "Add to Bag"}
                                     </button>
                                 </div>
                             </div>
@@ -1215,19 +881,19 @@ export default function ProductPage() {
         );
     };
 
+    /* ── BRANDFILTER PROPS ────────────────────────────────────────────────── */
     const brandFilterProps = {
         filters,
         setFilters,
         filterData,
-        trendingCategories,
-        activeCategorySlug,
-        activeCategoryName,
+        trendingCategories: [],
+        activeCategorySlug: null,
+        activeCategoryName: "",
         onClearCategory: handleClearCategory,
         onCategoryPillClick: handleCategoryCheckboxToggle,
     };
 
-    // Keep your OLD loader for initial loading
-    if (loading && allProducts.length === 0)
+    if (loading && allProducts.length === 0) {
         return (
             <div
                 className="fullscreen-loader page-title-main-name"
@@ -1242,209 +908,28 @@ export default function ProductPage() {
                         loop
                         autoplay
                     />
-
-
                     <p className="text-muted mb-0">
                         Please wait while we prepare the best products for you...
                     </p>
                 </div>
             </div>
         );
+    }
 
-    /* ── render ─────────────────────────────────────────────────────────────── */
     return (
         <>
             <Header />
 
-            {/* 🔥 UPDATED: HERO BANNER REPLACED WITH SWIPER SLIDER 🔥 */}
-            {bannerImages?.length > 0 &&
-                !location.pathname.toLowerCase().includes("/skintype") &&
-                !(filters.skinTypes && filters.skinTypes.length > 0) ? (
-                <section className="hero-slider text-center mt-xl-5 pt-xl-4 padding-left-rightss">
-                    <Swiper
-                        ref={swiperRef}
-                        modules={[Autoplay, Pagination, Navigation]}
-                        onSlideChange={() => {
-                            const swiper = swiperRef.current?.swiper;
-                            if (!swiper) return;
-                            document.querySelectorAll(".slide-video").forEach((v) => v.pause());
-                            const activeSlide = swiper.slides[swiper.activeIndex];
-                            const video = activeSlide?.querySelector("video");
-                            if (video) video.play().catch(() => { });
-                        }}
-                        loop={bannerImages.length > 1}
-                        autoplay={{ delay: 5000, disableOnInteraction: false }}
-                        pagination={{
-                            clickable: true,
-                            bulletClass: 'custom-swiper-bullet',
-                            bulletActiveClass: 'custom-swiper-bullet-active',
-                        }}
-                        navigation={bannerImages.length > 1}
-                        speed={800}
-                        style={{ height: "auto", width: "100%" }}
-                    >
-                        {bannerImages.map((banner, index) => {
-                            const imgUrl = typeof banner === "string" ? banner : banner.url;
-                            const targetLink = typeof banner === "object" ? banner.link : null;
-
-                            return (
-                                <SwiperSlide key={index}>
-                                    <div
-                                        className="position-relative w-100 h-100 mt-5 pt-4 hero-slider-image-responsive"
-                                        style={{ cursor: targetLink ? "pointer" : "default" }}
-                                        onClick={() => {
-                                            if (!targetLink) return;
-                                            if (targetLink.startsWith("http")) window.open(targetLink, "_blank");
-                                            else navigate(targetLink);
-                                        }}
-                                    >
-                                        <img
-                                            src={imgUrl}
-                                            alt={pageTitle || `Banner ${index + 1}`}
-                                            className="w-100 h-100"
-                                            style={{ maxHeight: "100%" }}
-                                            onError={(e) => { e.currentTarget.src = "/banner-placeholder.jpg"; }}
-                                        />
-                                    </div>
-                                </SwiperSlide>
-                            );
-                        })}
-                    </Swiper>
-                </section>
-            ) : (
-                <div className="non-hero-spacer" />
-            )}
-
-            {/* Trending Categories */}
-            {trendingCategories.length > 0 && (
-                <div className="container-lg mt-4 mb-4">
-                    <h2 className="text-center" style={{ marginBottom: "30px", textAlign: "center" }}>Top Catagories</h2>
-                    <div
-                        className="category-swiper-outer"
-                        style={{
-                            width: "100%",
-                            display: "flex",
-                            justifyContent: "center",
-                        }}
-                    >
-                        <Swiper
-                            modules={[Navigation]}
-                            spaceBetween={10}
-                            slidesPerView="auto"
-                            navigation
-                            style={{
-                                padding: "5px 0",
-                                width: "auto" // Swiper ko sirf apne slides ke hisab se width lene do
-                            }}
-                        >
-                            {trendingCategories.map((cat) => {
-                                const isActive = (filters.categoryIds || []).includes(cat._id) ||
-                                    (filters.categoryIds || []).includes(cat.slug) ||
-                                    ((filters.categoryIds || []).length === 0 && activeCategorySlug === cat.slug);
-
-                                return (
-                                    <SwiperSlide key={cat.slug} className="mx-auto" style={{ width: "auto" }}>
-                                        <button
-                                            onClick={() => handleTopCategoryClick(cat)}
-                                            className={`btn px-4 py-2 page-title-main-name ${isActive ? "btn-dark custom-pill" : "custom-pill"}`}
-                                            style={{
-                                                fontSize: 13,
-                                                fontWeight: isActive ? 600 : 400,
-                                                transition: "all 0.18s ease",
-                                                transform: isActive ? "scale(1.04)" : "scale(1)",
-                                                whiteSpace: "nowrap",
-                                                margin: "0 15px",
-                                            }}
-                                            title={`Filter by ${cat.name}`}
-                                        >
-                                            {cat.name}
-                                        </button>
-                                    </SwiperSlide>
-                                );
-                            })}
-
-                        </Swiper>
-
-                    </div>
-                </div>
-            )}
-
-            {/* Shop By Skin Types */}
-            {shopBySkinTypes.length > 0 && (
-                <div className="container-lg mt-3">
-                    <h5 className="mb-2 page-title-main-name">Shop by Skin Type</h5>
-                    <div className="d-flex overflow-auto py-2"
-                        style={{ gap: "0.75rem", whiteSpace: "nowrap", scrollbarWidth: "none" }}>
-                        {shopBySkinTypes.map((skin) => {
-                            const isActive = filters.skinTypes.includes(skin.slug);
-                            return (
-                                <button
-                                    key={skin.slug}
-                                    onClick={() => handleSkinTypeClick(skin)}
-                                    className={`btn rounded-pill px-4 py-2 page-title-main-name flex-shrink-0 ${isActive ? "btn-dark" : "btn-outline-secondary"}`}
-                                    style={{ fontSize: 13, fontWeight: isActive ? 600 : 400 }}
-                                >
-                                    {skin.name}
-                                </button>
-                            );
-                        })}
-                    </div>
-                </div>
-            )}
-
-            {/* Shop By Ingredients */}
-            {shopByIngredients.length > 0 && (
-                <div className="container-lg mt-3">
-                    <h5 className="mb-2 page-title-main-name">Shop by Ingredients</h5>
-                    <div className="d-flex overflow-auto py-2"
-                        style={{ gap: "0.75rem", whiteSpace: "nowrap", scrollbarWidth: "none" }}>
-                        {shopByIngredients.map((ing) => {
-                            const isActive = filters.ingredients.includes(ing.slug);
-                            return (
-                                <button
-                                    key={ing.slug}
-                                    onClick={() => handleIngredientClick(ing)}
-                                    className={`btn rounded-pill px-4 py-2 page-title-main-name flex-shrink-0 ${isActive ? "btn-dark" : "btn-outline-secondary"}`}
-                                    style={{ fontSize: 13, fontWeight: isActive ? 600 : 400 }}
-                                >
-                                    {ing.name}
-                                </button>
-                            );
-                        })}
-                    </div>
-                </div>
-            )}
-
-            {/* Special Offers / Promotions */}
-            {promotions.length > 0 && (
-                <div className="container-lg mt-3">
-                    <h5 className="mb-2 page-title-main-name">Special Offers</h5>
-                    <div className="d-flex overflow-auto py-2"
-                        style={{ gap: "0.75rem", whiteSpace: "nowrap", scrollbarWidth: "none" }}>
-                        {promotions.map((promo) => (
-                            <button
-                                key={promo._id}
-                                onClick={() => handlePromotionClick(promo)}
-                                className="btn px-4 py-2 page-title-main-name flex-shrink-0 btn-outline-danger"
-                                style={{ fontSize: 13, fontWeight: 500 }}
-                            >
-                                {promo.title} {promo.discountLabel && `(${promo.discountLabel})`}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            <div className="padding-left-rightss ms-lg-0 ms-3 mx-3">
-                {/* <h2 className="mb-4 d-none d-lg-block page-title-main-name page-upper-case-first">{pageTitle}</h2> */}
-
-                <div className="row">
-                    <div className="d-none d-lg-block col-lg-3">
+            <div className="padding-left-rightss ms-lg-0 ms-3 mx-3 mt-5">
+                <div className="row mt-5">
+                    {/* Sidebar Filter on Left for Desktop */}
+                    <div className="d-none d-lg-block col-lg-3 mt-5">
                         <BrandFilter {...brandFilterProps} />
                     </div>
 
-                    <div className="d-lg-none mb-lg-3">
-                        <h2 className="mb-4 text-center mt-lg-0 mt-3 page-upper-case-first">{pageTitle}</h2>
+                    {/* Mobile Filters and Layout Header */}
+                    <div className="d-lg-none mb-lg-3 mt-4">
+                        <h2 className="mb-4 text-center mt-lg-0 mt-3 page-upper-case-first">VTO Products</h2>
                         <div className="w-100 filter-responsive rounded shadow-sm">
                             <div className="container-fluid p-0">
                                 <div className="row g-0" style={{ flexDirection: "row-reverse" }}>
@@ -1473,10 +958,10 @@ export default function ProductPage() {
                         </div>
                     </div>
 
-                    {/* Filter & Sort Offcanvas */}
+                    {/* Mobile Offcanvas Drawer Filters */}
                     {showFilterOffcanvas && (
                         <>
-                            <div className="position-fixed top-0 start-0 w-100 h-100 bg-dark"
+                            <div className="position-fixed top-0 start-0 w-100 h-100 bg-dark mt-5"
                                 style={{ opacity: 0.5, zIndex: 1040 }} onClick={() => setShowFilterOffcanvas(false)} />
                             <div className="position-fixed start-0 bottom-0 w-100 bg-white"
                                 style={{ zIndex: 1050, borderTopLeftRadius: 16, borderTopRightRadius: 16, maxHeight: "85vh", boxShadow: "0 -4px 20px rgba(0,0,0,.2)" }}>
@@ -1531,86 +1016,33 @@ export default function ProductPage() {
                         </>
                     )}
 
-                    <div className="col-12 col-lg-9">
+                    {/* Products Grid Column */}
+                    <div className="col-12 col-lg-9 mt-lg-5">
                         <div className="mb-3 d-flex justify-content-between align-items-center">
-                            <span className="text-muted page-title-main-name d-lg-block d-none mt-3">
+                            <span className="text-muted page-title-main-name d-lg-block d-none mt-5">
                                 Showing {totalCount} products
                             </span>
+                            {isAnyFilterActive && (
+                                <button className="btn btn-sm btn-outline-danger mt-3" onClick={handleClearAllFilters}>
+                                    Clear Filters
+                                </button>
+                            )}
                         </div>
 
                         <div className="row g-4 position-relative">
-                            {/* NEW Loading Overlay - shown when loading but products exist */}
-                            {/* {loading && allProducts.length > 0 && (
-                                <div className="position-absolute w-100 h-100 d-flex justify-content-center align-items-start pt-5"
-                                    style={{ background: 'rgba(255,255,255,0.6)', zIndex: 10, borderRadius: '15px' }}>
-                                    <div className="text-center sticky-top" style={{ top: '200px' }}>
-                                        <DotLottieReact className='foryoulanding-css'
-                                            src="https://lottie.host/73673e65-df58-41a5-87e7-b837c5d00fe8/dJVGVbJuYJ.lottie"
-                                            loop
-                                            autoplay
-                                            style={{ width: '150px', height: '150px' }}
-                                        />
-                                        <p className="page-title-main-name fw-bold">Refining selection...</p>
-                                    </div>
-                                </div>
-                            )} */}
-
-
-                            {loading && (
-                                <div
-                                    className="position-fixed top-0 start-0 w-100 h-100 d-flex flex-column justify-content-center align-items-center"
-                                    style={{
-                                        backgroundColor: 'rgba(255, 255, 255, 0.97)',
-                                        zIndex: 9999,
-                                        backdropFilter: 'blur(10px)',
-                                    }}
-                                >
-                                    <div className="text-center">
-                                        <DotLottieReact
-                                            className="mb-4"
-                                            src="https://lottie.host/73673e65-df58-41a5-87e7-b837c5d00fe8/dJVGVbJuYJ.lottie"
-                                            loop
-                                            autoplay
-                                            style={{ width: '200px', height: '200px' }}
-                                        />
-
-                                        <p className="text-muted mb-0">
-                                            Finding the perfect products just for you
-                                        </p>
-
-                                        {/* Optional loading dots */}
-                                        <div className="d-flex justify-content-center gap-1 mt-4">
-                                            <div className="dot-pulse"></div>
-                                            <div className="dot-pulse"></div>
-                                            <div className="dot-pulse"></div>
-                                        </div>
-                                    </div>
+                            {allProducts.length > 0 ? (
+                                allProducts.map(renderProductCard)
+                            ) : (
+                                <div className="col-12 text-center py-5">
+                                    <h4>No products found</h4>
+                                    <p className="text-muted">Try adjusting your filters.</p>
                                 </div>
                             )}
-                            {allProducts.length > 0
-                                ? allProducts.map(renderProductCard)
-                                : loading
-                                    ? (
-                                        // NEW Loading state when no products yet
-                                        <div className="col-12 text-center py-5">
-                                            <DotLottieReact className='foryoulanding-css'
-                                                src="https://lottie.host/73673e65-df58-41a5-87e7-b837c5d00fe8/dJVGVbJuYJ.lottie"
-                                                loop
-                                                autoplay
-                                                style={{ width: '200px', height: '200px', margin: '0 auto' }}
-                                            />
-                                            <p className="text-muted">Loading products...</p>
-                                        </div>
-                                    )
-                                    : <div className="col-12 text-center py-5"><h4>No products found</h4><p className="text-muted">Try adjusting your filters.</p></div>
-                            }
                         </div>
 
                         {loadingMore && (
                             <div className="text-center mt-4 py-4">
-                                <div className="spinner-border text-primary" role="status">
-                                    <span className="visually-hidden">Loading more products...</span>
-                                </div>
+                                <div className="spinner-border text-primary" role="status" />
                                 <p className="mt-2">Loading more products...</p>
                             </div>
                         )}
@@ -1625,26 +1057,103 @@ export default function ProductPage() {
                     </div>
                 </div>
             </div>
-            {/* ===================== OUT OF STOCK POPUP ===================== */}
-            <OutOfStockPopup
-                isOpen={showOutOfStockPopup}
-                onClose={closeOutOfStockPopup}
-                productName={outOfStockProductName}
-            />
+
+            {/* Out of Stock Popup */}
+            {showOutOfStockPopup && (
+                <div
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                        zIndex: 9999,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    }}
+                    onClick={closeOutOfStockPopup}
+                >
+                    <div
+                        style={{
+                            backgroundColor: '#fff',
+                            borderRadius: '12px',
+                            padding: '30px 40px',
+                            maxWidth: '400px',
+                            width: '90%',
+                            textAlign: 'center',
+                            boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
+                            position: 'relative',
+                            animation: 'popupSlideIn 0.3s ease-out',
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <button
+                            onClick={closeOutOfStockPopup}
+                            style={{
+                                position: 'absolute',
+                                top: '10px',
+                                right: '15px',
+                                background: 'none',
+                                border: 'none',
+                                fontSize: '24px',
+                                cursor: 'pointer',
+                                color: '#666',
+                            }}
+                        >
+                            <FaTimes />
+                        </button>
+
+                        <div
+                            style={{
+                                width: '60px',
+                                height: '60px',
+                                backgroundColor: '#fee2e2',
+                                borderRadius: '50%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                margin: '0 auto 15px',
+                            }}
+                        >
+                            <FaTimes style={{ color: '#dc3545', fontSize: '30px' }} />
+                        </div>
+
+                        <h5 className="page-title-main-name" style={{ fontSize: '18px', fontWeight: 600, marginBottom: '10px', color: '#333' }}>
+                            Out of Stock
+                        </h5>
+
+                        <p style={{ fontSize: '14px', color: '#666', marginBottom: '20px' }}>
+                            "Oops! {outOfStockProductName} is out of stock right now. Check back soon or discover similar items."
+                        </p>
+
+                        <button onClick={closeOutOfStockPopup} className="btn btn-dark w-100" style={{ borderRadius: '8px', padding: '10px' }}>
+                            Got it
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {/* ===================== MOBILE BOTTOM SHEET DRAWER ===================== */}
             {showVariantOverlay && (() => {
                 const item = allProducts.find(p => p._id === showVariantOverlay);
                 if (!item) return null;
 
-                const allVariants = item.variants || [];
-                const displayVariant = tempSelectedVariants[item._id] || selectedVariants[item._id] || (allVariants.find((v) => v.stock > 0) || allVariants[0]) || {};
-                const groupedVariants = groupVariantsByType(allVariants);
+                const vars = Array.isArray(item.variants) ? item.variants : [];
+                const displayVariant = tempSelectedVariants[item._id] || selectedVariants[item._id] || (vars.find((v) => v.stock > 0) || vars[0]) || {};
+                const groupedVariants = groupVariantsByType(vars);
                 const isAdding = addingToCart[item._id];
                 const isCurrentVariantOutOfStock = displayVariant.stock <= 0;
 
                 const hasColorVariants = groupedVariants.color.length > 0;
                 const hasTextVariants = groupedVariants.text.length > 0;
+
+                // Price calculations
+                const price = displayVariant?.displayPrice || displayVariant?.discountedPrice || item.price || 0;
+                const orig = displayVariant?.originalPrice || displayVariant?.mrp || item.mrp || price;
+                const disc = orig > price;
+                const pct = disc ? Math.round(((orig - price) / orig) * 100) : 0;
 
                 return (
                     <>
@@ -1766,15 +1275,15 @@ export default function ProductPage() {
                                     </span>
                                     <div className="mobile-sheet-price-row">
                                         <span className="mobile-sheet-current-price">
-                                            ₹{displayVariant.displayPrice}
+                                            ₹{price}
                                         </span>
-                                        {displayVariant.originalPrice > displayVariant.displayPrice && (
+                                        {disc && (
                                             <>
                                                 <span className="mobile-sheet-original-price">
-                                                    ₹{displayVariant.originalPrice}
+                                                    ₹{orig}
                                                 </span>
                                                 <span className="mobile-sheet-discount">
-                                                    ({Math.round(((displayVariant.originalPrice - displayVariant.displayPrice) / displayVariant.originalPrice) * 100)}% OFF)
+                                                    ({pct}% OFF)
                                                 </span>
                                             </>
                                         )}
@@ -1799,7 +1308,7 @@ export default function ProductPage() {
                                     disabled={isAdding || isCurrentVariantOutOfStock}
                                     onClick={async (e) => {
                                         e.stopPropagation();
-                                        const chosen = tempSelectedVariants[item._id] || selectedVariants[item._id] || (allVariants.find((v) => v.stock > 0) || allVariants[0]);
+                                        const chosen = tempSelectedVariants[item._id] || selectedVariants[item._id] || (vars.find((v) => v.stock > 0) || vars[0]);
                                         if (chosen) {
                                             handleVariantSelect(item._id, chosen);
                                         }
@@ -1829,6 +1338,3 @@ export default function ProductPage() {
         </>
     );
 }
-
-
-//===========================================================================Done-Code(End)========================================================================================== 

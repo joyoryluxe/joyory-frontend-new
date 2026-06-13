@@ -889,6 +889,31 @@ const RecommendationSlider = ({ title, products: initialProducts }) => {
                           }}
                         />
 
+                        {item?.supportsVTO && (
+                          <div
+                            className="support-beauty-badge"
+                            title="Try It On"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleProductClick(item);
+                            }}
+                            onTouchStart={(e) => e.stopPropagation()}
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M3 7V5a2 2 0 0 1 2-2h2" />
+                              <path d="M17 3h2a2 2 0 0 1 2 2v2" />
+                              <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+                              <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
+                              <path d="M8 10a4 4 0 1 1 8 0c0 2.2-1.8 4-4 4s-4-1.8-4-4z" />
+                              <path d="M10 10h.01" />
+                              <path d="M14 10h.01" />
+                              <path d="M10 13c.5.5 1.5.7 2 .7s1.5-.2 2-.7" />
+                              <path d="M6 19c0-1.5 1.5-2.5 6-2.5s6 1 6 2.5" />
+                            </svg>
+                            <span className="vto-text">TRY IT ON</span>
+                          </div>
+                        )}
+
                         {/* OUT OF STOCK OVERLAY */}
                         {showOutOfStock && (
                           <div
@@ -925,7 +950,7 @@ const RecommendationSlider = ({ title, products: initialProducts }) => {
                         )}
 
                         {/* Open in New Tab Button - Hidden when out of stock */}
-                        {!showOutOfStock && (
+                        {/* {!showOutOfStock && (
                           <button
                             onClick={(e) => handleOpenInNewTab(item, e)}
                             style={{
@@ -952,7 +977,7 @@ const RecommendationSlider = ({ title, products: initialProducts }) => {
                           >
                             <FaExternalLinkAlt />
                           </button>
-                        )}
+                        )} */}
 
                         {/* Wishlist Icon - Hidden when out of stock */}
                         {!showOutOfStock && (
@@ -1059,7 +1084,7 @@ const RecommendationSlider = ({ title, products: initialProducts }) => {
                                   <span className="original-price text-muted text-decoration-line-through ms-2 fs-6">
                                     {formatPrice(displayVariant.originalPrice)}
                                   </span>
-                                  <span className="discount-percent text-danger fw-bold ms-2">
+                                  <span className="discount-percent fw-bold ms-2">
                                     ({displayVariant.discountPercent || 0}% OFF)
                                   </span>
                                 </>
@@ -1072,10 +1097,10 @@ const RecommendationSlider = ({ title, products: initialProducts }) => {
                             <div className="d-flex align-items-center justify-content-between">
                               <button
                                 className={`btn w-100 addtocartbuttton page-title-main-name d-flex align-items-center justify-content-center gap-2 ${showOutOfStock
-                                    ? "btn-secondary"
-                                    : isAdding
-                                      ? ""
-                                      : "btn-outline-dark"
+                                  ? "btn-secondary"
+                                  : isAdding
+                                    ? ""
+                                    : "btn-outline-dark"
                                   }`}
                                 onClick={(e) => {
                                   e.stopPropagation();

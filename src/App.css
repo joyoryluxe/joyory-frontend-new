@@ -675,3 +675,60 @@ button:hover img {
     display: inline-block !important;
     vertical-align: middle !important;
 }
+
+/* Support Beauty Badge global styles */
+.support-beauty-badge {
+    position: absolute !important;
+    bottom: 10px !important;
+    left: 10px !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    padding: 0 0 0 7px !important;
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 20px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 0px !important;
+    z-index: 3 !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+    border: 1px solid #f0f0f0 !important;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), gap 0.3s ease, padding 0.3s ease !important;
+    overflow: hidden !important;
+    white-space: nowrap !important;
+    cursor: pointer !important;
+}
+
+.support-beauty-badge svg {
+    flex-shrink: 0 !important;
+}
+
+.support-beauty-badge .vto-text {
+    font-family: 'Montserrat', 'Poppins', sans-serif !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.5px !important;
+    opacity: 0 !important;
+    max-width: 0 !important;
+    transition: opacity 0.2s ease, max-width 0.3s ease !important;
+    color: #000000 !important;
+    display: inline-block !important;
+}
+
+.foryou-card:hover .support-beauty-badge,
+.foryou-card-wrapper:hover .support-beauty-badge,
+.product-hero-main-image:hover .support-beauty-badge,
+.support-beauty-badge:hover {
+    width: 112px !important;
+    gap: 6px !important;
+    padding: 0 10px !important;
+}
+
+.foryou-card:hover .support-beauty-badge .vto-text,
+.foryou-card-wrapper:hover .support-beauty-badge .vto-text,
+.product-hero-main-image:hover .support-beauty-badge .vto-text,
+.support-beauty-badge:hover .vto-text {
+    opacity: 1 !important;
+    max-width: 80px !important;
+}

@@ -11,6 +11,8 @@ import mic from "../../assets/mic.svg";
 import search from "../../assets/search.svg";
 import axiosInstance from "../../utils/axiosInstance.js";
 import { UserContext } from "../../context/UserContext";
+import { CartContext } from "../../context/CartContext";
+import { WishlistContext } from "../../context/WishlistContext";
 import HeaderCategories from "./HeaderCategories";
 import MobileHeader from "./MobileHeaderView";
 
@@ -164,8 +166,8 @@ const Header = ({ hideCategories = false }) => {
   const [showMobileSearch, setShowMobileSearch] = useState(false);
 
   // ---------- cart & wishlist ----------
-  const [cartCount, setCartCount] = useState(0);
-  const [wishlistCount, setWishlistCount] = useState(0);
+  const { cartCount } = useContext(CartContext);
+  const { wishlistCount } = useContext(WishlistContext);
 
   // ---------- search ----------
   const [searchText, setSearchText] = useState("");
@@ -342,49 +344,7 @@ const Header = ({ hideCategories = false }) => {
     fetchData();
   }, []);
 
-  // ---------- cart count ----------
-  useEffect(() => {
-    const fetchCart = async () => {
-      if (!user || user.guest) { setCartCount(0); return; }
-      try {
-        const res = await axiosInstance.get("/api/user/cart/summary", { withCredentials: true });
-        const count = res.data?.cart?.length || res.data?.items?.length || res.data?.count || 0;
-        setCartCount(count);
-      } catch (err) {
-        console.error("Cart fetch error:", err);
-        setCartCount(0);
-      }
-    };
-    fetchCart();
-    const interval = setInterval(fetchCart, 30000);
-    return () => clearInterval(interval);
-  }, [user]);
 
-  // ---------- wishlist count ----------
-  useEffect(() => {
-    const fetchWishlist = async () => {
-      if (!user || user.guest) {
-        setWishlistCount(0);
-        return;
-      }
-      try {
-        const res = await axiosInstance.get("/api/user/wishlist", { withCredentials: true });
-        let count = 0;
-        if (res.data?.count !== undefined) count = res.data.count;
-        else if (res.data?.items?.length !== undefined) count = res.data.items.length;
-        else if (Array.isArray(res.data)) count = res.data.length;
-        else if (res.data?.wishlist?.length !== undefined) count = res.data.wishlist.length;
-        setWishlistCount(count);
-      } catch (err) {
-        console.error("Wishlist fetch error:", err);
-        setWishlistCount(0);
-      }
-    };
-
-    fetchWishlist();
-    const interval = setInterval(fetchWishlist, 45000);
-    return () => clearInterval(interval);
-  }, [user]);
 
   // ---------- search logic ----------
   useEffect(() => {

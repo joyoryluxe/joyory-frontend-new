@@ -4,6 +4,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { UserProvider } from "./context/UserContext";
 import ProtectedRoute from "./components/common/ProtectedRoute";
 import CartProvider from "./context/CartContext";
+import { WishlistProvider } from "./context/WishlistContext";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -37,6 +38,7 @@ import Shadefinderundertone from "./pages/ShadeFinderUndertone";
 import Shadetone from "./pages/ShadeTone";
 import Foundation from "./pages/Foundation";
 import Virtualtryon from "./pages/VirtualTryOn";
+import VtoProducts from "./pages/VtoProducts";
 import Recommendations from "./pages/Recommendations";
 import Skintypes from "./components/sections/home/SkinTypes";
 import Allsaleproduct from "./pages/AllSaleProduct";
@@ -101,7 +103,8 @@ function App() {
     <UserProvider>
       <Router>
         <CartProvider>
-          <ToastContainer position="top-right" autoClose={3000} />
+          <WishlistProvider>
+            <ToastContainer position="top-right" autoClose={3000} />
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<Home />} />
@@ -147,6 +150,7 @@ function App() {
             <Route path="/Foundation" element={<Foundation />} />
             <Route path="/Mainvirtualtryon" element={<Mainvirtualtryon />} />
             <Route path="/Virtualtryon" element={<Virtualtryon />} />
+            <Route path="/vto-products" element={<VtoProducts />} />
             <Route path="/Recommendations" element={<Recommendations />} />
             <Route path="/Skintypes" element={<Skintypes />} />
             <Route path="/productpage/:slug" element={<PromotionProductsPage />} />
@@ -233,6 +237,7 @@ function App() {
 
           {/* ── AI Beauty Concierge (global floating widget) ── */}
           <BeautyConcierge />
+          </WishlistProvider>
         </CartProvider>
       </Router>
     </UserProvider>
