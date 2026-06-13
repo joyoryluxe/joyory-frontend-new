@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import "../../styles/SidebarCommon.css";
 import user from "../../assets/user.svg";
 import Order from "../../assets/Order.svg";
@@ -15,6 +15,20 @@ const Sidebarcomon = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const path = location.pathname;
+    if (path.includes("/Useraccount")) setActiveSection("profile");
+    else if (path.includes("/Myorders")) setActiveSection("orders");
+    else if (path.includes("/wishlist")) setActiveSection("wishlist");
+    else if (path.includes("/ingredient-compatibility")) setActiveSection("compatibility");
+    else if (path.includes("/routines")) setActiveSection("routines");
+    else if (path.includes("/referral")) setActiveSection("refer");
+    else if (path.includes("/wallet")) setActiveSection("wallet");
+    else if (path.includes("/help")) setActiveSection("help");
+    else if (path.includes("/Coming-Soon")) setActiveSection("sell");
+  }, [location.pathname]);
 
   const handleNavigate = (section, path) => {
     setActiveSection(section);
@@ -86,7 +100,10 @@ const Sidebarcomon = () => {
             className={activeSection === "profile" ? "active" : ""}
             onClick={() => handleNavigate("profile", "/Useraccount")}
           >
-            <img src={user} alt="Image-Not-Found" className="img-fluid" />  Profile
+            <div className="ua-sidebar-icon-wrapper">
+              <img src={user} alt="Image-Not-Found" className="img-fluid" />
+            </div>
+            Profile
           </li>
 
 
@@ -95,7 +112,9 @@ const Sidebarcomon = () => {
             className={activeSection === "orders" ? "active" : ""}
             onClick={() => handleNavigate("orders", "/Myorders")}
           >
-            <img src={Order} alt="Image-Not-Found" className="img-fluid" />
+            <div className="ua-sidebar-icon-wrapper">
+              <img src={Order} alt="Image-Not-Found" className="img-fluid" />
+            </div>
             Orders
           </li>
 
@@ -104,16 +123,68 @@ const Sidebarcomon = () => {
             className={activeSection === "wishlist" ? "active" : ""}
             onClick={() => handleNavigate("wishlist", "/wishlist")}
           >
-            {/* <img src={user} alt="Image-Not-Found" className="img-fluid" /> */}
-            <img src={favourite} alt="Image-Not-Found" className="img-fluid" />
+            <div className="ua-sidebar-icon-wrapper">
+              <img src={favourite} alt="Image-Not-Found" className="img-fluid" />
+            </div>
             Wishlist
+          </li>
+
+          <li
+            className={activeSection === "compatibility" ? "active" : ""}
+            onClick={() => handleNavigate("compatibility", "/ingredient-compatibility")}
+          >
+            <div className="ua-sidebar-icon-wrapper">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="img-fluid">
+                <g transform="translate(0.575, 1.39)">
+                  <path d="M9 3H15M10 3V10.22C10 10.98 9.68 11.71 9.11 12.23L5.78 15.3C4.65 16.34 5.39 18.22 6.92 18.22H17.07C18.61 18.22 19.34 16.34 18.21 15.3L14.88 12.23C14.31 11.71 14 10.98 14 10.22V3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M7.5 15H16.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </g>
+              </svg>
+            </div>
+            Ingredient Compatibility
           </li>
 
           <li
             className={activeSection === "routines" ? "active" : ""}
             onClick={() => handleNavigate("routines", "/routines")}
           >
-            <span style={{ marginRight: "10px", fontSize: "1.2rem" }}>🧴</span>
+            <div className="ua-sidebar-icon-wrapper">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="img-fluid"
+              >
+                <g transform="translate(0, 0.5)">
+                  {/* Bottle */}
+                  <path
+                    d="M10 3H14M11 3V6L8.5 8.5C8.18 8.82 8 9.25 8 9.71V18C8 19.1 8.9 20 10 20H14C15.1 20 16 19.1 16 18V9.71C16 9.25 15.82 8.82 15.5 8.5L13 6V3"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+
+                  {/* Checklist */}
+                  <path
+                    d="M18 10L19 11L21 9"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M18 15L19 16L21 14"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </g>
+              </svg>
+            </div>
             Routine Builder
           </li>
 
@@ -121,8 +192,9 @@ const Sidebarcomon = () => {
             className={activeSection === "refer" ? "active" : ""}
             onClick={() => handleNavigate("refer", "/referral")}
           >
-            {/* <img src={user} alt="Image-Not-Found" className="img-fluid" /> */}
-            <img src={Refresh} alt="Image-Not-Found" className="img-fluid" />
+            <div className="ua-sidebar-icon-wrapper">
+              <img src={Refresh} alt="Image-Not-Found" className="img-fluid" />
+            </div>
             Refer & Earn
           </li>
 
@@ -130,8 +202,9 @@ const Sidebarcomon = () => {
             className={activeSection === "wallet" ? "active" : ""}
             onClick={() => handleNavigate("wallet", "/wallet")}
           >
-            {/* <img src={user} alt="Image-Not-Found" className="img-fluid" /> */}
-            <img src={wallets} alt="Image-Not-Found" className="img-fluid" />
+            <div className="ua-sidebar-icon-wrapper">
+              <img src={wallets} alt="Image-Not-Found" className="img-fluid" />
+            </div>
             Joyory Wallet
           </li>
 
@@ -139,8 +212,9 @@ const Sidebarcomon = () => {
             className={activeSection === "help" ? "active" : ""}
             onClick={() => handleNavigate("help", "/help")}
           >
-            {/* <img src={user} alt="Image-Not-Found" className="img-fluid" /> */}
-            <img src={help} alt="Image-Not-Found" className="img-fluid" />
+            <div className="ua-sidebar-icon-wrapper">
+              <img src={help} alt="Image-Not-Found" className="img-fluid" />
+            </div>
             Help & FAQs
           </li>
 
@@ -148,16 +222,19 @@ const Sidebarcomon = () => {
             className={activeSection === "sell" ? "active" : ""}
             onClick={() => handleNavigate("sell", "/Coming-Soon")}
           >
-            {/* <img src={user} alt="Image-Not-Found" className="img-fluid" /> */}
-            <img src={Joyory} alt="Image-Not-Found" className="img-fluid" />
+            <div className="ua-sidebar-icon-wrapper">
+              <img src={Joyory} alt="Image-Not-Found" className="img-fluid" />
+            </div>
             Sell on Joyory
           </li>
 
           <li
             className={activeSection === "logout" ? "active" : ""}
-            onClick={handleLogout} // ✅ call API here
+            onClick={handleLogout}
           >
-            <img src={logout} alt="Image-Not-Found" className="img-fluid" />
+            <div className="ua-sidebar-icon-wrapper">
+              <img src={logout} alt="Image-Not-Found" className="img-fluid" />
+            </div>
             Logout
           </li>
         </ul>

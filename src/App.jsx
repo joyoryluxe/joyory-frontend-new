@@ -6,8 +6,8 @@ import ProtectedRoute from "./components/common/ProtectedRoute";
 import CartProvider from "./context/CartContext";
 import { WishlistProvider } from "./context/WishlistContext";
 import Home from "./pages/Home";
-import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import PhoneAuth from "./pages/PhoneAuth";
 import ForgotPassword from "./pages/ForgotPassword";
 import Otp from "./pages/Otp";
 import ResetPassword from "./pages/ResetPassword";
@@ -108,8 +108,8 @@ function App() {
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<Home />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<PhoneAuth />} />
+            <Route path="/login" element={<PhoneAuth />} />
             <Route path="/otp" element={<Otp />} />
             <Route path="/forgotpassword" element={<ForgotPassword />} />
             <Route path="/resetpassword" element={<ResetPassword />} />

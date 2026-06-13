@@ -94,11 +94,16 @@ export default function BeautyConcierge() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const hideFab = ["/login", "/signup", "/affiliatelogin", "/affiliatesignup", "/mainvirtualtryon"].includes(
-    location.pathname.toLowerCase()
-  );
-
-
+  const hideFab = [
+    "/login",
+    "/signup",
+    "/affiliatelogin",
+    "/affiliatesignup",
+    "/mainvirtualtryon",
+    "/forgotpassword",
+    "/otp",
+    "/resetpassword"
+  ].includes(location.pathname.toLowerCase());
 
   /* ── state ── */
   const [open, setOpen] = useState(false);
