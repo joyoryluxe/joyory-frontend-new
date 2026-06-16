@@ -475,6 +475,8 @@ export default function Recommendations() {
                     borderRadius: '50%',
                     width: '34px',
                     height: '34px',
+                    minHeight: '34px',
+                    maxHeight: '34px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -672,7 +674,7 @@ export default function Recommendations() {
                             </div>
                             {isOutOfStock && (
                               <span style={{
-                                position: "absolute", top: 0, left: 8, right: 0, bottom: 0,
+                                position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
                                 display: "flex", alignItems: "center", justifyContent: "center",
                                 color: "red", fontWeight: "bold", fontSize: 16, pointerEvents: "none"
                               }}>✕</span>
@@ -1066,7 +1068,7 @@ export default function Recommendations() {
                               <span style={{
                                 color: 'red',
                                 fontWeight: 'bold',
-                                marginLeft: '6px',
+                                marginLeft: '0px',
                                 fontSize: '12px',
                               }}>✕</span>
                             )}

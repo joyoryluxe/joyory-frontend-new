@@ -1,52 +1,201 @@
-/* src/css/IngredientDetail.css */
+/* src/styles/IngredientDetail.css */
 
 .ing-detail-page {
-  max-width: 1040px;
-  margin: 120px auto 60px;
+  max-width: 1100px;
+  margin: 145px auto 60px;
   padding: 0 20px;
   box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
+/* Hero Section */
 .ing-hero-card {
   background: #ffffff;
-  border: 1px solid #f2d5dc;
-  border-radius: 24px;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
   padding: 32px 40px;
-  box-shadow: 0 16px 48px rgba(163, 118, 129, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+}
+
+.ing-category-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: #0077b6;
+  background: #ffffff;
+  border: 1px solid #0077b6;
+  border-radius: 4px;
 }
 
 .ing-profile-badge {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: #fffafb;
-  border: 1px solid #fae0e5;
-  border-radius: 14px;
-  padding: 8px 16px;
-  min-width: 160px;
+  background: #ffffff;
+  border: 1px solid #111111;
+  border-radius: 8px;
+  padding: 10px 16px;
+  min-width: 180px;
   text-align: left;
 }
 
 .ing-badge-icon {
-  font-size: 22px;
+  font-size: 20px;
   display: flex;
   align-items: center;
+  justify-content: center;
 }
 
 .ing-badge-info {
   line-height: 1.3;
 }
 
+.ing-badge-info span {
+  font-size: 11px;
+  color: #666666;
+}
+
+.ing-badge-info strong {
+  font-size: 13px;
+  color: #111111;
+}
+
+/* Ingredient Detailed Cards */
 .ing-card {
   background: #ffffff;
-  border: 1px solid #fae5e9;
-  border-radius: 20px;
-  box-shadow: 0 8px 24px rgba(163, 118, 129, 0.04);
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+}
+
+/* Headings & Texts */
+.card-body {
+  padding: 10px !important;
+}
+
+.ing-card h4,
+.ing-card h5 {
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #111111;
+}
+
+/* Skin Suitability Badges */
+.ing-skin-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #111111;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+}
+
+.ing-skin-badge-avoid {
+  display: inline-block;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #111111;
+  background: #ffffff;
+  border: 1px dashed #111111;
+  border-radius: 4px;
+}
+
+/* Conflict and Compatible Styling */
+.ing-compatible-badge {
+  display: inline-block;
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #0077b6;
+  background: #ffffff;
+  border: 1px solid #0077b6;
+  border-radius: 24px;
+  transition: all 0.2s ease;
+}
+
+.ing-compatible-badge:hover {
+  background: #0077b6;
+  color: #ffffff;
+}
+
+.ing-conflict-card {
+  padding: 16px;
+  border: 1px solid #111111;
+  background: #ffffff;
+  border-radius: 8px;
+  font-size: 13px;
+  transition: transform 0.2s ease;
+}
+
+.ing-conflict-card:hover {
+  transform: translateY(-2px);
+}
+
+.ing-severity-high {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 3px 8px;
+  background: #111111;
+  color: #ffffff;
+  border-radius: 3px;
+  text-transform: uppercase;
+}
+
+.ing-severity-medium {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 2px 7px;
+  background: #ffffff;
+  color: #111111;
+  border: 1px solid #111111;
+  border-radius: 3px;
+  text-transform: uppercase;
+}
+
+.ing-conflict-advice {
+  background: #f8f9fa;
+  padding: 10px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #111111;
+  border-left: 3px solid #0077b6;
+}
+
+/* Catalog Product Mini Cards */
+.hover-card {
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+  background: #ffffff;
 }
 
 .hover-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 30px rgba(163, 118, 129, 0.15) !important;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05) !important;
+  border-color: #111111 !important;
+}
+
+.hover-card .card-img-top {
+  height: 200px;
+  object-fit: cover;
+  background-color: #ffffff;
+  width: 100%;
+}
+
+.ing-product-price {
+  font-weight: 700;
+  color: #000;
 }
 
 .limit-2-lines {
@@ -62,11 +211,30 @@
     margin: 80px auto 40px;
     padding: 0 16px;
   }
+
   .ing-hero-card {
     padding: 24px 20px;
-    border-radius: 16px;
+    border-radius: 12px;
   }
+
   .ing-profile-badge {
     min-width: 100%;
+  }
+
+  .hover-card .card-img-top {
+    height: 140px;
+  }
+
+  .hover-card .card-body {
+    justify-content: flex-start !important;
+    padding: 2px 8px !important;
+  }
+
+  .hover-card .card-body .mt-2 {
+    margin-top: 4px !important;
+  }
+
+  .hover-card .card-title {
+    margin-bottom: 4px !important;
   }
 }

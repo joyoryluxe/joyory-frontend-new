@@ -29,9 +29,17 @@ export const checkCompatibility = (ingredients) => {
  * GET /api/ingredients/:name/products
  * Get Joyory catalog products containing this ingredient
  */
-export const getProductsByIngredient = (name, page = 1, limit = 12) => {
+export const getProductsByIngredient = (name, pageOrCursor = null, limit = 12) => {
+  const params = { limit };
+  if (pageOrCursor) {
+    if (typeof pageOrCursor === "number") {
+      params.page = pageOrCursor;
+    } else {
+      params.cursor = pageOrCursor;
+    }
+  }
   return api.get(`/ingredients/${encodeURIComponent(name)}/products`, {
-    params: { page, limit },
+    params,
   });
 };
 

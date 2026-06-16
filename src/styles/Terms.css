@@ -104,6 +104,7 @@
   background: transparent;
   outline: none;
   width: 100%;
+  min-width: 0; /* Prevent horizontal overflow in flex containers */
   font-size: 1rem;
   color: #2d2d2d;
   font-family: 'Montserrat', sans-serif !important;
@@ -137,7 +138,7 @@
   margin: 0 auto;
   padding: 0 30px;
   display: grid;
-  grid-template-columns: 320px 1fr;
+  grid-template-columns: 320px minmax(0, 1fr);
   gap: 45px;
   align-items: start;
 }
@@ -520,7 +521,7 @@
 
 @media (max-width: 992px) {
   .terms-main-layout {
-    grid-template-columns: 1fr; /* Stack sidebar and contents */
+    grid-template-columns: minmax(0, 1fr); /* Stack sidebar and contents safely */
     padding: 0 20px;
     gap: 20px;
   }
@@ -557,10 +558,19 @@
 
   .terms-search-section {
     margin-top: -20px;
+    padding: 0 10px; /* Reduce horizontal margin/padding on small viewports */
   }
 
   .terms-search-wrapper {
-    padding: 8px 15px;
+    padding: 8px 12px; /* Optimize space inside search bar */
+  }
+
+  .terms-main-layout {
+    padding: 0 10px; /* Ensure main cards have full screen width access on tiny viewports */
+  }
+
+  .terms-section-card {
+    padding: 20px 12px; /* Maximize text space on small screens */
   }
 
   .terms-section-header h2 {

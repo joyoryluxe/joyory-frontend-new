@@ -213,6 +213,7 @@
         opacity: 0;
         transform: translateY(-10px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -499,6 +500,7 @@
     from {
         opacity: 0;
     }
+
     to {
         opacity: 1;
     }
@@ -584,6 +586,7 @@
     .header-categories {
         display: none;
     }
+
     .mega-menu-overlay {
         display: none;
         /* Hide overlay on mobile where mega menu isn't used */
@@ -678,6 +681,18 @@
     padding: 20px;
     z-index: 1000;
     /* Higher than overlay */
+    animation: brandsFadeIn 0.25s ease-out;
+}
+
+@keyframes brandsFadeIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -10px);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, 0);
+    }
 }
 
 .brands-dropdown {
@@ -759,8 +774,135 @@
         opacity: 0;
         transform: translateY(-10px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
+    }
+}
+
+/* Custom category dropdown refinements for premium alignment & weights */
+
+/* 1. Make the subcategory titles bold, black and slightly larger */
+.category-dropdown .subcategory-title {
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    color: #000000 !important;
+    margin-bottom: 12px !important;
+    letter-spacing: 0.3px !important;
+    text-transform: capitalize !important;
+}
+
+.category-dropdown .subcategory-title:hover {
+    color: #0077b6 !important;
+}
+
+/* 2. Remove left margin/padding/indentation from all nested child category levels */
+.category-dropdown .subcategory-children {
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+    border: none !important;
+}
+
+.category-dropdown .subcategory-children.level-1,
+.category-dropdown .subcategory-children.level-2,
+.category-dropdown .subcategory-children.level-3,
+.category-dropdown .subcategory-children.level-4 {
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+}
+
+.category-dropdown .child-category-wrapper {
+    margin: 4px 0 !important;
+    padding: 0 !important;
+    text-align: left !important;
+}
+
+/* 3. Style child category texts to be clean, readable and left-aligned */
+.category-dropdown .child-category {
+    font-size: 13.5px !important;
+    color: #555555 !important;
+    cursor: pointer !important;
+    padding: 3px 0 !important;
+    text-align: left !important;
+    display: block !important;
+    transition: color 0.15s ease !important;
+}
+
+.category-dropdown .child-category:hover {
+    color: #000000 !important;
+}
+
+/* 4. Increase subcategory column width and display them in a clean flex layout to prevent wide gaps */
+.category-dropdown .subcategory {
+    min-width: 160px !important;
+    max-width: 220px !important;
+    width: auto !important;
+    padding: 0 !important;
+    margin-bottom: 20px !important;
+}
+
+.category-dropdown .dropdown-left-side {
+    flex: 1 !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 25px 45px !important;
+    justify-content: flex-start !important;
+}
+
+/* 5. Right side image sizing to prevent bottom overflow and match column heights */
+.category-dropdown .dropdown-right-side {
+    width: 280px !important;
+    max-width: 30% !important;
+    flex-shrink: 1 !important;
+    min-width: 200px !important;
+    height: auto !important;
+    display: block !important;
+}
+
+.category-dropdown .dropdown-right-side img {
+    width: 100% !important;
+    height: 260px !important;
+    /* Fixed height to match column layout and prevent overflow */
+    max-height: 260px !important;
+    object-fit: cover !important;
+    border-radius: 8px !important;
+}
+
+/* 6. Centering and responsiveness for all screen sizes */
+.category-dropdown {
+    position: absolute !important;
+    top: 100% !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: 92vw !important;
+    max-width: 1280px !important;
+    background: #fff !important;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12) !important;
+    padding: 30px 50px !important;
+    z-index: 1000 !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    gap: 40px !important;
+    border-radius: 0 0 12px 12px !important;
+    animation: categoryFadeIn 0.2s ease !important;
+}
+
+@media (max-width: 1280px) {
+    .category-dropdown {
+        width: 95vw !important;
+        padding: 25px 30px !important;
+        gap: 30px !important;
+    }
+}
+
+@keyframes categoryFadeIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -10px);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, 0);
     }
 }

@@ -1,7 +1,12 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 /* Privacy Policy Stylesheet - Joyory Luxe */
 
 .privacy-container {
-  background-color: #faf9f6; /* Premium Alabaster / Off-white background */
   color: #2d2d2d;
   font-family: 'Montserrat', sans-serif !important;
   min-height: 100vh;
@@ -11,12 +16,11 @@
 /* Luxe Header Banner */
 .privacy-header-banner {
   position: relative;
-  background: linear-gradient(135deg, #111111 0%, #1c1c1c 60%, #1a2327 100%); /* Slightly deep oceanic-charcoal accent for privacy */
-  color: #ffffff;
-  padding: 80px 20px;
+  /* background: linear-gradient(135deg, #111111 0%, #1c1c1c 60%, #292117 100%); */
+  color: #1c1a1a;
+  padding: 40px 20px 80px;
   text-align: center;
   overflow: hidden;
-  border-bottom: 2px solid #c5a880; /* Champagne Gold accent line */
 }
 
 .privacy-header-banner::before {
@@ -26,7 +30,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: radial-gradient(circle at 80% 20%, rgba(197, 168, 128, 0.15) 0%, transparent 50%);
+  /* background: radial-gradient(circle at 80% 20%, rgba(197, 168, 128, 0.15) 0%, transparent 50%); */
   pointer-events: none;
 }
 
@@ -36,15 +40,16 @@
   font-weight: 700;
   letter-spacing: 2px;
   margin-bottom: 15px;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  background: linear-gradient(to right, #ffffff, #ebd2b0, #ffffff);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #0c0a0a;
+  /* text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); */
+  /* background: linear-gradient(to right, #ffffff, #ebd2b0, #ffffff); */
+  /* -webkit-background-clip: text; */
+  /* -webkit-text-fill-color: transparent; */
 }
 
 .privacy-header-banner p {
   font-size: 1.1rem;
-  color: #d1c8be;
+  color: #2d2d2d;
   max-width: 600px;
   margin: 0 auto 20px auto;
   font-weight: 300;
@@ -105,6 +110,7 @@
   background: transparent;
   outline: none;
   width: 100%;
+  min-width: 0; /* Prevent horizontal overflow in flex containers */
   font-size: 1rem;
   color: #2d2d2d;
   font-family: 'Montserrat', sans-serif !important;
@@ -138,7 +144,7 @@
   margin: 0 auto;
   padding: 0 30px;
   display: grid;
-  grid-template-columns: 320px 1fr;
+  grid-template-columns: 320px minmax(0, 1fr);
   gap: 45px;
   align-items: start;
 }
@@ -349,59 +355,6 @@
   margin-top: 3px;
 }
 
-/* Grievance Officer Contact Details Box */
-.privacy-grievance-box {
-  background: #ffffff;
-  border: 1.5px dashed #c5a880;
-  border-radius: 12px;
-  padding: 25px;
-  margin-top: 20px;
-  box-shadow: 0 5px 15px rgba(197, 168, 128, 0.04);
-}
-
-.privacy-grievance-title {
-  font-family: 'playfair', sans-serif !important;
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: #111111;
-  margin-bottom: 15px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.privacy-grievance-title svg {
-  color: #b39268;
-}
-
-.privacy-grievance-grid {
-  display: grid;
-  grid-template-columns: 120px 1fr;
-  gap: 8px 15px;
-  font-size: 0.95rem;
-}
-
-.privacy-grievance-label {
-  font-weight: 600;
-  color: #2d2d2d;
-}
-
-.privacy-grievance-value {
-  color: #5f5f5f;
-}
-
-.privacy-grievance-value a {
-  color: #b39268;
-  text-decoration: none;
-  font-weight: 500;
-  transition: color 0.2s;
-}
-
-.privacy-grievance-value a:hover {
-  color: #111111;
-  text-decoration: underline;
-}
-
 /* Real-Time Highlight Match Mark */
 .highlight-text {
   background-color: rgba(197, 168, 128, 0.25);
@@ -574,7 +527,7 @@
 
 @media (max-width: 992px) {
   .privacy-main-layout {
-    grid-template-columns: 1fr; /* Stack sidebar and contents */
+    grid-template-columns: minmax(0, 1fr); /* Stack sidebar and contents safely */
     padding: 0 20px;
     gap: 20px;
   }
@@ -611,10 +564,19 @@
 
   .privacy-search-section {
     margin-top: -20px;
+    padding: 0 10px; /* Reduce horizontal margin/padding on small viewports */
   }
 
   .privacy-search-wrapper {
-    padding: 8px 15px;
+    padding: 8px 12px; /* Optimize space inside search bar */
+  }
+
+  .privacy-main-layout {
+    padding: 0 10px; /* Ensure main cards have full screen width access on tiny viewports */
+  }
+
+  .privacy-section-card {
+    padding: 20px 12px; /* Maximize text space on small screens */
   }
 
   .privacy-section-header h2 {
@@ -625,4 +587,82 @@
     padding: 12px 16px;
     font-size: 0.88rem;
   }
+
+  /* Optimize Grievance Box for Mobile viewports */
+  .privacy-grievance-box {
+    padding: 15px 12px;
+  }
+
+  .privacy-grievance-grid {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .privacy-grievance-label {
+    margin-top: 8px;
+    font-size: 0.9rem;
+  }
+
+  .privacy-grievance-label:first-child {
+    margin-top: 0;
+  }
+
+  .privacy-grievance-value {
+    font-size: 0.9rem;
+    word-break: break-all;
+    overflow-wrap: break-word;
+  }
+}
+
+/* Grievance Officer Contact Details Box */
+.privacy-grievance-box {
+  background: #ffffff;
+  border: 1.5px dashed #c5a880;
+  border-radius: 12px;
+  padding: 25px;
+  margin-top: 20px;
+  box-shadow: 0 5px 15px rgba(197, 168, 128, 0.04);
+}
+
+.privacy-grievance-title {
+  font-family: 'playfair', sans-serif !important;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #111111;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.privacy-grievance-title svg {
+  color: #b39268;
+}
+
+.privacy-grievance-grid {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 8px 15px;
+  font-size: 0.95rem;
+}
+
+.privacy-grievance-label {
+  font-weight: 600;
+  color: #2d2d2d;
+}
+
+.privacy-grievance-value {
+  color: #5f5f5f;
+}
+
+.privacy-grievance-value a {
+  color: #b39268;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.privacy-grievance-value a:hover {
+  color: #111111;
+  text-decoration: underline;
 }

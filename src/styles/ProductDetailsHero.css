@@ -46,6 +46,7 @@
     transition: all 0.2s ease !important;
     width: 36px !important;
     height: 36px !important;
+    min-height: 36px !important;
     background-color: #f8f8f8 !important;
     flex-shrink: 0 !important;
     margin-top: -4px !important;

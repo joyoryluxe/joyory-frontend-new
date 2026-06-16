@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { Card, Row, Col } from "react-bootstrap";
+import { Container, Row, Col } from "react-bootstrap";
+import { Gift, Copy, Check, Sparkles, Award, MessageSquare, Mail } from "lucide-react";
 import "../styles/Referral.css";
 import Header from "../components/common/Header";
 import Footer from "../components/common/Footer";
@@ -32,7 +33,6 @@ const Referral = () => {
         }
 
         const data = await res.json();
-
         setReferralCode(data.referralCode || "");
         setRewards(data.rewards || null);
         setTiers(data.tiers || []);
@@ -45,6 +45,7 @@ const Referral = () => {
   }, []);
 
   const handleCopy = () => {
+    if (!referralCode) return;
     navigator.clipboard.writeText(referralCode);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -53,112 +54,150 @@ const Referral = () => {
   return (
     <>
       <Header />
-      <div className="container py-4 page-title-main-name mt-lg-5 pt-lg-5 mt-md-0 pt-md-5 ">
-        {/* Header Banner */}
-        <img src={gift} alt="Referral Banner" className="img-fluid img-postion" />
-        <Card className="mb-4 text-center referral-banner cards">
-          <Card.Body>
-            <h5 className="mb-2">Exclusive Rewards Just For You</h5>
-            <p className="mb-0">Earn up to 1,000 points just by referring</p>
-          </Card.Body>
-        </Card>
-
-        {/* Rewards Info */}
-        <div className="mb-4">
-          <Col md={12}>
-            <Card className="p-3 text-center d-flex main-card border-top cards">
-              <h6>Your Reward</h6>
-              <div className="detilas">
-                <p className="mb-0">
-                  {rewards ? rewards.yourReward : "Loading..."}
-                </p>
-                <small>
-                  {rewards
-                    ? `when your referee buys for ₹${rewards.minOrderAmount} or more the first time`
-                    : ""}
-                </small>
-              </div>
-            </Card>
-          </Col>
-          <Col md={12}>
-            <Card className="p-3 text-center d-flex main-card border-bottom cards">
-              <h6>
-                Your Friend’s <br /> Reward
-              </h6>
-              <div className="detilas">
-                <p className="mb-0">
-                  {rewards ? rewards.friendReward : "Loading..."}
-                </p>
-                <small>
-                  {rewards
-                    ? `when your referee buys for ₹${rewards.minOrderAmount} or more the first time`
-                    : ""}
-                </small>
-              </div>
-            </Card>
-          </Col>
-        </div>
-
-        {/* Refer & Earn + Unlock Perks */}
-        <Row className="">
-          <Col lg={6} className="mb-3">
-            <Card className="p-3 text-center Refer-cards ">
-              <h6>Refer & Earn</h6>
-              <p>
-                Get ₹50 extra when your referral signs up via your shared
-                Instagram/WhatsApp link.
-              </p>
-
-              {/* ✅ Custom Referral Code Box */}
-              <div className="referral-box" onClick={handleCopy}>
-                <i className="bi bi-clipboard me-2"></i>
-                <span>{referralCode}</span>
-                {copied && <small className="copied-msg">Copied!</small>}
-              </div>
-            </Card>
-
-
-            <div className="Loyalty">
-              <Card className="p-3 cards">
-                <h6 className="fw-bold mb-3">Luxe Loyalty Tiers</h6>
-                <div className="Loyalty-box">
-                  <p>
-                    Each referral unlocks a new reward tier when your friend makes their
-                    first purchase!
+      <div className="referral-page-container pt-xl-5">
+        <Container className="pt-4 mt-lg-5 pt-lg-4 mt-md-0 pt-md-5">
+          {/* Hero Banner Section */}
+          <div className="referral-hero">
+            <Row className="w-100 align-items-center">
+              <Col lg={7} className="mb-4 mb-lg-0 text-start">
+                <div className="referral-hero-content">
+                  <span className="referral-hero-badge">Joyory Circle</span>
+                  <h1 className="referral-hero-title">
+                    Share the Luxe,<br />Spread the Beauty
+                  </h1>
+                  <p className="referral-hero-subtitle">
+                    Invite your inner circle to experience the premium world of Joyory.
+                    Gift them a special welcome, and unlock exquisite point rewards for yourself.
                   </p>
                 </div>
-                <Row>
-                  {tiers.map((tier, index) => (
-                    <Col lg={12} key={index} className="mb-2 w-75 margin-left">
-                      <Card className="p-3 pb-2 pt-2 text-center tier-card">
-                        <strong>{tier.milestone} Friend(s)</strong>
-                        <p className="mb-0">{tier.reward}</p>
-                      </Card>
-                    </Col>
-                  ))}
-                </Row>
-              </Card>
+              </Col>
+              <Col lg={5} className="referral-hero-img-col">
+                <img src={gift} alt="Referral Gift Banner" className="img-fluid referral-hero-img" />
+              </Col>
+            </Row>
+          </div>
+
+          {/* Value Dual Voucher Cards */}
+          <div className="rewards-voucher-grid">
+            <div className="voucher-card">
+              <div className="voucher-icon-wrapper">
+                <Gift size={24} />
+              </div>
+              <span className="voucher-label">Your Exclusive Reward</span>
+              <h3 className="voucher-reward">
+                {rewards ? rewards.yourReward : "Loading..."}
+              </h3>
+              <p className="voucher-reward-sub">
+                {rewards
+                  ? `Earned when your referred friend makes their first purchase of ₹${rewards.minOrderAmount} or more.`
+                  : "Fetching your tier benefits..."}
+              </p>
             </div>
 
-
-
-          </Col>
-
-          <Col lg={6}>
-            <Card className="p-3 text-center unlock-perks exclusive-pack exclusive-pack ">
-              <h6>Unlock <br /> Exclusive perks</h6>
-              <div className="">
-                <img src={Referrals} alt="Referral Banner" className="img-fluid" />
+            <div className="voucher-card">
+              <div className="voucher-icon-wrapper">
+                <Sparkles size={24} />
               </div>
-              <small>
-                For Exclusive deals, limited drops, and bonus samples every
-                month
-              </small>
-            </Card>
-          </Col>
-        </Row>       
-      </div>
+              <span className="voucher-label">Your Friend's Welcome Gift</span>
+              <h3 className="voucher-reward">
+                {rewards ? rewards.friendReward : "Loading..."}
+              </h3>
+              <p className="voucher-reward-sub">
+                {rewards
+                  ? `Sent to your friend to use on their first purchase of ₹${rewards.minOrderAmount} or more.`
+                  : "Fetching new member perks..."}
+              </p>
+            </div>
+          </div>
 
+          {/* Referral Code Dashboard + Loyalty Tiers */}
+          <Row className="referral-dashboard-row">
+            {/* Share Widget & VIP Benefits Column */}
+            <Col lg={6} className="mb-4 mb-lg-0">
+              <div className="referral-card-wrapper d-flex flex-column gap-4">
+                {/* Sharing Dashboard */}
+                <div className="referral-luxe-card">
+                  <h3 className="referral-card-title text-start">Spread Your Invite</h3>
+                  <p className="referral-card-desc text-start">
+                    Unlock a bonus ₹50 credit whenever a friend completes registration via your code. Copy your code or share it directly below.
+                  </p>
+
+                  <div className="sharing-widget-container">
+                    <div className="sharing-label">Your Personal Code</div>
+                    <div className="referral-code-display" onClick={handleCopy} title="Click to copy code">
+                      <span className="referral-code-text">{referralCode || "GETTING CODE..."}</span>
+                      <button className={`copy-badge-btn ${copied ? "copied" : ""}`}>
+                        {copied ? <Check size={14} /> : <Copy size={14} />}
+                        {copied ? "Copied" : "Copy Code"}
+                      </button>
+                    </div>
+
+                    <div className="sharing-label">Quick Share</div>
+                    <div className="social-share-group">
+                      <a
+                        href={`https://api.whatsapp.com/send?text=Hey! Discover premium cosmetics and skincare at Joyory. Use my invite code *${referralCode}* to get a special reward on your first order! Join here: https://joyory.com/login?ref=${referralCode}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="social-share-btn share-whatsapp"
+                      >
+                        <MessageSquare size={16} /> WhatsApp
+                      </a>
+                      <a
+                        href={`mailto:?subject=Exclusive Invitation to Joyory Luxe&body=Hey! I'd love to invite you to join Joyory, my go-to store for luxury beauty products. Sign up using my referral code *${referralCode}* to unlock a special welcome discount on your first order of items. Join here: https://beauty.joyory.com/signup?ref=${referralCode}`}
+                        className="social-share-btn share-email"
+                      >
+                        <Mail size={16} /> Send Email
+                      </a>
+                    </div>
+                  </div>
+                </div>
+
+                {/* VIP Perks Highlight */}
+
+              </div>
+            </Col>
+
+            {/* Loyalty Milestone Tiers Column */}
+            <Col lg={6}>
+              <div className="referral-luxe-card">
+                <h3 className="referral-card-title text-start">Luxe Loyalty Milestones</h3>
+                <p className="referral-card-desc text-start">
+                  The more friends you invite, the more benefits you unlock. Track your milestone goals and luxury rewards.
+                </p>
+
+                <div className="loyalty-tiers-container">
+                  {tiers.length > 0 ? (
+                    tiers.map((tier, index) => (
+                      <div className="tier-milestone-item" key={index}>
+                        <div className="tier-milestone-left">
+                          <div className="tier-milestone-badge">
+                            {tier.milestone}
+                          </div>
+                          <div className="tier-milestone-info">
+                            <div className="tier-milestone-title">
+                              {tier.milestone} Successful Friend{tier.milestone > 1 ? "s" : ""}
+                            </div>
+                            <div className="tier-milestone-reward">
+                              {tier.reward}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="tier-milestone-status">
+                          <Award size={14} className="me-1" /> Tier Goal
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-5 text-muted">
+                      No tiers defined yet. Start inviting to build your Luxe loyalty score!
+                    </div>
+                  )}
+                </div>
+              </div>
+            </Col>
+          </Row>
+        </Container>
+      </div>
       <Footer />
     </>
   );

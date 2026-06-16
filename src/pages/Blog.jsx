@@ -904,9 +904,9 @@ const Blog = () => {
                               />
 
                               {item?.supportsVTO && (
-                                <div 
-                                  className="support-beauty-badge" 
-                                  title="Try It On" 
+                                <div
+                                  className="support-beauty-badge"
+                                  title="Try It On"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleProductClick(item);
@@ -945,10 +945,12 @@ const Blog = () => {
                                   color: isProductInWishlist ? '#dc3545' : '#000000',
                                   fontSize: '22px',
                                   zIndex: 2,
-                                  backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                  backgroundColor: 'transparent !important',
                                   borderRadius: '50%',
                                   width: '34px',
                                   height: '34px',
+                                  minHeight: '34px',
+                                  maxHeight: '34px',
                                   display: 'flex',
                                   alignItems: 'center',
                                   justifyContent: 'center',

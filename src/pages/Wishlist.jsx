@@ -14,11 +14,15 @@ import axiosInstance from "../utils/axiosInstance.js";
 import "../styles/BestSellers.css";
 
 const Wishlist = () => {
-  const { wishlistItems, loading, removeFromWishlist: contextRemoveFromWishlist } = useContext(WishlistContext);
+  const { wishlistItems, loading, removeFromWishlist: contextRemoveFromWishlist, syncWishlist } = useContext(WishlistContext);
   const { addToCart, syncCartFromBackend } = useContext(CartContext);
   const [removingItems, setRemovingItems] = useState({});
   const navigate = useNavigate();
   const { user } = useContext(UserContext);
+
+  useEffect(() => {
+    syncWishlist(wishlistItems.length > 0);
+  }, []);
 
 
   const formatPrice = useCallback((price) => {

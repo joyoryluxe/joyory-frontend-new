@@ -987,7 +987,7 @@ const RoutineBuilder = () => {
       const canvas = document.createElement("canvas");
       canvas.width = video.videoWidth || 640;
       canvas.height = video.videoHeight || 480;
-      
+
       const ctx = canvas.getContext("2d");
       // Flip for mirrors natural selfie look
       ctx.translate(canvas.width, 0);
@@ -1044,7 +1044,7 @@ const RoutineBuilder = () => {
 
     try {
       setIsSavingLog(true);
-      
+
       // Filter out empty strings/nulls to avoid backend validation 500 crashes
       const cleanProgressPhotos = progressPhotos.filter(url => url && url.trim());
       const payload = {
@@ -1474,10 +1474,11 @@ const RoutineBuilder = () => {
                         )}
 
                         {step.allergenAlert && (
-                          <div className="rb-allergen-alert-box alert-danger">
+                          <div className="rb-allergen-alert-box">
                             <FaExclamationTriangle /> <strong>Allergen Warning:</strong> {step.allergenAlertMessage || "Matches your sensitive/allergy profile."}
                           </div>
                         )}
+
 
                         {step.note && (
                           <div className="rb-public-step-note">
@@ -1612,7 +1613,7 @@ const RoutineBuilder = () => {
                   <div>
 
                     {/* AI Skincare Coach Card */}
-                    <div className="rb-ai-banner d-flex flex-column align-items-stretch gap-3 mb-4 p-4 rounded-lg shadow-sm" style={{ background: "linear-gradient(135deg, #fffefe, #fcfaf6)", border: "1px solid var(--joyory-border)" }}>
+                    <div className="rb-ai-banner d-flex flex-column align-items-stretch gap-3 mb-4 p-4 rounded-lg shadow-sm" style={{ background: "#ffffff", border: "1px solid var(--joyory-border)" }}>
                       <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
                         <div className="rb-ai-banner-content">
                           <h4 className="mb-1 font-weight-bold d-flex align-items-center gap-2" style={{ fontSize: "1.25rem", color: "var(--joyory-charcoal)" }}>
@@ -1666,7 +1667,7 @@ const RoutineBuilder = () => {
                     {/* Routines Grid */}
                     {routines.length === 0 ? (
                       <div className="text-center py-5 border rounded-lg bg-light" style={{ borderStyle: "dashed !important" }}>
-                        <span style={{ fontSize: "3rem" }}>🪞</span>
+                        <FaCalendarAlt style={{ fontSize: "3rem", color: "#cccccc", marginBottom: "15px" }} />
                         <h4 className="mt-3">No routines created yet</h4>
                         <p className="text-muted">Use the Custom Builder or suggest an AI routine to begin tracking.</p>
                       </div>
@@ -1760,10 +1761,11 @@ const RoutineBuilder = () => {
                               </div>
 
                               {routine.completionPercentage < 100 && (
-                                <div className="rb-allergen-alert-box mt-2" style={{ background: "#fffde6", borderColor: "#fff5b8", color: "#856404", padding: "6px 12px", fontSize: "0.78rem" }}>
-                                  ⚠️ <strong>Missing Products:</strong> You need to buy {(routine.requiredProductsCount || routine.steps?.length || 0) - (routine.ownedProductsCount || 0)} product(s) to complete this routine.
+                                <div className="rb-allergen-alert-box mt-2" style={{ background: "#ffffff", border: "1px dashed #000000", color: "#000000", padding: "6px 12px", fontSize: "0.78rem" }}>
+                                  <strong>Missing Products:</strong> You need to buy {(routine.requiredProductsCount || routine.steps?.length || 0) - (routine.ownedProductsCount || 0)} product(s) to complete this routine.
                                 </div>
                               )}
+
 
                               {/* Step Products Preview */}
                               <div className="rb-products-preview">
@@ -1825,9 +1827,10 @@ const RoutineBuilder = () => {
                                   <span className="rb-badge rb-badge-time">
                                     {template.durationDays} Days
                                   </span>
-                                  <span className="rb-badge rb-badge-type" style={{ background: template.difficulty === 'advanced' ? '#fee2e2' : template.difficulty === 'medium' ? '#fef3c7' : '#d1fae5', color: template.difficulty === 'advanced' ? '#991b1b' : template.difficulty === 'medium' ? '#92400e' : '#065f46' }}>
+                                  <span className="rb-badge rb-badge-type">
                                     {template.difficulty}
                                   </span>
+
                                 </div>
                               </div>
                             </div>
@@ -1895,7 +1898,7 @@ const RoutineBuilder = () => {
                         <h2 className="mb-0 font-weight-bold" style={{ fontSize: "1.6rem", display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
                           {activeTrackerRoutine.name}
                           {trackerStats?.streakCount > 0 && (
-                            <span className="rb-streak-badge" style={{ background: "linear-gradient(135deg, #ff9d00, #ff5100)", color: "white", padding: "4px 10px", borderRadius: "20px", fontSize: "0.85rem", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                            <span className="rb-streak-badge" style={{ background: "#000000", color: "#ffffff", padding: "4px 10px", borderRadius: "20px", fontSize: "0.85rem", display: "inline-flex", alignItems: "center", gap: "4px" }}>
                               🔥 {trackerStats.streakCount} Day Streak!
                             </span>
                           )}
@@ -2057,7 +2060,7 @@ const RoutineBuilder = () => {
                                 <label className="rb-label mb-2">
                                   Visual Skin Diary (Progress Photos)
                                 </label>
-                                
+
                                 <div className="rb-photo-upload-area p-3 mb-3 text-center">
                                   <div className="d-flex justify-content-center gap-3">
                                     <button
@@ -2080,7 +2083,7 @@ const RoutineBuilder = () => {
                                       />
                                     </label>
                                   </div>
-                                  
+
                                   {photoUploading && (
                                     <div className="text-muted mt-2 d-flex align-items-center justify-content-center gap-1" style={{ fontSize: "0.8rem" }}>
                                       <div className="spinner-border spinner-border-sm text-primary" role="status" style={{ width: "12px", height: "12px" }} />
@@ -2259,9 +2262,9 @@ const RoutineBuilder = () => {
                                     <h4 style={{ fontSize: "1.1rem", fontWeight: "700" }} className="mb-3">Daily Coaching Tips</h4>
                                     <div className="d-flex flex-column gap-2">
                                       {coachTips.map((tip, idx) => (
-                                        <div key={idx} className="d-flex align-items-center gap-2 p-2 border rounded" style={{ background: "#fffde6", borderColor: "#fff5b8" }}>
-                                          <span style={{ color: "#d69e2e" }}>💡</span>
-                                          <span style={{ fontSize: "0.9rem", color: "#744210" }}>{tip}</span>
+                                        <div key={idx} className="d-flex align-items-center gap-2 p-2 border rounded" style={{ background: "#ffffff", borderColor: "#000000", color: "#000000" }}>
+                                          <span>💡</span>
+                                          <span style={{ fontSize: "0.9rem" }}>{tip}</span>
                                         </div>
                                       ))}
                                     </div>
@@ -2319,40 +2322,41 @@ const RoutineBuilder = () => {
 
                                 <div className="rb-audit-grid d-flex flex-column gap-3">
                                   {auditData.warnings?.length > 0 && (
-                                    <div className="rb-audit-section p-3 rounded" style={{ background: "#fff5f5", border: "1px solid #fed7d7" }}>
-                                      <h5 className="text-danger font-weight-bold mb-2" style={{ fontSize: "0.95rem" }}>⚠️ Warnings / Risks</h5>
+                                    <div className="rb-audit-section p-3 rounded" style={{ background: "#ffffff", border: "1px solid #000000" }}>
+                                      <h5 className="font-weight-bold mb-2" style={{ fontSize: "0.95rem" }}>Warnings / Risks</h5>
                                       <ul className="mb-0 pl-3" style={{ fontSize: "0.9rem" }}>
-                                        {auditData.warnings.map((w, idx) => <li key={idx} className="mb-1 text-danger">{w}</li>)}
+                                        {auditData.warnings.map((w, idx) => <li key={idx} className="mb-1">{w}</li>)}
                                       </ul>
                                     </div>
                                   )}
 
                                   {auditData.missingItems?.length > 0 && (
-                                    <div className="rb-audit-section p-3 rounded" style={{ background: "#fffaf0", border: "1px solid #feebc8" }}>
-                                      <h5 className="text-warning font-weight-bold mb-2" style={{ fontSize: "0.95rem", color: "#c05621" }}>🔍 Missing Essentials</h5>
-                                      <ul className="mb-0 pl-3" style={{ fontSize: "0.9rem", color: "#c05621" }}>
+                                    <div className="rb-audit-section p-3 rounded" style={{ background: "#ffffff", border: "1px dashed #777777" }}>
+                                      <h5 className="font-weight-bold mb-2" style={{ fontSize: "0.95rem", color: "#333333" }}>Missing Essentials</h5>
+                                      <ul className="mb-0 pl-3" style={{ fontSize: "0.9rem", color: "#333333" }}>
                                         {auditData.missingItems.map((mi, idx) => <li key={idx} className="mb-1">{mi}</li>)}
                                       </ul>
                                     </div>
                                   )}
 
                                   {auditData.strengths?.length > 0 && (
-                                    <div className="rb-audit-section p-3 rounded" style={{ background: "#f0fff4", border: "1px solid #c6f6d5" }}>
-                                      <h5 className="text-success font-weight-bold mb-2" style={{ fontSize: "0.95rem" }}>✓ Key Strengths</h5>
-                                      <ul className="mb-0 pl-3" style={{ fontSize: "0.9rem", color: "#22543d" }}>
+                                    <div className="rb-audit-section p-3 rounded" style={{ background: "#ffffff", border: "1px solid #000000" }}>
+                                      <h5 className="font-weight-bold mb-2" style={{ fontSize: "0.95rem" }}>Key Strengths</h5>
+                                      <ul className="mb-0 pl-3" style={{ fontSize: "0.9rem", color: "#333333" }}>
                                         {auditData.strengths.map((s, idx) => <li key={idx} className="mb-1">{s}</li>)}
                                       </ul>
                                     </div>
                                   )}
 
                                   {auditData.recommendations?.length > 0 && (
-                                    <div className="rb-audit-section p-3 rounded border" style={{ background: "#f7fafc" }}>
-                                      <h5 className="font-weight-bold mb-2" style={{ fontSize: "0.95rem", color: "var(--joyory-charcoal)" }}>💡 Strategic Recommendations</h5>
-                                      <ul className="mb-0 pl-3" style={{ fontSize: "0.9rem", color: "#4a5568" }}>
+                                    <div className="rb-audit-section p-3 rounded border" style={{ background: "#ffffff", borderColor: "#000000" }}>
+                                      <h5 className="font-weight-bold mb-2" style={{ fontSize: "0.95rem", color: "var(--joyory-charcoal)" }}>Strategic Recommendations</h5>
+                                      <ul className="mb-0 pl-3" style={{ fontSize: "0.9rem", color: "#333333" }}>
                                         {auditData.recommendations.map((r, idx) => <li key={idx} className="mb-1">{r}</li>)}
                                       </ul>
                                     </div>
                                   )}
+
                                 </div>
                               </div>
                             ) : (
@@ -2374,7 +2378,7 @@ const RoutineBuilder = () => {
 
                     <div className="rb-form-header">
                       <h2>{editingRoutineId ? "Edit Routine Journey" : "Design A Goal Skincare Journey"}</h2>
-                      <p className="text-muted">Outline your step-by-step product layering. Customize allergen slots and tracking durations.</p>
+                      <p className="text-muted text-journey">Outline your step-by-step product layering. Customize allergen slots and tracking durations.</p>
                     </div>
 
                     {/* Metadata Fields */}
@@ -2482,17 +2486,18 @@ const RoutineBuilder = () => {
                     {/* Step Customizer Section */}
                     <div className="rb-section-title">
                       <span>Routine steps ({steps.length})</span>
-                      <div className="d-flex gap-2 flex-wrap">
+                      <div className="steps-btns">
                         {steps.length > 0 && (
                           <button
                             type="button"
                             className="rb-btn-secondary"
-                            style={{ padding: "6px 14px", fontSize: "0.85rem", background: "#fff3cd", border: "1px solid #ffeeba", color: "#856404" }}
+                            style={{ padding: "6px 14px", fontSize: "0.85rem", background: "#ffffff", border: "1px solid #000000", color: "#000000" }}
                             onClick={handleCheckConflicts}
                             disabled={conflictChecking}
                           >
                             {conflictChecking ? "Checking conflicts..." : "Check Conflicts"}
                           </button>
+
                         )}
                         {steps.length > 1 && (
                           <button type="button" className="rb-btn-secondary" style={{ padding: "6px 14px", fontSize: "0.85rem" }} onClick={handleAutoSort} disabled={validatingOrder}>
@@ -2548,7 +2553,7 @@ const RoutineBuilder = () => {
                                         <div className="rb-selected-brand">SKU: {step.selectedSku}</div>
                                       ) : null}
 
-                                      <div className="d-flex align-items-center gap-2 mt-2">
+                                      <div className="d-flex align-items-center gap-2 mt-2 alr-chk">
                                         <input
                                           type="checkbox"
                                           id={`step-own-${idx}`}
@@ -2561,15 +2566,16 @@ const RoutineBuilder = () => {
                                         </label>
                                       </div>
                                     </div>
-                                    <div className="d-flex flex-column gap-2">
+                                    <div className="d-flex flex-column gap-2 alt-rmv">
                                       <button
                                         type="button"
                                         className="rb-remove-selected-btn"
-                                        style={{ color: "var(--joyory-gold-hover)", fontWeight: "600", fontSize: "0.80rem" }}
+                                        style={{ color: "#000000", fontWeight: "600", fontSize: "0.80rem" }}
                                         onClick={() => handleOpenAlternatives(step.product, idx)}
                                       >
                                         Alternatives
                                       </button>
+
                                       <button
                                         type="button"
                                         className="rb-remove-selected-btn"
@@ -2662,68 +2668,72 @@ const RoutineBuilder = () => {
 
                               {/* Product Ownership Panel */}
                               {step.product && (
-                                <div className="rb-step-fields-row mt-3 p-3 rounded bg-light border" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "15px" }}>
-                                  <div className="rb-form-group">
-                                    <label className="rb-label">Step Importance</label>
-                                    <select
-                                      value={step.isRequired !== false ? "true" : "false"}
-                                      onChange={(e) => handleStepTextChange(idx, "isRequired", e.target.value === "true")}
-                                      className="rb-select"
-                                      style={{ padding: "8px 12px" }}
-                                    >
-                                      <option value="true">Required Step (Crucial)</option>
-                                      <option value="false">Optional Step (Flexible)</option>
-                                    </select>
+                                <div className="rb-step-ownership-panel mt-3 p-3 rounded-lg bg-light border">
+                                  <div className="rb-step-fields-row" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "15px" }}>
+                                    <div className="rb-form-group">
+                                      <label className="rb-label">Step Importance</label>
+                                      <select
+                                        value={step.isRequired !== false ? "true" : "false"}
+                                        onChange={(e) => handleStepTextChange(idx, "isRequired", e.target.value === "true")}
+                                        className="rb-select"
+                                        style={{ padding: "8px 12px" }}
+                                      >
+                                        <option value="true">Required Step (Crucial)</option>
+                                        <option value="false">Optional Step (Flexible)</option>
+                                      </select>
+                                    </div>
+                                    <div className="rb-form-group">
+                                      <label className="rb-label">Do you already own this product?</label>
+                                      <select
+                                        value={step.isOwned ? "true" : "false"}
+                                        onChange={(e) => handleStepTextChange(idx, "isOwned", e.target.value === "true")}
+                                        className="rb-select"
+                                        style={{ padding: "8px 12px" }}
+                                      >
+                                        <option value="false">No (Need to Buy)</option>
+                                        <option value="true">Yes (Already Owned)</option>
+                                      </select>
+                                    </div>
+                                    {step.isOwned && (
+                                      <>
+                                        <div className="rb-form-group">
+                                          <label className="rb-label">Where did you buy it?</label>
+                                          <select
+                                            value={step.ownershipType || "purchased_from_us"}
+                                            onChange={(e) => handleStepTextChange(idx, "ownershipType", e.target.value || null)}
+                                            className="rb-select"
+                                            style={{ padding: "8px 12px" }}
+                                          >
+                                            <option value="purchased_from_us">Joyory Store</option>
+                                            <option value="purchased_elsewhere">Elsewhere / Other Brand</option>
+                                            <option value="">Received as Gift / Other</option>
+                                          </select>
+                                        </div>
+                                        <div className="rb-form-group">
+                                          <label className="rb-label">Purchase Source</label>
+                                          <input
+                                            type="text"
+                                            placeholder="e.g. Website, Store, Gifted"
+                                            value={step.purchaseSource || ""}
+                                            onChange={(e) => handleStepTextChange(idx, "purchaseSource", e.target.value)}
+                                            className="rb-input"
+                                            style={{ padding: "8px 12px" }}
+                                          />
+                                        </div>
+                                      </>
+                                    )}
                                   </div>
-                                  <div className="rb-form-group">
-                                    <label className="rb-label">Do you already own this product?</label>
-                                    <select
-                                      value={step.isOwned ? "true" : "false"}
-                                      onChange={(e) => handleStepTextChange(idx, "isOwned", e.target.value === "true")}
-                                      className="rb-select"
-                                      style={{ padding: "8px 12px" }}
-                                    >
-                                      <option value="false">No (Need to Buy)</option>
-                                      <option value="true">Yes (Already Owned)</option>
-                                    </select>
-                                  </div>
-                                  {step.isOwned ? (
-                                    <>
-                                      <div className="rb-form-group">
-                                        <label className="rb-label">Where did you buy it?</label>
-                                        <select
-                                          value={step.ownershipType || "purchased_from_us"}
-                                          onChange={(e) => handleStepTextChange(idx, "ownershipType", e.target.value || null)}
-                                          className="rb-select"
-                                          style={{ padding: "8px 12px" }}
-                                        >
-                                          <option value="purchased_from_us">Joyory Store</option>
-                                          <option value="purchased_elsewhere">Elsewhere / Other Brand</option>
-                                          <option value="">Received as Gift / Other</option>
-                                        </select>
-                                      </div>
-                                      <div className="rb-form-group">
-                                        <label className="rb-label">Purchase Source</label>
-                                        <input
-                                          type="text"
-                                          placeholder="e.g. Website, Store, Gifted"
-                                          value={step.purchaseSource || ""}
-                                          onChange={(e) => handleStepTextChange(idx, "purchaseSource", e.target.value)}
-                                          className="rb-input"
-                                          style={{ padding: "8px 12px" }}
-                                        />
-                                      </div>
-                                    </>
-                                  ) : (
-                                    <div className="d-flex align-items-center justify-content-between p-2 rounded bg-white border border-warning flex-grow-1" style={{ fontSize: "0.85rem", color: "#856404", gridColumn: "span 2" }}>
-                                      <div className="d-flex align-items-center gap-2">
-                                        <span>🛒</span>
+
+                                  {!step.isOwned && (
+                                    <div className="d-flex align-items-center justify-content-between p-3 mt-3 rounded bg-white flex-wrap gap-2" style={{ fontSize: "0.85rem", border: "1px dashed #000000", color: "#000000" }}>
+                                      <div className="d-flex align-items-center gap-2 n-own">
+                                        {/* <span>🛒</span> */}
                                         <span><strong>Not Owned:</strong> Buy from Joyory to unlock our 99% Satisfaction Guarantee, custom AI Coach tips, and daily progress analytics!</span>
                                       </div>
                                       <button
                                         type="button"
                                         className="rb-create-btn"
-                                        style={{ padding: "6px 14px", fontSize: "0.8rem", background: "var(--joyory-charcoal)", color: "white" }}
+                                        style={{ padding: "6px 14px", fontSize: "0.8rem", background: "var(--joyory-charcoal)", color: "white", border: "none", borderRadius: "20px" }}
                                         onClick={async () => {
                                           try {
                                             const matchedProd = allProducts.find(p => String(p._id) === String(step.product));
@@ -2800,15 +2810,16 @@ const RoutineBuilder = () => {
 
                     {/* Layering Validation Warnings */}
                     {layeringWarnings.length > 0 && (
-                      <div className="rb-conflict-report mt-4 p-3 rounded-lg border" style={{ borderColor: "#ffeeba", background: "#fffdf6" }}>
-                        <h4 className="d-flex align-items-center gap-2 mb-3" style={{ fontSize: "1.10rem", fontWeight: "700", color: "#856404" }}>
+                      <div className="rb-conflict-report mt-4 p-3 rounded-lg border" style={{ borderColor: "#000000", background: "#ffffff" }}>
+                        <h4 className="d-flex align-items-center gap-2 mb-3" style={{ fontSize: "1.10rem", fontWeight: "700", color: "#000000" }}>
                           <FaInfoCircle /> Smart Layering Sequence Alerts
                         </h4>
                         <ul className="pl-3 mb-3">
                           {layeringWarnings.map((warning, wIdx) => (
-                            <li key={wIdx} className="mb-2" style={{ color: "#856404" }}>{warning}</li>
+                            <li key={wIdx} className="mb-2" style={{ color: "#000000" }}>{warning}</li>
                           ))}
                         </ul>
+
                         <button
                           type="button"
                           className="rb-create-btn"
@@ -2829,13 +2840,13 @@ const RoutineBuilder = () => {
 
                     {/* Ingredient Conflicts report */}
                     {(conflicts.length > 0 || conflictRecommendations.length > 0) && (
-                      <div className="rb-conflict-report mt-4 p-3 rounded-lg border" style={{ borderColor: conflicts.length > 0 ? "#f5c6cb" : "#c6f6d5", background: conflicts.length > 0 ? "#fffbfb" : "#f0fff4" }}>
+                      <div className="rb-conflict-report mt-4 p-3 rounded-lg border" style={{ borderColor: "#000000", background: "#ffffff" }}>
                         <h4 className="d-flex align-items-center gap-2 mb-3" style={{ fontSize: "1.10rem", fontWeight: "700" }}>
-                          <FaExclamationTriangle style={{ color: conflicts.length > 0 ? "#d32f2f" : "#2e7d32" }} />
+                          <FaExclamationTriangle style={{ color: "#000000" }} />
                           Regimen Compatibility Audit
                         </h4>
                         {conflicts.map((c, cIdx) => (
-                          <div key={cIdx} className="alert alert-danger mb-2 p-3 border-danger d-flex flex-column gap-1" style={{ background: "#f8d7da" }}>
+                          <div key={cIdx} className="mb-2 p-3 border d-flex flex-column gap-1" style={{ background: "#ffffff", borderColor: "#000000", borderStyle: "dashed" }}>
                             <strong>Conflict detected: {c.ingredients.join(" + ")}</strong>
                             <div>{c.warning}</div>
                             <div className="text-muted mt-1" style={{ fontSize: "0.85rem" }}>
@@ -2844,7 +2855,7 @@ const RoutineBuilder = () => {
                           </div>
                         ))}
                         {conflictRecommendations.map((rec, rIdx) => (
-                          <div key={rIdx} className="alert alert-success mb-0 p-2 border-success" style={{ background: "#d4edda", color: "#155724" }}>
+                          <div key={rIdx} className="mb-0 p-2 border" style={{ background: "#ffffff", borderColor: "#000000", color: "#000000" }}>
                             {rec}
                           </div>
                         ))}
@@ -2852,13 +2863,14 @@ const RoutineBuilder = () => {
                     )}
 
                     {steps.some(s => s.isRequired !== false && !s.isOwned) && (
-                      <div className="alert alert-warning d-flex align-items-center gap-2 mt-3 mb-3 p-3 rounded-lg border border-warning" style={{ background: "#fffdf5", borderColor: "#ffeeba", color: "#856404" }}>
-                        <FaExclamationTriangle style={{ color: "#d97706", fontSize: "1.2rem" }} />
+                      <div className="d-flex align-items-center gap-2 mt-3 mb-3 p-3 rounded-lg border" style={{ background: "#ffffff", borderColor: "#000000", borderStyle: "dashed", color: "#000000" }}>
+                        <FaExclamationTriangle style={{ color: "#000000", fontSize: "1.2rem" }} />
                         <span style={{ fontSize: "0.85rem" }}>
                           <strong>Product Ownership Warning:</strong> You have required steps in this routine that you do not own. Please purchase them or mark them as owned to complete your routine.
                         </span>
                       </div>
                     )}
+
 
                     {/* Action Row */}
                     <div className="rb-action-row">
@@ -2905,7 +2917,7 @@ const RoutineBuilder = () => {
               </p>
 
               <div className="rb-guide-sections-grid">
-                
+
                 {/* Section 1: What is it? */}
                 <div className="rb-guide-section-card">
                   <h4 className="rb-guide-section-title">✨ What is the Routine Builder?</h4>
@@ -3029,7 +3041,7 @@ const RoutineBuilder = () => {
                           className={`rb-alternative-card ${activeSelection === "bestMatch" ? "active" : ""}`}
                           onClick={() => setSelectedAIMatches(prev => ({ ...prev, [cat]: "bestMatch" }))}
                         >
-                          <div className="rb-alt-label bg-primary text-white" style={{ background: "var(--joyory-gold) !important" }}>Recommended</div>
+                          <div className="rb-alt-label text-white" style={{ background: "#000000" }}>Recommended</div>
                           <img src={recs.bestMatch.variants?.[0]?.images?.[0] || recs.bestMatch.image || ""} alt={recs.bestMatch.name} />
                           <div className="rb-alt-name">{recs.bestMatch.name}</div>
                           <div className="rb-alt-price">₹{recs.bestMatch.price}</div>
@@ -3043,7 +3055,7 @@ const RoutineBuilder = () => {
                           className={`rb-alternative-card ${activeSelection === "budgetMatch" ? "active" : ""}`}
                           onClick={() => setSelectedAIMatches(prev => ({ ...prev, [cat]: "budgetMatch" }))}
                         >
-                          <div className="rb-alt-label bg-success text-white">Budget Match</div>
+                          <div className="rb-alt-label text-white" style={{ background: "#555555" }}>Budget Match</div>
                           <img src={recs.budgetMatch.variants?.[0]?.images?.[0] || recs.budgetMatch.image || ""} alt={recs.budgetMatch.name} />
                           <div className="rb-alt-name">{recs.budgetMatch.name}</div>
                           <div className="rb-alt-price">₹{recs.budgetMatch.price}</div>
@@ -3057,7 +3069,7 @@ const RoutineBuilder = () => {
                           className={`rb-alternative-card ${activeSelection === "premiumMatch" ? "active" : ""}`}
                           onClick={() => setSelectedAIMatches(prev => ({ ...prev, [cat]: "premiumMatch" }))}
                         >
-                          <div className="rb-alt-label bg-warning text-dark">Premium Match</div>
+                          <div className="rb-alt-label text-white" style={{ background: "#222222" }}>Premium Match</div>
                           <img src={recs.premiumMatch.variants?.[0]?.images?.[0] || recs.premiumMatch.image || ""} alt={recs.premiumMatch.name} />
                           <div className="rb-alt-name">{recs.premiumMatch.name}</div>
                           <div className="rb-alt-price">₹{recs.premiumMatch.price}</div>
@@ -3080,10 +3092,11 @@ const RoutineBuilder = () => {
                     </div>
 
                     {!(aiStepOwnership[cat]) && (
-                      <div className="mt-2 p-2 rounded text-left" style={{ fontSize: "0.8rem", background: "#fffdf5", color: "#856404", border: "1px solid #ffeeba" }}>
-                        🎁 <strong>Joyory Benefit:</strong> Buy this recommended product from us to unlock our 99% Satisfaction Guarantee, custom AI Skincare Coach tips, and automatic routine compliance scoring! (If you already bought it elsewhere, toggle above).
+                      <div className="mt-2 p-2 rounded text-left" style={{ fontSize: "0.8rem", background: "#ffffff", color: "#000000", border: "1px dashed #000000" }}>
+                        <strong>Joyory Benefit:</strong> Buy this recommended product from us to unlock our 99% Satisfaction Guarantee, custom AI Skincare Coach tips, and automatic routine compliance scoring! (If you already bought it elsewhere, toggle above).
                       </div>
                     )}
+
                   </div>
                 );
               })}
@@ -3126,85 +3139,88 @@ const RoutineBuilder = () => {
               </button>
             </div>
 
-            {alternativesLoading ? (
-              <div className="text-center py-5">
-                <div className="spinner-border text-primary" role="status" />
-                <p className="mt-2 text-muted">Searching catalog for suitable swaps...</p>
-              </div>
-            ) : alternativesData ? (
-              <div className="rb-alternatives-row mt-4">
-                {/* Budget Option */}
-                {alternativesData.budgetMatch ? (
-                  <div className="rb-alternative-card select-swap">
-                    <div className="rb-alt-label bg-success text-white">Budget Swap</div>
-                    <img src={alternativesData.budgetMatch.variants?.[0]?.images?.[0] || alternativesData.budgetMatch.image || ""} alt={alternativesData.budgetMatch.name} />
-                    <div className="rb-alt-name">{alternativesData.budgetMatch.name}</div>
-                    <div className="rb-alt-price">₹{alternativesData.budgetMatch.price}</div>
-                    <div className="rb-alt-rating">★ {alternativesData.budgetMatch.avgRating || 5}</div>
-                    <button
-                      type="button"
-                      className="rb-create-btn justify-content-center w-100 mt-2"
-                      style={{ padding: "8px", fontSize: "0.8rem" }}
-                      onClick={() => handleSwapProduct(alternativesData.budgetMatch)}
-                    >
-                      Swap Product
-                    </button>
-                  </div>
-                ) : (
-                  <div className="rb-alternative-card disabled select-swap">
-                    <p className="text-muted m-0 p-3">No budget match alternative available in this category.</p>
-                  </div>
-                )}
+            <div className="rb-modal-steps-scroll" style={{ overflowY: "auto", flex: 1, paddingRight: "5px" }}>
+              {alternativesLoading ? (
+                <div className="text-center py-5">
+                  <div className="spinner-border text-primary" role="status" />
+                  <p className="mt-2 text-muted">Searching catalog for suitable swaps...</p>
+                </div>
+              ) : alternativesData ? (
+                <div className="rb-alternatives-row mt-4">
+                  {/* Budget Option */}
+                  {alternativesData.budgetMatch ? (
+                    <div className="rb-alternative-card select-swap">
+                      <div className="rb-alt-label text-white" style={{ background: "#555555" }}>Budget Swap</div>
+                      <img src={alternativesData.budgetMatch.variants?.[0]?.images?.[0] || alternativesData.budgetMatch.image || ""} alt={alternativesData.budgetMatch.name} />
+                      <div className="rb-alt-name">{alternativesData.budgetMatch.name}</div>
+                      <div className="rb-alt-price">₹{alternativesData.budgetMatch.price}</div>
+                      <div className="rb-alt-rating">★ {alternativesData.budgetMatch.avgRating || 5}</div>
+                      <button
+                        type="button"
+                        className="rb-create-btn justify-content-center w-100 mt-2"
+                        style={{ padding: "8px", fontSize: "0.8rem" }}
+                        onClick={() => handleSwapProduct(alternativesData.budgetMatch)}
+                      >
+                        Swap Product
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="rb-alternative-card disabled select-swap">
+                      <p className="text-muted m-0 p-3">No budget match alternative available in this category.</p>
+                    </div>
+                  )}
 
-                {/* Premium Option */}
-                {alternativesData.premiumMatch ? (
-                  <div className="rb-alternative-card select-swap">
-                    <div className="rb-alt-label bg-warning text-dark">Premium Swap</div>
-                    <img src={alternativesData.premiumMatch.variants?.[0]?.images?.[0] || alternativesData.premiumMatch.image || ""} alt={alternativesData.premiumMatch.name} />
-                    <div className="rb-alt-name">{alternativesData.premiumMatch.name}</div>
-                    <div className="rb-alt-price">₹{alternativesData.premiumMatch.price}</div>
-                    <div className="rb-alt-rating">★ {alternativesData.premiumMatch.avgRating || 5}</div>
-                    <button
-                      type="button"
-                      className="rb-create-btn justify-content-center w-100 mt-2"
-                      style={{ padding: "8px", fontSize: "0.8rem" }}
-                      onClick={() => handleSwapProduct(alternativesData.premiumMatch)}
-                    >
-                      Swap Product
-                    </button>
-                  </div>
-                ) : (
-                  <div className="rb-alternative-card disabled select-swap">
-                    <p className="text-muted m-0 p-3">No premium match alternative available in this category.</p>
-                  </div>
-                )}
+                  {/* Premium Option */}
+                  {alternativesData.premiumMatch ? (
+                    <div className="rb-alternative-card select-swap">
+                      <div className="rb-alt-label text-white" style={{ background: "#222222" }}>Premium Swap</div>
+                      <img src={alternativesData.premiumMatch.variants?.[0]?.images?.[0] || alternativesData.premiumMatch.image || ""} alt={alternativesData.premiumMatch.name} />
+                      <div className="rb-alt-name">{alternativesData.premiumMatch.name}</div>
+                      <div className="rb-alt-price">₹{alternativesData.premiumMatch.price}</div>
+                      <div className="rb-alt-rating">★ {alternativesData.premiumMatch.avgRating || 5}</div>
+                      <button
+                        type="button"
+                        className="rb-create-btn justify-content-center w-100 mt-2"
+                        style={{ padding: "8px", fontSize: "0.8rem" }}
+                        onClick={() => handleSwapProduct(alternativesData.premiumMatch)}
+                      >
+                        Swap Product
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="rb-alternative-card disabled select-swap">
+                      <p className="text-muted m-0 p-3">No premium match alternative available in this category.</p>
+                    </div>
+                  )}
 
-                {/* Sensitive Skin friendly Option */}
-                {alternativesData.sensitiveMatch ? (
-                  <div className="rb-alternative-card select-swap">
-                    <div className="rb-alt-label bg-info text-white">Gentle Swap</div>
-                    <img src={alternativesData.sensitiveMatch.variants?.[0]?.images?.[0] || alternativesData.sensitiveMatch.image || ""} alt={alternativesData.sensitiveMatch.name} />
-                    <div className="rb-alt-name">{alternativesData.sensitiveMatch.name}</div>
-                    <div className="rb-alt-price">₹{alternativesData.sensitiveMatch.price}</div>
-                    <div className="rb-alt-rating">★ {alternativesData.sensitiveMatch.avgRating || 5}</div>
-                    <button
-                      type="button"
-                      className="rb-create-btn justify-content-center w-100 mt-2"
-                      style={{ padding: "8px", fontSize: "0.8rem" }}
-                      onClick={() => handleSwapProduct(alternativesData.sensitiveMatch)}
-                    >
-                      Swap Product
-                    </button>
-                  </div>
-                ) : (
-                  <div className="rb-alternative-card disabled select-swap">
-                    <p className="text-muted m-0 p-3">No gentle match alternative available in this category.</p>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <p className="text-center text-muted">No alternative products found in this category.</p>
-            )}
+                  {/* Sensitive Skin friendly Option */}
+                  {alternativesData.sensitiveMatch ? (
+                    <div className="rb-alternative-card select-swap">
+                      <div className="rb-alt-label text-white" style={{ background: "#888888" }}>Gentle Swap</div>
+                      <img src={alternativesData.sensitiveMatch.variants?.[0]?.images?.[0] || alternativesData.sensitiveMatch.image || ""} alt={alternativesData.sensitiveMatch.name} />
+                      <div className="rb-alt-name">{alternativesData.sensitiveMatch.name}</div>
+                      <div className="rb-alt-price">₹{alternativesData.sensitiveMatch.price}</div>
+                      <div className="rb-alt-rating">★ {alternativesData.sensitiveMatch.avgRating || 5}</div>
+                      <button
+                        type="button"
+                        className="rb-create-btn justify-content-center w-100 mt-2"
+                        style={{ padding: "8px", fontSize: "0.8rem" }}
+                        onClick={() => handleSwapProduct(alternativesData.sensitiveMatch)}
+                      >
+                        Swap Product
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="rb-alternative-card disabled select-swap">
+                      <p className="text-muted m-0 p-3">No gentle match alternative available in this category.</p>
+                    </div>
+                  )}
+                </div>
+
+              ) : (
+                <p className="text-center text-muted">No alternative products found in this category.</p>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -3272,7 +3288,7 @@ const RoutineBuilder = () => {
                 ✕
               </button>
             </div>
-            
+
             <div className="rb-notif-drawer-body">
               {activeReminders.length === 0 ? (
                 <div className="text-center py-5">
@@ -3298,7 +3314,7 @@ const RoutineBuilder = () => {
                           <div>
                             <h5 className="rb-notif-title">{reminder.routineName}</h5>
                             <p className="rb-notif-msg">{reminder.message}</p>
-                            
+
                             {/* Streak Badge */}
                             {reminder.streakCount > 0 && (
                               <span className="rb-notif-streak-badge">
@@ -3307,7 +3323,7 @@ const RoutineBuilder = () => {
                             )}
                           </div>
                         </div>
-                        
+
                         <button
                           type="button"
                           className="rb-notif-card-dismiss"
@@ -3318,7 +3334,7 @@ const RoutineBuilder = () => {
                           ✕
                         </button>
                       </div>
-                      
+
                       <div className="d-flex justify-content-end mt-3">
                         <button
                           type="button"

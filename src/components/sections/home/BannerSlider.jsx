@@ -126,7 +126,7 @@ const BannerSlider = () => {
   }
 
   return (
-    <div className="px-lg-5 px-4 py- container-lg-fluid">
+    <div className="px-lg-5 px-0 container-lg-fluid">
       {/* Custom Pagination Styles - Same as HeroSlider */}
       <style>{`
         .banner-swiper .custom-swiper-bullet {
