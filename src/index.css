@@ -1,7 +1,29 @@
-/* src/index.css */
+html {
+    scroll-behavior: smooth;
+}
 
 body {
     margin: 0;
+    scroll-behavior: smooth;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Reusable transition helper classes for premium experience */
+.smooth-transition {
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.image-fade-in {
+    opacity: 0;
+    animation: imageLoadedFadeIn 0.5s ease-in-out forwards;
+}
+
+@keyframes imageLoadedFadeIn {
+    to {
+        opacity: 1;
+    }
 }
 
 .auth-bg {

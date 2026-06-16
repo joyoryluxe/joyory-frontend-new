@@ -144,7 +144,7 @@ export default function SkinToneSelector() {
     <>
       <Header />
 
-      <div className="shadefinder-wrapper bg-white" style={{ minHeight: "100vh" }}>
+      <div className="shadefinder-wrapper bg-white" >
         <Container className="d-flex flex-column align-items-center">
           {/* Header Section */}
           <header className="text-center mb-4 mb-md-5">

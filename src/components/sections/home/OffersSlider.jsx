@@ -45,7 +45,11 @@ const OffersSlider = () => {
         if (!res.ok) throw new Error("Failed to fetch promotions");
         const data = await res.json();
         if (Array.isArray(data)) {
-          setPromotions(data);
+          // Filter promotions that have at least one valid image
+          const validPromotions = data.filter(
+            (promo) => Array.isArray(promo.images) && promo.images.length > 0 && promo.images[0]
+          );
+          setPromotions(validPromotions);
         } else {
           throw new Error("API response is not an array");
         }
@@ -59,10 +63,11 @@ const OffersSlider = () => {
     fetchPromotions();
   }, []);
 
-  if (isLoading) return <div className="loading-state page-title-main-name">Loading offers...</div>;
-  if (error) return <div className="error-state">Error: {error}</div>;
+  // Gracefully return null during loading or error to avoid layout shifts or visual glitches
+  if (isLoading) return null;
+  if (error) return null;
 
-  // ✅ If no promotions → hide the entire section
+  // ✅ If no valid promotions with images → hide the entire section
   if (promotions.length === 0) return null;
 
   // ✅ Enhanced navigation logic based on scope

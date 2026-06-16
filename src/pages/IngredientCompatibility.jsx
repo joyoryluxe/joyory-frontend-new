@@ -294,10 +294,10 @@ export default function IngredientCompatibility() {
           const is1InB = cleanB.some(ing => ing.toLowerCase() === name1);
 
           if ((is1InA && is2InB) || (is2InA && is1InB)) {
-            const matchedIngA = is1InA 
+            const matchedIngA = is1InA
               ? (cleanToRawMap[name1] || c.ingredient1)
               : (cleanToRawMap[name2] || c.ingredient2);
-            const matchedIngB = is2InB 
+            const matchedIngB = is2InB
               ? (cleanToRawMap[name2] || c.ingredient2)
               : (cleanToRawMap[name1] || c.ingredient1);
 
@@ -425,36 +425,33 @@ export default function IngredientCompatibility() {
       <div className="ic-container page-title-main-name">
         <div className="ic-card">
           <div className="text-center mb-4">
-            <span className="ic-icon-header">🧪</span>
+            {/* <span className="ic-icon-header">🧪</span> */}
             <h2 className="fw-bold mt-2 text-dark">Ingredient Intelligence Labs</h2>
-            <p className="text-muted mx-auto" style={{ maxWidth: "540px", fontSize: "14px" }}>
+            <p className="text-muted mx-auto mb-5" style={{ maxWidth: "540px", fontSize: "14px" }}>
               Evaluate safety profiles, layering incompatibilities, and synergistic benefits using our clinical skincare intelligence engine.
             </p>
           </div>
 
           {/* Navigation Tabs (Modern Segmented Control) */}
-          <div className="d-flex justify-content-center mb-4 bg-light p-1" style={{ borderRadius: "12px", border: "1px solid #fae5e9" }}>
+          <div className="ic-tabs-nav">
             <button
               type="button"
-              className={`btn flex-grow-1 py-2 fw-semibold border-0 d-flex align-items-center justify-content-center gap-1 ${activeTab === "ingredients" ? "bg-white text-dark shadow-sm" : "text-muted bg-transparent"}`}
+              className={`ic-tab-btn ${activeTab === "ingredients" ? "active" : ""}`}
               onClick={() => setActiveTab("ingredients")}
-              style={{ fontSize: "13px", borderRadius: "10px", transition: "all 0.2s", color: activeTab === "ingredients" ? "#000" : "#6c757d" }}
             >
               <FaFlask /> Ingredient Layering
             </button>
             <button
               type="button"
-              className={`btn flex-grow-1 py-2 fw-semibold border-0 d-flex align-items-center justify-content-center gap-1 ${activeTab === "products" ? "bg-white text-dark shadow-sm" : "text-muted bg-transparent"}`}
+              className={`ic-tab-btn ${activeTab === "products" ? "active" : ""}`}
               onClick={() => setActiveTab("products")}
-              style={{ fontSize: "13px", borderRadius: "10px", transition: "all 0.2s", color: activeTab === "products" ? "#000" : "#6c757d" }}
             >
               <FaBox /> Product Layering
             </button>
             <button
               type="button"
-              className={`btn flex-grow-1 py-2 fw-semibold border-0 d-flex align-items-center justify-content-center gap-1 ${activeTab === "ocr" ? "bg-white text-dark shadow-sm" : "text-muted bg-transparent"}`}
+              className={`ic-tab-btn ${activeTab === "ocr" ? "active" : ""}`}
               onClick={() => setActiveTab("ocr")}
-              style={{ fontSize: "13px", borderRadius: "10px", transition: "all 0.2s", color: activeTab === "ocr" ? "#000" : "#6c757d" }}
             >
               <FaBarcode /> Raw Label Scanner
             </button>
@@ -504,9 +501,9 @@ export default function IngredientCompatibility() {
                     }}
                   />
                   <button
-                    className="btn btn-dark px-3"
+                    className="btn btn-dark px-3 ingredient-add"
                     onClick={() => addIngredient(searchInput)}
-                    disabled={!searchInput.trim()}
+                    // disabled={!searchInput.trim()}
                   >
                     <FaPlus /> Add
                   </button>
@@ -558,7 +555,7 @@ export default function IngredientCompatibility() {
               </div>
 
               {/* Action Buttons */}
-              <div className="d-flex gap-2 mb-4">
+              <div className="d-flex gap-2 mb-4 w-50 m-auto Compatibility-btn">
                 <button
                   className="ic-action-btn-primary"
                   onClick={handleCheckIngredients}
@@ -579,7 +576,7 @@ export default function IngredientCompatibility() {
               {result && (
                 <div className="mt-4 border-top pt-4 text-start">
                   {result.conflicts?.length === 0 ? (
-                    <div className="p-3 rounded mb-3 bg-success bg-opacity-10 text-success border border-success border-opacity-25 d-flex gap-3 align-items-start">
+                    <div className="ic-alert ic-alert-success mb-3">
                       <FaCheckCircle size={28} className="flex-shrink-0 mt-1" />
                       <div>
                         <h5 className="fw-bold mb-1">Perfect Harmony!</h5>
@@ -589,7 +586,7 @@ export default function IngredientCompatibility() {
                       </div>
                     </div>
                   ) : (
-                    <div className="p-3 rounded mb-3 bg-warning bg-opacity-10 text-warning-dark border border-warning border-opacity-25 d-flex gap-3 align-items-start" style={{ color: "#854d0e" }}>
+                    <div className="ic-alert ic-alert-warning mb-3">
                       <FaExclamationTriangle size={28} className="flex-shrink-0 mt-1" />
                       <div>
                         <h5 className="fw-bold mb-1">Layering Caution Needed</h5>
@@ -620,7 +617,7 @@ export default function IngredientCompatibility() {
                               <span><strong>Concern:</strong> {conflict.reason}</span>
                             </div>
                             <div className="bg-light p-2 rounded small fw-medium" style={{ fontSize: "12.5px" }}>
-                              <strong>💡 Layers Tip:</strong> {conflict.advice}
+                              <strong>Layers Tip:</strong> {conflict.advice}
                             </div>
                           </div>
                         ))}
@@ -631,8 +628,8 @@ export default function IngredientCompatibility() {
                   {/* Safe Ingredients Details */}
                   {result.safe?.length > 0 && (
                     <div className="mt-4">
-                      <h5 className="fw-bold fs-6 mb-3 text-success d-flex align-items-center gap-2">
-                        <FaCheckCircle className="text-success" size={16} />
+                      <h5 className="fw-bold fs-6 mb-3 ic-text-blue d-flex align-items-center gap-2">
+                        <FaCheckCircle className="ic-text-blue" size={16} />
                         <span>Safe Ingredients (No Conflicts):</span>
                       </h5>
                       <div className="d-flex flex-wrap gap-2">
@@ -677,7 +674,7 @@ export default function IngredientCompatibility() {
                   </div>
                 ) : (
                   <div className="popular-products-scroll-wrapper">
-                    <div className="d-flex gap-3 overflow-auto pb-2 scrollbar-thin" style={{ scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}>
+                    <div className="d-flex gap-3 overflow-auto pb-2 pt-2 scrollbar-thin" style={{ scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}>
                       {catalogProducts.map((p) => {
                         const imgUrl = p.variants?.[0]?.images?.[0] || p.image || "/placeholder.png";
                         return (
@@ -698,7 +695,7 @@ export default function IngredientCompatibility() {
                             <div className="ic-mini-card-brand">
                               {typeof p.brand === "string" ? p.brand : (p.brand?.name || "Joyory")}
                             </div>
-                            <div className="d-flex gap-1 justify-content-center">
+                            <div className="ic-mini-slot-tray">
                               <button
                                 type="button"
                                 className="ic-mini-slot-btn"
@@ -799,7 +796,7 @@ export default function IngredientCompatibility() {
                               </div>
                             ))
                           ) : (
-                            <div className="p-3 text-center text-danger small fw-semibold">
+                            <div className="p-3 text-center ic-text-black small fw-semibold">
                               ⚠️ No matching products found
                             </div>
                           )}
@@ -882,7 +879,7 @@ export default function IngredientCompatibility() {
                               </div>
                             ))
                           ) : (
-                            <div className="p-3 text-center text-danger small fw-semibold">
+                            <div className="p-3 text-center ic-text-black small fw-semibold">
                               ⚠️ No matching products found
                             </div>
                           )}
@@ -894,7 +891,7 @@ export default function IngredientCompatibility() {
               </div>
 
               {/* Actions */}
-              <div className="d-flex gap-2 mb-4">
+              <div className="d-flex gap-2 mb-4 w-50 m-auto Compatibility-btn">
                 <button
                   className="ic-action-btn-primary"
                   onClick={handleCheckProducts}
@@ -948,7 +945,7 @@ export default function IngredientCompatibility() {
 
                   {/* Verdict Panel */}
                   {productResult.compatible ? (
-                    <div className="p-3 rounded mb-4 bg-success bg-opacity-10 text-success border border-success border-opacity-25 d-flex gap-3 align-items-start">
+                    <div className="ic-alert ic-alert-success mb-4">
                       <FaCheckCircle size={28} className="flex-shrink-0 mt-1" />
                       <div>
                         <h5 className="fw-bold mb-1">Layering Approved</h5>
@@ -956,7 +953,7 @@ export default function IngredientCompatibility() {
                       </div>
                     </div>
                   ) : (
-                    <div className="p-3 rounded mb-4 bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 d-flex gap-3 align-items-start">
+                    <div className="ic-alert ic-alert-danger mb-4">
                       <FaExclamationTriangle size={28} className="flex-shrink-0 mt-1" />
                       <div>
                         <h5 className="fw-bold mb-1">Conflict Warning</h5>
@@ -968,11 +965,11 @@ export default function IngredientCompatibility() {
                   {/* Synergy Benefits */}
                   {productResult.synergies?.length > 0 && (
                     <div className="mb-4">
-                      <h5 className="fw-bold fs-6 mb-2 text-success">Formulation Synergies Detected:</h5>
+                      <h5 className="fw-bold fs-6 mb-2 ic-text-blue">Formulation Synergies Detected:</h5>
                       <div className="d-flex flex-column gap-2">
                         {productResult.synergies.map((syn, idx) => (
                           <div key={idx} className="p-2 border rounded  bg-opacity-5" style={{ fontSize: "12.5px" }}>
-                            <strong className="text-success uppercase d-block mb-1">{syn.pair.toUpperCase()}</strong>
+                            <strong className="ic-text-blue uppercase d-block mb-1">{syn.pair.toUpperCase()}</strong>
                             <span className="text-muted">{syn.benefit}</span>
                           </div>
                         ))}
@@ -983,7 +980,7 @@ export default function IngredientCompatibility() {
                   {/* Conflicts Listing */}
                   {productResult.conflicts?.length > 0 ? (
                     <div className="mt-3">
-                      <h5 className="fw-bold fs-6 mb-2 text-danger">Formulation Conflicts:</h5>
+                      <h5 className="fw-bold fs-6 mb-2 ic-text-black">Formulation Conflicts:</h5>
                       <div className="d-flex flex-column gap-3">
                         {productResult.conflicts.map((conflict, idx) => (
                           <div key={idx} className="p-3 border rounded bg-white shadow-sm">
@@ -1037,7 +1034,7 @@ export default function IngredientCompatibility() {
               </div>
 
               {/* Actions */}
-              <div className="d-flex gap-2 mb-4">
+              <div className="d-flex gap-2 mb-4 w-50 m-auto Compatibility-btn">
                 <button
                   className="ic-action-btn-primary"
                   onClick={handleScanText}
@@ -1075,22 +1072,25 @@ export default function IngredientCompatibility() {
 
                   {/* Allergen Warning Banner */}
                   {(ocrResult.allergenWarnings?.length > 0 || ocrResult.sensitiveWarnings?.length > 0) && (
-                    <div className="alert alert-danger p-3 rounded mb-4 text-start border-0" style={{ backgroundColor: "#fef2f2", color: "#b91c1c", borderRadius: "12px" }}>
-                      <h5 className="fw-bold fs-6 mb-1 d-flex align-items-center gap-2" style={{ color: "#991b1b" }}>
-                        <FaExclamationTriangle /> Warning: Allergen Match
-                      </h5>
-                      <ul className="ps-3 mb-0 small" style={{ color: "#991b1b" }}>
-                        {ocrResult.allergenWarnings.map((w, idx) => (
-                          <li key={idx} className="fw-semibold">
-                            {w.ingredient} matches your profile allergen list!
-                          </li>
-                        ))}
-                        {ocrResult.sensitiveWarnings.map((w, idx) => (
-                          <li key={idx}>
-                            {w.ingredient} is marked as skin sensitive.
-                          </li>
-                        ))}
-                      </ul>
+                    <div className="ic-alert ic-alert-danger mb-4">
+                      <FaExclamationTriangle size={28} className="flex-shrink-0 mt-1" />
+                      <div>
+                        <h5 className="fw-bold fs-6 mb-1 d-flex align-items-center gap-2">
+                          Warning: Allergen Match
+                        </h5>
+                        <ul className="ps-3 mb-0 small" style={{ color: "inherit" }}>
+                          {ocrResult.allergenWarnings.map((w, idx) => (
+                            <li key={idx} className="fw-semibold">
+                              {w.ingredient} matches your profile allergen list!
+                            </li>
+                          ))}
+                          {ocrResult.sensitiveWarnings.map((w, idx) => (
+                            <li key={idx}>
+                              {w.ingredient} is marked as skin sensitive.
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
                     </div>
                   )}
 

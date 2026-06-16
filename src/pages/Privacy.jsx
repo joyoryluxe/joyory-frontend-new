@@ -20,7 +20,8 @@ import {
   ChevronDown,
   ChevronUp,
   ArrowUp,
-  Info
+  Info,
+  XCircle
 } from "lucide-react";
 
 const Privacy = () => {
@@ -318,7 +319,7 @@ const Privacy = () => {
                 onClick={() => setSearchQuery("")}
                 aria-label="Clear search"
               >
-                <ChevronDown size={18} style={{ transform: "rotate(45deg)" }} />
+                <XCircle size={18} />
               </button>
             )}
           </div>

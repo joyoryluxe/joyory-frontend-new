@@ -880,9 +880,9 @@ const Foryou = () => {
                         />
 
                         {item?.supportsVTO && (
-                          <div 
-                            className="support-beauty-badge" 
-                            title="Try It On" 
+                          <div
+                            className="support-beauty-badge"
+                            title="Try It On"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleProductClick(item);
@@ -959,6 +959,8 @@ const Foryou = () => {
                               borderRadius: '50%',
                               width: '34px',
                               height: '34px',
+                              minHeight: '34px',
+                              maxHeight: '34px',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
@@ -1149,7 +1151,7 @@ const Foryou = () => {
                                       </div>
                                       {oosV && (
                                         <span style={{
-                                          position: "absolute", top: 0, left: 8, right: 0, bottom: 0,
+                                          position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
                                           display: "flex", alignItems: "center", justifyContent: "center",
                                           color: "red", fontWeight: "bold", fontSize: 16, pointerEvents: "none"
                                         }}>✕</span>
@@ -1333,7 +1335,7 @@ const Foryou = () => {
                               <span style={{
                                 color: 'red',
                                 fontWeight: 'bold',
-                                marginLeft: '6px',
+                                marginLeft: '0px',
                                 fontSize: '12px',
                               }}>✕</span>
                             )}

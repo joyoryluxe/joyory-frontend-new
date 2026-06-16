@@ -806,7 +806,7 @@ const ProductDetailsHero = ({
                         </div>
                         {outOfStock && (
                           <span style={{
-                            position: "absolute", top: 0, left: 8, right: 0, bottom: 0,
+                            position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
                             display: "flex", alignItems: "center", justifyContent: "center",
                             color: "red", fontWeight: "bold", fontSize: 16, pointerEvents: "none"
                           }}>✕</span>

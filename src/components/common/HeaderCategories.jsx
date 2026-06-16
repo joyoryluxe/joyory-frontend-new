@@ -92,7 +92,7 @@ const HeaderCategories = () => {
                   setActiveCategoryId(null);
                 }}
               >
-                {child.name}
+                {child.name ? child.name.replace(/\s+And\s+/gi, " & ") : ""}
               </div>
               {renderSubCategories(child.subCategories, path, level + 1)}
             </div>
@@ -136,10 +136,10 @@ const HeaderCategories = () => {
                   }}
                 >
                   <div className="brand-image-wrapper">
-                    <img 
-                      src={getBrandImage(brand)} 
-                      alt={brand.name} 
-                      className="w-100 img-fluid" 
+                    <img
+                      src={getBrandImage(brand)}
+                      alt={brand.name}
+                      className="w-100 img-fluid"
                       onError={(e) => {
                         e.target.onerror = null;
                         e.target.src = BRAND_PLACEHOLDER;
@@ -181,7 +181,7 @@ const HeaderCategories = () => {
                   setActiveCategoryId(null);
                 }}
               >
-                {cat.name}
+                {cat.name ? cat.name.replace(/\s+And\s+/gi, " & ") : ""}
               </span>
 
               {activeCategoryId === cat._id && (
@@ -197,7 +197,7 @@ const HeaderCategories = () => {
                               setActiveCategoryId(null);
                             }}
                           >
-                            {sub.name}
+                            {sub.name ? sub.name.replace(/\s+And\s+/gi, " & ") : ""}
                           </div>
                           {renderSubCategories(sub.subCategories, `${cat.slug}/${sub.slug}`)}
                         </div>

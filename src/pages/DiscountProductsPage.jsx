@@ -657,9 +657,9 @@ const DiscountProductsPage = () => {
               />
 
               {prod?.supportsVTO && (
-                <div 
-                  className="support-beauty-badge" 
-                  title="Try It On" 
+                <div
+                  className="support-beauty-badge"
+                  title="Try It On"
                   onClick={(e) => {
                     e.stopPropagation();
                     navigate(`/product/${slugPr}`);
@@ -738,6 +738,8 @@ const DiscountProductsPage = () => {
                     borderRadius: '50%',
                     width: '34px',
                     height: '34px',
+                    minHeight: '34px',
+                    maxHeight: '34px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',

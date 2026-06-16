@@ -147,7 +147,7 @@ const Virtualtryonhome = () => {
   }
 
   return (
-    <div className="px-lg-5 px-4 container-lg-fluid">
+    <div className="px-lg-5 px-0 container-lg-fluid">
       <div className="position-relative banner-container">
         <Swiper
           modules={[Autoplay, Pagination, Navigation, EffectFade]}
@@ -181,7 +181,7 @@ const Virtualtryonhome = () => {
             .sort((a, b) => (a.order || 0) - (b.order || 0))
             .map((banner) => (
               <SwiperSlide key={banner._id}>
-                <div 
+                <div
                   className="banner-slide position-relative overflow-hidden"
                   onClick={handleSlideClick}
                   style={{ cursor: 'pointer' }}

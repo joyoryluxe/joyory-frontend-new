@@ -39,7 +39,7 @@ export default function IngredientDetailsDrawer({ isOpen, onClose, ingredient })
 
       {/* Drawer Panel */}
       <div 
-        className="position-fixed top-0 end-0 h-100 bg-white shadow-lg d-flex flex-column"
+        className="ic-drawer-panel position-fixed top-0 end-0 h-100 bg-white shadow-lg d-flex flex-column"
         style={{
           width: "420px",
           maxWidth: "100%",

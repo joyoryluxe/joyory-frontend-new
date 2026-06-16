@@ -909,8 +909,10 @@ export default function ProductPage() {
                         position: "absolute", top: 8, right: 8,
                         cursor: wishlistLoading[prod._id] ? "not-allowed" : "pointer",
                         color: inWl ? "#dc3545" : "#ccc", fontSize: 22, zIndex: 2,
-                        backgroundColor: "transparent",
+                        backgroundColor: 'transparent !important',
                         borderRadius: "50%",
+                        minHeight: '34px',
+                        maxHeight: '34px',
                         width: 34, height: 34, display: "flex", alignItems: "center",
                         justifyContent: "center",
                         transition: "all .3s ease", border: "none",
@@ -983,8 +985,8 @@ export default function ProductPage() {
                 {showVariantOverlay === prod._id && (
                     <div className="variant-overlay" onClick={(e) => { e.stopPropagation(); closeVariantOverlay(); }}>
                         <div
-                          className="variant-overlay-content"
-                          onClick={(e) => e.stopPropagation()}
+                            className="variant-overlay-content"
+                            onClick={(e) => e.stopPropagation()}
                         >
                             <div className="overlay-header d-flex justify-content-between align-items-center p-3 border-bottom">
                                 <h5 className="m-0 page-title-main-name">Select Variant</h5>
@@ -1072,9 +1074,9 @@ export default function ProductPage() {
                                     Selected: <span className="text-dark fw-bold">{getVariantDisplayText(displayVariant)}</span>
                                 </div>
                                 <div className="mt-1 mb-2 text-start">
-                                    <span 
-                                        onClick={(e) => { e.stopPropagation(); navigate(`/product/${slugPr}`); }} 
-                                        className="text-decoration-none fw-semibold" 
+                                    <span
+                                        onClick={(e) => { e.stopPropagation(); navigate(`/product/${slugPr}`); }}
+                                        className="text-decoration-none fw-semibold"
                                         style={{ cursor: 'pointer', fontSize: '12px' }}
                                     >
                                         View Details

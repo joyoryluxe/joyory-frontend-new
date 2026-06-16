@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import ScrollToTop from "./components/common/ScrollToTop";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { UserProvider } from "./context/UserContext";
@@ -102,6 +103,7 @@ function App() {
   return (
     <UserProvider>
       <Router>
+        <ScrollToTop />
         <CartProvider>
           <WishlistProvider>
             <ToastContainer position="top-right" autoClose={3000} />

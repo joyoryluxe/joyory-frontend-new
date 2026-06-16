@@ -993,13 +993,17 @@ const RecommendationSlider = ({ title, products: initialProducts }) => {
                               position: 'absolute',
                               top: '10px',
                               right: '10px',
+                              backgroundColor: 'transparent !important',
                               cursor: wishlistLoading[item._id] ? 'not-allowed' : 'pointer',
                               color: isProductInWishlist ? '#dc3545' : '#ccc',
                               fontSize: '22px',
                               zIndex: 2,
+                              backgroundColor: 'transparent !important',
                               borderRadius: '50%',
                               width: '34px',
                               height: '34px',
+                              minHeight: '34px',
+                              maxHeight: '34px',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
@@ -1207,8 +1211,8 @@ const RecommendationSlider = ({ title, products: initialProducts }) => {
                                       </div>
                                       {isOutOfStock && (
                                         <span style={{
-                                          position: "absolute", top: 0, left: 8, right: 0, bottom: 0,
-                                          display: "flex", alignItems: "center", justifycontent: "center",
+                                          position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
+                                          display: "flex", alignItems: "center", justifyContent: "center",
                                           color: "red", fontWeight: "bold", fontSize: 16, pointerEvents: "none"
                                         }}>✕</span>
                                       )}
@@ -1426,7 +1430,7 @@ const RecommendationSlider = ({ title, products: initialProducts }) => {
                                   <span style={{
                                     color: 'red',
                                     fontWeight: 'bold',
-                                    marginLeft: '6px',
+                                    marginLeft: '0px',
                                     fontSize: '12px',
                                   }}>✕</span>
                                 )}

@@ -73,7 +73,7 @@ export const WishlistProvider = ({ children }) => {
         setWishlistItems(uniqueItems);
         setWishlistCount(uniqueItems.length);
       } else {
-        const response = await axiosInstance.get("/api/user/wishlist", { withCredentials: true });
+        const response = await axiosInstance.get(`/api/user/wishlist?_t=${Date.now()}`, { withCredentials: true });
         if (response.data?.success) {
           const items = response.data.wishlist || [];
           

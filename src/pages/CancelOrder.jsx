@@ -294,9 +294,9 @@ const RecoProductCard = ({ product, navigate, user, onAddToCartSuccess }) => {
           />
 
           {(product?.supportsVTO || product?.product?.supportsVTO) && (
-            <div 
-              className="support-beauty-badge" 
-              title="Try It On" 
+            <div
+              className="support-beauty-badge"
+              title="Try It On"
               onClick={(e) => {
                 e.stopPropagation();
                 navigate(`/product/${getProductSlug()}`);
@@ -370,6 +370,8 @@ const RecoProductCard = ({ product, navigate, user, onAddToCartSuccess }) => {
                 borderRadius: '50%',
                 width: '34px',
                 height: '34px',
+                minHeight: '34px',
+                maxHeight: '34px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -558,8 +560,8 @@ const RecoProductCard = ({ product, navigate, user, onAddToCartSuccess }) => {
                         </div>
                         {isOOS && (
                           <span style={{
-                            position: "absolute", top: 0, left: 8, right: 0, bottom: 0,
-                            display: "flex", alignItems: "center", justifyCorner: "center",
+                            position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
+                            display: "flex", alignItems: "center", justifyContent: "center",
                             color: "red", fontWeight: "bold", fontSize: 16, pointerEvents: "none"
                           }}>✕</span>
                         )}

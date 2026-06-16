@@ -490,10 +490,18 @@ const SearchPage = () => {
     if (searchTerm) {
       const { brand, category, remaining } = parseSemanticQuery(searchTerm, categories, brandsList);
 
-      if (brand) {
+      // if (brand) {
+      //   p.append("brandIds", brand.slug || brand._id);
+      // }
+      // if (category) {
+      //   p.append("categoryIds", category.slug || category._id);
+      // }
+
+
+      if (brand && (!filters.brandIds || filters.brandIds.length === 0)) {
         p.append("brandIds", brand.slug || brand._id);
       }
-      if (category) {
+      if (category && (!filters.categoryIds || filters.categoryIds.length === 0)) {
         p.append("categoryIds", category.slug || category._id);
       }
 
@@ -1109,9 +1117,9 @@ const SearchPage = () => {
               />
 
               {prod?.supportsVTO && (
-                <div 
-                  className="support-beauty-badge" 
-                  title="Try It On" 
+                <div
+                  className="support-beauty-badge"
+                  title="Try It On"
                   onClick={(e) => {
                     e.stopPropagation();
                     navigate(`/product/${slugPr}`);
@@ -1189,6 +1197,8 @@ const SearchPage = () => {
                     borderRadius: '50%',
                     width: '34px',
                     height: '34px',
+                    minHeight: '34px',
+                    maxHeight: '34px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -1405,7 +1415,7 @@ const SearchPage = () => {
                             </div>
                             {oosV && (
                               <span style={{
-                                position: "absolute", top: 0, left: 8, right: 0, bottom: 0,
+                                position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
                                 display: "flex", alignItems: "center", justifyContent: "center",
                                 color: "red", fontWeight: "bold", fontSize: 16, pointerEvents: "none"
                               }}>✕</span>
