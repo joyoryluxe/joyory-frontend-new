@@ -110,7 +110,8 @@
   background: transparent;
   outline: none;
   width: 100%;
-  min-width: 0; /* Prevent horizontal overflow in flex containers */
+  min-width: 0;
+  /* Prevent horizontal overflow in flex containers */
   font-size: 1rem;
   color: #2d2d2d;
   font-family: 'Montserrat', sans-serif !important;
@@ -152,7 +153,8 @@
 /* Left Sidebar - Sticky Navigation */
 .privacy-sidebar {
   position: sticky;
-  top: 150px; /* Account for fixed Header and subheader spacers */
+  top: 150px;
+  /* Account for fixed Header and subheader spacers */
   max-height: calc(100vh - 180px);
   overflow-y: auto;
   background: rgba(255, 255, 255, 0.8);
@@ -244,7 +246,8 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
   transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
   position: relative;
-  scroll-margin-top: 150px; /* Offset for sticky header scroll target */
+  scroll-margin-top: 150px;
+  /* Offset for sticky header scroll target */
 }
 
 .privacy-section-card:hover {
@@ -444,7 +447,8 @@
 .privacy-mobile-nav {
   display: none;
   position: sticky;
-  top: 130px; /* Clear mobile header */
+  top: 130px;
+  /* Clear mobile header */
   z-index: 90;
   margin-bottom: 25px;
 }
@@ -527,17 +531,20 @@
 
 @media (max-width: 992px) {
   .privacy-main-layout {
-    grid-template-columns: minmax(0, 1fr); /* Stack sidebar and contents safely */
+    grid-template-columns: minmax(0, 1fr);
+    /* Stack sidebar and contents safely */
     padding: 0 20px;
     gap: 20px;
   }
 
   .privacy-sidebar {
-    display: none; /* Hide desktop sidebar */
+    display: none;
+    /* Hide desktop sidebar */
   }
 
   .privacy-mobile-nav {
-    display: block; /* Show mobile category select */
+    display: block;
+    /* Show mobile category select */
   }
 
   .privacy-header-banner {
@@ -564,19 +571,23 @@
 
   .privacy-search-section {
     margin-top: -20px;
-    padding: 0 10px; /* Reduce horizontal margin/padding on small viewports */
+    padding: 0 10px;
+    /* Reduce horizontal margin/padding on small viewports */
   }
 
   .privacy-search-wrapper {
-    padding: 8px 12px; /* Optimize space inside search bar */
+    padding: 8px 12px;
+    /* Optimize space inside search bar */
   }
 
   .privacy-main-layout {
-    padding: 0 10px; /* Ensure main cards have full screen width access on tiny viewports */
+    padding: 0 10px;
+    /* Ensure main cards have full screen width access on tiny viewports */
   }
 
   .privacy-section-card {
-    padding: 20px 12px; /* Maximize text space on small screens */
+    padding: 20px 12px;
+    /* Maximize text space on small screens */
   }
 
   .privacy-section-header h2 {

@@ -214,81 +214,43 @@ const RecommendationSlider = ({ title, products: initialProducts }) => {
     const productId = prod._id;
     const sku = getSku(variant);
 
+    if (!user || user.guest) {
+      showToastMsg("Please login to use wishlist", "error");
+      localStorage.setItem("pendingWishlistAction", JSON.stringify({ productId, sku }));
+      navigate("/login", { state: { from: "/wishlist" } });
+      return;
+    }
+
     setWishlistLoading(prev => ({ ...prev, [productId]: true }));
 
     try {
       const currentlyInWishlist = isInWishlist(productId, sku);
 
-      if (user && !user.guest) {
-        if (currentlyInWishlist) {
-          await axios.delete(
-            `https://beauty.joyory.com/api/user/wishlist/${productId}`,
-            {
-              withCredentials: true,
-              data: { sku: sku }
-            }
-          );
-          showToastMsg("Removed from wishlist!", "success");
-        } else {
-          await axios.post(
-            `https://beauty.joyory.com/api/user/wishlist/${productId}`,
-            { sku: sku },
-            { withCredentials: true }
-          );
-          showToastMsg("Added to wishlist!", "success");
-        }
-
-        await fetchWishlistData();
+      if (currentlyInWishlist) {
+        await axios.delete(
+          `https://beauty.joyory.com/api/user/wishlist/${productId}`,
+          {
+            withCredentials: true,
+            data: { sku: sku }
+          }
+        );
+        showToastMsg("Removed from wishlist!", "success");
       } else {
-        const guestWishlist = JSON.parse(localStorage.getItem("guestWishlist")) || [];
-
-        if (currentlyInWishlist) {
-          const updatedWishlist = guestWishlist.filter(item =>
-            !(item._id === productId && item.sku === sku)
-          );
-          localStorage.setItem("guestWishlist", JSON.stringify(updatedWishlist));
-          showToastMsg("Removed from wishlist!", "success");
-        } else {
-          const productData = {
-            _id: productId,
-            name: prod.name,
-            brand: getBrandName(prod),
-            price: variant.discountedPrice || variant.displayPrice || prod.price || 0,
-            originalPrice: variant.originalPrice || variant.mrp || prod.mrp || prod.price || 0,
-            mrp: variant.originalPrice || variant.mrp || prod.mrp || prod.price || 0,
-            displayPrice: variant.discountedPrice || variant.displayPrice || prod.price || 0,
-            images: variant.images || prod.images || ["/placeholder.png"],
-            image: variant.images?.[0] || variant.image || prod.images?.[0] || "/placeholder.png",
-            slug: getProductSlug(prod),
-            sku: sku,
-            variantSku: sku,
-            variantId: sku,
-            variantName: variant.shadeName || variant.name || "Default",
-            shadeName: variant.shadeName || variant.name || "Default",
-            variant: variant.shadeName || variant.name || "Default",
-            hex: variant.hex || "#cccccc",
-            stock: variant.stock || 0,
-            status: variant.stock > 0 ? "inStock" : "outOfStock",
-            avgRating: prod.avgRating || 0,
-            totalRatings: prod.totalRatings || 0,
-            commentsCount: prod.totalRatings || 0,
-            discountPercent: (variant.originalPrice && variant.discountedPrice && variant.originalPrice > variant.discountedPrice)
-              ? Math.round(((variant.originalPrice - variant.discountedPrice) / variant.originalPrice) * 100)
-              : 0
-          };
-
-          guestWishlist.push(productData);
-          localStorage.setItem("guestWishlist", JSON.stringify(guestWishlist));
-          showToastMsg("Added to wishlist!", "success");
-        }
-
-        await fetchWishlistData();
+        await axios.post(
+          `https://beauty.joyory.com/api/user/wishlist/${productId}`,
+          { sku: sku },
+          { withCredentials: true }
+        );
+        showToastMsg("Added to wishlist!", "success");
       }
+
+      await fetchWishlistData();
     } catch (error) {
       console.error("Wishlist toggle error:", error);
       if (error.response?.status === 401) {
         showToastMsg("Please login to use wishlist", "error");
-        navigate("/login");
+        localStorage.setItem("pendingWishlistAction", JSON.stringify({ productId, sku }));
+        navigate("/login", { state: { from: "/wishlist" } });
       } else {
         showToastMsg(error.response?.data?.message || "Failed to update wishlist", "error");
       }
@@ -981,7 +943,8 @@ const RecommendationSlider = ({ title, products: initialProducts }) => {
 
                         {/* Wishlist Icon - Hidden when out of stock */}
                         {!showOutOfStock && (
-                          <button className="bg-transparent"
+                          <button
+                            className={`product-card-wishlist-btn ${isProductInWishlist ? 'in-wishlist' : ''}`}
                             onClick={(e) => {
                               e.stopPropagation();
                               if (displayVariant) {
@@ -989,28 +952,6 @@ const RecommendationSlider = ({ title, products: initialProducts }) => {
                               }
                             }}
                             disabled={wishlistLoading[item._id]}
-                            style={{
-                              position: 'absolute',
-                              top: '10px',
-                              right: '10px',
-                              backgroundColor: 'transparent !important',
-                              cursor: wishlistLoading[item._id] ? 'not-allowed' : 'pointer',
-                              color: isProductInWishlist ? '#dc3545' : '#ccc',
-                              fontSize: '22px',
-                              zIndex: 2,
-                              backgroundColor: 'transparent !important',
-                              borderRadius: '50%',
-                              width: '34px',
-                              height: '34px',
-                              minHeight: '34px',
-                              maxHeight: '34px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              transition: 'all 0.3s ease',
-                              border: 'none',
-                              outline: 'none'
-                            }}
                             title={isProductInWishlist ? "Remove from wishlist" : "Add to wishlist"}
                           >
                             {wishlistLoading[item._id] ? (

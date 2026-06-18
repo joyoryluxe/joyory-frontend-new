@@ -327,6 +327,15 @@ const OrderSuccess = () => {
       const data = await response.json();
       const orderData = data.order || data;
       setOrder(orderData);
+
+      // Track Purchase in Meta Pixel
+      if (window.fbq) {
+        window.fbq('track', 'Purchase', {
+          value: orderData?.amount?.grandTotal || 0,
+          currency: 'INR',
+          content_ids: (orderData?.products || []).map(p => p.productId || p._id)
+        });
+      }
     } catch (err) {
       setError(err.message);
     } finally {

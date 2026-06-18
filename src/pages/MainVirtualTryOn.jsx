@@ -353,15 +353,17 @@ const MainVirtualTryon = () => {
   };
 
   const toggleWishlist = async (prod, shade) => {
-    if (!user || user.guest) {
-      toast.error("Please login to use wishlist");
-      navigate("/login", { state: { from: window.location.pathname } });
-      return;
-    }
     if (!prod || !shade) return toast.error("Select a shade first");
     const pid = prod._id;
     const sku = shade.sku || shade.variantSku || shade._id;
     if (!sku) return toast.error("Selected shade has no SKU");
+
+    if (!user || user.guest) {
+      toast.error("Please login to use wishlist");
+      localStorage.setItem("pendingWishlistAction", JSON.stringify({ productId: pid, sku }));
+      navigate("/login", { state: { from: "/wishlist" } });
+      return;
+    }
 
     try {
       const inWl = isInWishlist(pid, sku);

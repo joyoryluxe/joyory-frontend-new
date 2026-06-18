@@ -104,7 +104,7 @@ export default function HeroSlider() {
                 />
               ) : (
                 <video
-                  className="slide-media slide-video"
+                  className="slide-media slide-video mt-5"
                   src={item.url}
                   muted
                   playsInline

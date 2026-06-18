@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import ScrollToTop from "./components/common/ScrollToTop";
 import { ToastContainer } from "react-toastify";
@@ -98,12 +99,88 @@ import IngredientDetail from "./pages/IngredientDetail";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import RoutineBuilder from "./pages/RoutineBuilder";
+import MetaPixelTracker from "./components/common/MetaPixelTracker";
 
 function App() {
+  useEffect(() => {
+    let isDown = false;
+    let startX;
+    let scrollLeft;
+    let moved = false;
+    let activeContainer = null;
+
+    const handleMouseDown = (e) => {
+      const container = e.target.closest('.cat-wrap');
+      if (!container) return;
+
+      isDown = true;
+      activeContainer = container;
+      startX = e.pageX - container.offsetLeft;
+      scrollLeft = container.scrollLeft;
+      moved = false;
+
+      // Temporarily disable smooth scroll behavior to track drag responsively
+      container.style.scrollBehavior = 'auto';
+      container.style.cursor = 'grabbing';
+      container.style.userSelect = 'none';
+    };
+
+    const handleMouseMove = (e) => {
+      if (!isDown || !activeContainer) return;
+      const x = e.pageX - activeContainer.offsetLeft;
+      const walk = (x - startX);
+      if (Math.abs(walk) > 5) {
+        moved = true;
+        activeContainer.scrollLeft = scrollLeft - walk;
+      }
+    };
+
+    const handleMouseUp = () => {
+      if (activeContainer) {
+        activeContainer.style.scrollBehavior = 'smooth';
+        activeContainer.style.cursor = '';
+        activeContainer.style.userSelect = '';
+      }
+      isDown = false;
+    };
+
+    const handleMouseLeave = () => {
+      if (activeContainer) {
+        activeContainer.style.scrollBehavior = 'smooth';
+        activeContainer.style.cursor = '';
+        activeContainer.style.userSelect = '';
+      }
+      isDown = false;
+    };
+
+    const handleClickCapture = (e) => {
+      if (moved && activeContainer && e.target.closest('.cat-wrap') === activeContainer) {
+        e.stopPropagation();
+        e.preventDefault();
+        moved = false;
+      }
+    };
+
+    document.addEventListener('mousedown', handleMouseDown);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('mouseleave', handleMouseLeave);
+    document.addEventListener('click', handleClickCapture, true);
+
+    return () => {
+      document.removeEventListener('mousedown', handleMouseDown);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('mouseleave', handleMouseLeave);
+      document.removeEventListener('click', handleClickCapture, true);
+    };
+  }, []);
+
   return (
     <UserProvider>
       <Router>
         <ScrollToTop />
+        <MetaPixelTracker />
         <CartProvider>
           <WishlistProvider>
             <ToastContainer position="top-right" autoClose={3000} />

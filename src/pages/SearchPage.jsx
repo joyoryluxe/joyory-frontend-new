@@ -445,6 +445,13 @@ const SearchPage = () => {
   useEffect(() => {
     const q = new URLSearchParams(location.search).get("q") || "";
     setSearchTerm(q);
+
+    // Track Search in Meta Pixel
+    if (q && window.fbq) {
+      window.fbq('track', 'Search', {
+        search_string: q
+      });
+    }
   }, [location.search]);
 
   const [allProducts, setAllProducts] = useState([]);
@@ -468,6 +475,7 @@ const SearchPage = () => {
   const [trendingCategories, setTrendingCategories] = useState([]);
   const [showFilterOffcanvas, setShowFilterOffcanvas] = useState(false);
   const [showSortOffcanvas, setShowSortOffcanvas] = useState(false);
+  const [showDesktopSortDropdown, setShowDesktopSortDropdown] = useState(false);
 
   const [filters, setFilters] = useState({
     brandIds: [],
@@ -534,9 +542,10 @@ const SearchPage = () => {
       p.append("discountMin", filters.discountMin);
     }
 
-    if (filters.sort) {
-      p.append("sort", filters.sort);
-    }
+    // Do not pass sort to backend API due to cursor pagination limitation (nextCursor is null when sorting)
+    // if (filters.sort) {
+    //   p.append("sort", filters.sort);
+    // }
 
     if (currentCursor) {
       p.append("cursor", currentCursor);
@@ -705,11 +714,6 @@ const SearchPage = () => {
 
   // 🔥 FIXED: Toggle with proper string normalization and storage sync
   const toggleWishlist = useCallback(async (prod, variant) => {
-    if (!user || user.guest) {
-      showToastMsg("Please login to use wishlist", "error");
-      navigate("/login", { state: { from: location.pathname } });
-      return;
-    }
     // Handle case when no variant is passed (for products without variants)
     if (!prod) {
       showToastMsg("Product not found", "error");
@@ -731,85 +735,39 @@ const SearchPage = () => {
     const productId = String(prod._id);
     const sku = String(getSku(effectiveVariant));
 
+    if (!user || user.guest) {
+      showToastMsg("Please login to use wishlist", "error");
+      localStorage.setItem("pendingWishlistAction", JSON.stringify({ productId, sku }));
+      navigate("/login", { state: { from: "/wishlist" } });
+      return;
+    }
+
     setWishlistLoading(prev => ({ ...prev, [productId]: true }));
 
     try {
       const currentlyInWishlist = isInWishlist(productId, sku);
 
-      if (user && !user.guest) {
-        // API call for logged-in users with credentials
-        if (currentlyInWishlist) {
-          await axiosInstance.delete(`/api/user/wishlist/${productId}`, {
-            data: { sku: sku },
-            withCredentials: true // 🔥 FIXED: Added credentials
-          });
-          showToastMsg("Removed from wishlist!", "success");
-        } else {
-          await axiosInstance.post(`/api/user/wishlist/${productId}`,
-            { sku: sku },
-            { withCredentials: true } // 🔥 FIXED: Added credentials
-          );
-          showToastMsg("Added to wishlist!", "success");
-        }
-        // Re-fetch to sync with server
-        await fetchWishlistData();
+      if (currentlyInWishlist) {
+        await axiosInstance.delete(`/api/user/wishlist/${productId}`, {
+          data: { sku: sku },
+          withCredentials: true // 🔥 FIXED: Added credentials
+        });
+        showToastMsg("Removed from wishlist!", "success");
       } else {
-        // LocalStorage for guests
-        let guestWishlist = JSON.parse(localStorage.getItem(WISHLIST_CACHE_KEY)) || [];
-
-        if (currentlyInWishlist) {
-          // Remove from wishlist
-          guestWishlist = guestWishlist.filter(item =>
-            !(String(item._id) === productId && String(item.sku) === sku)
-          );
-          localStorage.setItem(WISHLIST_CACHE_KEY, JSON.stringify(guestWishlist));
-          showToastMsg("Removed from wishlist!", "success");
-        } else {
-          // Add to wishlist with normalized data
-          const productData = {
-            _id: productId,
-            productId: productId,
-            name: prod.name,
-            brand: getBrandName(prod),
-            price: effectiveVariant.discountedPrice || effectiveVariant.displayPrice || prod.price || 0,
-            originalPrice: effectiveVariant.originalPrice || effectiveVariant.mrp || prod.mrp || prod.price || 0,
-            mrp: effectiveVariant.originalPrice || effectiveVariant.mrp || prod.mrp || prod.price || 0,
-            displayPrice: effectiveVariant.discountedPrice || effectiveVariant.displayPrice || prod.price || 0,
-            images: effectiveVariant.images || prod.images || ["/placeholder.png"],
-            image: effectiveVariant.images?.[0] || effectiveVariant.image || prod.images?.[0] || "/placeholder.png",
-            slug: prod.slugs?.[0] || prod.slug || productId,
-            sku: sku,
-            variantSku: sku,
-            variantId: sku,
-            variantName: effectiveVariant.shadeName || effectiveVariant.name || "Default",
-            shadeName: effectiveVariant.shadeName || effectiveVariant.name || "Default",
-            variant: effectiveVariant.shadeName || effectiveVariant.name || "Default",
-            hex: effectiveVariant.hex || "#cccccc",
-            stock: effectiveVariant.stock || 0,
-            status: effectiveVariant.stock > 0 ? "inStock" : "outOfStock",
-            avgRating: prod.avgRating || 0,
-            totalRatings: prod.totalRatings || 0,
-            commentsCount: prod.totalRatings || 0,
-            discountPercent: (effectiveVariant.originalPrice && effectiveVariant.discountedPrice && effectiveVariant.originalPrice > effectiveVariant.discountedPrice)
-              ? Math.round(((effectiveVariant.originalPrice - effectiveVariant.discountedPrice) / effectiveVariant.originalPrice) * 100)
-              : 0
-          };
-          guestWishlist.push(productData);
-          localStorage.setItem(WISHLIST_CACHE_KEY, JSON.stringify(guestWishlist));
-          showToastMsg("Added to wishlist!", "success");
-        }
-
-        // 🔥 FIXED: Dispatch storage event for cross-tab sync
-        window.dispatchEvent(new StorageEvent('storage', { key: WISHLIST_CACHE_KEY }));
-
-        // Update local state immediately
-        await fetchWishlistData();
+        await axiosInstance.post(`/api/user/wishlist/${productId}`,
+          { sku: sku },
+          { withCredentials: true } // 🔥 FIXED: Added credentials
+        );
+        showToastMsg("Added to wishlist!", "success");
       }
+      // Update local state immediately
+      await fetchWishlistData();
     } catch (error) {
       console.error("Wishlist toggle error:", error);
       if (error.response?.status === 401) {
         showToastMsg("Please login to use wishlist", "error");
-        navigate("/login");
+        localStorage.setItem("pendingWishlistAction", JSON.stringify({ productId, sku }));
+        navigate("/login", { state: { from: "/wishlist" } });
       } else {
         showToastMsg(error.response?.data?.message || "Failed to update wishlist", "error");
       }
@@ -891,8 +849,38 @@ const SearchPage = () => {
 
   // ==================== CLIENT-SIDE SEARCH & FILTER ====================
   const filteredProducts = useMemo(() => {
-    return allProducts;
-  }, [allProducts]);
+    if (!allProducts || !Array.isArray(allProducts)) return [];
+    const getProductPrice = (prod) => {
+      const vars = Array.isArray(prod.variants) ? prod.variants : [];
+      const hasVar = vars.length > 0;
+      const displayVariant = tempSelectedVariants[prod._id] || selectedVariants[prod._id] || (hasVar ? (vars.find((v) => v.stock > 0) || vars[0]) : null);
+      return displayVariant?.displayPrice || displayVariant?.discountedPrice || prod.price || 0;
+    };
+    const getProductDiscount = (prod) => {
+      const vars = Array.isArray(prod.variants) ? prod.variants : [];
+      const hasVar = vars.length > 0;
+      const displayVariant = tempSelectedVariants[prod._id] || selectedVariants[prod._id] || (hasVar ? (vars.find((v) => v.stock > 0) || vars[0]) : null);
+      const price = displayVariant?.displayPrice || displayVariant?.discountedPrice || prod.price || 0;
+      const orig = displayVariant?.originalPrice || displayVariant?.mrp || prod.mrp || price;
+      return orig > price ? Math.round(((orig - price) / orig) * 100) : 0;
+    };
+    const getProductRating = (prod) => {
+      return prod.avgRating || prod.rating || 0;
+    };
+    const sorted = [...allProducts];
+    if (filters.sort === 'priceHighToLow') {
+      sorted.sort((a, b) => getProductPrice(b) - getProductPrice(a));
+    } else if (filters.sort === 'priceLowToHigh') {
+      sorted.sort((a, b) => getProductPrice(a) - getProductPrice(b));
+    } else if (filters.sort === 'rating') {
+      sorted.sort((a, b) => getProductRating(b) - getProductRating(a));
+    } else if (filters.sort === 'discountHighToLow') {
+      sorted.sort((a, b) => getProductDiscount(b) - getProductDiscount(a));
+    } else if (filters.sort === 'discountLowToHigh') {
+      sorted.sort((a, b) => getProductDiscount(a) - getProductDiscount(b));
+    }
+    return sorted;
+  }, [allProducts, filters.sort, selectedVariants, tempSelectedVariants]);
 
   // ==================== HANDLERS ====================
   const handleInputChange = (e) => {
@@ -1179,33 +1167,13 @@ const SearchPage = () => {
               {/* Wishlist button */}
               {!showOutOfStock && (
                 <button
+                  className={`product-card-wishlist-btn ${inWl ? 'in-wishlist' : ''}`}
                   onClick={(e) => {
                     e.stopPropagation();
                     if (displayVariant || !hasVar)
                       toggleWishlist(prod, displayVariant || {});
                   }}
                   disabled={wishlistLoading[prod._id]}
-                  style={{
-                    position: 'absolute',
-                    top: '10px',
-                    right: '10px',
-                    cursor: wishlistLoading[prod._id] ? 'not-allowed' : 'pointer',
-                    color: inWl ? '#dc3545' : '#ccc',
-                    fontSize: '22px',
-                    zIndex: 2,
-                    backgroundColor: 'transparent !important',
-                    borderRadius: '50%',
-                    width: '34px',
-                    height: '34px',
-                    minHeight: '34px',
-                    maxHeight: '34px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    transition: 'all 0.3s ease',
-                    border: 'none',
-                    outline: 'none'
-                  }}
                   title={inWl ? "Remove from wishlist" : "Add to wishlist"}
                 >
                   {wishlistLoading[prod._id] ? (
@@ -1634,9 +1602,12 @@ const SearchPage = () => {
                   <div className="px-4 pb-4">
                     <div className="list-group">
                       {[
-                        { value: "recent", label: "Relevance" },
-                        { value: "priceHighToLow", label: "Price High to Low" },
-                        { value: "priceLowToHigh", label: "Price Low to High" },
+                        { value: "recent", label: "Newest First" },
+                        { value: "priceLowToHigh", label: "Price: Low to High" },
+                        { value: "priceHighToLow", label: "Price: High to Low" },
+                        { value: "rating", label: "Top Rated" },
+                        { value: "discountHighToLow", label: "Discount: High to Low" },
+                        { value: "discountLowToHigh", label: "Discount: Low to High" }
                       ].map(({ value, label }) => (
                         <label key={value} className="list-group-item py-3 d-flex align-items-center">
                           <input className="form-check-input me-3" type="radio" name="sort"
@@ -1660,11 +1631,73 @@ const SearchPage = () => {
                 <span className="text-muted page-title-main-name">
                   {filteredProducts.length > 0 ? `Showing ${filteredProducts.length} products` : "No products found"}
                 </span>
-                {isAnyFilterActive && (
-                  <button className="btn btn-sm btn-outline-danger" onClick={handleClearAllFilters}>
-                    Clear Filters
-                  </button>
-                )}
+                <div className="d-flex align-items-center gap-3">
+                  {/* {isAnyFilterActive && (
+                    <button className="btn btn-sm btn-outline-danger" onClick={handleClearAllFilters}>
+                      Clear Filters
+                    </button>
+                  )} */}
+                  {/* Desktop Sort Dropdown */}
+                  <div className="d-none d-lg-flex align-items-center position-relative" style={{ gap: '6px' }}>
+                    <span className="text-muted page-title-main-name" style={{ fontSize: '14px' }}>Sort by:</span>
+                    <div className="position-relative">
+                      <button 
+                        type="button"
+                        className="btn btn-link text-decoration-none p-0 page-title-main-name fw-semibold text-dark d-inline-flex align-items-center gap-1"
+                        onClick={() => setShowDesktopSortDropdown(!showDesktopSortDropdown)}
+                        style={{ border: 'none', background: 'none', boxShadow: 'none', fontSize: '14px' }}
+                      >
+                        {
+                          filters.sort === 'priceHighToLow' ? 'Price: High to Low' : 
+                          filters.sort === 'priceLowToHigh' ? 'Price: Low to High' : 
+                          filters.sort === 'rating' ? 'Top Rated' :
+                          filters.sort === 'discountHighToLow' ? 'Discount: High to Low' :
+                          filters.sort === 'discountLowToHigh' ? 'Discount: Low to High' :
+                          'Newest First'
+                        }
+                        <FaChevronDown style={{ fontSize: '10px', transition: 'transform 0.2s', transform: showDesktopSortDropdown ? 'rotate(180deg)' : 'none' }} />
+                      </button>
+                      {showDesktopSortDropdown && (
+                        <>
+                          <div className="position-fixed top-0 start-0 w-100 h-100" style={{ zIndex: 998 }} onClick={() => setShowDesktopSortDropdown(false)} />
+                          <ul className="dropdown-menu show dropdown-menu-end shadow-sm" style={{ position: 'absolute', top: '100%', right: 0, zIndex: 999, border: '1px solid #eee', borderRadius: '8px', minWidth: '170px', display: 'block', marginTop: '5px', background: '#fff', padding: '5px 0' }}>
+                            {[
+                              { value: "recent", label: "Newest First" },
+                              { value: "priceLowToHigh", label: "Price: Low to High" },
+                              { value: "priceHighToLow", label: "Price: High to Low" },
+                              { value: "rating", label: "Top Rated" },
+                              { value: "discountHighToLow", label: "Discount: High to Low" },
+                              { value: "discountLowToHigh", label: "Discount: Low to High" }
+                            ].map(({ value, label }) => (
+                              <li key={value}>
+                                <button 
+                                  type="button"
+                                  className={`dropdown-item page-title-main-name py-2 custom-sort-item ${filters.sort === value ? 'active' : ''}`}
+                                  onClick={() => {
+                                    setFilters(prev => ({ ...prev, sort: value }));
+                                    setShowDesktopSortDropdown(false);
+                                  }}
+                                  style={{ 
+                                    fontSize: '13px', 
+                                    border: 'none', 
+
+
+                                    width: '100%', 
+                                    textAlign: 'left', 
+                                    cursor: 'pointer',
+                                    padding: '8px 16px'
+                                  }}
+                                >
+                                  {label}
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {isLoading && allProducts.length === 0 ? (

@@ -19,6 +19,7 @@ import CustomerReviews from "../components/common/CustomerReviews";
 
 // 🆕 Import Lottie loader
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import SEOMeta from "../components/common/SEOMeta";
 
 const ProductDetail = () => {
   const { slug } = useParams();
@@ -105,6 +106,17 @@ const ProductDetail = () => {
           data.supportsVTO = location.state.supportsVTO;
         }
         setProduct(data);
+
+        // Track ViewContent in Meta Pixel
+        if (window.fbq) {
+          window.fbq('track', 'ViewContent', {
+            content_ids: [data._id],
+            content_name: data.name,
+            content_type: 'product',
+            value: data.price || (data.variants?.[0]?.displayPrice) || 0,
+            currency: 'INR'
+          });
+        }
 
         if (data.reviewSummary) {
           setReviewSummary(data.reviewSummary);
@@ -402,6 +414,7 @@ const ProductDetail = () => {
 
   return (
     <>
+      <SEOMeta type="product" slug={slug} />
       <Header />
 
       <main className="product-detail-page page-title-main-name">

@@ -79,8 +79,43 @@ const PromotionProducts = () => {
 
   const [showFilterOffcanvas, setShowFilterOffcanvas] = useState(false);
   const [showSortOffcanvas, setShowSortOffcanvas] = useState(false);
+  const [showDesktopSortDropdown, setShowDesktopSortDropdown] = useState(false);
   const [showVariantOverlay, setShowVariantOverlay] = useState(null);
   const [selectedVariantType, setSelectedVariantType] = useState("all");
+
+  const sortedProducts = useMemo(() => {
+    if (!products || !Array.isArray(products)) return [];
+    const getProductPrice = (prod) => {
+      const vars = Array.isArray(prod.variants) ? prod.variants : [];
+      const hasVar = vars.length > 0;
+      const displayVariant = selectedVariants[prod._id] || (hasVar ? (vars.find((v) => v.stock > 0) || vars[0]) : null);
+      return displayVariant?.displayPrice || displayVariant?.discountedPrice || prod.price || 0;
+    };
+    const getProductDiscount = (prod) => {
+      const vars = Array.isArray(prod.variants) ? prod.variants : [];
+      const hasVar = vars.length > 0;
+      const displayVariant = selectedVariants[prod._id] || (hasVar ? (vars.find((v) => v.stock > 0) || vars[0]) : null);
+      const price = displayVariant?.displayPrice || displayVariant?.discountedPrice || prod.price || 0;
+      const orig = displayVariant?.originalPrice || displayVariant?.mrp || prod.mrp || price;
+      return orig > price ? Math.round(((orig - price) / orig) * 100) : 0;
+    };
+    const getProductRating = (prod) => {
+      return prod.avgRating || prod.rating || 0;
+    };
+    const sorted = [...products];
+    if (filters.sort === 'priceHighToLow') {
+      sorted.sort((a, b) => getProductPrice(b) - getProductPrice(a));
+    } else if (filters.sort === 'priceLowToHigh') {
+      sorted.sort((a, b) => getProductPrice(a) - getProductPrice(b));
+    } else if (filters.sort === 'rating') {
+      sorted.sort((a, b) => getProductRating(b) - getProductRating(a));
+    } else if (filters.sort === 'discountHighToLow') {
+      sorted.sort((a, b) => getProductDiscount(b) - getProductDiscount(a));
+    } else if (filters.sort === 'discountLowToHigh') {
+      sorted.sort((a, b) => getProductDiscount(a) - getProductDiscount(b));
+    }
+    return sorted;
+  }, [products, filters.sort, selectedVariants]);
 
   const loaderRef = useRef(null);
 
@@ -112,42 +147,26 @@ const PromotionProducts = () => {
     if (!prod || !variant) return toast.warn("Please select a variant first");
     const pid = prod._id;
     const sku = getSku(variant);
+
+    if (!user || user.guest) {
+      toast.error("Please login to use wishlist");
+      localStorage.setItem("pendingWishlistAction", JSON.stringify({ productId: pid, sku }));
+      navigate("/login", { state: { from: "/wishlist" } });
+      return;
+    }
+
     setWishlistLoading((p) => ({ ...p, [pid]: true }));
 
     try {
       const inWl = isInWishlist(pid, sku);
-      if (user && !user.guest) {
-        if (inWl) {
-          await axiosInstance.delete(`/api/user/wishlist/${pid}`, { data: { sku } });
-          toast.success("Removed from wishlist!");
-        } else {
-          await axiosInstance.post(`/api/user/wishlist/${pid}`, { sku });
-          toast.success("Added to wishlist!");
-        }
-        await fetchWishlistData();
+      if (inWl) {
+        await axiosInstance.delete(`/api/user/wishlist/${pid}`, { data: { sku } });
+        toast.success("Removed from wishlist!");
       } else {
-        // Guest logic (same as before)
-        let g = JSON.parse(localStorage.getItem("guestWishlist") || "[]");
-        if (inWl) {
-          g = g.filter((it) => !(it._id === pid && it.sku === sku));
-          toast.success("Removed from wishlist!");
-        } else {
-          g.push({
-            _id: pid,
-            name: prod.name,
-            brand: getBrandName(prod),
-            displayPrice: variant.displayPrice || variant.discountedPrice || prod.price,
-            originalPrice: variant.originalPrice || variant.mrp || prod.price,
-            image: variant.images?.[0] || prod.images?.[0],
-            sku,
-            variantName: variant.shadeName || "Default",
-            stock: variant.stock,
-          });
-          toast.success("Added to wishlist!");
-        }
-        localStorage.setItem("guestWishlist", JSON.stringify(g));
-        await fetchWishlistData();
+        await axiosInstance.post(`/api/user/wishlist/${pid}`, { sku });
+        toast.success("Added to wishlist!");
       }
+      await fetchWishlistData();
     } catch (e) {
       toast.error(e.response?.data?.message || "Wishlist error");
     } finally {
@@ -176,7 +195,8 @@ const PromotionProducts = () => {
       if (filters.priceRange.max != null) p.append("maxPrice", filters.priceRange.max);
     }
     if (filters.discountRange) p.append("minDiscount", filters.discountRange.min);
-    if (filters.sort) p.append("sort", filters.sort);
+    // Do not pass sort to backend API due to cursor pagination limitation (nextCursor is null when sorting)
+    // if (filters.sort) p.append("sort", filters.sort);
 
     if (cursor) p.append("cursor", cursor);
     p.append("limit", "9");
@@ -353,16 +373,9 @@ const PromotionProducts = () => {
       <div key={prod._id} className="col-6 col-md-4 col-lg-4 position-relative">
         {/* Wishlist Button */}
         <button
+          className={`product-card-wishlist-btn ${inWl ? 'in-wishlist' : ''}`}
           onClick={() => toggleWishlist(prod, displayVariant || {})}
           disabled={wishlistLoading[prod._id]}
-          style={{
-            position: "absolute", top: 8, right: 8, zIndex: 2,
-            cursor: wishlistLoading[prod._id] ? "not-allowed" : "pointer",
-            color: inWl ? "#dc3545" : "#ccc", fontSize: 22,
-            backgroundColor: "rgba(255,255,255,.9)", borderRadius: "50%",
-            width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: "0 2px 4px rgba(0,0,0,.1)", border: "none",
-          }}
         >
           {wishlistLoading[prod._id] ? (
             <div className="spinner-border spinner-border-sm" role="status" />
@@ -679,7 +692,16 @@ const PromotionProducts = () => {
                       <img src={updownarrow} alt="Sort" style={{ width: 25 }} />
                       <div className="text-start">
                         <p className="mb-0 fs-6 fw-semibold page-title-main-name">Sort by</p>
-                        <span className="text-muted small">{filters.sort === "recent" ? "Relevance" : filters.sort}</span>
+                        <span className="text-muted small">
+                          {
+                            filters.sort === 'priceHighToLow' ? 'Price: High to Low' : 
+                            filters.sort === 'priceLowToHigh' ? 'Price: Low to High' : 
+                            filters.sort === 'rating' ? 'Top Rated' :
+                            filters.sort === 'discountHighToLow' ? 'Discount: High to Low' :
+                            filters.sort === 'discountLowToHigh' ? 'Discount: Low to High' :
+                            'Newest First'
+                          }
+                        </span>
                       </div>
                     </button>
                   </div>
@@ -702,12 +724,44 @@ const PromotionProducts = () => {
             </div>
           )}
 
-          {/* Mobile Sort Offcanvas - You can improve later if needed */}
+          {/* Mobile Sort Offcanvas */}
           {showSortOffcanvas && (
-            /* Keep your existing sort offcanvas or update to match new sort options */
-            <div className="position-fixed start-0 bottom-0 w-100 bg-white" style={{ zIndex: 1050, borderTopLeftRadius: 16, borderTopRightRadius: 16, maxHeight: "60vh" }}>
-              {/* Your existing sort offcanvas content */}
-            </div>
+            <>
+              <div className="position-fixed top-0 start-0 w-100 h-100 bg-dark"
+                style={{ opacity: 0.5, zIndex: 1040 }} onClick={() => setShowSortOffcanvas(false)} />
+              <div className="position-fixed start-0 bottom-0 w-100 bg-white"
+                style={{ zIndex: 1050, borderTopLeftRadius: 16, borderTopRightRadius: 16, maxHeight: "60vh", boxShadow: "0 -4px 12px rgba(0,0,0,.15)" }}>
+                <div className="text-center py-3 position-relative">
+                  <h5 className="mb-0 fw-bold page-title-main-name">Sort by</h5>
+                  <button className="btn-close position-absolute end-0 me-3"
+                    style={{ top: "50%", transform: "translateY(-50%)" }}
+                    onClick={() => setShowSortOffcanvas(false)} />
+                  <div className="mx-auto mt-2 bg-secondary" style={{ height: 5, width: 50, borderRadius: 3 }} />
+                </div>
+                <div className="px-4 pb-4">
+                  <div className="list-group">
+                    {[
+                      { value: "recent", label: "Newest First" },
+                      { value: "priceLowToHigh", label: "Price: Low to High" },
+                      { value: "priceHighToLow", label: "Price: High to Low" },
+                      { value: "rating", label: "Top Rated" },
+                      { value: "discountHighToLow", label: "Discount: High to Low" },
+                      { value: "discountLowToHigh", label: "Discount: Low to High" }
+                    ].map(({ value, label }) => (
+                      <label key={value} className="list-group-item py-3 d-flex align-items-center">
+                        <input className="form-check-input me-3" type="radio" name="sort"
+                          checked={filters.sort === value}
+                          onChange={() => {
+                            setFilters(prev => ({ ...prev, sort: value }));
+                            setShowSortOffcanvas(false);
+                          }} />
+                        <span className="page-title-main-name">{label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </>
           )}
 
           {/* Product Grid */}
@@ -716,15 +770,78 @@ const PromotionProducts = () => {
               <span className="text-muted page-title-main-name">
                 {promotionMeta?.name || `Showing ${products.length} products`}
               </span>
-              {isAnyFilterActive && (
-                <button className="btn btn-sm btn-outline-danger" onClick={handleClearAllFilters}>
-                  Clear Filters
-                </button>
-              )}
+              <div className="d-flex align-items-center gap-3">
+                {/* {isAnyFilterActive && (
+                  <button className="btn btn-sm btn-outline-danger" onClick={handleClearAllFilters}>
+                    Clear Filters
+                  </button>
+                )} */}
+                {/* Desktop Sort Dropdown */}
+                <div className="d-none d-lg-flex align-items-center position-relative" style={{ gap: '6px'}}>
+                  <span className="text-muted page-title-main-name" style={{ fontSize: '14px' }}>Sort by:</span>
+                  <div className="position-relative">
+                    <button 
+                      type="button"
+                      className="btn btn-link text-decoration-none p-0 page-title-main-name fw-semibold text-dark d-inline-flex align-items-center gap-1"
+                      onClick={() => setShowDesktopSortDropdown(!showDesktopSortDropdown)}
+                      style={{ border: 'none', background: 'none', boxShadow: 'none', fontSize: '14px' }}
+                    >
+                      {
+                        filters.sort === 'priceHighToLow' ? 'Price: High to Low' : 
+                        filters.sort === 'priceLowToHigh' ? 'Price: Low to High' : 
+                        filters.sort === 'rating' ? 'Top Rated' :
+                        filters.sort === 'discountHighToLow' ? 'Discount: High to Low' :
+                        filters.sort === 'discountLowToHigh' ? 'Discount: Low to High' :
+                        'Newest First'
+                      }
+                      <FaChevronDown style={{ fontSize: '10px', transition: 'transform 0.2s', transform: showDesktopSortDropdown ? 'rotate(180deg)' : 'none' }} />
+                    </button>
+                    {showDesktopSortDropdown && (
+                      <>
+                        <div className="position-fixed top-0 start-0 w-100 h-100" style={{ zIndex: 998 }} onClick={() => setShowDesktopSortDropdown(false)} />
+                        <ul className="dropdown-menu show dropdown-menu-end shadow-sm" style={{ position: 'absolute', top: '100%', right: 0, zIndex: 999, border: '1px solid #eee', borderRadius: '8px', minWidth: '170px', display: 'block', marginTop: '5px', background: '#fff', padding: '5px 0' }}>
+                          {[
+                            { value: "recent", label: "Newest First" },
+                            { value: "priceLowToHigh", label: "Price: Low to High" },
+                            { value: "priceHighToLow", label: "Price: High to Low" },
+                            { value: "rating", label: "Top Rated" },
+                            { value: "discountHighToLow", label: "Discount: High to Low" },
+                            { value: "discountLowToHigh", label: "Discount: Low to High" }
+                          ].map(({ value, label }) => (
+                            <li key={value}>
+                              <button 
+                                type="button"
+                                className={`dropdown-item page-title-main-name py-2 custom-sort-item ${filters.sort === value ? 'active' : ''}`}
+                                onClick={() => {
+                                  setFilters(prev => ({ ...prev, sort: value }));
+                                  setShowDesktopSortDropdown(false);
+                                }}
+                                style={{ 
+                                  fontSize: '13px', 
+                                  border: 'none', 
+
+
+                                  width: '100%', 
+                                  textAlign: 'left', 
+                                  cursor: 'pointer',
+                                  padding: '8px 16px'
+                                }}
+                              >
+                                {label}
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
 
+
             <div className="row g-4">
-              {products.length > 0 ? products.map(renderProductCard) : (
+              {sortedProducts.length > 0 ? sortedProducts.map(renderProductCard) : (
                 <div className="col-12 text-center py-5">
                   <h4>No products found</h4>
                   <p className="text-muted">Try adjusting your filters.</p>

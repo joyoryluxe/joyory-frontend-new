@@ -119,6 +119,41 @@ const DiscountProductsPage = () => {
   const [filterData, setFilterData] = useState(null);
   const [showFilterOffcanvas, setShowFilterOffcanvas] = useState(false);
   const [showSortOffcanvas, setShowSortOffcanvas] = useState(false);
+  const [showDesktopSortDropdown, setShowDesktopSortDropdown] = useState(false);
+
+  const sortedDiscountProducts = useMemo(() => {
+    if (!discountProducts || !Array.isArray(discountProducts)) return [];
+    const getProductPrice = (prod) => {
+      const vars = Array.isArray(prod.variants) ? prod.variants : [];
+      const hasVar = vars.length > 0;
+      const displayVariant = tempSelectedVariants[prod._id] || selectedVariants[prod._id] || (hasVar ? (vars.find((v) => v.stock > 0) || vars[0]) : null);
+      return displayVariant?.displayPrice || displayVariant?.discountedPrice || prod.price || 0;
+    };
+    const getProductDiscount = (prod) => {
+      const vars = Array.isArray(prod.variants) ? prod.variants : [];
+      const hasVar = vars.length > 0;
+      const displayVariant = tempSelectedVariants[prod._id] || selectedVariants[prod._id] || (hasVar ? (vars.find((v) => v.stock > 0) || vars[0]) : null);
+      const price = displayVariant?.displayPrice || displayVariant?.discountedPrice || prod.price || 0;
+      const orig = displayVariant?.originalPrice || displayVariant?.mrp || prod.mrp || price;
+      return orig > price ? Math.round(((orig - price) / orig) * 100) : 0;
+    };
+    const getProductRating = (prod) => {
+      return prod.avgRating || prod.rating || 0;
+    };
+    const sorted = [...discountProducts];
+    if (filters.sort === 'priceHighToLow') {
+      sorted.sort((a, b) => getProductPrice(b) - getProductPrice(a));
+    } else if (filters.sort === 'priceLowToHigh') {
+      sorted.sort((a, b) => getProductPrice(a) - getProductPrice(b));
+    } else if (filters.sort === 'rating') {
+      sorted.sort((a, b) => getProductRating(b) - getProductRating(a));
+    } else if (filters.sort === 'discountHighToLow') {
+      sorted.sort((a, b) => getProductDiscount(b) - getProductDiscount(a));
+    } else if (filters.sort === 'discountLowToHigh') {
+      sorted.sort((a, b) => getProductDiscount(a) - getProductDiscount(b));
+    }
+    return sorted;
+  }, [discountProducts, filters.sort, selectedVariants, tempSelectedVariants]);
 
   // Trending categories for pills (like ProductPage)
   const [trendingCategories, setTrendingCategories] = useState([]);
@@ -203,81 +238,43 @@ const DiscountProductsPage = () => {
     const productId = prod._id;
     const sku = getSku(variant);
 
+    if (!user || user.guest) {
+      showToastMsg("Please login to use wishlist", "error");
+      localStorage.setItem("pendingWishlistAction", JSON.stringify({ productId, sku }));
+      navigate("/login", { state: { from: "/wishlist" } });
+      return;
+    }
+
     setWishlistLoading(prev => ({ ...prev, [productId]: true }));
 
     try {
       const currentlyInWishlist = isInWishlist(productId, sku);
 
-      if (user && !user.guest) {
-        if (currentlyInWishlist) {
-          await axios.delete(
-            `https://beauty.joyory.com/api/user/wishlist/${productId}`,
-            {
-              withCredentials: true,
-              data: { sku: sku }
-            }
-          );
-          showToastMsg("Removed from wishlist!", "success");
-        } else {
-          await axios.post(
-            `https://beauty.joyory.com/api/user/wishlist/${productId}`,
-            { sku: sku },
-            { withCredentials: true }
-          );
-          showToastMsg("Added to wishlist!", "success");
-        }
-
-        await fetchWishlistData();
+      if (currentlyInWishlist) {
+        await axios.delete(
+          `https://beauty.joyory.com/api/user/wishlist/${productId}`,
+          {
+            withCredentials: true,
+            data: { sku: sku }
+          }
+        );
+        showToastMsg("Removed from wishlist!", "success");
       } else {
-        const guestWishlist = JSON.parse(localStorage.getItem("guestWishlist")) || [];
-
-        if (currentlyInWishlist) {
-          const updatedWishlist = guestWishlist.filter(item =>
-            !(item._id === productId && item.sku === sku)
-          );
-          localStorage.setItem("guestWishlist", JSON.stringify(updatedWishlist));
-          showToastMsg("Removed from wishlist!", "success");
-        } else {
-          const productData = {
-            _id: productId,
-            name: prod.name,
-            brand: getBrandName(prod),
-            price: variant.discountedPrice || variant.displayPrice || prod.price || 0,
-            originalPrice: variant.originalPrice || variant.mrp || prod.mrp || prod.price || 0,
-            mrp: variant.originalPrice || variant.mrp || prod.mrp || prod.price || 0,
-            displayPrice: variant.discountedPrice || variant.displayPrice || prod.price || 0,
-            images: variant.images || prod.images || ["/placeholder.png"],
-            image: variant.images?.[0] || variant.image || prod.images?.[0] || "/placeholder.png",
-            slug: prod.slugs?.[0] || prod.slug || prod._id,
-            sku: sku,
-            variantSku: sku,
-            variantId: sku,
-            variantName: variant.shadeName || variant.name || "Default",
-            shadeName: variant.shadeName || variant.name || "Default",
-            variant: variant.shadeName || variant.name || "Default",
-            hex: variant.hex || "#cccccc",
-            stock: variant.stock || 0,
-            status: variant.stock > 0 ? "inStock" : "outOfStock",
-            avgRating: prod.avgRating || 0,
-            totalRatings: prod.totalRatings || 0,
-            commentsCount: prod.totalRatings || 0,
-            discountPercent: (variant.originalPrice && variant.discountedPrice && variant.originalPrice > variant.discountedPrice)
-              ? Math.round(((variant.originalPrice - variant.discountedPrice) / variant.originalPrice) * 100)
-              : 0
-          };
-
-          guestWishlist.push(productData);
-          localStorage.setItem("guestWishlist", JSON.stringify(guestWishlist));
-          showToastMsg("Added to wishlist!", "success");
-        }
-
-        await fetchWishlistData();
+        await axios.post(
+          `https://beauty.joyory.com/api/user/wishlist/${productId}`,
+          { sku: sku },
+          { withCredentials: true }
+        );
+        showToastMsg("Added to wishlist!", "success");
       }
+
+      await fetchWishlistData();
     } catch (error) {
       console.error("Wishlist toggle error:", error);
       if (error.response?.status === 401) {
         showToastMsg("Please login to use wishlist", "error");
-        navigate("/login");
+        localStorage.setItem("pendingWishlistAction", JSON.stringify({ productId, sku }));
+        navigate("/login", { state: { from: "/wishlist" } });
       } else {
         showToastMsg(error.response?.data?.message || "Failed to update wishlist", "error");
       }
@@ -395,7 +392,8 @@ const DiscountProductsPage = () => {
     }
 
     // Add sorting
-    if (filters.sort) params.append("sort", filters.sort);
+    // Do not pass sort to backend API due to cursor pagination limitation (nextCursor is null when sorting)
+    // if (filters.sort) params.append("sort", filters.sort);
 
     // Add cursor and limit
     if (cursor) params.append("cursor", cursor);
@@ -571,7 +569,10 @@ const DiscountProductsPage = () => {
   const getCurrentSortText = () => {
     if (filters.sort === "priceHighToLow") return "Price: High to Low";
     if (filters.sort === "priceLowToHigh") return "Price: Low to High";
-    return "Relevance";
+    if (filters.sort === "rating") return "Top Rated";
+    if (filters.sort === "discountHighToLow") return "Discount: High to Low";
+    if (filters.sort === "discountLowToHigh") return "Discount: Low to High";
+    return "Newest First";
   };
 
   // ===================== RENDER PRODUCT CARD - MATCHING ProductPage DESIGN =====================
@@ -718,7 +719,8 @@ const DiscountProductsPage = () => {
 
               {/* Wishlist Icon - Hidden when out of stock */}
               {!showOutOfStock && (
-                <button className="bg-transparent"
+                <button
+                  className={`product-card-wishlist-btn ${inWl ? 'in-wishlist' : ''}`}
                   onClick={(e) => {
                     e.stopPropagation();
                     if (displayVariant || !hasVar) {
@@ -726,27 +728,6 @@ const DiscountProductsPage = () => {
                     }
                   }}
                   disabled={wishlistLoading[prod._id]}
-                  style={{
-                    position: 'absolute',
-                    top: '10px',
-                    right: '10px',
-                    cursor: wishlistLoading[prod._id] ? 'not-allowed' : 'pointer',
-                    color: inWl ? '#dc3545' : '#ccc',
-                    fontSize: '22px',
-                    zIndex: 2,
-                    backgroundColor: 'transparent !important',
-                    borderRadius: '50%',
-                    width: '34px',
-                    height: '34px',
-                    minHeight: '34px',
-                    maxHeight: '34px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    transition: 'all 0.3s ease',
-                    border: 'none',
-                    outline: 'none'
-                  }}
                   title={inWl ? "Remove from wishlist" : "Add to wishlist"}
                 >
                   {wishlistLoading[prod._id] ? (
@@ -1168,8 +1149,8 @@ const DiscountProductsPage = () => {
         <div className="container-lg mt-5">
           <h2 className="mt-5 pt-5 page-title-main-name text-center">Shop By Category</h2>
 
-          <div className="d-flex mt-4 overflow-auto align-items-center justify-content-center"
-            style={{ gap: "0.75rem", whiteSpace: "nowrap", scrollbarWidth: "none" }}>
+          <div className="d-flex mt-4 overflow-auto align-items-center cat-wrap"
+            style={{ whiteSpace: "nowrap", scrollbarWidth: "none" }}>
             {trendingCategories.map((cat) => {
               const isActive = (filters.categoryIds || []).includes(cat._id) ||
                 (filters.categoryIds || []).includes(cat.slug) ||
@@ -1312,9 +1293,12 @@ const DiscountProductsPage = () => {
                 <div className="px-4 pb-4">
                   <div className="list-group">
                     {[
-                      { value: "recent", label: "Relevance" },
-                      { value: "priceHighToLow", label: "Price: High to Low" },
+                      { value: "recent", label: "Newest First" },
                       { value: "priceLowToHigh", label: "Price: Low to High" },
+                      { value: "priceHighToLow", label: "Price: High to Low" },
+                      { value: "rating", label: "Top Rated" },
+                      { value: "discountHighToLow", label: "Discount: High to Low" },
+                      { value: "discountLowToHigh", label: "Discount: Low to High" }
                     ].map(({ value, label }) => (
                       <label key={value} className="list-group-item py-3 d-flex align-items-center">
                         <input
@@ -1343,19 +1327,80 @@ const DiscountProductsPage = () => {
                 {coupon?.code || `Showing ${discountProducts.length} products`}
                 {/* {hasMore && " (Scroll for more)"} */}
               </span>
-              {isAnyFilterActive() && (
-                <button
-                  className="btn btn-sm btn-outline-danger"
-                  onClick={handleClearAllFilters}
-                >
-                  Clear Filters
-                </button>
-              )}
+              <div className="d-flex align-items-center gap-3">
+                {/* {isAnyFilterActive() && (
+                  <button
+                    className="btn btn-sm btn-outline-danger"
+                    onClick={handleClearAllFilters}
+                  >
+                    Clear Filters
+                  </button>
+                )} */}
+                {/* Desktop Sort Dropdown */}
+                <div className="d-none d-lg-flex align-items-center position-relative mt-5" style={{ gap: '6px' }}>
+                  <span className="text-muted page-title-main-name" style={{ fontSize: '14px' }}>Sort by:</span>
+                  <div className="position-relative">
+                    <button
+                      type="button"
+                      className="btn btn-link text-decoration-none p-0 page-title-main-name fw-semibold text-dark d-inline-flex align-items-center gap-1"
+                      onClick={() => setShowDesktopSortDropdown(!showDesktopSortDropdown)}
+                      style={{ border: 'none', background: 'none', boxShadow: 'none', fontSize: '14px' }}
+                    >
+                      {
+                        filters.sort === 'priceHighToLow' ? 'Price: High to Low' :
+                          filters.sort === 'priceLowToHigh' ? 'Price: Low to High' :
+                            filters.sort === 'rating' ? 'Top Rated' :
+                              filters.sort === 'discountHighToLow' ? 'Discount: High to Low' :
+                                filters.sort === 'discountLowToHigh' ? 'Discount: Low to High' :
+                                  'Newest First'
+                      }
+                      <FaChevronDown style={{ fontSize: '10px', transition: 'transform 0.2s', transform: showDesktopSortDropdown ? 'rotate(180deg)' : 'none' }} />
+                    </button>
+                    {showDesktopSortDropdown && (
+                      <>
+                        <div className="position-fixed top-0 start-0 w-100 h-100" style={{ zIndex: 998 }} onClick={() => setShowDesktopSortDropdown(false)} />
+                        <ul className="dropdown-menu show dropdown-menu-end shadow-sm" style={{ position: 'absolute', top: '100%', right: 0, zIndex: 999, border: '1px solid #eee', borderRadius: '8px', minWidth: '170px', display: 'block', marginTop: '5px', background: '#fff', padding: '5px 0' }}>
+                          {[
+                            { value: "recent", label: "Newest First" },
+                            { value: "priceLowToHigh", label: "Price: Low to High" },
+                            { value: "priceHighToLow", label: "Price: High to Low" },
+                            { value: "rating", label: "Top Rated" },
+                            { value: "discountHighToLow", label: "Discount: High to Low" },
+                            { value: "discountLowToHigh", label: "Discount: Low to High" }
+                          ].map(({ value, label }) => (
+                            <li key={value}>
+                              <button
+                                type="button"
+                                className={`dropdown-item page-title-main-name py-2 custom-sort-item ${filters.sort === value ? 'active' : ''}`}
+                                onClick={() => {
+                                  setFilters(prev => ({ ...prev, sort: value }));
+                                  setShowDesktopSortDropdown(false);
+                                }}
+                                style={{
+                                  fontSize: '13px',
+                                  border: 'none',
+                                  width: '100%',
+                                  textAlign: 'left',
+                                  cursor: 'pointer',
+                                  padding: '8px 16px'
+                                }}
+                              >
+                                {label}
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
 
+
             <div className="row g-4" style={{ opacity: loadingDiscountProducts ? 0.6 : 1, transition: "opacity 0.2s ease" }}>
-              {discountProducts.length > 0 ? (
-                discountProducts.map(renderProductCard)
+              {sortedDiscountProducts.length > 0 ? (
+                sortedDiscountProducts.map(renderProductCard)
               ) : (
                 <div className="col-12 text-center py-5">
                   <h4>No products found</h4>

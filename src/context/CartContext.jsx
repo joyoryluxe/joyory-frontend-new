@@ -682,6 +682,18 @@ const CartProvider = ({ children }) => {
         updateCartCount(updatedCart);
 
         console.log("Guest cart updated:", updatedCart);
+
+        // Track AddToCart in Meta Pixel
+        if (window.fbq) {
+          window.fbq('track', 'AddToCart', {
+            content_ids: [product._id],
+            content_name: product.name,
+            content_type: 'product',
+            value: selectedVariant.discountedPrice || selectedVariant.originalPrice || product.price,
+            currency: 'INR'
+          });
+        }
+
         return true;
       }
 
@@ -728,6 +740,18 @@ const CartProvider = ({ children }) => {
 
         setCartItems(updated);
         updateCartCount(updated);
+
+        // Track AddToCart in Meta Pixel
+        if (window.fbq) {
+          window.fbq('track', 'AddToCart', {
+            content_ids: [product._id],
+            content_name: product.name,
+            content_type: 'product',
+            value: selectedVariant.discountedPrice || selectedVariant.originalPrice || product.price,
+            currency: 'INR'
+          });
+        }
+
         return true;
       }
 

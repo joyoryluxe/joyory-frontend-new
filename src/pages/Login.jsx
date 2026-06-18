@@ -334,21 +334,22 @@
 
 import React, { useState, useEffect, useContext } from "react";
 import "../styles/Login.css";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import axiosInstance from "../utils/axiosInstance.js";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { UserContext } from "../context/UserContext";
 import Logo from "../assets/logos.webp";
-
+ 
 const Login = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [passwordType, setPasswordType] = useState("password");
   const [rememberMe, setRememberMe] = useState(false);
   const navigate = useNavigate();
-
+  const location = useLocation();
+ 
   const { loginUser } = useContext(UserContext);
 
   // Load saved credentials on component mount (only to pre-fill form)
@@ -395,9 +396,10 @@ const Login = () => {
       );
 
       if (res.data?.user) {
+        const redirectTo = location.state?.from || "/";
         loginUser(res.data.user);
         toast.success("Google login successful 🎉");
-        navigate("/");
+        navigate(redirectTo, { replace: true });
       } else {
         toast.error("Google login failed. Try again.");
       }
@@ -485,15 +487,16 @@ const Login = () => {
         saveCredentials(email, password);
         
         loginUser(res.data.user);
-        toast.success("Welcome back! Redirecting to homepage...");
-
+        toast.success("Welcome back! Redirecting...");
+ 
         // Optional cookie for client-side fallback
         const expiryDate = new Date();
         expiryDate.setDate(expiryDate.getDate() + 7);
         document.cookie = `token=1; path=/; expires=${expiryDate.toUTCString()}; SameSite=Lax`;
-
+ 
+        const redirectTo = location.state?.from || "/";
         setTimeout(() => {
-          navigate("/", { replace: true });
+          navigate(redirectTo, { replace: true });
         }, 800);
       } else {
         toast.error(res.data?.message || "Invalid login credentials");

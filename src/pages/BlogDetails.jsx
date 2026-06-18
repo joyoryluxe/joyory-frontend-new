@@ -14,6 +14,7 @@ import { UserContext } from "../context/UserContext";
 import { CartContext } from "../context/CartContext";
 import bagIcon from "../assets/bag.svg";
 import Header from "../components/common/Header";
+import SEOMeta from "../components/common/SEOMeta";
 import "../styles/ForYou.css";
 import Footer from '../components/common/Footer';
 
@@ -179,6 +180,15 @@ const BlogDetail = () => {
   };
 
   const toggleWishlist = async (prod, variant) => {
+    if (!user || user.guest) {
+      toast.error("Please login to use wishlist");
+      if (prod && variant) {
+        const sku = getSku(variant);
+        localStorage.setItem("pendingWishlistAction", JSON.stringify({ productId: prod._id, sku }));
+      }
+      navigate("/login", { state: { from: "/wishlist" } });
+      return;
+    }
     if (!prod || !variant) return toast.warn("Please select a variant first");
     // Your full toggleWishlist logic (kept from your code)
     const productId = prod._id;
@@ -286,7 +296,7 @@ const BlogDetail = () => {
 
   return (
     <>
-
+      <SEOMeta type="blog" slug={slug} />
       <Header />
       {/* <ToastContainer position="top-right" autoClose={3000} /> */}
 
@@ -446,33 +456,12 @@ const BlogDetail = () => {
 
                               {/* Wishlist Icon */}
                               <button
+                                className={`product-card-wishlist-btn ${isProductInWishlist ? 'in-wishlist' : ''}`}
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   if (variant) toggleWishlist(item, variant);
                                 }}
                                 disabled={wishlistLoading[item._id]}
-                                style={{
-                                  position: 'absolute',
-                                  top: '10px',
-                                  right: '10px',
-                                  cursor: wishlistLoading[item._id] ? 'not-allowed' : 'pointer',
-                                  color: isProductInWishlist ? '#dc3545' : '#000000',
-                                  fontSize: '22px',
-                                  zIndex: 2,
-                                  backgroundColor: 'transparent !important',
-                                  borderRadius: '50%',
-                                  width: '34px',
-                                  height: '34px',
-                                  minHeight: '34px',
-                                  maxHeight: '34px',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                                  transition: 'all 0.3s ease',
-                                  border: 'none',
-                                  outline: 'none'
-                                }}
                                 title={isProductInWishlist ? "Remove from wishlist" : "Add to wishlist"}
                               >
                                 {wishlistLoading[item._id] ? (
