@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useContext } from "react";
-import { useNavigate, useSearchParams, Link } from "react-router-dom";
+import { useNavigate, useSearchParams, Link, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import { motion, AnimatePresence } from "framer-motion";
 import { UserContext } from "../context/UserContext";
@@ -9,8 +9,9 @@ import "../styles/PhoneAuth.css";
 
 const PhoneAuth = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
-  const redirectUrl = searchParams.get("redirectUrl") || "/";
+  const redirectUrl = searchParams.get("redirectUrl") || location.state?.from || "/";
   const { loginUser } = useContext(UserContext);
 
   // Flow steps: "phone" | "otp" | "profile"

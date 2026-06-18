@@ -364,3 +364,136 @@
     margin-top: 80px;
     margin-bottom: 40px;
 }
+
+/* Footer Popular Brands styling */
+.footer-brands-section {
+    padding: 20px 0;
+    border-top: 1px solid #eaeaea;
+    /* border-bottom: 1px solid #eaeaea; */
+    background-color: #fafafa;
+    width: 100%;
+}
+
+.footer-brands-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #6c757d;
+    white-space: nowrap;
+    letter-spacing: 0.5px;
+    width: 200px;
+    min-width: 200px;
+    flex-shrink: 0;
+}
+
+.footer-brands-list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 5px;
+    font-size: 14px;
+    color: #888888;
+}
+
+.footer-brand-link {
+    color: #888888;
+    text-decoration: none;
+    transition: color 0.2s ease;
+    font-size: 13px;
+}
+
+.footer-brand-link:hover {
+    color: #0077b6;
+}
+
+.footer-brands-separator {
+    color: #cccccc;
+    user-select: none;
+    margin: 0 4px;
+}
+
+@media (max-width: 768px) {
+    .footer-brands-section .d-flex {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 12px !important;
+    }
+    .footer-brands-section {
+        padding: 20px 15px;
+    }
+}
+
+/* Footer Top Categories styling */
+.footer-categories-section {
+    padding: 25px 0;
+    border-bottom: 1px solid #eaeaea;
+    background-color: #fafafa;
+    width: 100%;
+}
+
+.footer-categories-header {
+    font-size: 18px;
+    font-weight: 600;
+    color: #6c757d;
+    margin-bottom: 20px;
+    letter-spacing: 0.5px;
+}
+
+.footer-category-row {
+    display: flex;
+    align-items: flex-start;
+    padding: 12px 0;
+    border-bottom: 1px dashed #e5e5e5;
+    gap: 24px;
+}
+
+.footer-category-row:last-child {
+    border-bottom: none;
+}
+
+.footer-category-name {
+    width: 200px;
+    min-width: 200px;
+    flex-shrink: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: #6c757d;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.footer-category-name:hover {
+    color: #0077b6;
+}
+
+.footer-subcategory-links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px;
+    color: #888888;
+}
+
+.footer-subcategory-link {
+    color: #888888;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.footer-subcategory-link:hover {
+    color: #0077b6;
+}
+
+@media (max-width: 768px) {
+    .footer-category-row {
+        flex-direction: column !important;
+        gap: 8px !important;
+    }
+    .footer-category-name {
+        width: 100% !important;
+        min-width: 100% !important;
+    }
+    .footer-categories-section {
+        padding: 20px 15px;
+    }
+}
