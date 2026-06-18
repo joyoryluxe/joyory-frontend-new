@@ -912,7 +912,8 @@ const BestSellers = () => {
 
                                                 {/* Wishlist Icon - Hidden when out of stock */}
                                                 {!showOutOfStock && (
-                                                    <button className="bg-transparent"
+                                                    <button
+                                                        className={`product-card-wishlist-btn ${isProductInWishlist ? 'in-wishlist' : ''}`}
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             if (displayVariant) {
@@ -920,27 +921,6 @@ const BestSellers = () => {
                                                             }
                                                         }}
                                                         disabled={wishlistLoading[item._id]}
-                                                        style={{
-                                                            position: 'absolute',
-                                                            top: '10px',
-                                                            right: '10px',
-                                                            cursor: wishlistLoading[item._id] ? 'not-allowed' : 'pointer',
-                                                            color: isProductInWishlist ? '#dc3545' : '#ccc',
-                                                            fontSize: '22px',
-                                                            zIndex: 2,
-                                                            backgroundColor: 'transparent !important',
-                                                            borderRadius: '50%',
-                                                            width: '34px',
-                                                            height: '34px',
-                                                            minHeight: '34px',
-                                                            maxHeight: '34px',
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            justifyContent: 'center',
-                                                            transition: 'all 0.3s ease',
-                                                            border: 'none',
-                                                            outline: 'none'
-                                                        }}
                                                         title={isProductInWishlist ? "Remove from wishlist" : "Add to wishlist"}
                                                     >
                                                         {wishlistLoading[item._id] ? (

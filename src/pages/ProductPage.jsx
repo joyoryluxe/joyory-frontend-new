@@ -3,6 +3,7 @@ import React, { useState, useEffect, useContext, useRef, useCallback, useMemo } 
 import { useParams, useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { FaStar, FaHeart, FaRegHeart, FaChevronDown, FaTimes, FaCheck } from "react-icons/fa";
 import Header from "../components/common/Header";
+import SEOMeta from "../components/common/SEOMeta";
 import Footer from "../components/common/Footer";
 // import { CartContext } from "../Context/CartContext";
 import { UserContext } from "../context/UserContext.jsx";
@@ -209,7 +210,7 @@ const parseFiltersFromSearchParams = (searchParams) => {
     if (minRating !== null) initialFilters.minRating = minRating;
 
     const sortParam = searchParams.get('sort');
-    if (sortParam !== null && ['recent', 'priceHighToLow', 'priceLowToHigh'].includes(sortParam)) {
+    if (sortParam !== null && ['recent', 'priceHighToLow', 'priceLowToHigh', 'rating', 'discountHighToLow', 'discountLowToHigh'].includes(sortParam)) {
         initialFilters.sort = sortParam;
     }
 
@@ -297,8 +298,43 @@ export default function ProductPage() {
 
     const [showFilterOffcanvas, setShowFilterOffcanvas] = useState(false);
     const [showSortOffcanvas, setShowSortOffcanvas] = useState(false);
+    const [showDesktopSortDropdown, setShowDesktopSortDropdown] = useState(false);
     const [showVariantOverlay, setShowVariantOverlay] = useState(null);
     const [selectedVariantType, setSelectedVariantType] = useState("all");
+
+    const sortedProducts = useMemo(() => {
+        if (!allProducts || !Array.isArray(allProducts)) return [];
+        const getProductPrice = (prod) => {
+            const vars = Array.isArray(prod.variants) ? prod.variants : [];
+            const hasVar = vars.length > 0;
+            const displayVariant = tempSelectedVariants[prod._id] || selectedVariants[prod._id] || (hasVar ? (vars.find((v) => v.stock > 0) || vars[0]) : null);
+            return displayVariant?.displayPrice || displayVariant?.discountedPrice || prod.price || 0;
+        };
+        const getProductDiscount = (prod) => {
+            const vars = Array.isArray(prod.variants) ? prod.variants : [];
+            const hasVar = vars.length > 0;
+            const displayVariant = tempSelectedVariants[prod._id] || selectedVariants[prod._id] || (hasVar ? (vars.find((v) => v.stock > 0) || vars[0]) : null);
+            const price = displayVariant?.displayPrice || displayVariant?.discountedPrice || prod.price || 0;
+            const orig = displayVariant?.originalPrice || displayVariant?.mrp || prod.mrp || price;
+            return orig > price ? Math.round(((orig - price) / orig) * 100) : 0;
+        };
+        const getProductRating = (prod) => {
+            return prod.avgRating || prod.rating || 0;
+        };
+        const sorted = [...allProducts];
+        if (filters.sort === 'priceHighToLow') {
+            sorted.sort((a, b) => getProductPrice(b) - getProductPrice(a));
+        } else if (filters.sort === 'priceLowToHigh') {
+            sorted.sort((a, b) => getProductPrice(a) - getProductPrice(b));
+        } else if (filters.sort === 'rating') {
+            sorted.sort((a, b) => getProductRating(b) - getProductRating(a));
+        } else if (filters.sort === 'discountHighToLow') {
+            sorted.sort((a, b) => getProductDiscount(b) - getProductDiscount(a));
+        } else if (filters.sort === 'discountLowToHigh') {
+            sorted.sort((a, b) => getProductDiscount(a) - getProductDiscount(b));
+        }
+        return sorted;
+    }, [allProducts, filters.sort, selectedVariants, tempSelectedVariants]);
 
     const { user } = useContext(UserContext);
     const loaderRef = useRef(null);
@@ -337,7 +373,11 @@ export default function ProductPage() {
     const toggleWishlist = async (prod, variant) => {
         if (!user || user.guest) {
             showToastMsg("Please login to use wishlist", "error");
-            navigate("/login", { state: { from: location.pathname } });
+            if (prod && variant) {
+                const sku = getSku(variant);
+                localStorage.setItem("pendingWishlistAction", JSON.stringify({ productId: prod._id, sku }));
+            }
+            navigate("/login", { state: { from: "/wishlist" } });
             return;
         }
         if (!prod || !variant) return showToastMsg("Select a variant first", "error");
@@ -424,7 +464,8 @@ export default function ProductPage() {
             p.append("discountMin", filters.discountMin);
         }
 
-        if (filters.sort) p.append("sort", filters.sort);
+        // Do not pass sort to backend API due to cursor pagination limitation (nextCursor is null when sorting)
+        // if (filters.sort) p.append("sort", filters.sort);
         if (cursor) p.append("cursor", cursor);
         p.append("limit", "9");
 
@@ -880,33 +921,13 @@ export default function ProductPage() {
                             {/* Wishlist button */}
                             {!showOutOfStock && (
                                 <button
+                                    className={`product-card-wishlist-btn ${inWl ? 'in-wishlist' : ''}`}
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         if (displayVariant || !hasVar)
                                             toggleWishlist(prod, displayVariant || {});
                                     }}
                                     disabled={wishlistLoading[prod._id]}
-                                    style={{
-                                        position: 'absolute',
-                                        top: '10px',
-                                        right: '10px',
-                                        cursor: wishlistLoading[prod._id] ? 'not-allowed' : 'pointer',
-                                        color: inWl ? '#dc3545' : '#ccc',
-                                        fontSize: '22px',
-                                        zIndex: 2,
-                                        backgroundColor: 'transparent !important',
-                                        borderRadius: '50%',
-                                        width: '34px',
-                                        height: '34px',
-                                        minHeight: '34px',
-                                        maxHeight: '34px',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        transition: 'all 0.3s ease',
-                                        border: 'none',
-                                        outline: 'none'
-                                    }}
                                     title={inWl ? "Remove from wishlist" : "Add to wishlist"}
                                 >
                                     {wishlistLoading[prod._id] ? (
@@ -1256,6 +1277,7 @@ export default function ProductPage() {
     /* ── render ─────────────────────────────────────────────────────────────── */
     return (
         <>
+            <SEOMeta type="category" slug={effectiveSlug} />
             <Header />
 
             {/* 🔥 UPDATED: HERO BANNER REPLACED WITH SWIPER SLIDER 🔥 */}
@@ -1322,51 +1344,34 @@ export default function ProductPage() {
                 <div className="container-lg mt-4 mb-4">
                     <h2 className="text-center" style={{ marginBottom: "30px", textAlign: "center" }}>Top Catagories</h2>
                     <div
-                        className="category-swiper-outer"
+                        className="d-flex overflow-auto py-2 align-items-center cat-wrap"
                         style={{
-                            width: "100%",
-                            display: "flex",
-                            justifyContent: "center",
+                            whiteSpace: "nowrap",
+                            scrollbarWidth: "none"
                         }}
                     >
-                        <Swiper
-                            modules={[Navigation]}
-                            spaceBetween={10}
-                            slidesPerView="auto"
-                            navigation
-                            style={{
-                                padding: "5px 0",
-                                width: "auto" // Swiper ko sirf apne slides ke hisab se width lene do
-                            }}
-                        >
-                            {trendingCategories.map((cat) => {
-                                const isActive = (filters.categoryIds || []).includes(cat._id) ||
-                                    (filters.categoryIds || []).includes(cat.slug) ||
-                                    ((filters.categoryIds || []).length === 0 && activeCategorySlug === cat.slug);
+                        {trendingCategories.map((cat) => {
+                            const isActive = (filters.categoryIds || []).includes(cat._id) ||
+                                (filters.categoryIds || []).includes(cat.slug) ||
+                                ((filters.categoryIds || []).length === 0 && activeCategorySlug === cat.slug);
 
-                                return (
-                                    <SwiperSlide key={cat.slug} className="mx-auto" style={{ width: "auto" }}>
-                                        <button
-                                            onClick={() => handleTopCategoryClick(cat)}
-                                            className={`btn px-4 py-2 page-title-main-name ${isActive ? "btn-dark custom-pill" : "custom-pill"}`}
-                                            style={{
-                                                fontSize: 13,
-                                                fontWeight: isActive ? 600 : 400,
-                                                transition: "all 0.18s ease",
-                                                transform: isActive ? "scale(1.04)" : "scale(1)",
-                                                whiteSpace: "nowrap",
-                                                margin: "0 15px",
-                                            }}
-                                            title={`Filter by ${cat.name}`}
-                                        >
-                                            {cat.name}
-                                        </button>
-                                    </SwiperSlide>
-                                );
-                            })}
-
-                        </Swiper>
-
+                            return (
+                                <button
+                                    key={cat.slug}
+                                    onClick={() => handleTopCategoryClick(cat)}
+                                    className={`btn px-4 py-2 page-title-main-name flex-shrink-0 ${isActive ? "btn-dark custom-pill" : "custom-pill"}`}
+                                    style={{
+                                        fontSize: 13,
+                                        fontWeight: isActive ? 600 : 400,
+                                        transition: "all 0.18s ease",
+                                        transform: isActive ? "scale(1.04)" : "scale(1)"
+                                    }}
+                                    title={`Filter by ${cat.name}`}
+                                >
+                                    {cat.name}
+                                </button>
+                            );
+                        })}
                     </div>
                 </div>
             )}
@@ -1516,9 +1521,12 @@ export default function ProductPage() {
                                 <div className="px-4 pb-4">
                                     <div className="list-group">
                                         {[
-                                            { value: "recent", label: "Relevance" },
-                                            { value: "priceHighToLow", label: "Price High to Low" },
-                                            { value: "priceLowToHigh", label: "Price Low to High" },
+                                            { value: "recent", label: "Newest First" },
+                                            { value: "priceLowToHigh", label: "Price: Low to High" },
+                                            { value: "priceHighToLow", label: "Price: High to Low" },
+                                            { value: "rating", label: "Top Rated" },
+                                            { value: "discountHighToLow", label: "Discount: High to Low" },
+                                            { value: "discountLowToHigh", label: "Discount: Low to High" }
                                         ].map(({ value, label }) => (
                                             <label key={value} className="list-group-item py-3 d-flex align-items-center">
                                                 <input className="form-check-input me-3" type="radio" name="sort"
@@ -1538,6 +1546,65 @@ export default function ProductPage() {
                             <span className="text-muted page-title-main-name d-lg-block d-none mt-3">
                                 Showing {totalCount} products
                             </span>
+                            {/* Desktop Sort Dropdown */}
+                            <div className="d-none d-lg-flex align-items-center position-relative mt-3" style={{ gap: '6px' }}>
+                                <span className="text-muted page-title-main-name" style={{ fontSize: '14px' }}>Sort by:</span>
+                                <div className="position-relative">
+                                    <button
+                                        type="button"
+                                        className="btn btn-link text-decoration-none p-0 page-title-main-name fw-semibold text-dark d-inline-flex align-items-center gap-1"
+                                        onClick={() => setShowDesktopSortDropdown(!showDesktopSortDropdown)}
+                                        style={{ border: 'none', background: 'none', boxShadow: 'none', fontSize: '14px' }}
+                                    >
+                                        {
+                                            filters.sort === 'priceHighToLow' ? 'Price: High to Low' :
+                                                filters.sort === 'priceLowToHigh' ? 'Price: Low to High' :
+                                                    filters.sort === 'rating' ? 'Top Rated' :
+                                                        filters.sort === 'discountHighToLow' ? 'Discount: High to Low' :
+                                                            filters.sort === 'discountLowToHigh' ? 'Discount: Low to High' :
+                                                                'Newest First'
+                                        }
+                                        <FaChevronDown style={{ fontSize: '10px', transition: 'transform 0.2s', transform: showDesktopSortDropdown ? 'rotate(180deg)' : 'none' }} />
+                                    </button>
+                                    {showDesktopSortDropdown && (
+                                        <>
+                                            <div className="position-fixed top-0 start-0 w-100 h-100" style={{ zIndex: 998 }} onClick={() => setShowDesktopSortDropdown(false)} />
+                                            <ul className="dropdown-menu show dropdown-menu-end shadow-sm" style={{ position: 'absolute', top: '100%', right: 0, zIndex: 999, border: '1px solid #eee', borderRadius: '8px', minWidth: '170px', display: 'block', marginTop: '5px', background: '#fff', padding: '5px 0' }}>
+                                                {[
+                                                    { value: "recent", label: "Newest First" },
+                                                    { value: "priceLowToHigh", label: "Price: Low to High" },
+                                                    { value: "priceHighToLow", label: "Price: High to Low" },
+                                                    { value: "rating", label: "Top Rated" },
+                                                    { value: "discountHighToLow", label: "Discount: High to Low" },
+                                                    { value: "discountLowToHigh", label: "Discount: Low to High" }
+                                                ].map(({ value, label }) => (
+                                                    <li key={value}>
+                                                        <button
+                                                            type="button"
+                                                            className={`dropdown-item page-title-main-name py-2 custom-sort-item ${filters.sort === value ? 'active' : ''}`}
+                                                            onClick={() => {
+                                                                setFilters(prev => ({ ...prev, sort: value }));
+                                                                setShowDesktopSortDropdown(false);
+                                                            }}
+                                                            style={{
+                                                                fontSize: '13px',
+                                                                border: 'none',
+
+                                                                width: '100%',
+                                                                textAlign: 'left',
+                                                                cursor: 'pointer',
+                                                                padding: '8px 16px'
+                                                            }}
+                                                        >
+                                                            {label}
+                                                        </button>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
                         </div>
 
                         <div className="row g-4 position-relative">
@@ -1589,8 +1656,8 @@ export default function ProductPage() {
                                     </div>
                                 </div>
                             )}
-                            {allProducts.length > 0
-                                ? allProducts.map(renderProductCard)
+                            {sortedProducts.length > 0
+                                ? sortedProducts.map(renderProductCard)
                                 : loading
                                     ? (
                                         // NEW Loading state when no products yet

@@ -353,32 +353,11 @@ const RecoProductCard = ({ product, navigate, user, onAddToCartSuccess }) => {
             </div>
           )}
 
-          {/* Wishlist Icon - Hidden when out of stock */}
           {!showOutOfStock && (
-            <button className='bg-transparent'
+            <button
+              className={`product-card-wishlist-btn ${productInWishlist ? 'in-wishlist' : ''}`}
               onClick={handleToggleWishlist}
               disabled={wishlistLoading}
-              style={{
-                position: 'absolute',
-                top: '10px',
-                right: '10px',
-                cursor: wishlistLoading ? 'not-allowed' : 'pointer',
-                color: productInWishlist ? '#dc3545' : '#ccc',
-                fontSize: '22px',
-                zIndex: 2,
-                backgroundColor: 'transparent !important',
-                borderRadius: '50%',
-                width: '34px',
-                height: '34px',
-                minHeight: '34px',
-                maxHeight: '34px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'all 0.3s ease',
-                border: 'none',
-                outline: 'none',
-              }}
               title={productInWishlist ? "Remove from wishlist" : "Add to wishlist"}
             >
               {wishlistLoading ? (

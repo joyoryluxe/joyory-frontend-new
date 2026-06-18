@@ -469,19 +469,6 @@ button:hover img {
    Global Product Card Hover Reveal, Visual Ordering, and Sizing Updates
    ========================================================================== */
 
-/* 1. Ensure absolute card consistency with matching aspect-ratios and smooth hover effects */
-.foryou-card,
-.foryou-card-wrapper {
-    transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
-    border-radius: 8px !important;
-    overflow: hidden !important;
-}
-
-.foryou-card:hover,
-.foryou-card-wrapper:hover {
-    transform: translateY(-4px) !important;
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08) !important;
-}
 
 .foryou-img-wrapper {
     aspect-ratio: 1 / 1 !important;

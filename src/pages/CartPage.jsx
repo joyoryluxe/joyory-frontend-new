@@ -2145,33 +2145,31 @@ const RecoProductCard = ({ product, navigate, user, onAddToCartSuccess }) => {
   const handleToggleWishlist = async (e) => {
     e.stopPropagation();
     if (!selectedVariant) { toast.error('Please select a variant first'); return; }
+
+    if (!user || user.guest) {
+      toast.error('Please login to use wishlist');
+      localStorage.setItem("pendingWishlistAction", JSON.stringify({ productId, sku }));
+      navigate('/login', { state: { from: "/wishlist" } });
+      return;
+    }
+
     setWishlistLoading(true);
     try {
       const inWl = isInWishlist(productId, sku);
-      if (user && !user.guest) {
-        if (inWl) {
-          await axios.delete(`https://beauty.joyory.com/api/user/wishlist/${productId}`, { withCredentials: true, data: { sku } });
-          toast.success('Removed from wishlist!');
-        } else {
-          await axios.post(`https://beauty.joyory.com/api/user/wishlist/${productId}`, { sku }, { withCredentials: true });
-          toast.success('Added to wishlist!');
-        }
-        await fetchWishlistData();
+      if (inWl) {
+        await axios.delete(`https://beauty.joyory.com/api/user/wishlist/${productId}`, { withCredentials: true, data: { sku } });
+        toast.success('Removed from wishlist!');
       } else {
-        const local = JSON.parse(localStorage.getItem('guestWishlist')) || [];
-        if (inWl) {
-          localStorage.setItem('guestWishlist', JSON.stringify(local.filter((i) => !(i._id === productId && i.sku === sku))));
-          toast.success('Removed from wishlist!');
-        } else {
-          const pName = product?.product?.name || product?.name || 'Unnamed Product';
-          local.push({ _id: productId, name: pName, sku, image: imageUrl, displayPrice, originalPrice });
-          localStorage.setItem('guestWishlist', JSON.stringify(local));
-          toast.success('Added to wishlist!');
-        }
-        await fetchWishlistData();
+        await axios.post(`https://beauty.joyory.com/api/user/wishlist/${productId}`, { sku }, { withCredentials: true });
+        toast.success('Added to wishlist!');
       }
+      await fetchWishlistData();
     } catch (err) {
-      if (err.response?.status === 401) { toast.error('Please login to use wishlist'); navigate('/login'); }
+      if (err.response?.status === 401) {
+        toast.error('Please login to use wishlist');
+        localStorage.setItem("pendingWishlistAction", JSON.stringify({ productId, sku }));
+        navigate('/login', { state: { from: "/wishlist" } });
+      }
       else toast.error('Failed to update wishlist');
     } finally {
       setWishlistLoading(false);
@@ -2285,28 +2283,10 @@ const RecoProductCard = ({ product, navigate, user, onAddToCartSuccess }) => {
 
           {/* Wishlist Icon - Hidden when out of stock */}
           {!showOutOfStock && (
-            <button className='bg-transparent'
+            <button
+              className={`product-card-wishlist-btn ${productInWishlist ? 'in-wishlist' : ''}`}
               onClick={handleToggleWishlist}
               disabled={wishlistLoading}
-              style={{
-                position: 'absolute',
-                top: '10px',
-                right: '10px',
-                cursor: wishlistLoading ? 'not-allowed' : 'pointer',
-                color: productInWishlist ? '#dc3545' : '#ccc',
-                fontSize: '22px',
-                zIndex: 2,
-                backgroundColor: 'transparent !important',
-                borderRadius: '50%',
-                width: '34px',
-                height: '34px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'all 0.3s ease',
-                border: 'none',
-                outline: 'none',
-              }}
               title={productInWishlist ? "Remove from wishlist" : "Add to wishlist"}
             >
               {wishlistLoading ? (

@@ -449,11 +449,17 @@ const ProductDetailsHero = ({
             )}
 
             <button
-              className="product-hero-wishlist-btn"
+              className={`product-card-wishlist-btn ${isInWishlist ? 'in-wishlist' : ''}`}
               onClick={toggleWishlist}
               disabled={wishlistLoading}
             >
-              {isInWishlist ? <FaHeart color="#dc3545" size={22} /> : <FaRegHeart color="#ccc" size={22} />}
+              {wishlistLoading ? (
+                <div className="spinner-border spinner-border-sm" role="status" />
+              ) : isInWishlist ? (
+                <FaHeart />
+              ) : (
+                <FaRegHeart />
+              )}
             </button>
           </div>
         </div>
@@ -740,7 +746,7 @@ const ProductDetailsHero = ({
             onClick={toggleWishlist}
             disabled={wishlistLoading}
           >
-            Wishlist <FaRegHeart className="ms-2" />
+            Wishlist {isInWishlist ? <FaHeart className="ms-2" style={{ color: '#dc3545' }} /> : <FaRegHeart className="ms-2" />}
           </button>
         </div>
 

@@ -59,9 +59,9 @@ const Footer = () => {
             {/* <li><Link className="page-title-main-name border-none" to="/aboutus">Who we are</Link></li> */}
             {/* <li><Link className="page-title-main-name border-none" to="/help">FAQs</Link></li> */}
             <li><Link className="page-title-main-name border-none" to="#">Brands</Link></li>
-            <li><Link className="page-title-main-name border-none" to="#">Offers</Link></li>
-            <li><Link className="page-title-main-name border-none" to="#">Foryou</Link></li>
-            <li><Link className="page-title-main-name border-none" to="/FoundationShadeFinder">Shade_finder</Link></li>
+            <li><Link className="page-title-main-name border-none" to="/Offerlanding">Offers</Link></li>
+            <li><Link className="page-title-main-name border-none" to="/Foryoulanding">For you</Link></li>
+            <li><Link className="page-title-main-name border-none" to="/ShadeFinder">Shade finder</Link></li>
             <li><Link className="page-title-main-name border-none" to="/virtualtryon">Virtual Try-on</Link></li>
             {/* <li><Link className="page-title-main-name border-none" to="/blogs">Blogs</Link></li> */}
             <li><Link className="page-title-main-name border-none" to="/terms">Terms & Condition</Link></li>

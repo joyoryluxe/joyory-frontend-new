@@ -19,6 +19,7 @@ import BannerSlider from "../components/sections/home/BannerSlider";
 import Build from "../components/sections/home/Build";
 import Certificate from "../components/sections/home/Certificate";
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import SEOMeta from "../components/common/SEOMeta";
 
 function Home() {
   const { user, guestLogin, loading: authLoading } = useContext(UserContext);
@@ -74,6 +75,7 @@ function Home() {
 
   return (
     <>
+      <SEOMeta type="home" />
       <Header />
 
       <Hero />

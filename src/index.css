@@ -76,3 +76,113 @@ body {
     color: #fff !important;
     border-color: #000 !important;
 }
+
+/* Custom Wishlist Button for Product Cards */
+.product-card-wishlist-btn {
+    position: absolute !important;
+    top: 10px !important;
+    right: 10px !important;
+    cursor: pointer !important;
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    border-radius: 50% !important;
+    width: 34px !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    max-height: 34px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 20px !important;
+    /* <--- ADD THIS LINE (adjust value to make it smaller or larger) */
+    /* box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12) !important; */
+    border: none !important;
+    outline: none !important;
+    /* transition: transform 0.2s ease, background-color 0.2s ease !important; */
+    z-index: 2 !important;
+}
+
+.product-card-wishlist-btn:hover {
+    transform: scale(1.1) !important;
+    background-color: #f8f9fa !important;
+}
+
+.product-card-wishlist-btn.in-wishlist {
+    color: #dc3545 !important;
+}
+
+.product-card-wishlist-btn:disabled {
+    cursor: not-allowed !important;
+    opacity: 0.7 !important;
+}
+
+/* Trending/Top Categories Pill Wrapper - Smooth Horizontal Scrolling */
+.cat-wrap {
+    display: flex !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none !important;
+    /* Firefox */
+    width: 100% !important;
+    /* max-width: 100% !important; */
+    padding: 10px 20px !important;
+    scroll-behavior: smooth;
+    gap: 20px !important;
+    justify-content: flex-start !important;
+    /* Safe default to prevent left cut-off */
+}
+
+.cat-wrap::-webkit-scrollbar {
+    display: none !important;
+    /* Chrome/Safari/Opera */
+}
+
+@media (min-width: 992px) {
+    .cat-wrap {
+        max-width: 850px !important;
+        /* 5 * 150px (button width) + 4 * 15px (gap) */
+        margin-left: auto !important;
+        margin-right: auto !important;
+        justify-content: safe center !important;
+        /* Center if items fit, align left if they overflow */
+        padding: 10px 0 !important;
+        margin-bottom: 25px !important;
+    }
+
+    .cat-wrap button {
+        width: 150px !important;
+        flex-shrink: 0 !important;
+        text-align: center !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        padding: 12px 8px !important;
+        font-size: 16px !important;
+        /* padding-left: 5px !important;
+        padding-right: 5px !important; */
+    }
+}
+
+/* Custom Sort Dropdown styling */
+.custom-sort-item {
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    border: none !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    color: #000000 !important;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    padding: 8px 16px !important;
+    transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.custom-sort-item:hover,
+.custom-sort-item:focus,
+.custom-sort-item:active,
+.custom-sort-item.active {
+    color: #0077b6 !important;
+    background: transparent !important;
+    background-color: transparent !important;
+}

@@ -333,50 +333,36 @@ export default function OffersPage() {
     }, [user]);
 
     const toggleWishlist = async (prod, variant) => {
-        if (!user || user.guest) {
-            showToastMsg("Please login to use wishlist", "error");
-            navigate("/login", { state: { from: location.pathname } });
-            return;
-        }
         if (!prod || !variant) return showToastMsg("Select a variant first", "error");
         const pid = prod._id;
         const sku = getSku(variant);
+
+        if (!user || user.guest) {
+            showToastMsg("Please login to use wishlist", "error");
+            localStorage.setItem("pendingWishlistAction", JSON.stringify({ productId: pid, sku }));
+            navigate("/login", { state: { from: "/wishlist" } });
+            return;
+        }
+
         setWishlistLoading((p) => ({ ...p, [pid]: true }));
         try {
             const inWl = isInWishlist(pid, sku);
-            if (user && !user.guest) {
-                if (inWl) {
-                    await axios.delete(`${WISHLIST_API_BASE}/${pid}`, { withCredentials: true, data: { sku } });
-                    showToastMsg("Removed from wishlist!", "success");
-                } else {
-                    await axios.post(`${WISHLIST_API_BASE}/${pid}`, { sku }, { withCredentials: true });
-                    showToastMsg("Added to wishlist!", "success");
-                }
-                await fetchWishlistData();
+            if (inWl) {
+                await axios.delete(`${WISHLIST_API_BASE}/${pid}`, { withCredentials: true, data: { sku } });
+                showToastMsg("Removed from wishlist!", "success");
             } else {
-                let g = JSON.parse(localStorage.getItem("guestWishlist") || "[]");
-                if (inWl) {
-                    g = g.filter((it) => !(it._id === pid && it.sku === sku));
-                    showToastMsg("Removed from wishlist!", "success");
-                } else {
-                    g.push({
-                        _id: pid,
-                        name: prod.name,
-                        brand: getBrandName(prod),
-                        displayPrice: variant.displayPrice || variant.discountedPrice || prod.price,
-                        originalPrice: variant.originalPrice || variant.mrp || prod.price,
-                        image: variant.images?.[0] || prod.images?.[0],
-                        sku,
-                        variantName: variant.shadeName || "Default",
-                        stock: variant.stock,
-                    });
-                    showToastMsg("Added to wishlist!", "success");
-                }
-                localStorage.setItem("guestWishlist", JSON.stringify(g));
-                await fetchWishlistData();
+                await axios.post(`${WISHLIST_API_BASE}/${pid}`, { sku }, { withCredentials: true });
+                showToastMsg("Added to wishlist!", "success");
             }
+            await fetchWishlistData();
         } catch (e) {
-            showToastMsg(e.response?.data?.message || "Wishlist error", "error");
+            if (e.response?.status === 401) {
+                showToastMsg("Please login to use wishlist", "error");
+                localStorage.setItem("pendingWishlistAction", JSON.stringify({ productId: pid, sku }));
+                navigate("/login", { state: { from: "/wishlist" } });
+            } else {
+                showToastMsg(e.response?.data?.message || "Wishlist error", "error");
+            }
         } finally {
             setWishlistLoading((p) => ({ ...p, [pid]: false }));
         }
@@ -581,7 +567,8 @@ export default function OffersPage() {
 
                         {/* Wishlist Icon - Hidden when out of stock */}
                         {!showOutOfStock && (
-                            <button className="bg-transparent"
+                            <button
+                                className={`product-card-wishlist-btn ${isProductInWishlist ? 'in-wishlist' : ''}`}
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     if (displayVariant || !hasVar) {
@@ -589,27 +576,6 @@ export default function OffersPage() {
                                     }
                                 }}
                                 disabled={wishlistLoading[prod._id]}
-                                style={{
-                                    position: 'absolute',
-                                    top: '10px',
-                                    right: '10px',
-                                    cursor: wishlistLoading[prod._id] ? 'not-allowed' : 'pointer',
-                                    color: isProductInWishlist ? '#dc3545' : '#ccc',
-                                    fontSize: '22px',
-                                    zIndex: 2,
-                                    backgroundColor: 'transparent !important',
-                                    borderRadius: '50%',
-                                    width: '34px',
-                                    height: '34px',
-                                    minHeight: '34px',
-                                    maxHeight: '34px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    transition: 'all 0.3s ease',
-                                    border: 'none',
-                                    outline: 'none'
-                                }}
                                 title={isProductInWishlist ? "Remove from wishlist" : "Add to wishlist"}
                             >
                                 {wishlistLoading[prod._id] ? (

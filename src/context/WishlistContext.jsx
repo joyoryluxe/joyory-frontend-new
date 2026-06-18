@@ -2,6 +2,7 @@ import React, { createContext, useState, useEffect, useContext } from "react";
 import axiosInstance from "../utils/axiosInstance.js";
 import { UserContext } from "./UserContext";
 import { toast } from "react-toastify";
+import { useNavigate, useLocation } from "react-router-dom";
 
 export const WishlistContext = createContext();
 
@@ -9,6 +10,8 @@ const GUEST_WISHLIST_KEY = "guestWishlist";
 
 export const WishlistProvider = ({ children }) => {
   const { user } = useContext(UserContext);
+  const navigate = useNavigate();
+  const location = useLocation();
   const [wishlistItems, setWishlistItems] = useState([]);
   const [wishlistCount, setWishlistCount] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -73,6 +76,22 @@ export const WishlistProvider = ({ children }) => {
         setWishlistItems(uniqueItems);
         setWishlistCount(uniqueItems.length);
       } else {
+        const pendingActionStr = localStorage.getItem("pendingWishlistAction");
+        if (pendingActionStr) {
+          try {
+            const { productId, sku } = JSON.parse(pendingActionStr);
+            localStorage.removeItem("pendingWishlistAction");
+            await axiosInstance.post(
+              `/api/user/wishlist/${productId}`,
+              { sku },
+              { withCredentials: true }
+            );
+            toast.success("Product added to your wishlist!");
+          } catch (e) {
+            console.error("Error executing pending wishlist action:", e);
+          }
+        }
+
         const response = await axiosInstance.get(`/api/user/wishlist?_t=${Date.now()}`, { withCredentials: true });
         if (response.data?.success) {
           const items = response.data.wishlist || [];
@@ -123,6 +142,13 @@ export const WishlistProvider = ({ children }) => {
     const rawProductId = product._id || product.productId;
     const cleanProductId = typeof rawProductId === "object" && rawProductId ? (rawProductId._id || rawProductId.id) : String(rawProductId);
     const sku = selectedVariant.sku || selectedVariant.variantSku;
+
+    if (!user || user.guest) {
+      toast.error("Please login to use wishlist");
+      localStorage.setItem("pendingWishlistAction", JSON.stringify({ productId: cleanProductId, sku }));
+      navigate("/login", { state: { from: "/wishlist" } });
+      return false;
+    }
 
     const currentlyInWishlist = isInWishlist(cleanProductId, sku);
     const previousItems = [...wishlistItems];

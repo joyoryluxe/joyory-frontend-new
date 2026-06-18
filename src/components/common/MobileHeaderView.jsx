@@ -24,7 +24,7 @@ import "../../App.css";
 
 // Static Menu Items
 const STATIC_MENU_ITEMS = [
-  { label: "Brands", path: "/" },
+  // { label: "Brands", path: "/" },
   { label: "Offers", path: "/offerlanding" },
   { label: "Virtual Try-on", path: "/virtualtryon" },
   { label: "Shade finder", path: "/shadefinder" },
