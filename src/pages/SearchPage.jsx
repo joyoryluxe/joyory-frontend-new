@@ -498,13 +498,6 @@ const SearchPage = () => {
     if (searchTerm) {
       const { brand, category, remaining } = parseSemanticQuery(searchTerm, categories, brandsList);
 
-      // if (brand) {
-      //   p.append("brandIds", brand.slug || brand._id);
-      // }
-      // if (category) {
-      //   p.append("categoryIds", category.slug || category._id);
-      // }
-
 
       if (brand && (!filters.brandIds || filters.brandIds.length === 0)) {
         p.append("brandIds", brand.slug || brand._id);
