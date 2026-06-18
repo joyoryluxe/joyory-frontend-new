@@ -581,13 +581,7 @@ const CartProvider = ({ children }) => {
   useEffect(() => {
     const initializeCart = () => {
       if (user) {
-        if (user.guest) {
-          const guestCart = getGuestCart();
-          setCartItems(guestCart);
-          updateCartCount(guestCart);
-        } else {
-          syncCartFromBackend();
-        }
+        syncCartFromBackend();
       }
     };
 
@@ -600,19 +594,24 @@ const CartProvider = ({ children }) => {
   };
 
   const syncCartFromBackend = async () => {
-    const cookies = document.cookie.split("; ");
-    const isLoggedIn =
-      cookies.some((c) => c.startsWith("token=")) ||
-      cookies.some((c) => c.startsWith("session="));
-
-    if (!isLoggedIn) return;
-
     try {
       const res = await fetch(
         "https://beauty.joyory.com/api/user/cart/summary",
         { credentials: "include" }
       );
-      if (!res.ok) return;
+      if (res.status === 400 || res.status === 401) {
+        // Fallback to localStorage guest cart
+        const guestCart = getGuestCart();
+        setCartItems(guestCart);
+        updateCartCount(guestCart);
+        return;
+      }
+      if (!res.ok) {
+        const guestCart = getGuestCart();
+        setCartItems(guestCart);
+        updateCartCount(guestCart);
+        return;
+      }
       const data = await res.json();
 
       const normalized = (data.cart || []).map((item) => ({
@@ -630,6 +629,9 @@ const CartProvider = ({ children }) => {
       updateCartCount(normalized);
     } catch (err) {
       console.error("Failed to sync cart", err);
+      const guestCart = getGuestCart();
+      setCartItems(guestCart);
+      updateCartCount(guestCart);
     }
   };
 
@@ -641,11 +643,48 @@ const CartProvider = ({ children }) => {
         return false;
       }
 
-      // ✅ GUEST USER FLOW
-      if (isGuest) {
-        const guestCart = getGuestCart();
+      // Try backend first for BOTH guest and logged-in flows
+      const payload = {
+        productId: product._id,
+        variants: [{ variantSku: selectedVariant.sku, quantity: 1 }],
+      };
 
-        // Check if item already exists in guest cart
+      let backendSuccess = false;
+      let backendErrorStatus = null;
+
+      try {
+        const res = await axios.post(
+          "https://beauty.joyory.com/api/user/cart/add",
+          payload,
+          { withCredentials: true }
+        );
+        if (res.data && res.data.success) {
+          backendSuccess = true;
+          // Refresh state from backend
+          await syncCartFromBackend();
+        }
+      } catch (err) {
+        console.warn("Backend add to cart failed, checking fallback:", err);
+        backendErrorStatus = err?.response?.status;
+      }
+
+      if (backendSuccess) {
+        // Track AddToCart in Meta Pixel
+        if (window.fbq) {
+          window.fbq('track', 'AddToCart', {
+            content_ids: [product._id],
+            content_name: product.name,
+            content_type: 'product',
+            value: selectedVariant.discountedPrice || selectedVariant.originalPrice || product.price,
+            currency: 'INR'
+          });
+        }
+        return true;
+      }
+
+      // If backend failed (or returned 401/400) and it's a guest request, fall back to localStorage
+      if (isGuest || backendErrorStatus === 401 || backendErrorStatus === 400) {
+        const guestCart = getGuestCart();
         const existingItemIndex = guestCart.findIndex(
           (item) =>
             item.productId === product._id &&
@@ -653,16 +692,13 @@ const CartProvider = ({ children }) => {
         );
 
         let updatedCart;
-
         if (existingItemIndex >= 0) {
-          // Update quantity if item exists
           updatedCart = guestCart.map((item, index) =>
             index === existingItemIndex
               ? { ...item, quantity: item.quantity + 1 }
               : item
           );
         } else {
-          // Add new item to guest cart
           const newCartItem = {
             productId: product._id,
             selectedVariant,
@@ -671,19 +707,15 @@ const CartProvider = ({ children }) => {
             price: selectedVariant.discountedPrice || selectedVariant.originalPrice || product.price,
             name: product.name,
             brand: product.brand?.name || (typeof product.brand === "string" ? product.brand : "Unknown"),
-            isGuest: true // Mark as guest item
+            isGuest: true
           };
           updatedCart = [...guestCart, newCartItem];
         }
 
-        // Save to localStorage and update state
         saveGuestCart(updatedCart);
         setCartItems(updatedCart);
         updateCartCount(updatedCart);
 
-        console.log("Guest cart updated:", updatedCart);
-
-        // Track AddToCart in Meta Pixel
         if (window.fbq) {
           window.fbq('track', 'AddToCart', {
             content_ids: [product._id],
@@ -693,77 +725,20 @@ const CartProvider = ({ children }) => {
             currency: 'INR'
           });
         }
-
         return true;
       }
 
-      // ✅ LOGGED-IN USER FLOW (your existing code)
-      const payload = {
-        productId: product._id,
-        variants: [{ variantSku: selectedVariant.sku, quantity: 1 }],
-      };
-
-      const res = await axios.post(
-        "https://beauty.joyory.com/api/user/cart/add",
-        payload,
-        { withCredentials: true }
-      );
-
-      if (res.data.success) {
-        putVariantInCache(product._id, selectedVariant);
-
-        const existing = cartItems.find(
-          (i) =>
-            i.productId === product._id &&
-            i.selectedVariant?.sku === selectedVariant.sku
-        );
-
-        const updated = existing
-          ? cartItems.map((i) =>
-            i.productId === product._id &&
-              i.selectedVariant?.sku === selectedVariant.sku
-              ? { ...i, quantity: i.quantity + 1 }
-              : i
-          )
-          : [
-            ...cartItems,
-            {
-              productId: product._id,
-              selectedVariant,
-              quantity: 1,
-              image: selectedVariant.image || product.images?.[0] || "/placeholder.png",
-              price: selectedVariant.discountedPrice || selectedVariant.originalPrice || product.price,
-              name: product.name,
-              brand: product.brand?.name || (typeof product.brand === "string" ? product.brand : "Unknown"),
-            },
-          ];
-
-        setCartItems(updated);
-        updateCartCount(updated);
-
-        // Track AddToCart in Meta Pixel
-        if (window.fbq) {
-          window.fbq('track', 'AddToCart', {
-            content_ids: [product._id],
-            content_name: product.name,
-            content_type: 'product',
-            value: selectedVariant.discountedPrice || selectedVariant.originalPrice || product.price,
-            currency: 'INR'
-          });
-        }
-
-        return true;
+      // If it wasn't a guest request and failed with 401, throw Auth error
+      if (backendErrorStatus === 401) {
+        throw new Error("Authentication required");
       }
 
       return false;
     } catch (error) {
-      console.error("Add to Cart error:", error?.response?.data || error);
-
-      if (error?.response?.status === 401) {
-        // If user is not authenticated, you might want to switch to guest mode
-        throw new Error("Authentication required");
+      console.error("Add to Cart error:", error);
+      if (error.message === "Authentication required") {
+        throw error;
       }
-
       alert(error?.response?.data?.message || "Failed to add to cart");
       return false;
     }

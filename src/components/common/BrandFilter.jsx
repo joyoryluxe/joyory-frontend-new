@@ -1,5 +1,6 @@
-import React, { useState, useMemo } from "react";
-import { FaTimes, FaChevronRight, FaChevronDown } from "react-icons/fa";
+import React, { useState, useEffect, useMemo } from "react";
+import { FaTimes, FaChevronRight, FaChevronDown, FaChevronUp } from "react-icons/fa";
+import "../../styles/BrandFilter.css";
 
 // Default empty filter shape used as fallback
 const EMPTY_FILTERS = {
@@ -29,6 +30,16 @@ const BrandFilter = ({
     defaultFilters,
 }) => {
     const [expandedIds, setExpandedIds] = useState(new Set());
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 992);
+    const [chipsExpanded, setChipsExpanded] = useState(false);
+
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth < 992);
+        };
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, []);
 
     // Merge the passed defaultFilters with the empty shape
     const mergedDefault = useMemo(() => {
@@ -265,8 +276,19 @@ const BrandFilter = ({
     }
 
     return (
-        <div className="filter-sidebar border bg-white shadow-sm page-title-main-name"
-            style={{ position: "sticky", top: "140px", borderRadius: "12px", overflowY: "hidden" }}>
+        <div className={`filter-sidebar page-title-main-name ${isMobile ? "" : "border bg-white shadow-sm"}`}
+            style={isMobile ? {
+                position: "static",
+                borderRadius: "0",
+                overflowY: "visible",
+                maxHeight: "none"
+            } : {
+                position: "sticky",
+                top: "140px",
+                borderRadius: "12px",
+                overflowY: "auto",
+                maxHeight: "calc(100vh - 170px)"
+            }}>
 
             {/* Header */}
             <div className="p-3 border-bottom d-flex justify-content-between align-items-center bg-light">
@@ -286,28 +308,50 @@ const BrandFilter = ({
 
             {/* Active Chips */}
             {activeChips.length > 0 && (
-                <div className="height-selcted-section p-2">
-                    {activeChips.map((chip, idx) => (
-                        <span key={idx} className="height-selcted-section-sub" style={{ fontSize: "11px" }}>
-                            {chip.isPill && <span style={{ opacity: 0.75 }}>Category: </span>}
-                            {chip.label}
-                            <FaTimes
-                                style={{ cursor: "pointer", marginLeft: 6 }}
-                                onClick={() => {
-                                    if (chip.group === "categoryPill") {
-                                        if (onClearCategory) onClearCategory();
-                                    } else if (chip.group === "priceRange") {
-                                        handlePriceSelection(null);
-                                    } else if (chip.group === "discountMin") {
-                                        handleDiscountSelection(null);
-                                    } else {
-                                        handleToggleFilter(chip.group, chip.val);
-                                    }
-                                }}
-                            />
-                        </span>
-                    ))}
-                </div>
+                <>
+                    <div className="height-selcted-section p-2">
+                        {(chipsExpanded ? activeChips : activeChips.slice(0, 3)).map((chip, idx) => (
+                            <span key={idx} className="height-selcted-section-sub" style={{ fontSize: "11px" }}>
+                                {chip.isPill && <span style={{ opacity: 0.75 }}>Category: </span>}
+                                {chip.label}
+                                <FaTimes
+                                    style={{ cursor: "pointer", marginLeft: 6 }}
+                                    onClick={() => {
+                                        if (chip.group === "categoryPill") {
+                                            if (onClearCategory) onClearCategory();
+                                        } else if (chip.group === "priceRange") {
+                                            handlePriceSelection(null);
+                                        } else if (chip.group === "discountMin") {
+                                            handleDiscountSelection(null);
+                                        } else {
+                                            handleToggleFilter(chip.group, chip.val);
+                                        }
+                                    }}
+                                />
+                            </span>
+                        ))}
+                    </div>
+                    {activeChips.length > 3 && (
+                        <div className="px-3 pb-2">
+                            <button
+                                type="button"
+                                className="btn btn-sm btn-link text-decoration-none p-0 fw-semibold text-dark d-flex align-items-center gap-1"
+                                onClick={() => setChipsExpanded(!chipsExpanded)}
+                                style={{ fontSize: "13px", border: "none", background: "none" }}
+                            >
+                                {chipsExpanded ? (
+                                    <>
+                                        View less <FaChevronUp size={11} />
+                                    </>
+                                ) : (
+                                    <>
+                                        View more <FaChevronDown size={11} />
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    )}
+                </>
             )}
 
             <div className="accordion accordion-flush" id="mainFilterAccordion">

@@ -395,10 +395,10 @@ const MainVirtualTryon = () => {
         productId: pid,
         variants: [{ variantSku: sku, quantity: 1 }]
       };
-      
+
       const { data } = await axiosInstance.post("/api/user/cart/add", payload);
       if (!data.success) throw new Error(data.message || "Cart add failed");
-      
+
       toast.success("Product added to cart!");
       // navigate("/cartpage");
     } catch (e) {
@@ -414,7 +414,7 @@ const MainVirtualTryon = () => {
   const removeShade = () => {
     setActiveShade(null);
     setActiveShadeObj(null);
-    
+
     const type = (activeType || '').toLowerCase();
     if (type.includes('lip')) { S.current.lipC = 'none'; }
     else if (type.includes('eye') && !type.includes('brow')) { S.current.linerC = 'none'; }
@@ -460,6 +460,7 @@ const MainVirtualTryon = () => {
   const queryProductId = searchParams.get('productId');
   const queryProductSlug = searchParams.get('productSlug');
   const querySku = searchParams.get('sku');
+  const queryVtoType = searchParams.get('vtoType');
 
   useEffect(() => {
     const targetProductIdentifier = queryProductSlug || queryProductId;
@@ -504,7 +505,9 @@ const MainVirtualTryon = () => {
             setShades(shadesList);
 
             // Determine VTO category type
-            const rawType = product.type || product.vtoType || (typeof product.category === 'object' ? product.category.name : product.category) || 'lipstick';
+            // const rawType = product.type || product.vtoType || (typeof product.category === 'object' ? product.category.name : product.category) || 'lipstick';
+
+            const rawType = queryVtoType || product.vtoType || product.type || (typeof product.category === 'object' ? product.category.name : product.category) || 'lipstick';
             const normalizedType = rawType.toLowerCase();
             setActiveType(normalizedType);
 
@@ -1085,8 +1088,8 @@ const MainVirtualTryon = () => {
                 </picture>
 
                 {/* Close Button at top right of image */}
-                <button 
-                  className="vto-landing-close-btn" 
+                <button
+                  className="vto-landing-close-btn"
                   onClick={() => navigate(-1)}
                   aria-label="Close Virtual Try-On"
                 >
@@ -1122,8 +1125,8 @@ const MainVirtualTryon = () => {
                   >
                     SELFIE MODE
                   </button>
-                  <button 
-                    className="vto-btn-black" 
+                  <button
+                    className="vto-btn-black"
                     onClick={() => { setMode('photo'); setVtoStep('instructions'); }}
                   >
                     UPLOAD PHOTO
@@ -1525,9 +1528,9 @@ const MainVirtualTryon = () => {
                   <button className="vto-shade-popup-btn vto-shade-popup-btn-clear" onClick={removeShade} title="Remove Shade">
                     <FaTimes />
                   </button>
-                  <button 
-                    className={`vto-shade-popup-btn vto-shade-popup-btn-wishlist ${isInWishlist(activeProduct._id, activeShadeObj.sku || activeShadeObj.variantSku || activeShadeObj._id) ? 'active' : ''}`} 
-                    onClick={() => toggleWishlist(activeProduct, activeShadeObj)} 
+                  <button
+                    className={`vto-shade-popup-btn vto-shade-popup-btn-wishlist ${isInWishlist(activeProduct._id, activeShadeObj.sku || activeShadeObj.variantSku || activeShadeObj._id) ? 'active' : ''}`}
+                    onClick={() => toggleWishlist(activeProduct, activeShadeObj)}
                     title="Wishlist"
                   >
                     {isInWishlist(activeProduct._id, activeShadeObj.sku || activeShadeObj.variantSku || activeShadeObj._id) ? <FaHeart /> : <FaRegHeart />}

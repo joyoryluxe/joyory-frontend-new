@@ -20,6 +20,15 @@ const Wishlist = () => {
   const navigate = useNavigate();
   const { user } = useContext(UserContext);
 
+  const getCleanProductSlug = (item) => {
+    try {
+      const slugMap = JSON.parse(localStorage.getItem("productSlugMap") || "{}");
+      return slugMap[item.productId] || item.slug || item.productId;
+    } catch {
+      return item.slug || item.productId;
+    }
+  };
+
   useEffect(() => {
     syncWishlist(wishlistItems.length > 0);
   }, []);
@@ -82,8 +91,8 @@ const Wishlist = () => {
         await addToCart(product, variant, true);
       }
 
-      // Remove from wishlist after moving
-      await contextRemoveFromWishlist(item.productId, item.sku);
+      // Remove from wishlist after moving (silently, to avoid double toast alerts)
+      await contextRemoveFromWishlist(item.productId, item.sku, true);
       await syncCartFromBackend();
       toast.success("Moved to cart successfully!");
       navigate("/cartpage");
@@ -206,7 +215,7 @@ const Wishlist = () => {
                   <div
                     className="position-relative"
                     style={{ cursor: "pointer" }}
-                    onClick={() => navigate(`/product/${item.productId}`)}
+                    onClick={() => navigate(`/product/${getCleanProductSlug(item)}`)}
                   >
                     <img
                       src={item.image || "/placeholder.png"}
@@ -222,7 +231,7 @@ const Wishlist = () => {
                     <h6
                       className="foryou-name font-family-Poppins m-0 p-0 mt-2"
                       style={{ cursor: "pointer" }}
-                      onClick={() => navigate(`/product/${item.productId}`)}
+                      onClick={() => navigate(`/product/${getCleanProductSlug(item)}`)}
                     >
                       {(() => {
                         const variantText = (item.variantName || item.variant || "").trim().toUpperCase();

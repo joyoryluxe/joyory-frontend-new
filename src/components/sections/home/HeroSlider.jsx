@@ -99,7 +99,7 @@ export default function HeroSlider() {
               {item.type === "image" ? (
                 <img
                   src={item.url}
-                  alt={item.title || "Joyory Slide"}
+                  alt={item.title || "Joyory"}
                   className="slide-media hero-slider-image-responsive"
                 />
               ) : (

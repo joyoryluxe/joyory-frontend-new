@@ -84,7 +84,7 @@ const ProductDetail = () => {
     if (variant.slug) {
       navigate(`/product/${variant.slug}`, { replace: true });
     } else if (variant.sku) {
-      const productSlug = product.slugs?.[0] || slug;
+      const productSlug = product.slugs?.[0] || product.slug || slug;
       navigate(`/product/${productSlug}?variant=${variant.sku}`, {
         replace: true,
       });
@@ -92,6 +92,11 @@ const ProductDetail = () => {
   };
 
   useEffect(() => {
+    // Avoid double fetching if we already have the product and the slug is one of its slugs or ID
+    if (product && (product._id === slug || (product.slugs && product.slugs.includes(slug)) || product.slug === slug)) {
+      return;
+    }
+
     const fetchProduct = async () => {
       try {
         let url = `/api/user/products/${slug}`;
@@ -187,7 +192,19 @@ const ProductDetail = () => {
     };
 
     fetchProduct();
-  }, [slug, location.search, navigate]);
+  }, [slug, location.search, navigate, product]);
+
+  // Auto-rewrite URL to use product slug instead of database ID for clean SEO URLs
+  useEffect(() => {
+    if (product) {
+      const primarySlug = product.slugs?.[0] || product.slug;
+      if (primarySlug && slug !== primarySlug) {
+        const variantParam = getVariantFromQuery();
+        const search = variantParam ? `?variant=${variantParam}` : "";
+        navigate(`/product/${primarySlug}${search}`, { replace: true });
+      }
+    }
+  }, [product, slug, navigate]);
 
   /* ===================== VARIANT HANDLING ===================== */
   const handleVariantSelect = (variant) => {
@@ -237,9 +254,10 @@ const ProductDetail = () => {
     }
 
     try {
-      const success = await addToCart(product, selectedShade, false);
+      const isGuest = !user || user.guest;
+      const success = await addToCart(product, selectedShade, isGuest);
       if (success) {
-        toast.success("✅ Added to cart!");
+        toast.success("Added to cart!");
         setTimeout(() => navigate("/cartpage"), 1000);
       } else {
         toast.error("❌ Failed to add to cart");

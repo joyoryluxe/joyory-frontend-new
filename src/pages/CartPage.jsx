@@ -2882,6 +2882,15 @@ const CartPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { syncCartFromBackend } = useContext(CartContext);
+
+  const getCleanProductSlug = (item) => {
+    try {
+      const slugMap = JSON.parse(localStorage.getItem("productSlugMap") || "{}");
+      return slugMap[item.productId] || item.productSlug || item.productId;
+    } catch {
+      return item.productSlug || item.productId;
+    }
+  };
   const { syncWishlist } = useContext(WishlistContext);
   const { user } = useContext(UserContext);
 
@@ -2927,25 +2936,16 @@ const CartPage = () => {
           throw new Error("Failed to move item to wishlist");
         }
       } else {
-        // Guest user: Handle locally
-        const local = JSON.parse(localStorage.getItem("guestWishlist") || "[]");
-        const exists = local.some((i) => (i.productId === productId || i._id === productId) && i.sku === variantSku);
-        if (!exists) {
-          const displayPrice = itemToRemove.price;
-          const originalPrice = itemToRemove.selectedVariant?.originalPrice || displayPrice;
-          local.push({
-            _id: productId,
-            productId: productId,
-            name: itemToRemove.name,
-            sku: variantSku,
-            image: itemToRemove.image,
-            displayPrice: displayPrice,
-            originalPrice: originalPrice,
-          });
-          localStorage.setItem("guestWishlist", JSON.stringify(local));
-        }
-        // Remove from cart locally/session-wise using existing cart removal function
-        await handleRemoveByProductId(productId, variantSku);
+        // Guest user: Save pending action and redirect to login
+        localStorage.setItem("pendingCartAction", JSON.stringify({
+          type: "move-to-wishlist",
+          productId,
+          sku: variantSku
+        }));
+        handleCloseConfirm();
+        toast.info("Please login to move items to your wishlist");
+        navigate("/login", { state: { from: "/cartpage" } });
+        return;
       }
 
       handleCloseConfirm();
@@ -2988,7 +2988,14 @@ const CartPage = () => {
         if (!silent) setLoading(false);
         return;
       }
-      if (!res.ok) { if (res.status === 401) navigate("/login"); throw new Error("Failed to fetch cart"); }
+      if (!res.ok) {
+        if (res.status === 401) {
+          if (user && !user.guest) {
+            navigate("/login");
+          }
+        }
+        throw new Error("Failed to fetch cart");
+      }
 
       const data = await res.json();
       const normalizedCart = (data.cart || []).map((item) => {
@@ -3000,6 +3007,7 @@ const CartPage = () => {
         return {
           cartItemId: item._id || `${item.product}-${variant.sku || "default"}`,
           productId: item.product || item.productId,
+          productSlug: item.slug || (item.product && typeof item.product === 'object' ? item.product.slugs?.[0] || item.product.slug : null) || null,
           name: item.name || "Unnamed Product",
           image: variant.image || "/placeholder.png",
           brand: item.brand || "",
@@ -3032,7 +3040,60 @@ const CartPage = () => {
       setStockError(offender ? offender.stockMessage : "");
     } catch (err) {
       console.error("Error fetching cart:", err);
-      setCartData(null);
+      // Fallback to local guest cart if user is guest or not logged in
+      const isGuest = !user || user.guest;
+      if (isGuest) {
+        try {
+          const guestCart = JSON.parse(localStorage.getItem("guestCart") || "[]");
+          const normalizedCart = guestCart.map((item) => ({
+            cartItemId: item.cartItemId || `${item.productId}-${item.selectedVariant?.sku || "default"}`,
+            productId: item.productId,
+            productSlug: item.selectedVariant?.slug || (item.product ? item.product.slugs?.[0] || item.product.slug : null) || null,
+            name: item.name || "Unnamed Product",
+            image: item.image || "/placeholder.png",
+            brand: item.brand || "",
+            selectedVariant: item.selectedVariant || {},
+            quantity: item.quantity || 1,
+            price: item.price || 0,
+            subTotal: (item.price || 0) * (item.quantity || 1),
+            discounts: [],
+            stockStatus: "in_stock",
+            stockMessage: "",
+            canCheckout: true,
+          }));
+
+          const totalAmount = normalizedCart.reduce((sum, item) => sum + item.subTotal, 0);
+
+          setCartData({
+            cart: normalizedCart,
+            freebies: [],
+            bagMrp: totalAmount,
+            bagDiscount: 0,
+            autoDiscount: 0,
+            couponDiscount: 0,
+            shipping: 0,
+            taxableAmount: totalAmount,
+            gstRate: "12%",
+            gstAmount: Math.round(totalAmount * 0.12 * 100) / 100,
+            gstMessage: "",
+            payable: totalAmount,
+            appliedCoupon: null,
+            applicableCoupons: [],
+            inapplicableCoupons: [],
+            promotions: [],
+            totalSavings: 0,
+            savingsMessage: "",
+            grandTotal: totalAmount,
+            shippingMessage: "",
+          });
+          setStockError("");
+        } catch (localErr) {
+          console.error("Error parsing guestCart from localStorage:", localErr);
+          setCartData(null);
+        }
+      } else {
+        setCartData(null);
+      }
     } finally {
       if (!silent) setLoading(false);
     }
@@ -3075,6 +3136,7 @@ const CartPage = () => {
       console.error(err);
       alert("Failed to update quantity. Please try again.");
       await fetchCart();
+      await syncCartFromBackend();
     }
   };
 
@@ -3094,6 +3156,7 @@ const CartPage = () => {
       console.error(err);
       alert("Failed to remove item from cart.");
       await fetchCart();
+      await syncCartFromBackend();
     }
   };
 
@@ -3129,6 +3192,7 @@ const CartPage = () => {
       await new Promise((res) => setTimeout(res, 1500));
 
       await fetchCart(code);
+      await syncCartFromBackend();
       localStorage.setItem("appliedCoupon", code);
 
       setCouponMessage(`Coupon ${code} applied successfully!`);
@@ -3155,6 +3219,7 @@ const CartPage = () => {
     setCouponMessageColor("info");
     localStorage.removeItem("appliedCoupon");
     await fetchCart();
+    await syncCartFromBackend();
   };
 
   const handleShowDiscountProducts = (coupon) => {
@@ -3297,10 +3362,50 @@ const CartPage = () => {
       if (applyCode) await fetchCart(applyCode);
       else if (savedCoupon) await fetchCart(savedCoupon);
       else await fetchCart();
+      await syncCartFromBackend();
     };
     load();
     fetchRecommendations();
   }, []);
+
+  // ── Handle pending cart action after login ───────────────────────────────────
+  useEffect(() => {
+    const handlePendingCartAction = async () => {
+      if (!user || user.guest) return; // Wait until authenticated user is loaded
+      
+      const pendingActionStr = localStorage.getItem("pendingCartAction");
+      if (pendingActionStr) {
+        try {
+          const { type, productId, sku } = JSON.parse(pendingActionStr);
+          localStorage.removeItem("pendingCartAction");
+
+          if (type === "move-to-wishlist") {
+            const res = await fetch(`https://beauty.joyory.com/api/user/cart/${productId}/move-to-wishlist`, {
+              method: "POST",
+              credentials: "include",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ sku }),
+            });
+
+            if (res.ok) {
+              toast.success("Product moved to wishlist successfully!");
+              const savedCoupon = localStorage.getItem("appliedCoupon");
+              await fetchCart(savedCoupon);
+              await syncCartFromBackend();
+              syncWishlist();
+            } else {
+              console.error("Failed to move item to wishlist");
+            }
+          }
+        } catch (e) {
+          console.error("Error executing pending cart action:", e);
+        }
+      }
+    };
+    handlePendingCartAction();
+  }, [user, syncWishlist]);
 
   // ── Auto-clear coupon message ──────────────────────────────────────────────
   useEffect(() => {
@@ -3458,7 +3563,7 @@ const CartPage = () => {
                 const shadeHex = variant.hex;
                 return (
                   <li key={item.cartItemId} className="list-group-item d-flex justify-content-between align-items-end border-black">
-                    <div className="d-flex align-items-center gap-2" style={{ cursor: "pointer" }} onClick={() => navigate(`/product/${item.productId}`)}>
+                    <div className="d-flex align-items-center gap-2" style={{ cursor: "pointer" }} onClick={() => navigate(`/product/${getCleanProductSlug(item)}`)}>
                       <img src={item.image} alt={item.name} style={{ width: "80px", height: "80px", objectFit: "cover", borderRadius: "8px" }} />
                       <div className="w-75">
                         <strong className="page-title-main-name">
