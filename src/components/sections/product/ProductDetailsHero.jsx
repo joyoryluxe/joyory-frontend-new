@@ -428,7 +428,8 @@ const ProductDetailsHero = ({
                 onClick={(e) => {
                   e.stopPropagation();
                   const sku = selectedShade ? getSku(selectedShade) : null;
-                  navigate(`/Mainvirtualtryon?productId=${product.slug || product._id}${sku ? `&sku=${sku}` : ''}`);
+                  const vtoType = product.vtoType || "";
+                  navigate(`/Mainvirtualtryon?productId=${product.slug || product._id}${sku ? `&sku=${sku}` : ''}${vtoType ? `&vtoType=${vtoType}` : ''}`);
                 }}
                 onTouchStart={(e) => e.stopPropagation()}
                 style={{ cursor: "pointer" }}

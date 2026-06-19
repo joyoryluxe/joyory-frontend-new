@@ -14,7 +14,7 @@ import { toast } from "react-toastify";
 import "../styles/ProductPage.css";
 import "../styles/BestSellers.css";
 import "../styles/ForYou.css";
-
+import SEOMeta from "../components/common/SEOMeta"; // Add import at top
 const CART_API_BASE = "/api/user/cart";
 const PRODUCT_ALL_API = "/api/user/products/all";
 
@@ -523,9 +523,9 @@ export default function VtoProducts() {
                             />
 
                             {prod?.supportsVTO && (
-                                <div 
-                                    className="support-beauty-badge" 
-                                    title="Try It On" 
+                                <div
+                                    className="support-beauty-badge"
+                                    title="Try It On"
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         navigate(`/product/${slugPr}`);
@@ -914,6 +914,7 @@ export default function VtoProducts() {
 
     return (
         <>
+            <SEOMeta type="vtoproducts" /> {/* Add this */}
             <Header />
 
             <div className="padding-left-rightss ms-lg-0 ms-3 mx-3 mt-5">
@@ -1031,19 +1032,19 @@ export default function VtoProducts() {
                                 <div className="d-none d-lg-flex align-items-center position-relative mt-5" style={{ gap: '6px' }}>
                                     <span className="text-muted page-title-main-name" style={{ fontSize: '14px' }}>Sort by:</span>
                                     <div className="position-relative">
-                                        <button 
+                                        <button
                                             type="button"
                                             className="btn btn-link text-decoration-none p-0 page-title-main-name fw-semibold text-dark d-inline-flex align-items-center gap-1"
                                             onClick={() => setShowDesktopSortDropdown(!showDesktopSortDropdown)}
                                             style={{ border: 'none', background: 'none', boxShadow: 'none', fontSize: '14px' }}
                                         >
                                             {
-                                                filters.sort === 'priceHighToLow' ? 'Price: High to Low' : 
-                                                filters.sort === 'priceLowToHigh' ? 'Price: Low to High' : 
-                                                filters.sort === 'rating' ? 'Top Rated' :
-                                                filters.sort === 'discountHighToLow' ? 'Discount: High to Low' :
-                                                filters.sort === 'discountLowToHigh' ? 'Discount: Low to High' :
-                                                'Newest First'
+                                                filters.sort === 'priceHighToLow' ? 'Price: High to Low' :
+                                                    filters.sort === 'priceLowToHigh' ? 'Price: Low to High' :
+                                                        filters.sort === 'rating' ? 'Top Rated' :
+                                                            filters.sort === 'discountHighToLow' ? 'Discount: High to Low' :
+                                                                filters.sort === 'discountLowToHigh' ? 'Discount: Low to High' :
+                                                                    'Newest First'
                                             }
                                             <FaChevronDown style={{ fontSize: '10px', transition: 'transform 0.2s', transform: showDesktopSortDropdown ? 'rotate(180deg)' : 'none' }} />
                                         </button>
@@ -1060,20 +1061,20 @@ export default function VtoProducts() {
                                                         { value: "discountLowToHigh", label: "Discount: Low to High" }
                                                     ].map(({ value, label }) => (
                                                         <li key={value}>
-                                                            <button 
+                                                            <button
                                                                 type="button"
                                                                 className={`dropdown-item page-title-main-name py-2 custom-sort-item ${filters.sort === value ? 'active' : ''}`}
                                                                 onClick={() => {
                                                                     setFilters(prev => ({ ...prev, sort: value }));
                                                                     setShowDesktopSortDropdown(false);
                                                                 }}
-                                                                style={{ 
-                                                                    fontSize: '13px', 
-                                                                    border: 'none', 
+                                                                style={{
+                                                                    fontSize: '13px',
+                                                                    border: 'none',
 
 
-                                                                    width: '100%', 
-                                                                    textAlign: 'left', 
+                                                                    width: '100%',
+                                                                    textAlign: 'left',
                                                                     cursor: 'pointer',
                                                                     padding: '8px 16px'
                                                                 }}

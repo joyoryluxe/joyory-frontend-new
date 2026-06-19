@@ -76,6 +76,7 @@ function Home() {
   return (
     <>
       <SEOMeta type="home" />
+      <h1 style={{ display: "none" }}>Joyory - India's Premium Beauty & Cosmetics Store</h1>
       <Header />
 
       <Hero />

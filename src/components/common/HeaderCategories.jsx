@@ -10,9 +10,7 @@ const BRAND_PLACEHOLDER = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org
 const STATIC_MENU_ITEMS = [
   { label: "Brands", path: "/", hasDropdown: true },
   { label: "Offers", path: "/offerlanding" },
-  { label: "Virtual Try-on", path: "/virtualtryon" },
-  { label: "Shade finder", path: "/shadefinder" },
-  { label: "For you", path: "/foryoulanding" },
+  { label: "AI Beauty Lab", path: "/ai-beauty-lab", hasDropdown: true },
   { label: "About us", path: "/aboutus" }
 ];
 
@@ -158,6 +156,92 @@ const HeaderCategories = () => {
     );
   };
 
+  const renderAiBeautyLabDropdown = () => {
+    const aiItems = [
+      {
+        title: "AI Beauty Concierge",
+        description: "Your 24/7 personal beauty chat advisor.",
+        icon: "💬",
+        action: () => {
+          document.getElementById("beauty-concierge-fab")?.click();
+          setActiveStaticItem(null);
+        }
+      },
+      {
+        title: "Skincare Routine Builder",
+        description: "Build a structured AM/PM skincare regimen.",
+        icon: "🧴",
+        action: () => {
+          navigate("/routines");
+          setActiveStaticItem(null);
+        }
+      },
+      {
+        title: "Ingredient Compatibility",
+        description: "Scan ingredients for sensitivity & allergens.",
+        icon: "🧪",
+        action: () => {
+          navigate("/ingredient-compatibility");
+          setActiveStaticItem(null);
+        }
+      },
+      {
+        title: "AI Virtual Try-On",
+        description: "Try makeup shades instantly using your camera.",
+        icon: "🤳",
+        action: () => {
+          navigate("/Mainvirtualtryon");
+          setActiveStaticItem(null);
+        }
+      },
+      {
+        title: "Foundation Shade Finder",
+        description: "Find your perfect shade matching your skin tone.",
+        icon: "🎨",
+        action: () => {
+          navigate("/shadefinder");
+          setActiveStaticItem(null);
+        }
+      },
+      {
+        title: "Smart Beauty Quiz",
+        description: "Take our quiz for skin type recommendations.",
+        icon: "📝",
+        action: () => {
+          navigate("/foryoulanding");
+          setActiveStaticItem(null);
+        }
+      }
+    ];
+
+    return (
+      <div className="ai-dropdown">
+        <div className="ai-dropdown-header">
+          <h3>AI Beauty Lab</h3>
+          <p>Cutting-edge AI tools customized to your skincare & makeup needs.</p>
+        </div>
+        <div className="ai-dropdown-grid">
+          {aiItems.map((item, idx) => (
+            <div
+              key={idx}
+              className="ai-dropdown-item"
+              onClick={(e) => {
+                e.stopPropagation();
+                item.action();
+              }}
+            >
+              <div className="ai-dropdown-icon">{item.icon}</div>
+              <div className="ai-dropdown-info">
+                <h4>{item.title}</h4>
+                <p>{item.description}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <>
       {/* 🔥 NEW: FULL PAGE OVERLAY WHEN DROPDOWN IS OPEN */}
@@ -249,6 +333,12 @@ const HeaderCategories = () => {
               {item.label === "Brands" && activeStaticItem === "Brands" && (
                 <div className="brands-dropdown-wrapper">
                   {renderBrandsDropdown()}
+                </div>
+              )}
+
+              {item.label === "AI Beauty Lab" && activeStaticItem === "AI Beauty Lab" && (
+                <div className="ai-dropdown-wrapper">
+                  {renderAiBeautyLabDropdown()}
                 </div>
               )}
             </div>

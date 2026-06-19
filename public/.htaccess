@@ -1,0 +1,23 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # ─── SEO Backend Redirects ──────────────────────────────────────────────────
+  # Redirect sitemap and robots.txt requests to your backend API domain.
+  # Replace 'https://beauty.joyory.com' with your actual backend URL if it changes.
+  RewriteRule ^sitemap\.xml$ https://beauty.joyory.com/sitemap.xml [R=301,L]
+  RewriteRule ^sitemap-products-(.+)\.xml$ https://beauty.joyory.com/sitemap-products-$1.xml [R=301,L]
+  RewriteRule ^sitemap-categories\.xml$ https://beauty.joyory.com/sitemap-categories.xml [R=301,L]
+  RewriteRule ^sitemap-brands\.xml$ https://beauty.joyory.com/sitemap-brands.xml [R=301,L]
+  RewriteRule ^sitemap-blogs\.xml$ https://beauty.joyory.com/sitemap-blogs.xml [R=301,L]
+  RewriteRule ^robots\.txt$ https://beauty.joyory.com/robots.txt [R=301,L]
+
+  # ─── React SPA Routing ──────────────────────────────────────────────────────
+  # If a file or directory exists, serve it directly
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Otherwise, route everything else to index.html for React Router
+  RewriteRule ^ /index.html [L]
+</IfModule>

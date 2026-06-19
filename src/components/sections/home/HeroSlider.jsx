@@ -45,13 +45,13 @@ export default function HeroSlider() {
     document.querySelectorAll(".slide-video").forEach((v) => v.pause());
     const activeSlide = swiper.slides[swiper.activeIndex];
     const video = activeSlide?.querySelector("video");
-    if (video) video.play().catch(() => {});
+    if (video) video.play().catch(() => { });
   };
 
   // ✅ Click anywhere on the image/video → redirect
   const handleSlideClick = (item) => {
     if (!item?.buttonLink) return;
-    
+
     if (item.buttonLink.startsWith("http")) {
       window.location.href = item.buttonLink;   // external or full URL
     } else {
@@ -89,7 +89,7 @@ export default function HeroSlider() {
       >
         {slides.map((item, index) => (
           <SwiperSlide key={item._id || index}>
-            <div 
+            <div
               className="slide-wrapper position-relative mt-xl-4 padding-left-rightss"
               onClick={() => handleSlideClick(item)}
               style={{
@@ -99,7 +99,7 @@ export default function HeroSlider() {
               {item.type === "image" ? (
                 <img
                   src={item.url}
-                  alt={item.title || "Joyory Slide"}
+                  alt={item.title || "Joyory"}
                   className="slide-media hero-slider-image-responsive"
                 />
               ) : (

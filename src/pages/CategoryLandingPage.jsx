@@ -19,6 +19,7 @@ import "../styles/CategoryLandingPage.css";
 import "../styles/BestSellers.css";
 import Bag from "../assets/Bag.svg";
 import { ToastContainer, toast } from "react-toastify";
+import SEOMeta from "../components/common/SEOMeta"; // Add import at top
 
 // Import Swiper and its styles
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -1114,6 +1115,7 @@ export default function CategoryLandingPage() {
 
     return (
         <>
+            <SEOMeta type="category" slug={effectiveSlug} />
             <Header />
 
             {/* ===================== OUT OF STOCK POPUP ===================== */}
