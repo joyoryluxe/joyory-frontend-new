@@ -906,3 +906,98 @@
         transform: translate(-50%, 0);
     }
 }
+
+/* AI Beauty Lab Dropdown Styles */
+.ai-dropdown-wrapper {
+    position: absolute !important;
+    top: 100% !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: 680px !important;
+    background: #fff !important;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12) !important;
+    border-radius: 0 0 12px 12px !important;
+    padding: 24px 30px !important;
+    z-index: 1000 !important;
+    animation: categoryFadeIn 0.2s ease !important;
+}
+
+.ai-dropdown {
+    width: 100%;
+}
+
+.ai-dropdown-header {
+    margin-bottom: 20px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 12px;
+    text-align: left;
+}
+
+.ai-dropdown-header h3 {
+    margin: 0 0 4px 0;
+    font-size: 18px;
+    font-weight: 700;
+    color: #000;
+}
+
+.ai-dropdown-header p {
+    margin: 0;
+    font-size: 13px;
+    color: #666;
+}
+
+.ai-dropdown-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+.ai-dropdown-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 14px;
+    border-radius: 8px;
+    border: 1px solid #f0f0f0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: #fff;
+}
+
+.ai-dropdown-item:hover {
+    border-color: #000;
+    background-color: #fafafa;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.ai-dropdown-icon {
+    font-size: 22px;
+    width: 44px;
+    height: 44px;
+    background: #f9f9f9;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border: 1px solid #eee;
+}
+
+.ai-dropdown-info {
+    text-align: left;
+}
+
+.ai-dropdown-info h4 {
+    margin: 0 0 4px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #000;
+}
+
+.ai-dropdown-info p {
+    margin: 0;
+    font-size: 12px;
+    color: #666;
+    line-height: 1.4;
+}

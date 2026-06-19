@@ -14,6 +14,7 @@ import {
 import Header from "../components/common/Header";
 import Footer from "../components/common/Footer";
 import aboutWhyImg from "../assets/about-why.png";
+import SEOMeta from "../components/common/SEOMeta"; // Add import at top
 
 function useInView(threshold = 0.1) {
   const ref = useRef(null);
@@ -54,6 +55,7 @@ const AboutUs = () => {
 
   return (
     <>
+      <SEOMeta type="aboutus" /> {/* Add this */}
       <Header />
 
       <div className="about-page">

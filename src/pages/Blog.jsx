@@ -20,6 +20,8 @@ import axios from "axios";
 import bagIcon from "../assets/bag.svg";
 import { FaHeart, FaRegHeart, FaChevronDown } from "react-icons/fa";
 import { UserContext } from "../context/UserContext";
+import SEOMeta from "../components/common/SEOMeta"; // Add import at top
+
 
 const API_BASE = 'https://beauty.joyory.com/api';
 const CART_API_BASE = 'https://beauty.joyory.com/api/user/cart';
@@ -654,6 +656,7 @@ const Blog = () => {
 
   return (
     <>
+      <SEOMeta type="bloglist" /> {/* Add this */}
       <Header />
       {/* <ToastContainer position="top-right" autoClose={3000} /> */}
       <div className="blog-landing-container margin-topss page-title-main-name overflow-hidden">

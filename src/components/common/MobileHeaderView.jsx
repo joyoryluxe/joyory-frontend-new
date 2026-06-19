@@ -26,9 +26,7 @@ import "../../App.css";
 const STATIC_MENU_ITEMS = [
   // { label: "Brands", path: "/" },
   { label: "Offers", path: "/offerlanding" },
-  { label: "Virtual Try-on", path: "/virtualtryon" },
-  { label: "Shade finder", path: "/shadefinder" },
-  { label: "For you", path: "/foryoulanding" },
+  { label: "AI Beauty Lab", path: "/ai-beauty-lab", hasDropdown: true },
   { label: "About us", path: "/aboutus" }
 ];
 
@@ -63,6 +61,7 @@ const Mobileheaderview = ({
   const [showMobileSearch, setShowMobileSearch] = useState(false);
   const [mobileCategoriesOpen, setMobileCategoriesOpen] = useState({});
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [mobileAiLabOpen, setMobileAiLabOpen] = useState(false);
   const isWishlistActive = location.pathname === "/wishlist";
 
 
@@ -379,6 +378,98 @@ const Mobileheaderview = ({
             <div className="border-top-bottom">
               {STATIC_MENU_ITEMS.map((item) => {
                 const isForYou = item.path === "/foryoulanding";
+
+                if (item.label === "AI Beauty Lab") {
+                  return (
+                    <div key={item.label} className="mobile-category-item">
+                      <div
+                        className="mobile-category-main"
+                        onClick={() => setMobileAiLabOpen(!mobileAiLabOpen)}
+                        style={{ paddingLeft: "16px" }}
+                      >
+                        <span className="mobile-category-name page-title-main-name p-0">
+                          {item.label}
+                        </span>
+                        <FaAngleDown
+                          className={`mobile-category-toggle ${mobileAiLabOpen ? 'open' : ''}`}
+                        />
+                      </div>
+
+                      {mobileAiLabOpen && (
+                        <div className="mobile-subcategory" style={{ background: "#f8f9fa" }}>
+                          <div className="mobile-subcategory-item ps-3 page-title-main-name">
+                            <span
+                              onClick={() => {
+                                document.getElementById("beauty-concierge-fab")?.click();
+                                closeMenu();
+                              }}
+                              className="mobile-subcategory-link p-0 cursor-pointer"
+                              style={{ display: "block", cursor: "pointer" }}
+                            >
+                              💬 AI Beauty Concierge
+                            </span>
+                          </div>
+                          <div className="mobile-subcategory-item ps-3 page-title-main-name">
+                            <Link
+                              to="/routines"
+                              onClick={closeMenu}
+                              className="mobile-subcategory-link p-0"
+                              style={{ display: "block" }}
+                            >
+                              🧴 Skincare Routine Builder
+                            </Link>
+                          </div>
+                          <div className="mobile-subcategory-item ps-3 page-title-main-name">
+                            <Link
+                              to="/ingredient-compatibility"
+                              onClick={closeMenu}
+                              className="mobile-subcategory-link p-0"
+                              style={{ display: "block" }}
+                            >
+                              🧪 Ingredient Compatibility
+                            </Link>
+                          </div>
+                          <div className="mobile-subcategory-item ps-3 page-title-main-name">
+                            <Link
+                              to="/Mainvirtualtryon"
+                              onClick={closeMenu}
+                              className="mobile-subcategory-link p-0"
+                              style={{ display: "block" }}
+                            >
+                              🤳 AI Virtual Try-On
+                            </Link>
+                          </div>
+                          <div className="mobile-subcategory-item ps-3 page-title-main-name">
+                            <Link
+                              to="/shadefinder"
+                              onClick={closeMenu}
+                              className="mobile-subcategory-link p-0"
+                              style={{ display: "block" }}
+                            >
+                              🎨 Foundation Shade Finder
+                            </Link>
+                          </div>
+                          <div className="mobile-subcategory-item ps-3 page-title-main-name">
+                            <span
+                              onClick={() => {
+                                if (!user || user.guest) {
+                                  navigate("/login", { state: { from: "/foryoulanding" } });
+                                } else {
+                                  navigate("/foryoulanding");
+                                }
+                                closeMenu();
+                              }}
+                              className="mobile-subcategory-link p-0 cursor-pointer"
+                              style={{ display: "block", cursor: "pointer" }}
+                            >
+                              📝 Smart Beauty Quiz
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
 
                 return (
                   <div

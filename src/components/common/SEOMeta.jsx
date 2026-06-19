@@ -232,12 +232,26 @@ const FALLBACKS = {
     image: "https://joyory.com/logo.png",
     type: "website"
   },
-  blog: {
+  bloglist: {
     title: "Joyory Beauty Blog - Makeup & Skincare Tips",
     description: "Get the latest expert beauty guides, clean skincare tips, makeup tutorials, and product advice from the Joyory Beauty Blog.",
-    canonical: "https://joyory.com/blogs",
+    canonical: "https://joyory.com/blog",
     image: "https://joyory.com/logo.png",
-    type: "article"
+    type: "website"
+  },
+  vtoproducts: {
+    title: "Virtual Try-On Products | Try Makeup Online | Joyory",
+    description: "Browse beauty and makeup products compatible with our AI Virtual Try-On tool. Try lipsticks, eyeshadows, and foundations in real-time.",
+    canonical: "https://joyory.com/vto-products",
+    image: "https://joyory.com/logo.png",
+    type: "website"
+  },
+  aboutus: {
+    title: "About Us | Joyory Luxe",
+    description: "Learn about Joyory, India's upcoming beauty-tech destination combining curated cosmetics with intelligent personalization tools.",
+    canonical: "https://joyory.com/Aboutus",
+    image: "https://joyory.com/logo.png",
+    type: "website"
   }
 };
 
@@ -294,8 +308,71 @@ const SEOMeta = ({ type = "home", slug = "", page = "" }) => {
     };
 
     // Apply the metadata values to the DOM
+    // const applyMetadata = (data) => {
+    //   const fallback = FALLBACKS[type] || FALLBACKS.home;
+    //   const title = data.title || fallback.title;
+    //   const description = data.description || fallback.description;
+    //   const canonical = data.canonical || fallback.canonical;
+    //   const ogTitle = data.openGraph?.title || title;
+    //   const ogDescription = data.openGraph?.description || description;
+    //   const ogImage = data.openGraph?.image || fallback.image;
+    //   const ogType = data.openGraph?.type || fallback.type;
+
+    //   // 1. Title
+    //   document.title = title;
+
+    //   // 2. Canonical URL
+    //   updateOrCreateLink("canonical", canonical);
+
+    //   // 3. Meta Description
+    //   updateOrCreateMeta("name", "description", description);
+
+    //   // 4. Open Graph tags
+    //   updateOrCreateMeta("property", "og:title", ogTitle);
+    //   updateOrCreateMeta("property", "og:description", ogDescription);
+    //   updateOrCreateMeta("property", "og:image", ogImage);
+    //   updateOrCreateMeta("property", "og:type", ogType);
+    //   updateOrCreateMeta("property", "og:url", canonical);
+
+    //   // 5. Twitter Card tags
+    //   updateOrCreateMeta("name", "twitter:card", "summary_large_image");
+    //   updateOrCreateMeta("name", "twitter:title", ogTitle);
+    //   updateOrCreateMeta("name", "twitter:description", ogDescription);
+    //   updateOrCreateMeta("name", "twitter:image", ogImage);
+
+    //   // 6. JSON-LD Structured Data
+    //   if (data.jsonLd) {
+    //     injectJsonLd(data.jsonLd);
+    //   } else if (fallback.jsonLd) {
+    //     injectJsonLd(fallback.jsonLd);
+    //   }
+    // };
+
+    // Update the applyMetadata function logic
     const applyMetadata = (data) => {
-      const fallback = FALLBACKS[type] || FALLBACKS.home;
+      let fallback = FALLBACKS[type] || FALLBACKS.home;
+
+      // Check category pages for custom skincare and makeup metadata
+      if (type === "category") {
+        if (slug === "skincare") {
+          fallback = {
+            title: "Buy Clean Skincare Products Online | Joyory",
+            description: "Shop premium, clean skincare products online at Joyory. Explore serums, moisturizers, sunscreens, and face washes curated for all skin types.",
+            canonical: "https://joyory.com/category/skincare",
+            image: "https://joyory.com/logo.png",
+            type: "website"
+          };
+        } else if (slug === "makeup") {
+          fallback = {
+            title: "Buy Premium Makeup & Cosmetics Online | Joyory",
+            description: "Shop high-quality makeup products online at Joyory. Find foundation, lipstick, eyeshadow, eyeliner, and cosmetics from premium brands.",
+            canonical: "https://joyory.com/category/makeup",
+            image: "https://joyory.com/logo.png",
+            type: "website"
+          };
+        }
+      }
+
       const title = data.title || fallback.title;
       const description = data.description || fallback.description;
       const canonical = data.canonical || fallback.canonical;
@@ -333,6 +410,7 @@ const SEOMeta = ({ type = "home", slug = "", page = "" }) => {
         injectJsonLd(fallback.jsonLd);
       }
     };
+
 
     const fetchSEO = async () => {
       try {
