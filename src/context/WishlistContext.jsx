@@ -113,10 +113,15 @@ export const WishlistProvider = ({ children }) => {
 
           setWishlistItems(uniqueItems);
           setWishlistCount(uniqueItems.length);
+        } else {
+          setWishlistItems([]);
+          setWishlistCount(0);
         }
       }
     } catch (err) {
       console.error("Failed to sync wishlist", err);
+      setWishlistItems([]);
+      setWishlistCount(0);
     } finally {
       if (!silent) setLoading(false);
     }
@@ -269,7 +274,7 @@ export const WishlistProvider = ({ children }) => {
     }
   };
 
-  const removeFromWishlist = async (productId, sku) => {
+  const removeFromWishlist = async (productId, sku, silent = false) => {
     const targetProductId = typeof productId === "object" && productId ? (productId._id || productId.id) : String(productId);
     const previousItems = [...wishlistItems];
     const updatedItems = wishlistItems.filter((item) => {
@@ -285,7 +290,7 @@ export const WishlistProvider = ({ children }) => {
           data: { sku }
         });
         await syncWishlist(true);
-        toast.success("Removed from wishlist");
+        if (!silent) toast.success("Removed from wishlist");
       } else {
         const guestWish = getGuestWishlist();
         const updated = guestWish.filter((item) => {
@@ -293,7 +298,7 @@ export const WishlistProvider = ({ children }) => {
           return !(itemProdId === targetProductId && item.sku === sku);
         });
         saveGuestWishlist(updated);
-        toast.success("Removed from wishlist");
+        if (!silent) toast.success("Removed from wishlist");
       }
       return true;
     } catch (err) {

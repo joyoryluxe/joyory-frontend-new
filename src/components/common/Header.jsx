@@ -328,6 +328,15 @@ const Header = ({ hideCategories = false }) => {
         }));
 
         setAllProducts(processed);
+        try {
+          const slugMap = {};
+          processed.forEach(p => {
+            if (p._id) slugMap[p._id] = p.slug;
+          });
+          localStorage.setItem("productSlugMap", JSON.stringify(slugMap));
+        } catch (e) {
+          console.error("Error saving product slug map:", e);
+        }
         const index = processed.map(p => ({
           product: p,
           searchString: getSearchableString(p)

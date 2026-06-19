@@ -257,11 +257,11 @@ const ProductDetailsHero = ({
       if (e.key === "Escape") {
         setIsLightboxOpen(false);
       } else if (e.key === "ArrowLeft") {
-        setLightboxImageIndex((prev) => 
+        setLightboxImageIndex((prev) =>
           prev === 0 ? initialDisplayImages.length - 1 : prev - 1
         );
       } else if (e.key === "ArrowRight") {
-        setLightboxImageIndex((prev) => 
+        setLightboxImageIndex((prev) =>
           prev === initialDisplayImages.length - 1 ? 0 : prev + 1
         );
       }
@@ -422,9 +422,34 @@ const ProductDetailsHero = ({
             />
 
             {(product?.supportsVTO || dbSupportsVTO) && (
-              <div 
-                className="support-beauty-badge" 
-                title="Try It On" 
+              // <div 
+              //   className="support-beauty-badge" 
+              //   title="Try It On" 
+              //   onClick={(e) => {
+              //     e.stopPropagation();
+              //     const sku = selectedShade ? getSku(selectedShade) : null;
+              //     navigate(`/Mainvirtualtryon?productId=${product.slug || product._id}${sku ? `&sku=${sku}` : ''}`);
+              //   }}
+              //   onTouchStart={(e) => e.stopPropagation()}
+              //   style={{ cursor: "pointer" }}
+              // >
+              //   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              //     <path d="M3 7V5a2 2 0 0 1 2-2h2" />
+              //     <path d="M17 3h2a2 2 0 0 1 2 2v2" />
+              //     <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+              //     <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
+              //     <path d="M8 10a4 4 0 1 1 8 0c0 2.2-1.8 4-4 4s-4-1.8-4-4z" />
+              //     <path d="M10 10h.01" />
+              //     <path d="M14 10h.01" />
+              //     <path d="M10 13c.5.5 1.5.7 2 .7s1.5-.2 2-.7" />
+              //     <path d="M6 19c0-1.5 1.5-2.5 6-2.5s6 1 6 2.5" />
+              //   </svg>
+              //   <span className="vto-text">TRY IT ON</span>
+              // </div>
+
+              <div
+                className="support-beauty-badge"
+                title="Try It On"
                 onClick={(e) => {
                   e.stopPropagation();
                   const sku = selectedShade ? getSku(selectedShade) : null;
@@ -476,9 +501,9 @@ const ProductDetailsHero = ({
             const mainTitleName = varText && varText.toUpperCase() !== "DEFAULT" ? `${product.name} - ${varText}` : product.name;
             return <h1 className="product-title-text">{mainTitleName}</h1>;
           })()}
-          <button 
-            type="button" 
-            className="product-share-btn" 
+          <button
+            type="button"
+            className="product-share-btn"
             onClick={handleShareClick}
             title="Share Product"
             aria-label="Share Product"
@@ -1078,7 +1103,7 @@ const ProductDetailsHero = ({
       {/* Lightbox Modal */}
       {isLightboxOpen && (
         <div className="lightbox-overlay" onClick={() => setIsLightboxOpen(false)}>
-          <button 
+          <button
             className="lightbox-close-btn"
             onClick={(e) => {
               e.stopPropagation();
@@ -1088,13 +1113,13 @@ const ProductDetailsHero = ({
           >
             &times;
           </button>
-          
+
           <div className="lightbox-content" onClick={(e) => e.stopPropagation()}>
             <button
               className="lightbox-nav-btn prev"
               onClick={(e) => {
                 e.stopPropagation();
-                setLightboxImageIndex((prev) => 
+                setLightboxImageIndex((prev) =>
                   prev === 0 ? initialDisplayImages.length - 1 : prev - 1
                 );
               }}
@@ -1102,7 +1127,7 @@ const ProductDetailsHero = ({
             >
               &#10094;
             </button>
-            
+
             <div className="lightbox-image-wrapper">
               <img
                 src={initialDisplayImages[lightboxImageIndex] || "/placeholder.png"}
@@ -1110,12 +1135,12 @@ const ProductDetailsHero = ({
                 onError={(e) => { e.currentTarget.src = "/placeholder.png"; }}
               />
             </div>
-            
+
             <button
               className="lightbox-nav-btn next"
               onClick={(e) => {
                 e.stopPropagation();
-                setLightboxImageIndex((prev) => 
+                setLightboxImageIndex((prev) =>
                   prev === initialDisplayImages.length - 1 ? 0 : prev + 1
                 );
               }}

@@ -119,99 +119,31 @@ const Addtocard = ({ prod, selectedShade, showToastMsg, user }) => {
       localStorage.setItem("cartVariantCache", JSON.stringify(cache));
       console.log("💾 Variant cached successfully");
 
-      // ✅ Guest user flow
-      if (isGuest) {
-        console.log("🎯 Adding to guest cart...");
-        
-        try {
-          const success = await addToCart(prod, variantToAdd, 1, true);
-          console.log("📊 addToCart result:", success);
-
-          if (success) {
-            console.log("✅ Successfully added to guest cart");
-            showToastMsg("✅ Added to cart! (Guest Mode)", "success");
-
-            // Verify guest cart was updated
-            const guestCart = JSON.parse(localStorage.getItem("guestCart") || "[]");
-            console.log("📋 Guest cart contents after add:", guestCart);
-            console.log("🛒 Guest cart item count:", guestCart.length);
-
-            setTimeout(() => {
-              navigate("/cartpage", { state: { refresh: true } });
-            }, 500);
-          } else {
-            console.log("❌ addToCart returned false");
-            showToastMsg("❌ Failed to add to cart", "error");
-          }
-        } catch (cartError) {
-          console.error("🔥 CartContext error:", cartError);
-          
-          // 🟢 FALLBACK: Direct localStorage handling if CartContext fails
-          console.log("🔄 Falling back to direct localStorage handling");
-          let guestCart = JSON.parse(localStorage.getItem("guestCart") || "[]");
-          
-          const existingIndex = guestCart.findIndex(
-            item => item.productId === prod._id && item.variantSku === variantToAdd.sku
-          );
-
-          if (existingIndex >= 0) {
-            guestCart[existingIndex].quantity += 1;
-          } else {
-            guestCart.push({
-              productId: prod._id,
-              name: prod.name,
-              variantSku: variantToAdd.sku,
-              shadeName: variantToAdd.shadeName || "Default",
-              image: variantToAdd.image || prod.images?.[0] || "/placeholder.png",
-              price: variantToAdd.discountedPrice || variantToAdd.originalPrice || prod.price,
-              quantity: 1,
-              stock: variantToAdd.stock,
-              brand: prod.brand?.name || prod.brand || "Unknown Brand",
-              product: prod,
-              selectedVariant: variantToAdd,
-              isGuest: true
-            });
-          }
-          
-          localStorage.setItem("guestCart", JSON.stringify(guestCart));
-          console.log("💾 Direct guest cart save successful");
-          showToastMsg("✅ Added to cart! (Guest Mode)", "success");
-          
+      // ✅ Add to cart using Context
+      console.log("🎯 Adding to cart...");
+      try {
+        const success = await addToCart(prod, variantToAdd, isGuest);
+        if (success) {
+          console.log("✅ Successfully added to cart");
+          showToastMsg(isGuest ? "✅ Added to cart! (Guest Mode)" : "✅ Product added to cart!", "success");
           setTimeout(() => {
             navigate("/cartpage", { state: { refresh: true } });
           }, 500);
-        }
-        return;
-      }
-
-      // ✅ Logged-in user flow
-      console.log("🔐 Logged-in user flow starting...");
-      try {
-        const response = await axiosInstance.post("/api/user/cart/add", {
-          productId: prod._id,
-          variants: [{ variantSku: variantToAdd.sku, quantity: 1 }],
-        });
-
-        console.log("📡 Backend response:", response.data);
-
-        if (response.data.success) {
-          await addToCart(prod, variantToAdd, 1, false);
-          showToastMsg("✅ Product added to cart!", "success");
-          navigate("/cartpage", { state: { refresh: true } });
         } else {
-          showToastMsg(response.data.message || "❌ Failed to add product", "error");
+          console.log("❌ addToCart returned false");
+          showToastMsg("❌ Failed to add to cart", "error");
         }
-      } catch (error) {
-        console.error("📡 Backend API error:", error);
-        if (error.response?.status === 401) {
+      } catch (cartError) {
+        console.error("🔥 CartContext error:", cartError);
+        if (cartError.message === "Authentication required") {
           showToastMsg("⚠️ Please log in first", "error");
           navigate("/login");
         } else {
-          showToastMsg("❌ Failed to add product", "error");
+          showToastMsg("❌ Failed to add product to cart", "error");
         }
       }
     } catch (err) {
-      console.error("🔥 Add to Cart error:", err);
+      console.error("🔥 Add to Cart outer error:", err);
       showToastMsg("❌ Failed to add product to cart", "error");
     }
   };
