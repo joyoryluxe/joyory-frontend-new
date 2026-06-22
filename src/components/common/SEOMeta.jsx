@@ -214,21 +214,21 @@ const FALLBACKS = {
   product: {
     title: "Buy Premium Beauty Products Online | Joyory",
     description: "Shop authentic cosmetics, luxury makeup, clean skincare, and haircare online at Joyory. 100% genuine products, free delivery over ₹499.",
-    canonical: "https://joyory.com/products",
+    canonical: "https://joyory.com/product",
     image: "https://joyory.com/logo.png",
     type: "product"
   },
   category: {
     title: "Buy Beauty Products Online | Joyory",
     description: "Explore the best beauty and cosmetic collections at Joyory. Authentic global brands, best prices, fast delivery.",
-    canonical: "https://joyory.com/categories",
+    canonical: "https://joyory.com/category",
     image: "https://joyory.com/logo.png",
     type: "website"
   },
   brand: {
     title: "Shop Premium Beauty Brands Online | Joyory",
     description: "Discover luxury makeup and skincare brands online at Joyory. Shop 100% authentic cosmetics with easy returns.",
-    canonical: "https://joyory.com/brands",
+    canonical: "https://joyory.com/brand",
     image: "https://joyory.com/logo.png",
     type: "website"
   },
@@ -354,11 +354,11 @@ const SEOMeta = ({ type = "home", slug = "", page = "" }) => {
 
       // Check category pages for custom skincare and makeup metadata
       if (type === "category") {
-        if (slug === "skincare") {
+        if (slug === "skincare" || slug === "skin") {
           fallback = {
             title: "Buy Clean Skincare Products Online | Joyory",
             description: "Shop premium, clean skincare products online at Joyory. Explore serums, moisturizers, sunscreens, and face washes curated for all skin types.",
-            canonical: "https://joyory.com/category/skincare",
+            canonical: "https://joyory.com/category/skin",
             image: "https://joyory.com/logo.png",
             type: "website"
           };
@@ -403,7 +403,11 @@ const SEOMeta = ({ type = "home", slug = "", page = "" }) => {
       updateOrCreateMeta("name", "twitter:description", ogDescription);
       updateOrCreateMeta("name", "twitter:image", ogImage);
 
-      // 6. JSON-LD Structured Data
+      // 6. Dynamic Indexing Control (robots) for staging/dev privacy
+      const isProduction = window.location.hostname === "joyory.com" || window.location.hostname === "www.joyory.com";
+      updateOrCreateMeta("name", "robots", isProduction ? "index, follow" : "noindex, nofollow");
+
+      // 7. JSON-LD Structured Data
       if (data.jsonLd) {
         injectJsonLd(data.jsonLd);
       } else if (fallback.jsonLd) {

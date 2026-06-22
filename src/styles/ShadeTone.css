@@ -116,9 +116,6 @@
     transform: scale(0.5);
 }
 
-.card-3d:not(.center) img {
-    /* filter: grayscale(80%) blur(1px); */
-}
 
 
 /* Navigation Arrows */
@@ -232,6 +229,16 @@
     border-radius: 0px;
 }
 
+.margin-bottom-after-button {
+    margin-bottom: 50px;
+}
+
+@media (max-width: 991px) {
+    .margin-bottom-after-button {
+        margin-bottom: 120px !important;
+    }
+}
+
 
 /* Mobile Responsive */
 
@@ -270,9 +277,6 @@
         margin-top: 30px;
         min-height: 15px;
         
-    }
-    .margin-bottom-after-button {
-        margin-bottom: 100px;
     }
     .margin-topsssa {
         display: none;

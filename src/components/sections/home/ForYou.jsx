@@ -966,8 +966,7 @@ const Foryou = () => {
                           style={{ height: '200px' }}>
                           <div className="brand-name small text-muted text-start mb-1 mt-2">
                             {typeof item.brandName === 'string' ? item.brandName : "Unknown Brand"}
-                          </div>
-                          <h6
+                          </div><div className="product-card-title-wrap"><h6
                             className="foryou-name font-family-Poppins m-0 p-0"
                             onClick={() => {
                               if (showOutOfStock) {
@@ -986,8 +985,7 @@ const Foryou = () => {
                               const nameStr = item.name || "Unnamed Product";
                               return varText && varText.toUpperCase() !== "DEFAULT" ? `${nameStr} - ${varText}` : nameStr;
                             })()}
-                          </h6>
-                          {showOutOfStock && (
+                          </h6></div>{showOutOfStock && (
                             <div className="mt-2 mb-2">
                               <span
                                 style={{
@@ -1024,6 +1022,11 @@ const Foryou = () => {
                               )}
                             </div>
                           </div>
+                  {item.nextOrderDiscountMessage && (
+                    <div className="next-order-discount-tag" title={item.nextOrderDiscountMessage} onClick={(e) => { e.stopPropagation(); window.showDiscountPopup && window.showDiscountPopup(item.nextOrderDiscountMessage, e.currentTarget); }}>
+                      <span className="text-truncate">{item.nextOrderDiscountMessage}</span>
+                    </div>
+                  )}
                           <div className="cart-section">
                             <div className="d-flex align-items-center justify-content-between">
                               <button

@@ -1,9 +1,10 @@
 import React, { useEffect, useContext } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import Header from "../components/common/Header";
 import Footer from "../components/common/Footer";
 import { UserContext } from "../context/UserContext";
 import "../styles/AiBeautyLab.css";
+import beautyLabHeroImg from "../assets/beauty_lab_hero_products.webp";
 
 // Assets
 import virtualTryOnImg from "../assets/Virtual-tryon-new.png";
@@ -14,7 +15,20 @@ import trustBgImg from "../assets/organic-cosmetic-product-with-dreamy-aesthetic
 
 const AiBeautyLab = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useContext(UserContext);
+
+  useEffect(() => {
+    if (location.hash) {
+      const id = location.hash.substring(1);
+      const element = document.getElementById(id);
+      if (element) {
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: "smooth", block: "center" });
+        }, 150);
+      }
+    }
+  }, [location]);
 
   useEffect(() => {
     // Scroll Reveal Intersection Observer
@@ -103,19 +117,19 @@ const AiBeautyLab = () => {
       <Header />
 
       {/* Hero Section */}
-      <section className="lab-hero">
+      <section className="lab-hero mt-lg-5" style={{ backgroundImage: `url(${beautyLabHeroImg})` }}>
         <div className="lab-hero-overlay"></div>
-        <div className="lab-hero-content text-center container">
-          <span className="lab-hero-tag">JOYORY BEAUTY LAB</span>
+        <div className="lab-hero-content text-center text-lg-start container">
+          <span className="lab-hero-tag">Science Behind Every Glow</span>
           <h1 className="lab-hero-title page-title-main-name">
             Revolutionizing Beauty <br />
             <span>With Intelligent Science</span>
           </h1>
           <p className="lab-hero-subtitle">
-            Say goodbye to shopping guesswork. Experience Virtual Try-Ons, Foundation Shade matching, skincare routines, and ingredient audits powered by dermatologist-aligned AI algorithms.
+            Experience technology meets skincare. Powerful ingredients, backed by science to bring out your best skin every day.
           </p>
           <a href="#lab-grid" className="btn-lab-primary">
-            Explore Lab Tools &darr;
+            EXPLORE LAB TOOLS &gt;
           </a>
         </div>
       </section>
@@ -123,14 +137,14 @@ const AiBeautyLab = () => {
       {/* Main Grid Section */}
       <section id="lab-grid" className="lab-grid-section container py-5">
         <div className="section-header text-center mb-5 reveal-on-scroll">
-          <span className="section-tag">Interactive Tools</span>
+          <span className="lab-section-tag">Interactive Tools</span>
           <h2 className="section-title page-title-main-name">Our Core AI USPs</h2>
           <div className="section-title-divider"></div>
         </div>
 
         <div className="tools-grid">
           {tools.map((tool, idx) => (
-            <div key={idx} className="tool-card reveal-on-scroll">
+            <div key={idx} id={tool.title.toLowerCase().replace(/\s+/g, "-")} className="tool-card reveal-on-scroll">
               <div className="tool-card-image">
                 <img src={tool.image} alt={tool.title} />
                 <span className="tool-card-badge">{tool.badge}</span>
@@ -151,7 +165,7 @@ const AiBeautyLab = () => {
       <section className="lab-compare-section py-5">
         <div className="container">
           <div className="section-header text-center mb-5 reveal-on-scroll">
-            <span className="section-tag">The Joyory Standard</span>
+            <span className="lab-section-tag">The Joyory Standard</span>
             <h2 className="section-title page-title-main-name">How We Differ From Regular E-Commerce</h2>
             <div className="section-title-divider"></div>
           </div>
@@ -177,7 +191,7 @@ const AiBeautyLab = () => {
 
             <div className="compare-column joyory-column">
               <div className="joyory-glow"></div>
-              <h3>Joyory AI Beauty Lab</h3>
+              <h3>Joyory Smart Beauty Features</h3>
               <ul>
                 <li>
                   <span className="icon-success">&#10004;</span> Live color matching via device camera with AI Try-On.

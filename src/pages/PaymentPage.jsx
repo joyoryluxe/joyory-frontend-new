@@ -132,6 +132,7 @@ const PaymentPage = () => {
               }
 
               navigate("/ordersuccess", {
+                replace: true,
                 state: { paymentResponse: response, backendResponse: verifyData },
               });
             } catch (err) {

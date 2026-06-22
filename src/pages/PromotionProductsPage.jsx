@@ -395,8 +395,7 @@ const PromotionProducts = () => {
         />
 
         <div className="card-body p-0 d-flex flex-column" style={{ height: 265 }}>
-          <div className="brand-name text-muted small mb-1 fw-medium mt-2">{getBrandName(prod)}</div>
-          <h5
+          <div className="brand-name text-muted small mb-1 fw-medium mt-2">{getBrandName(prod)}</div><div className="product-card-title-wrap"><h5
             className="card-title mt-2 page-title-main-name"
             style={{ cursor: "pointer" }}
             onClick={() => navigate(`/product/${slugPr}`)}
@@ -405,11 +404,7 @@ const PromotionProducts = () => {
               const varName = displayVariant ? getVariantDisplayText(displayVariant) : "";
               return varName && varName.toUpperCase() !== "DEFAULT" ? `${prod.name} - ${varName}` : prod.name;
             })()}
-          </h5>
-
-
-
-          <p className="fw-bold mb-3 mt-2 page-title-main-name" style={{ fontSize: 16 }}>
+          </h5></div><p className="fw-bold mb-3 mt-2 page-title-main-name" style={{ fontSize: 16 }}>
             {(() => {
               const price = displayVariant?.displayPrice || displayVariant?.discountedPrice || prod.price || 0;
               const orig = displayVariant?.originalPrice || displayVariant?.mrp || prod.mrp || price;
@@ -426,6 +421,11 @@ const PromotionProducts = () => {
               );
             })()}
           </p>
+                  {prod.nextOrderDiscountMessage && (
+                    <div className="next-order-discount-tag" title={prod.nextOrderDiscountMessage} onClick={(e) => { e.stopPropagation(); window.showDiscountPopup && window.showDiscountPopup(prod.nextOrderDiscountMessage, e.currentTarget); }}>
+                      <span className="text-truncate">{prod.nextOrderDiscountMessage}</span>
+                    </div>
+                  )}
 
           <div className="mt-auto">
             <button

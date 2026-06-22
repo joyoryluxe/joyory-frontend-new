@@ -9,6 +9,8 @@ import { FaStar, FaHeart, FaRegHeart, FaChevronDown, FaTimes, FaCheck } from "re
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "../styles/Recommendations.css";
+import "../styles/BestSellers.css";
+import "../App.css";
 import bagIcon from "../assets/bag.svg";
 
 // Helper functions (same as Foryou)
@@ -294,17 +296,17 @@ export default function Recommendations() {
     const isAdding = addingToCart[prod._id];
 
     // Check if product is completely out of stock (all variants OOS)
-    const isCompletelyOutOfStock = hasVar ? vars.every(v => v.stock <= 0) : prod.stock <= 0;
+    const isCompletelyOutOfStock = hasVar ? vars.every(v => (v.stock ?? 0) <= 0) : (prod.stock ?? 0) <= 0;
 
     // Check if current selected variant is out of stock
-    const isCurrentVariantOutOfStock = displayVariant ? displayVariant.stock <= 0 : prod.stock <= 0;
+    const isCurrentVariantOutOfStock = displayVariant ? (displayVariant.stock ?? 0) <= 0 : (prod.stock ?? 0) <= 0;
 
     // Determine if we should show out of stock state
-    const showOutOfStock = isCompletelyOutOfStock;
+    const showOutOfStock = isCompletelyOutOfStock && !hasVar;
 
     // Show select variant button if product has variants but user hasn't selected one yet
-    const showSelectVariantButton = hasVar && vars.length > 1;
-    const buttonDisabled = isAdding || showOutOfStock;
+    const showSelectVariantButton = hasVar && vars.length > 1 && !isVariantSelected;
+    const buttonDisabled = isAdding || showOutOfStock || (isVariantSelected && isCurrentVariantOutOfStock);
 
     let buttonText = "Add to Bag";
     if (isAdding) {
@@ -354,9 +356,9 @@ export default function Recommendations() {
               />
 
               {prod?.supportsVTO && (
-                <div 
-                  className="support-beauty-badge" 
-                  title="Try It On" 
+                <div
+                  className="support-beauty-badge"
+                  title="Try It On"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleProductClick(prod);
@@ -446,8 +448,7 @@ export default function Recommendations() {
                   {getBrandName(prod)}
                 </div>
 
-                {/* Product Name */}
-                <h6
+                {/* Product Name */}<div className="product-card-title-wrap"><h6
                   className="foryou-name font-family-Poppins m-0 p-0 text-start"
                   onClick={() => {
                     if (showOutOfStock) {
@@ -462,9 +463,7 @@ export default function Recommendations() {
                     const varName = displayVariant ? getVariantDisplayText(displayVariant) : "";
                     return varName && varName.toUpperCase() !== "DEFAULT" ? `${prod.name} - ${varName}` : prod.name;
                   })()}
-                </h6>
-
-                {/* Show out of stock message in variant area */}
+                </h6></div>{/* Show out of stock message in variant area */}
                 {showOutOfStock && (
                   <div className="mt-2 mb-2 text-start">
                     <span
@@ -481,23 +480,28 @@ export default function Recommendations() {
                 )}
 
                 {/* Price Section */}
-                <div className="price-section mb-3 text-start">
+                <div className="price-section mb-3 mt-auto">
                   <div className="d-flex align-items-baseline flex-wrap">
-                    <span className="current-price fw-400 fs-5" style={{ fontSize: '16px', fontWeight: '600', textDecoration: showOutOfStock ? 'line-through' : 'none', opacity: showOutOfStock ? 0.6 : 1 }}>
+                    <span className="current-price fw-400 fs-5" style={{ textDecoration: showOutOfStock ? 'line-through' : 'none', opacity: showOutOfStock ? 0.6 : 1 }}>
                       {formatPrice(price)}
                     </span>
                     {disc && !showOutOfStock && (
                       <>
-                        <span className="original-price text-muted text-decoration-line-through ms-2 fs-6" style={{ fontSize: '13px' }}>
+                        <span className="original-price text-muted text-decoration-line-through ms-2 fs-6">
                           {formatPrice(orig)}
                         </span>
-                        <span className="discount-percent fw-bold ms-2" style={{ fontSize: '13px' }}>
+                        <span className="discount-percent fw-bold ms-2">
                           ({pct}% OFF)
                         </span>
                       </>
                     )}
                   </div>
                 </div>
+                  {prod.nextOrderDiscountMessage && (
+                    <div className="next-order-discount-tag" title={prod.nextOrderDiscountMessage} onClick={(e) => { e.stopPropagation(); window.showDiscountPopup && window.showDiscountPopup(prod.nextOrderDiscountMessage, e.currentTarget); }}>
+                      <span className="text-truncate">{prod.nextOrderDiscountMessage}</span>
+                    </div>
+                  )}
 
                 {/* Add to Cart / Select Variant / Out of Stock Button */}
                 <div className="cart-section">
@@ -825,7 +829,7 @@ export default function Recommendations() {
         </div>
       )}
 
-      <div className="container-lg py-4 page-title-main-name">
+      <div className="padding-left-rightss recommendations-container py-4 page-title-main-name">
         {/* Header Section */}
         <div className="text-center mb-5">
           <h1 className="recommendations-title mb-3 " style={{ fontSize: '28px', fontWeight: '400' }}>
@@ -903,7 +907,7 @@ export default function Recommendations() {
         const displayVariant = tempSelectedVariants[item._id] || selectedVariants[item._id] || (allVariants.length > 0 ? (allVariants.find(v => v.stock > 0) || allVariants[0]) : null) || {};
         const groupedVariants = groupVariantsByType(allVariants);
         const isAdding = addingToCart[item._id];
-        const isCurrentVariantOutOfStock = displayVariant.stock <= 0;
+        const isCurrentVariantOutOfStock = (displayVariant.stock ?? 0) <= 0;
 
         const hasColorVariants = groupedVariants.color.length > 0;
         const hasTextVariants = groupedVariants.text.length > 0;

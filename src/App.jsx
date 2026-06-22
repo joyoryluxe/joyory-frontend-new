@@ -101,6 +101,7 @@ import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import RoutineBuilder from "./pages/RoutineBuilder";
 import MetaPixelTracker from "./components/common/MetaPixelTracker";
+import DiscountPopup from "./components/common/DiscountPopup";
 
 function App() {
   useEffect(() => {
@@ -318,6 +319,7 @@ function App() {
 
             {/* ── AI Beauty Concierge (global floating widget) ── */}
             <BeautyConcierge />
+            <DiscountPopup />
           </WishlistProvider>
         </CartProvider>
       </Router>

@@ -36,6 +36,19 @@
         @import url('https://fonts.googleapis.com/css2?family=Alice&display=swap');
     </style>
     <!--Font-Alice(End)-->
+    <!-- Environment Blocker for Meta Pixel -->
+    <script>
+        (function () {
+            const prodDomains = ['joyory.com', 'www.joyory.com'];
+            if (!prodDomains.includes(window.location.hostname)) {
+                console.log("[Meta Pixel Tracker] Disabled on non-production domain:", window.location.hostname);
+                window.fbq = function () {
+                    console.log("[Meta Pixel Mock Log]:", ...arguments);
+                };
+                window._fbq = window.fbq;
+            }
+        })();
+    </script>
     <!-- Meta Pixel SDK -->
     <script>
         !function (f, b, e, v, n, t, s) {

@@ -7,7 +7,7 @@
 
 .banner-container {
     margin: 0 auto;
-    max-width: 1920px;
+    /* max-width: 1920px; */
 }
 
 
@@ -142,10 +142,6 @@
         border-radius: 8px;
     }
 
-    .banner-image-wrapper {
-        /* padding-bottom: 50%; */
-        /* 2:1 Aspect Ratio for mobile */
-    }
 
     .banner-content {
         background: rgba(255, 255, 255, 0.95);
@@ -184,10 +180,7 @@
    ============================================ */
 
 @media (min-width: 769px) and (max-width: 1024px) {
-    .banner-image-wrapper {
-        /* padding-bottom: 40%; */
-        /* 2.5:1 Aspect Ratio for tablet */
-    }
+ 
 
     .banner-content {
         padding: 30px !important;

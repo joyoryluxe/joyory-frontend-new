@@ -198,15 +198,6 @@
     /* Prevent collapsing in restricted flex parents */
 }
 
-.foryou-name::before {
-    content: "";
-    float: right;
-    width: 14%;
-    /* ~1/7th of the container width */
-    height: 2.8em;
-    shape-outside: polygon(100% 0, 100% 50%, 0 50%, 0 100%);
-}
-
 .variant-name {
     font-size: 13px;
 }

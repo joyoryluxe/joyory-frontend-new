@@ -211,8 +211,7 @@ const Myorders = () => {
             orders.map((order) => (
               <div
                 key={order._id}
-                className="order-main-card mb-4 shadow-sm bg-white rounded overflow-y-scroll"
-                style={order.shipments && order.shipments.length >= 2 ? { height: "350px" } : {}}
+                className="order-main-card mb-4"
               >
                 {/* Header */}
                 <div className="order-header d-flex justify-content-between align-items-center p-3 bg-white position-sticky top-0">
@@ -246,7 +245,7 @@ const Myorders = () => {
                           )}
                         </span>
                       </div>
-                      <div className={`status-pill status-${shipment.status?.toLowerCase() || 'pending'} d-flex align-items-center gap-2 fw-bold mt-lg-0 mt-4`}>
+                      <div className={`status-pill status-${shipment.status?.toLowerCase() || 'pending'} d-flex align-items-center gap-2 fw-bold mt-lg-0`}>
                         {getStatusIcon(shipment.status)}
                         {shipment.status || "Pending"}
                       </div>
