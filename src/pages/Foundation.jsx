@@ -115,7 +115,7 @@ export default function FoundationPage() {
     <>
       <Header />
       
-      <div className="container py-3 py-md-5 foundation-wrapper">
+      <div className="container py-3 py-md-5 foundation-wrapper mb-5">
       <h3 className="fw-400 text-black mb-3 text-start page-title-main-name fs-2 margin-top-foundation">
         Choose Your Foundation Type
       </h3>
@@ -192,7 +192,7 @@ export default function FoundationPage() {
 
      {/* <Footer /> */}
 
-     <img src={Vector} className="img-fluid position-absolute bottom-0 top-100 d-lg-block d-none" alt="Image-not-found" />
+     {/* <img src={Vector} className="img-fluid position-absolute bottom-0 top-100 d-lg-block d-none" alt="Image-not-found" /> */}
     </>
 
 

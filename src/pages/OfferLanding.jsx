@@ -599,8 +599,7 @@ export default function OffersPage() {
                                 {getBrandName(prod)}
                             </div>
 
-                            {/* Product Name */}
-                            <h6
+                            {/* Product Name */}<div className="product-card-title-wrap"><h6
                                 className="foryou-name font-family-Poppins m-0 p-0"
                                 onClick={() => {
                                     if (showOutOfStock) {
@@ -619,9 +618,7 @@ export default function OffersPage() {
                                     const nameStr = prod.name || "Unnamed Product";
                                     return varText && varText.toUpperCase() !== "DEFAULT" ? `${nameStr} - ${varText}` : nameStr;
                                 })()}
-                            </h6>
-
-                            {/* Show out of stock message in variant area */}
+                            </h6></div>{/* Show out of stock message in variant area */}
                             {showOutOfStock && (
                                 <div className="mt-2 mb-2">
                                     <span
@@ -662,6 +659,11 @@ export default function OffersPage() {
                                     )}
                                 </div>
                             </div>
+                  {prod.nextOrderDiscountMessage && (
+                    <div className="next-order-discount-tag" title={prod.nextOrderDiscountMessage} onClick={(e) => { e.stopPropagation(); window.showDiscountPopup && window.showDiscountPopup(prod.nextOrderDiscountMessage, e.currentTarget); }}>
+                      <span className="text-truncate">{prod.nextOrderDiscountMessage}</span>
+                    </div>
+                  )}
 
                             {/* Add to Cart / Select Variant / Out of Stock Button */}
                             <div className="cart-section">

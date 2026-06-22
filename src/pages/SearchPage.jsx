@@ -1188,8 +1188,7 @@ const SearchPage = () => {
                   {getBrandName(prod)}
                 </div>
 
-                {/* Product Name */}
-                <h6
+                {/* Product Name */}<div className="product-card-title-wrap"><h6
                   className="foryou-name font-family-Poppins m-0 p-0"
                   onClick={() => {
                     if (showOutOfStock) {
@@ -1207,9 +1206,7 @@ const SearchPage = () => {
                     const varName = displayVariant ? getVariantDisplayText(displayVariant) : "";
                     return varName && varName.toUpperCase() !== "DEFAULT" ? `${prod.name} - ${varName}` : prod.name;
                   })()}
-                </h6>
-
-                {showOutOfStock && (
+                </h6></div>{showOutOfStock && (
                   <div className="mt-2 mb-2">
                     <span
                       style={{
@@ -1266,6 +1263,11 @@ const SearchPage = () => {
                     })()}
                   </div>
                 </div>
+                  {prod.nextOrderDiscountMessage && (
+                    <div className="next-order-discount-tag" title={prod.nextOrderDiscountMessage} onClick={(e) => { e.stopPropagation(); window.showDiscountPopup && window.showDiscountPopup(prod.nextOrderDiscountMessage, e.currentTarget); }}>
+                      <span className="text-truncate">{prod.nextOrderDiscountMessage}</span>
+                    </div>
+                  )}
 
                 {/* Cart Button */}
                 <div className="cart-section">

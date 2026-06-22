@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../utils/axiosInstance.js";
 import "../../styles/HeaderCategories.css";
+import { FaCommentDots, FaMagic, FaFlask, FaCamera, FaPalette, FaClipboardList } from "react-icons/fa";
 
 const CATEGORY_PLACEHOLDER = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='400' viewBox='0 0 300 400'><rect width='100%' height='100%' fill='%23f3f4f6'/><text x='50%' y='50%' font-family='sans-serif' font-size='16' fill='%239ca3af' dominant-baseline='middle' text-anchor='middle'>Shop Now</text></svg>";
 
@@ -10,7 +11,7 @@ const BRAND_PLACEHOLDER = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org
 const STATIC_MENU_ITEMS = [
   { label: "Brands", path: "/", hasDropdown: true },
   { label: "Offers", path: "/offerlanding" },
-  { label: "AI Beauty Lab", path: "/ai-beauty-lab", hasDropdown: true },
+  { label: "Smart Beauty Features", path: "/ai-beauty-lab", hasDropdown: true },
   { label: "About us", path: "/aboutus" }
 ];
 
@@ -161,54 +162,58 @@ const HeaderCategories = () => {
       {
         title: "AI Beauty Concierge",
         description: "Your 24/7 personal beauty chat advisor.",
-        icon: "💬",
+        icon: <FaCommentDots />,
+        // action: () => {
+        //   document.getElementById("beauty-concierge-fab")?.click();
+        //   setActiveStaticItem(null);
+        // }
         action: () => {
-          document.getElementById("beauty-concierge-fab")?.click();
+          navigate("/ai-beauty-lab#ai-beauty-concierge");
           setActiveStaticItem(null);
         }
       },
       {
         title: "Skincare Routine Builder",
         description: "Build a structured AM/PM skincare regimen.",
-        icon: "🧴",
+        icon: <FaMagic />,
         action: () => {
-          navigate("/routines");
+          navigate("/ai-beauty-lab#skincare-routine-builder");
           setActiveStaticItem(null);
         }
       },
       {
         title: "Ingredient Compatibility",
         description: "Scan ingredients for sensitivity & allergens.",
-        icon: "🧪",
+        icon: <FaFlask />,
         action: () => {
-          navigate("/ingredient-compatibility");
+          navigate("/ai-beauty-lab#ingredient-compatibility");
           setActiveStaticItem(null);
         }
       },
       {
         title: "AI Virtual Try-On",
         description: "Try makeup shades instantly using your camera.",
-        icon: "🤳",
+        icon: <FaCamera />,
         action: () => {
-          navigate("/Mainvirtualtryon");
+          navigate("/ai-beauty-lab#ai-virtual-try-on");
           setActiveStaticItem(null);
         }
       },
       {
         title: "Foundation Shade Finder",
         description: "Find your perfect shade matching your skin tone.",
-        icon: "🎨",
+        icon: <FaPalette />,
         action: () => {
-          navigate("/shadefinder");
+          navigate("/ai-beauty-lab#foundation-shade-finder");
           setActiveStaticItem(null);
         }
       },
       {
         title: "Smart Beauty Quiz",
         description: "Take our quiz for skin type recommendations.",
-        icon: "📝",
+        icon: <FaClipboardList />,
         action: () => {
-          navigate("/foryoulanding");
+          navigate("/ai-beauty-lab#smart-beauty-quiz");
           setActiveStaticItem(null);
         }
       }
@@ -336,7 +341,7 @@ const HeaderCategories = () => {
                 </div>
               )}
 
-              {item.label === "AI Beauty Lab" && activeStaticItem === "AI Beauty Lab" && (
+              {item.label === "Smart Beauty Features" && activeStaticItem === "Smart Beauty Features" && (
                 <div className="ai-dropdown-wrapper">
                   {renderAiBeautyLabDropdown()}
                 </div>

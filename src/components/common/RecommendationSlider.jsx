@@ -974,8 +974,7 @@ const RecommendationSlider = ({ title, products: initialProducts }) => {
                             {typeof item.brandName === 'string' ? item.brandName : "Unknown Brand"}
                           </div>
 
-                          {/* Product Name */}
-                          <h6
+                          {/* Product Name */}<div className="product-card-title-wrap"><h6
                             className="foryou-name font-family-Poppins m-0 p-0"
                             onClick={() => {
                               if (showOutOfStock) {
@@ -994,9 +993,7 @@ const RecommendationSlider = ({ title, products: initialProducts }) => {
                               const nameStr = item.name || "Unnamed Product";
                               return varText && varText.toUpperCase() !== "DEFAULT" ? `${nameStr} - ${varText}` : nameStr;
                             })()}
-                          </h6>
-
-                          {/* Show out of stock message in variant area */}
+                          </h6></div>{/* Show out of stock message in variant area */}
                           {showOutOfStock && (
                             <div className="mt-2 mb-2">
                               <span
@@ -1036,6 +1033,11 @@ const RecommendationSlider = ({ title, products: initialProducts }) => {
                               )}
                             </div>
                           </div>
+                  {item.nextOrderDiscountMessage && (
+                    <div className="next-order-discount-tag" title={item.nextOrderDiscountMessage} onClick={(e) => { e.stopPropagation(); window.showDiscountPopup && window.showDiscountPopup(item.nextOrderDiscountMessage, e.currentTarget); }}>
+                      <span className="text-truncate">{item.nextOrderDiscountMessage}</span>
+                    </div>
+                  )}
 
                           {/* Add to Cart Button */}
                           <div className="cart-section">

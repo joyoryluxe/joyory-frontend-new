@@ -71,7 +71,7 @@
         min-height: auto !important;
         display: flex;
         flex-direction: column;
-        overflow: hidden !important;
+        overflow-y: auto !important;
         border-radius: 16px !important;
         box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4) !important;
         background: #fff;
@@ -83,6 +83,7 @@
         max-height: calc(100vh - 40px) !important;
         margin: auto !important;
         border-radius: 16px !important;
+        overflow-y: auto !important;
     }
 
     .vto-landing-bg-box {
@@ -356,12 +357,12 @@
     flex-direction: column;
     background: #fff;
     /* border-radius: 16px; */
-    overflow: hidden;
+    overflow-y: auto;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     max-width: 440px;
     width: 90%;
     height: auto;
-    max-height: 99vh;
+    max-height: 92vh;
     animation: modalScale 0.5s cubic-bezier(0.16, 1, 0.3, 1);
     margin: auto;
 }
@@ -524,10 +525,11 @@
     min-height: auto;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    overflow-y: auto;
     box-shadow: 0 20px 80px rgba(0, 0, 0, 0.6);
     background: #fff;
     z-index: 10;
+    border-radius: 16px;
 }
 
 .vto-landing-bg-box {

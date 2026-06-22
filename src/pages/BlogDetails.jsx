@@ -487,16 +487,13 @@ const BlogDetail = () => {
                               <div className="justify-content-between d-flex flex-column" style={{ height: '260px' }}>
                                 <div className="brand-name small text-muted mb-1 mt-2 text-start">
                                   {item.brandName}
-                                </div>
-                                <h6
+                                </div><div className="product-card-title-wrap"><h6
                                   className="foryou-name font-family-Poppins m-0 p-0"
                                   onClick={() => navigate(`/product/${item.slug || item._id}`)}
                                   style={{ cursor: 'pointer' }}
                                 >
                                   {item.name}
-                                </h6>
-
-                                {/* Minimal Variant Display */}
+                                </h6></div>{/* Minimal Variant Display */}
                                 {hasVariants && (
                                   <div className="variant-section m-0 p-0 ms-0 mt-2 mb-2">
                                     {isVariantSelected ? (
@@ -535,6 +532,11 @@ const BlogDetail = () => {
                                     )}
                                   </div>
                                 </div>
+                  {item.nextOrderDiscountMessage && (
+                    <div className="next-order-discount-tag" title={item.nextOrderDiscountMessage} onClick={(e) => { e.stopPropagation(); window.showDiscountPopup && window.showDiscountPopup(item.nextOrderDiscountMessage, e.currentTarget); }}>
+                      <span className="text-truncate">{item.nextOrderDiscountMessage}</span>
+                    </div>
+                  )}
 
                                 {/* Add to Cart Button */}
                                 <div className="cart-section">

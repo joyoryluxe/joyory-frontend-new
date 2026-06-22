@@ -932,8 +932,7 @@ const Blog = () => {
                                   {typeof item.brandName === 'string' ? item.brandName : "Unknown Brand"}
                                 </div>
 
-                                {/* Product Name */}
-                                <h6
+                                {/* Product Name */}<div className="product-card-title-wrap"><h6
                                   className="foryou-name font-family-Poppins m-0 p-0"
                                   onClick={() => handleProductClick(item)}
                                   style={{ cursor: 'pointer' }}
@@ -942,9 +941,7 @@ const Blog = () => {
                                     const varName = variant ? getVariantDisplayText(variant) : "";
                                     return varName && varName.toUpperCase() !== "DEFAULT" ? `${item.name} - ${varName}` : item.name;
                                   })()}
-                                </h6>
-
-                                {/* Price Section */}
+                                </h6></div>{/* Price Section */}
                                 <div className="price-section mb-3 mt-auto">
                                   <div className="d-flex align-items-baseline flex-wrap">
                                     <span className="current-price fw-400 fs-5">
@@ -963,6 +960,11 @@ const Blog = () => {
                                     )}
                                   </div>
                                 </div>
+                  {item.nextOrderDiscountMessage && (
+                    <div className="next-order-discount-tag" title={item.nextOrderDiscountMessage} onClick={(e) => { e.stopPropagation(); window.showDiscountPopup && window.showDiscountPopup(item.nextOrderDiscountMessage, e.currentTarget); }}>
+                      <span className="text-truncate">{item.nextOrderDiscountMessage}</span>
+                    </div>
+                  )}
 
                                 {/* Add to Cart / Select Variant Button */}
                                 <div className="cart-section">

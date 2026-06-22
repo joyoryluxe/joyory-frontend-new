@@ -1,6 +1,6 @@
 // src/components/Mobileheaderview.jsx
 import React, { useState, useRef, useEffect } from "react";
-import { FaAngleDown, FaTimes, FaArrowLeft, FaMicrophone, FaSearch } from "react-icons/fa";
+import { FaAngleDown, FaTimes, FaArrowLeft, FaMicrophone, FaSearch, FaCommentDots, FaMagic, FaFlask, FaCamera, FaPalette, FaClipboardList } from "react-icons/fa";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import axiosInstance from "../../utils/axiosInstance.js";
 import logo from "../../assets/logo.png";
@@ -26,7 +26,7 @@ import "../../App.css";
 const STATIC_MENU_ITEMS = [
   // { label: "Brands", path: "/" },
   { label: "Offers", path: "/offerlanding" },
-  { label: "AI Beauty Lab", path: "/ai-beauty-lab", hasDropdown: true },
+  { label: "Smart Beauty Features", path: "/ai-beauty-lab", hasDropdown: true },
   { label: "About us", path: "/aboutus" }
 ];
 
@@ -61,7 +61,7 @@ const Mobileheaderview = ({
   const [showMobileSearch, setShowMobileSearch] = useState(false);
   const [mobileCategoriesOpen, setMobileCategoriesOpen] = useState({});
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [mobileAiLabOpen, setMobileAiLabOpen] = useState(false);
+  const [mobileAiLabOpen, setMobileAiLabOpen] = useState(true);
   const isWishlistActive = location.pathname === "/wishlist";
 
 
@@ -379,91 +379,91 @@ const Mobileheaderview = ({
               {STATIC_MENU_ITEMS.map((item) => {
                 const isForYou = item.path === "/foryoulanding";
 
-                if (item.label === "AI Beauty Lab") {
+                if (item.label === "Smart Beauty Features") {
                   return (
                     <div key={item.label} className="mobile-category-item">
                       <div
                         className="mobile-category-main"
-                        onClick={() => setMobileAiLabOpen(!mobileAiLabOpen)}
                         style={{ paddingLeft: "16px" }}
                       >
-                        <span className="mobile-category-name page-title-main-name p-0">
+                        <Link
+                          to="/ai-beauty-lab"
+                          onClick={closeMenu}
+                          className="mobile-category-name page-title-main-name p-0"
+                        >
                           {item.label}
-                        </span>
+                        </Link>
                         <FaAngleDown
                           className={`mobile-category-toggle ${mobileAiLabOpen ? 'open' : ''}`}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setMobileAiLabOpen(!mobileAiLabOpen);
+                          }}
                         />
                       </div>
 
                       {mobileAiLabOpen && (
                         <div className="mobile-subcategory" style={{ background: "#f8f9fa" }}>
                           <div className="mobile-subcategory-item ps-3 page-title-main-name">
-                            <span
-                              onClick={() => {
-                                document.getElementById("beauty-concierge-fab")?.click();
-                                closeMenu();
-                              }}
-                              className="mobile-subcategory-link p-0 cursor-pointer"
-                              style={{ display: "block", cursor: "pointer" }}
-                            >
-                              💬 AI Beauty Concierge
-                            </span>
-                          </div>
-                          <div className="mobile-subcategory-item ps-3 page-title-main-name">
                             <Link
-                              to="/routines"
+                              to="/ai-beauty-lab#ai-beauty-concierge"
                               onClick={closeMenu}
-                              className="mobile-subcategory-link p-0"
-                              style={{ display: "block" }}
+                              className="mobile-subcategory-link p-0 d-flex align-items-center gap-2"
+                              style={{ display: "flex", alignItems: "center" }}
                             >
-                              🧴 Skincare Routine Builder
+                              <FaCommentDots size={16} style={{ color: "#000" }} /> AI Beauty Concierge
                             </Link>
                           </div>
                           <div className="mobile-subcategory-item ps-3 page-title-main-name">
                             <Link
-                              to="/ingredient-compatibility"
+                              to="/ai-beauty-lab#skincare-routine-builder"
                               onClick={closeMenu}
-                              className="mobile-subcategory-link p-0"
-                              style={{ display: "block" }}
+                              className="mobile-subcategory-link p-0 d-flex align-items-center gap-2"
+                              style={{ display: "flex", alignItems: "center" }}
                             >
-                              🧪 Ingredient Compatibility
+                              <FaMagic size={16} style={{ color: "#000" }} /> Skincare Routine Builder
                             </Link>
                           </div>
                           <div className="mobile-subcategory-item ps-3 page-title-main-name">
                             <Link
-                              to="/Mainvirtualtryon"
+                              to="/ai-beauty-lab#ingredient-compatibility"
                               onClick={closeMenu}
-                              className="mobile-subcategory-link p-0"
-                              style={{ display: "block" }}
+                              className="mobile-subcategory-link p-0 d-flex align-items-center gap-2"
+                              style={{ display: "flex", alignItems: "center" }}
                             >
-                              🤳 AI Virtual Try-On
+                              <FaFlask size={16} style={{ color: "#000" }} /> Ingredient Compatibility
                             </Link>
                           </div>
                           <div className="mobile-subcategory-item ps-3 page-title-main-name">
                             <Link
-                              to="/shadefinder"
+                              to="/ai-beauty-lab#ai-virtual-try-on"
                               onClick={closeMenu}
-                              className="mobile-subcategory-link p-0"
-                              style={{ display: "block" }}
+                              className="mobile-subcategory-link p-0 d-flex align-items-center gap-2"
+                              style={{ display: "flex", alignItems: "center" }}
                             >
-                              🎨 Foundation Shade Finder
+                              <FaCamera size={16} style={{ color: "#000" }} /> AI Virtual Try-On
                             </Link>
                           </div>
                           <div className="mobile-subcategory-item ps-3 page-title-main-name">
-                            <span
-                              onClick={() => {
-                                if (!user || user.guest) {
-                                  navigate("/login", { state: { from: "/foryoulanding" } });
-                                } else {
-                                  navigate("/foryoulanding");
-                                }
-                                closeMenu();
-                              }}
-                              className="mobile-subcategory-link p-0 cursor-pointer"
-                              style={{ display: "block", cursor: "pointer" }}
+                            <Link
+                              to="/ai-beauty-lab#foundation-shade-finder"
+                              onClick={closeMenu}
+                              className="mobile-subcategory-link p-0 d-flex align-items-center gap-2"
+                              style={{ display: "flex", alignItems: "center" }}
                             >
-                              📝 Smart Beauty Quiz
-                            </span>
+                              <FaPalette size={16} style={{ color: "#000" }} /> Foundation Shade Finder
+                            </Link>
+                          </div>
+                          <div className="mobile-subcategory-item ps-3 page-title-main-name">
+                            <Link
+                              to="/ai-beauty-lab#smart-beauty-quiz"
+                              onClick={closeMenu}
+                              className="mobile-subcategory-link p-0 d-flex align-items-center gap-2"
+                              style={{ display: "flex", alignItems: "center" }}
+                            >
+                              <FaClipboardList size={16} style={{ color: "#000" }} /> Smart Beauty Quiz
+                            </Link>
                           </div>
                         </div>
                       )}

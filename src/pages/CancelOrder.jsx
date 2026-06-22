@@ -377,8 +377,7 @@ const RecoProductCard = ({ product, navigate, user, onAddToCartSuccess }) => {
             {/* Brand Name */}
             <div className="brand-name small text-muted mb-1 mt-2 text-start">{getBrandName()}</div>
 
-            {/* Product Name */}
-            <h6
+            {/* Product Name */}<div className="product-card-title-wrap"><h6
               className="foryou-name font-family-Poppins m-0 p-0"
               onClick={() => {
                 if (showOutOfStock) {
@@ -396,9 +395,7 @@ const RecoProductCard = ({ product, navigate, user, onAddToCartSuccess }) => {
                 const varText = displayVariant ? getVariantDisplayText(displayVariant) : "";
                 return varText && varText.toUpperCase() !== "DEFAULT" ? `${pName} - ${varText}` : pName;
               })()}
-            </h6>
-
-            {/* Show out of stock message in variant area */}
+            </h6></div>{/* Show out of stock message in variant area */}
             {showOutOfStock && (
               <div className="mt-2 mb-2">
                 <span
@@ -434,6 +431,11 @@ const RecoProductCard = ({ product, navigate, user, onAddToCartSuccess }) => {
                 )}
               </div>
             </div>
+                  {product.nextOrderDiscountMessage && (
+                    <div className="next-order-discount-tag" title={product.nextOrderDiscountMessage} onClick={(e) => { e.stopPropagation(); window.showDiscountPopup && window.showDiscountPopup(product.nextOrderDiscountMessage, e.currentTarget); }}>
+                      <span className="text-truncate">{product.nextOrderDiscountMessage}</span>
+                    </div>
+                  )}
 
             {/* Add to Cart / Select Variant / Out of Stock Button */}
             <div className="cart-section">

@@ -6,6 +6,12 @@ import ReactDOM from "react-dom/client";
 
 import './index.css'
 import App from './App.jsx'
+
+// Global trigger for nextOrderDiscountMessage popup bubble
+window.showDiscountPopup = (message, targetEl) => {
+  if (!message || !targetEl) return;
+  window.dispatchEvent(new CustomEvent('show-discount-popup', { detail: { message, targetEl } }));
+};
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import Header from './components/common/Header.jsx';
@@ -49,7 +55,7 @@ ReactGA.send({ hitType: "pageview", page: window.location.pathname });
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-      <App />
+    <App />
     {/* <Header /> */}
   </React.StrictMode>
 );

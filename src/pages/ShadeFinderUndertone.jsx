@@ -125,7 +125,7 @@ export default function UndertoneSlider() {
       </main>
 
       {/* Wavy Background at the bottom */}
-      <div className="wavy-footer-bg">
+      {/* <div className="wavy-footer-bg">
         <svg viewBox="0 0 1440 320" xmlns="http://www.w3.org/2000/svg">
           <path 
             fill="#D6E3E9" 
@@ -133,7 +133,7 @@ export default function UndertoneSlider() {
             d="M0,224L80,202.7C160,181,320,139,480,144C640,149,800,203,960,213.3C1120,224,1280,192,1360,176L1440,160L1440,320L1360,320C1280,320,1120,320,960,320C800,320,640,320,480,320C320,320,160,320,80,320L0,320Z"
           ></path>
         </svg>
-      </div>
+      </div> */}
 
       {/* <Footer /> */}
     </div>
