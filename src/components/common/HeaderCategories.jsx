@@ -11,7 +11,7 @@ const BRAND_PLACEHOLDER = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org
 const STATIC_MENU_ITEMS = [
   { label: "Brands", path: "/", hasDropdown: true },
   { label: "Offers", path: "/offerlanding" },
-  { label: "Smart Beauty Features", path: "/ai-beauty-lab", hasDropdown: true },
+  { label: "AI Beauty Features", path: "/ai-beauty-lab", hasDropdown: true },
   { label: "About us", path: "/aboutus" }
 ];
 
@@ -341,7 +341,7 @@ const HeaderCategories = () => {
                 </div>
               )}
 
-              {item.label === "Smart Beauty Features" && activeStaticItem === "Smart Beauty Features" && (
+              {item.label === "AI Beauty Features" && activeStaticItem === "AI Beauty Features" && (
                 <div className="ai-dropdown-wrapper">
                   {renderAiBeautyLabDropdown()}
                 </div>

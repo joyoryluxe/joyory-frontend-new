@@ -4,14 +4,16 @@ import Header from "../components/common/Header";
 import Footer from "../components/common/Footer";
 import { UserContext } from "../context/UserContext";
 import "../styles/AiBeautyLab.css";
-import beautyLabHeroImg from "../assets/beauty_lab_hero_products.webp";
+import beautyLabHeroImg from "../assets/beauty_lab_hero.png";
 
 // Assets
 import virtualTryOnImg from "../assets/Virtual-tryon-new.png";
 import shadeFinderImg from "../assets/Shadefinder.png";
-import scannerImg from "../assets/scanner.png";
-import skincareImg from "../assets/Skincare.png";
-import trustBgImg from "../assets/organic-cosmetic-product-with-dreamy-aesthetic-fresh-background.jpg";
+import ingredientCheckerImg from "../assets/Ingredient.png";
+import skincareImg from "../assets/Routine-Builder.png";
+import beautyConciergeImg from "../assets/AI-Beauty-Concierge.png";
+import beautyQuizImg from "../assets/Smart-Beauty-Quiz.png";
+import formulationsImg from "../assets/Formulations.png";
 
 const AiBeautyLab = () => {
   const navigate = useNavigate();
@@ -89,7 +91,7 @@ const AiBeautyLab = () => {
     {
       title: "Ingredient Compatibility",
       description: "Audit ingredients from any product. Cross-check actives like Retinol and Vitamin C for sensitivity, allergen alerts, and maximum efficacy.",
-      image: scannerImg,
+      image: ingredientCheckerImg,
       cta: "Scan Ingredients",
       action: () => navigate("/ingredient-compatibility"),
       badge: "Lab Check"
@@ -97,7 +99,7 @@ const AiBeautyLab = () => {
     {
       title: "AI Beauty Concierge",
       description: "Chat live with our beauty agent. Ask questions about product benefits, ingredient definitions, or step-by-step guides at any time.",
-      image: trustBgImg,
+      image: beautyConciergeImg,
       cta: "Start Chatting",
       action: handleLaunchChatbot,
       badge: "Live Advisor"
@@ -105,7 +107,7 @@ const AiBeautyLab = () => {
     {
       title: "Smart Beauty Quiz",
       description: "Unlock customized recommendations. Take a 2-minute personalized quiz mapping your skin concerns to direct Joyory collections.",
-      image: trustBgImg,
+      image: beautyQuizImg,
       cta: "Take the Quiz",
       action: handleQuizClick,
       badge: "Quiz Portal"
@@ -136,7 +138,7 @@ const AiBeautyLab = () => {
 
       {/* Main Grid Section */}
       <section id="lab-grid" className="lab-grid-section container py-5">
-        <div className="section-header text-center mb-5 reveal-on-scroll">
+        <div className="section-header text-center mb-4 mb-lg-5 reveal-on-scroll">
           <span className="lab-section-tag">Interactive Tools</span>
           <h2 className="section-title page-title-main-name">Our Core AI USPs</h2>
           <div className="section-title-divider"></div>
@@ -191,7 +193,7 @@ const AiBeautyLab = () => {
 
             <div className="compare-column joyory-column">
               <div className="joyory-glow"></div>
-              <h3>Joyory Smart Beauty Features</h3>
+              <h3>Joyory AI Beauty Features</h3>
               <ul>
                 <li>
                   <span className="icon-success">&#10004;</span> Live color matching via device camera with AI Try-On.
@@ -237,7 +239,7 @@ const AiBeautyLab = () => {
               </div>
             </div>
             <div className="trust-banner-visual">
-              <img src={scannerImg} alt="Dermatology Science" />
+              <img src={formulationsImg} alt="Dermatology Science" />
             </div>
           </div>
         </div>
