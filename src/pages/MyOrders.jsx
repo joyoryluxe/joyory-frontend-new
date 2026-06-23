@@ -200,10 +200,11 @@ const Myorders = () => {
 
           {orders.length === 0 ? (
             <div className="empty-orders text-center p-5 bg-white shadow-sm rounded">
-              <p className="empty-text fs-4 page-title-main-name">
-                You have no orders yet.
+              <h4 className="page-title-main-name fw-semibold mb-2">No Orders Placed Yet</h4>
+              <p className="empty-text fs-6 page-title-main-name text-muted mb-4">
+                Explore our curated beauty collections and start your shopping journey today!
               </p>
-              <button className="btn btn-dark mt-3 page-title-main-name" onClick={() => navigate("/")}>
+              <button className="btn btn-dark page-title-main-name" onClick={() => navigate("/")}>
                 Start Shopping
               </button>
             </div>

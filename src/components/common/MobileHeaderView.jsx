@@ -26,7 +26,7 @@ import "../../App.css";
 const STATIC_MENU_ITEMS = [
   // { label: "Brands", path: "/" },
   { label: "Offers", path: "/offerlanding" },
-  { label: "Smart Beauty Features", path: "/ai-beauty-lab", hasDropdown: true },
+  { label: "AI Beauty Features", path: "/ai-beauty-lab", hasDropdown: true },
   { label: "About us", path: "/aboutus" }
 ];
 
@@ -379,7 +379,7 @@ const Mobileheaderview = ({
               {STATIC_MENU_ITEMS.map((item) => {
                 const isForYou = item.path === "/foryoulanding";
 
-                if (item.label === "Smart Beauty Features") {
+                if (item.label === "AI Beauty Features") {
                   return (
                     <div key={item.label} className="mobile-category-item">
                       <div

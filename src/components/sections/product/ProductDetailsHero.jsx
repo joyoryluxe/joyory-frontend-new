@@ -72,9 +72,8 @@ const ProductDetailDescription = ({ product, scannedIngredients, onIngredientCli
                       <span
                         key={idx}
                         className={badgeClass}
-                        style={{ cursor: "pointer", borderRadius: "12px", transition: "all 0.15s ease", fontSize: "12px", display: "inline-flex", alignItems: "center", gap: "4px" }}
-                        onClick={() => onIngredientClick(ing)}
-                        title={ing.isAllergen ? "High Allergen Alert!" : ing.isSensitive ? "Sensitivity Alert" : "Click to view description"}
+                        style={{ borderRadius: "12px", transition: "all 0.15s ease", fontSize: "12px", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                        title={ing.isAllergen ? "High Allergen Alert!" : ing.isSensitive ? "Sensitivity Alert" : ing.name}
                       >
                         {ing.name} {ing.isAllergen && "⚠️"} {ing.isSensitive && "⚠️"}
                       </span>

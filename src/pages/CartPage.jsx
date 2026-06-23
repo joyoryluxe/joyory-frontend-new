@@ -2358,11 +2358,11 @@ const RecoProductCard = ({ product, navigate, user, onAddToCartSuccess }) => {
                 )}
               </div>
             </div>
-                  {product.nextOrderDiscountMessage && (
-                    <div className="next-order-discount-tag" title={product.nextOrderDiscountMessage} onClick={(e) => { e.stopPropagation(); window.showDiscountPopup && window.showDiscountPopup(product.nextOrderDiscountMessage, e.currentTarget); }}>
-                      <span className="text-truncate">{product.nextOrderDiscountMessage}</span>
-                    </div>
-                  )}
+            {product.nextOrderDiscountMessage && (
+              <div className="next-order-discount-tag" title={product.nextOrderDiscountMessage} onClick={(e) => { e.stopPropagation(); window.showDiscountPopup && window.showDiscountPopup(product.nextOrderDiscountMessage, e.currentTarget); }}>
+                <span className="text-truncate">{product.nextOrderDiscountMessage}</span>
+              </div>
+            )}
 
             {/* Add to Cart / Select Variant / Out of Stock Button */}
             <div className="cart-section">
@@ -3372,7 +3372,7 @@ const CartPage = () => {
   useEffect(() => {
     const handlePendingCartAction = async () => {
       if (!user || user.guest) return; // Wait until authenticated user is loaded
-      
+
       const pendingActionStr = localStorage.getItem("pendingCartAction");
       if (pendingActionStr) {
         try {
@@ -3706,11 +3706,11 @@ const CartPage = () => {
                   <span className="page-title-main-name">GST ({cartData.gstRate})</span>
                   <span className="page-title-main-name">+₹{cartData.gstAmount?.toFixed(2) || "0.00"}</span>
                 </div>
-                {cartData.gstMessage && (
+                {/* {cartData.gstMessage && (
                   <div className="small text-muted mb-2 margin-left-right-repert page-title-main-name">
                     <i className="bi bi-receipt me-1"></i>{cartData.gstMessage}
                   </div>
-                )}
+                )} */}
                 <hr className="border-color-blacks" />
                 <div className="d-flex justify-content-between mb-3 pt-2 margin-left-right-repert align-items-center">
                   <span className="fw-semibold fs-6 page-title-main-name">Total Payable :</span>
