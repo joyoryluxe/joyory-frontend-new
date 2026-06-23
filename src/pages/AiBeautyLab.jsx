@@ -7,6 +7,7 @@ import "../styles/AiBeautyLab.css";
 import beautyLabHeroImg from "../assets/beauty_lab_hero.png";
 
 // Assets
+import scannerImg from "../assets/Sd.png";
 import virtualTryOnImg from "../assets/Virtual-tryon-new.png";
 import shadeFinderImg from "../assets/Shadefinder.png";
 import ingredientCheckerImg from "../assets/Ingredient.png";

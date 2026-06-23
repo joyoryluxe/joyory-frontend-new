@@ -1333,15 +1333,6 @@ function SidePanel({ isOpen, isClosing, onClose, showQuizContent, quizData, load
                                                 </p>
                                             </div>
                                         )}
-                                                                      }} />
-                                                                      Selected
-                                                                  </div>}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            );
-                                        })}
->>>>>>> origin/main
                                     </div>
 
                                     <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 24 }}>
