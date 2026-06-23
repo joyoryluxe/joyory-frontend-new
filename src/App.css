@@ -501,7 +501,7 @@ button:hover img {
 }
 
 .cart-section button:hover:not(:disabled) {
-    background-color: #333 !important;
+    background-color: #000 !important;
     color: #fff !important;
 }
 
@@ -525,7 +525,7 @@ button:hover img {
         /* Keep relative for potential other overlays, but buttons are static */
         display: flex !important;
         flex-direction: column !important;
-        height: 200px !important;
+        height: 212px !important;
         /* Unified compact height to align cards perfectly and prevent button clipping */
         min-height: unset !important;
     }
