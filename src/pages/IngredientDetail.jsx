@@ -4,9 +4,9 @@ import { useParams, useNavigate } from "react-router-dom";
 import Header from "../components/common/Header";
 import Footer from "../components/common/Footer";
 import { getIngredientByName, getProductsByIngredient } from "../api/ingredientApi";
-import { 
+import {
   FaSun, FaMoon, FaCheckCircle, FaExclamationTriangle, FaHourglassHalf, FaExternalLinkAlt,
-  FaStar, FaHeart, FaRegHeart, FaTimes, FaCheck 
+  FaStar, FaHeart, FaRegHeart, FaTimes, FaCheck
 } from "react-icons/fa";
 import { CartContext } from "../context/CartContext";
 import { UserContext } from "../context/UserContext";
@@ -63,7 +63,7 @@ const getBrandName = (product) => {
 export default function IngredientDetail() {
   const { name } = useParams();
   const navigate = useNavigate();
-  
+
   const [ingredient, setIngredient] = useState(null);
   const [products, setProducts] = useState([]);
   const [totalProducts, setTotalProducts] = useState(0);
@@ -265,7 +265,7 @@ export default function IngredientDetail() {
         if (detailRes.data && detailRes.data.success) {
           setIngredient(detailRes.data.ingredient);
         }
-        
+
         // Load catalog products containing this ingredient
         setProdLoading(true);
         const prodRes = await getProductsByIngredient(name, null, 8);
@@ -350,7 +350,7 @@ export default function IngredientDetail() {
     const sku = displayVariant ? getSku(displayVariant) : null;
     const inWl = sku ? isInWishlist(prod._id, sku) : false;
     const slugPr = prod.slugs?.[0] || prod.slug || prod._id;
-    
+
     const rawImage = displayVariant?.images?.[0] || displayVariant?.image || prod.images?.[0];
     const img = rawImage
       ? (rawImage.startsWith("http") ? rawImage : `https://res.cloudinary.com/dekngswix/image/upload/${rawImage}`)
@@ -790,7 +790,7 @@ export default function IngredientDetail() {
 
   if (loading || !ingredient) {
     return (
-      <div 
+      <div
         className="position-fixed top-0 start-0 w-100 h-100 d-flex flex-column justify-content-center align-items-center"
         style={{ backgroundColor: "rgba(255,255,255,0.97)", zIndex: 9999, backdropFilter: "blur(10px)" }}
       >
@@ -811,7 +811,7 @@ export default function IngredientDetail() {
   return (
     <>
       <Header />
-      
+
       <div className="ing-detail-page page-title-main-name">
         {/* Ingredient Header Hero */}
         <section className="ing-hero-card mb-5">
@@ -855,11 +855,11 @@ export default function IngredientDetail() {
 
         {/* Detailed Analysis Grid */}
         <div className="row g-4 text-start mb-5">
-          
+
           {/* Left Column: Properties & Safety */}
           <div className="col-lg-7">
             <div className="ing-card p-4 h-100">
-              
+
               {/* Description */}
               <div className="mb-4">
                 <h4 className="fw-bold text-dark border-bottom pb-2 mb-2" style={{ fontSize: "16px" }}>What is {ingredient.name}?</h4>
@@ -917,7 +917,7 @@ export default function IngredientDetail() {
           {/* Right Column: Layering & Pairing */}
           <div className="col-lg-5">
             <div className="ing-card p-4 h-100">
-              
+
               {/* Incompatible Layers (Conflicts) */}
               <div className="mb-4">
                 <h4 className="fw-bold text-dark border-bottom pb-2 mb-2" style={{ fontSize: "16px" }}>Avoid Direct Layering (Conflicts)</h4>
@@ -994,7 +994,7 @@ export default function IngredientDetail() {
               {/* Load More Button */}
               {hasMoreProducts && (
                 <div className="mt-4 text-center">
-                  <button 
+                  <button
                     className="btn btn-outline-dark px-4 py-2"
                     onClick={loadMoreProducts}
                     disabled={prodLoading}

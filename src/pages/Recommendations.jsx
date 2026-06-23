@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { CartContext } from "../Context/CartContext";
+import { CartContext } from "../context/CartContext";
 import { UserContext } from "../context/UserContext.jsx";
 import axiosInstance from "../utils/axiosInstance.js";
 import Footer from "../components/common/Footer";

@@ -487,6 +487,12 @@ const OrderSuccess = () => {
                 <span>Discount:</span>
                 <span>-₹{(currentOrder?.amount?.discount || 0).toFixed(2)}</span>
               </div>
+              {currentOrder?.amount?.pointsDiscount > 0 && (
+                <div className="price-detail-item text-danger">
+                  <span>Points Discount:</span>
+                  <span>-₹{currentOrder.amount.pointsDiscount.toFixed(2)}</span>
+                </div>
+              )}
               <div className="price-detail-item">
                 <span>GST:</span>
                 <span>₹{(currentOrder?.amount?.gst || 0).toFixed(2)}</span>

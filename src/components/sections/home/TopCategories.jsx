@@ -191,8 +191,8 @@ const TopCategories = () => {
                         e.currentTarget.src = `https://picsum.photos/400/200?random=${i}`;
                       }}
                     />
-                    <div className="top-cat-body text-start">
-                      <h5 className="top-cat-title mb-0 mt-3 font-weightss top-category-name-font">
+                    <div className="top-cat-body text-center">
+                      <h5 className="top-cat-title mb-0 mt-3 font-weightss top-category-name-font text-start">
                         {cat.name || "Unnamed"}
                       </h5>
                     </div>

@@ -217,7 +217,7 @@ const FALLBACKS = {
     canonical: "https://joyory.com/product",
     image: "https://joyory.com/logo.png",
     type: "product"
-  },
+  }, 
   category: {
     title: "Buy Beauty Products Online | Joyory",
     description: "Explore the best beauty and cosmetic collections at Joyory. Authentic global brands, best prices, fast delivery.",
