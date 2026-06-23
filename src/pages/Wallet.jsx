@@ -9,6 +9,8 @@ import wallets from "../assets/wallet.svg";
 import refunds from "../assets/refunds.png";
 import Payment from "../assets/Payment.png";
 import Disount from "../assets/Disount.png";
+import logo from "../assets/logo.png";
+import { FaWallet, FaStar } from "react-icons/fa";
 
 const WalletPage = () => {
   const [wallet, setWallet] = useState(null);
@@ -100,6 +102,15 @@ const WalletPage = () => {
     }
   };
 
+  const handleAmountChange = (e) => {
+    const val = e.target.value;
+    if (val === "") {
+      setSelectedAmount(null);
+    } else {
+      setSelectedAmount(parseInt(val, 10));
+    }
+  };
+
   const handleLogout = () => {
     axios
       .post(
@@ -129,60 +140,121 @@ const WalletPage = () => {
         </div>
 
         <main className="wallet-content">
-          <h2 className="wallet-title">Joyory Wallet</h2>
-          <p className="wallet-subtitle">Swipe, shine, slay – all in one tap</p>
+          <div className="wallet-header-section">
+            <h2 className="wallet-title">Joyory Wallet</h2>
+            <p className="wallet-subtitle">Swipe, shine, slay – all in one tap</p>
+          </div>
 
-          <div className="wallet-balance-card">
-            <div>
-              <h4 className="balance-label">Wallet Balance</h4>
-              <h2 className="balance-amount">₹ {wallet?.walletBalance || 0}</h2>
-              <p className="balance-details">
-                Joyory Cash: <span>₹ {wallet?.joyoryCash || 0}</span>
-              </p>
-              <p className="balance-details">
-                Reward Points: <span>{wallet?.rewardPoints || 0}</span>
-              </p>
+          <div className="wallet-dashboard-grid">
+            {/* Left Side: Premium Digital Card & breakdown */}
+            <div className="wallet-left-column">
+              <div className="joyory-digital-card">
+                <div className="card-overlay-shine"></div>
+                <div className="card-header">
+                  <span className="card-brand">JOYORY WALLET</span>
+                  <div className="card-chip">
+                    <div className="chip-line"></div>
+                    <div className="chip-line"></div>
+                    <div className="chip-line"></div>
+                  </div>
+                </div>
+                <div className="card-body">
+                  <span className="card-balance-label">Total Balance</span>
+                  <h2 className="card-balance-val">₹ {wallet?.walletBalance || 0}</h2>
+                </div>
+                <div className="card-footer">
+                  <span className="card-holder">PREMIUM MEMBER</span>
+                  <span className="card-logo-symbol">
+                    <img src={logo} alt="Joyory" className="card-logo-img" />
+                  </span>
+                </div>
+              </div>
 
-              <div className="amount-options mt-4">
-                {[ 200 ,500, 1000, 2000, 3000].map((amt) => (
-                  <button
-                    key={amt}
-                    className={`amount-btn ${selectedAmount === amt ? "selected" : ""
-                      }`}
-                    onClick={() => setSelectedAmount(amt)}
-                  >
-                    ₹{amt}
-                  </button>
-                ))}
+              <div className="balance-breakdown-row">
+                <div className="breakdown-card cash-card">
+                  <div className="breakdown-icon-wrap">
+                    <FaWallet style={{ color: '#000', fontSize: '20px' }} />
+                  </div>
+                  <div className="breakdown-info">
+                    <span className="breakdown-label">Joyory Cash</span>
+                    <h4 className="breakdown-value">₹ {wallet?.joyoryCash || 0}</h4>
+                  </div>
+                </div>
+                <div className="breakdown-card points-card">
+                  <div className="breakdown-icon-wrap">
+                    <FaStar style={{ color: '#000', fontSize: '20px' }} />
+                  </div>
+                  <div className="breakdown-info">
+                    <span className="breakdown-label">Reward Points</span>
+                    <h4 className="breakdown-value">{wallet?.rewardPoints || 0}</h4>
+                  </div>
+                </div>
               </div>
             </div>
 
+            {/* Right Side: Action top up controls */}
+            <div className="wallet-right-column">
+              <div className="topup-panel">
+                <h4 className="topup-title">Top Up Wallet</h4>
+                <p className="topup-subtitle">Add funds instantly to your account</p>
 
-            <div className="wallet-actions">
-              {/* ✅ New: Amount selection */}
+                <div className="custom-amount-input-wrap">
+                  <span className="currency-symbol">₹</span>
+                  <input
+                    type="number"
+                    className="custom-amount-input"
+                    placeholder="Enter amount to add"
+                    value={selectedAmount || ""}
+                    onChange={handleAmountChange}
+                    min="1"
+                  />
+                </div>
 
-              <button className="add-money-btn" onClick={handleAddMoney}>
-                + Add Money
-              </button>
-              <br />
-              <br />
-              <img src={wallets} alt="Wallet" className="img-fluid w-50" />
+                <div className="quick-amount-options">
+                  {[200, 500, 1000, 2000, 3000].map((amt) => (
+                    <button
+                      key={amt}
+                      className={`quick-amount-btn ${selectedAmount === amt ? "active" : ""}`}
+                      onClick={() => setSelectedAmount(amt)}
+                    >
+                      + ₹{amt}
+                    </button>
+                  ))}
+                </div>
+
+                <button className="add-money-cta-btn" onClick={handleAddMoney}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px' }}>
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                  Confirm & Add Money
+                </button>
+              </div>
             </div>
           </div>
 
-          <h3 className="wallet-benefits-title">JOYORY WALLET BENEFITS</h3>
-          <div className="wallet-benefits">
-            <div className="benefit-item">
-              <img src={refunds} alt="Wallet" className="img-fluid w-50" />
-              <p>Quick Refunds</p>
+          <h3 className="wallet-benefits-title">Joyory Wallet Benefits</h3>
+          <div className="wallet-benefits-grid">
+            <div className="benefit-card">
+              <div className="benefit-image-wrap">
+                <img src={refunds} alt="Quick Refunds" />
+              </div>
+              <h4>Quick Refunds</h4>
+              <p>Instant refunds directly credited to your Joyory wallet for fast and easy shopping.</p>
             </div>
-            <div className="benefit-item">
-              <img src={Payment} alt="Wallet" className="img-fluid w-50" />
-              <p>One-Tap Payment</p>
+            <div className="benefit-card">
+              <div className="benefit-image-wrap">
+                <img src={Payment} alt="One-Tap Payment" />
+              </div>
+              <h4>One-Tap Payment</h4>
+              <p>Skip the OTP and payment gateway steps. Checkout with a single tap using your balance.</p>
             </div>
-            <div className="benefit-item">
-              <img src={Disount} alt="Wallet" className="img-fluid w-50" />
-              <p>Special Discounts</p>
+            <div className="benefit-card">
+              <div className="benefit-image-wrap">
+                <img src={Disount} alt="Special Discounts" />
+              </div>
+              <h4>Special Discounts</h4>
+              <p>Gain access to wallet-exclusive coupons, cashback promotions, and beauty deals.</p>
             </div>
           </div>
         </main>

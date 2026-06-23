@@ -1,193 +1,445 @@
-.wallet-container {
-    padding: 20px;
-    font-family: "Arial", sans-serif;
-}
-
-.wallet-title {
-    font-size: 24px;
-    font-weight: bold;
-    margin-top: 35px;
-}
-
-.wallet-subtitle {
-    color: gray;
-    margin-bottom: 15px;
-}
-
-.wallet-balance-card {
-    background: #e9f6fb;
-    padding: 20px;
-    border-radius: 12px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 20px;
-}
-
-.balance-label {
-    font-size: 16px;
-    font-weight: 500;
-}
-
-.balance-amount {
-    font-size: 28px;
-    font-weight: bold;
-    margin: 5px 0;
-}
-
-.balance-details {
-    margin: 3px 0;
-    font-size: 14px;
-}
-
-.balance-details span {
-    font-weight: bold;
-    color: #3399cc;
-}
-
-.wallet-actions {
-    text-align: center;
-}
-
-.add-money-btn {
-    background: white;
-    color: #3399cc;
-    border: 1px solid #3399cc;
-    padding: 8px 16px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: 0.3s;
-}
-
-.add-money-btn:hover {
-    background: #3399cc;
-    color: #fff;
-}
-
-.wallet-icon {
-    font-size: 40px;
-    margin-top: 10px;
-    color: #3399cc;
-}
-
-.wallet-benefits-title {
-    margin-top: 30px;
-    font-size: 18px;
-    font-weight: bold;
-}
-
-.wallet-benefits {
-    display: flex;
-    gap: 40px;
-    margin-top: 15px;
-}
-
-.benefit-item {
-    text-align: center;
-    font-size: 14px;
-}
-
-.benefit-icon {
-    font-size: 30px;
-    margin-bottom: 8px;
-    color: #3399cc;
-}
+/* Premium Wallet Page Styling */
 
 .wallet-page {
     display: flex;
     min-height: 100vh;
     margin: 30px;
-    background-color: #FFF;
+    background-color: #ffffff;
     margin-top: 130px;
-}
-
-
-/* .menu-toggle {
-  display: none;
-  position: absolute;
-  top: 15px;
-  left: 15px;
-  font-size: 24px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  z-index: 2000;
-} */
-
-.wallet-content {
-    flex: 1;
-    padding: 20px;
-    background-color: #FFF;
-}
-
-@media (max-width: 768px) {
-    .wallet-content {
-        margin-left: 0 !important;
-        padding-top: 60px !important;
-        padding: 0px !important;
-    }
-}
-
-@media (max-width: 991px) {
-    /* .wallet-page {
-        display: block;
-    } */
-    .main-sidebar h2 {
-        display: block !important;
-    }
-    .main-sidebar {
-        display: flex !important;
-        align-items: baseline;
-        justify-content: space-between;
-    }
-    .wallet-content h2 {
-        display: none;
-    }
-    .wallet-content {
-        margin-left: 0;
-        padding-top: 0;
-    }
-    .wallet-title {
-        font-size: 24px;
-        font-weight: bold;
-        margin-top: 0;
-    }
-    .wallet-page {
-        display: block;
-        min-height: auto;
-        /* margin-top: 90px !important; */
-        margin: 90px 15px;
-        background-color: #FFF;
-    }
+    font-family: 'Poppins', 'Montserrat', sans-serif;
 }
 
 .main-sidebar h2 {
     display: none;
 }
 
-.amount-options {
+.wallet-content {
+    flex: 1;
+    padding: 20px 40px;
+    background-color: #ffffff;
+}
+
+.wallet-header-section {
+    margin-bottom: 30px;
+}
+
+.wallet-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 6px;
+}
+
+.wallet-subtitle {
+    color: #666;
+    font-size: 13.5px;
+    letter-spacing: 0.3px;
+}
+
+/* Dashboard Grid Layout */
+.wallet-dashboard-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 35px;
+    margin-bottom: 45px;
+    align-items: start;
+}
+
+/* Left Column: Digital Card & Breakdown */
+.wallet-left-column {
     display: flex;
-    gap: 10px;
-    margin-bottom: 10px;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* Realistic Luxury Digital Card */
+.joyory-digital-card {
+    position: relative;
+    width: 100%;
+    max-width: 420px;
+    height: 240px;
+    background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+    border-radius: 16px;
+    padding: 28px;
+    color: #ffffff;
+    box-shadow: 0 15px 35px rgba(15, 32, 39, 0.25);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.card-overlay-shine {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0) 50%);
+    pointer-events: none;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-brand {
+    font-size: 13.5px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: rgba(255, 255, 255, 0.95);
+}
+
+/* Card Smart Chip */
+.card-chip {
+    width: 42px;
+    height: 32px;
+    background: linear-gradient(135deg, #fce38a 0%, #f38181 100%);
+    border-radius: 6px;
+    position: relative;
+    padding: 4px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    opacity: 0.85;
+}
+
+.chip-line {
+    height: 1px;
+    background-color: rgba(0, 0, 0, 0.2);
+    width: 100%;
+}
+
+.card-balance-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: rgba(255, 255, 255, 0.65);
+    display: block;
+    margin-bottom: 4px;
+}
+
+.card-balance-val {
+    font-size: 34px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin: 0;
+    color: #ffffff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-holder {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.card-logo-symbol {
+    display: flex !important;
+    align-items: center !important;
+}
+
+.card-logo-img {
+    height: 18px !important;
+    max-width: 90px !important;
+    object-fit: contain !important;
+    filter: brightness(0) invert(1) !important; /* Converts black brand logo to executive white */
+    opacity: 0.95 !important;
+}
+
+/* Breakdown Mini Cards */
+.balance-breakdown-row {
+    display: flex;
+    gap: 16px;
+    max-width: 420px;
+}
+
+.breakdown-card {
+    flex: 1;
+    background: #fdfdfd;
+    border: 1px solid #eaeaea;
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: all 0.2s ease;
+}
+
+.breakdown-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.04);
+}
+
+.breakdown-icon-wrap {
+    font-size: 20px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #f1f7fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.breakdown-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.breakdown-label {
+    font-size: 11px;
+    color: #777;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.breakdown-value {
+    font-size: 17px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 2px 0 0 0;
+}
+
+/* Right Column: Top up Panel */
+.topup-panel {
+    background: #ffffff;
+    border: 1px solid #eaeaea;
+    border-radius: 16px;
+    padding: 30px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.02);
+}
+
+.topup-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 4px;
+}
+
+.topup-subtitle {
+    font-size: 12.5px;
+    color: #666;
+    margin-bottom: 24px;
+}
+
+/* Input Fields */
+.custom-amount-input-wrap {
+    position: relative;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.currency-symbol {
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 20px;
+    font-weight: 600;
+    color: #000;
+}
+
+.custom-amount-input {
+    width: 100%;
+    height: 54px;
+    background: #fcfcfc;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    padding-left: 42px;
+    padding-right: 20px;
+    font-size: 17px;
+    font-weight: 600;
+    color: #1a1a1a;
+    outline: none;
+    transition: all 0.2s ease-in-out;
+}
+
+.custom-amount-input:focus {
+    border-color: #0077b6;
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba(0, 119, 182, 0.12);
+}
+
+/* Quick pills list */
+.quick-amount-options {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
     flex-wrap: wrap;
 }
 
-.amount-btn {
-    border: 1px solid #ccc;
-    background: #fff;
-    padding: 6px 14px;
+.quick-amount-btn {
+    flex: 1;
+    min-width: 70px;
+    height: 38px;
+    border: 1px dashed #cbd5e1;
+    background: #ffffff;
+    color: #475569;
+    font-size: 12.5px;
+    font-weight: 600;
     border-radius: 20px;
     cursor: pointer;
     transition: all 0.2s ease-in-out;
 }
 
-.amount-btn:hover {
-    background: #f5f5f5;
+.quick-amount-btn:hover {
+    background: #f8fafc;
+    border-color: #0077b6;
+    color: #0077b6;
 }
 
-.amount-btn.selected {
-    background: #3399cc;
-    color: #fff;
-    border-color: #3399cc;
+.quick-amount-btn.active {
+    background: #0077b6;
+    border-color: #0077b6;
+    color: #ffffff;
+    border-style: solid;
+    box-shadow: 0 4px 10px rgba(0, 119, 182, 0.2);
+}
+
+/* CTA Top up button */
+.add-money-cta-btn {
+    width: 100%;
+    height: 50px;
+    background: #000;
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    font-size: 14.5px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 119, 182, 0.25);
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.add-money-cta-btn:hover {
+    background: #222;
+    transform: translateY(-1px);
+    /* box-shadow: 0 6px 18px rgba(0, 119, 182, 0.35); */
+}
+
+/* Benefits Section */
+.wallet-benefits-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-top: 50px;
+    margin-bottom: 24px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.wallet-benefits-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-top: 15px;
+}
+
+.benefit-card {
+    background: #ffffff;
+    border: 1px solid #eaeaea;
+    border-radius: 12px;
+    padding: 24px;
+    text-align: center;
+    transition: all 0.25s ease;
+}
+
+.benefit-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    border-color: #cbd5e1;
+}
+
+.benefit-image-wrap {
+    width: 70px;
+    height: 70px;
+    margin: 0 auto 16px auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.benefit-image-wrap img {
+    max-height: 100%;
+    max-width: 100%;
+    object-fit: contain;
+}
+
+.benefit-card h4 {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 8px;
+}
+
+.benefit-card p {
+    font-size: 12px;
+    color: #666;
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* Responsiveness Media Queries */
+@media (max-width: 991px) {
+    .wallet-page {
+        display: block;
+        margin: 90px 15px;
+    }
+    .main-sidebar h2 {
+        display: block !important;
+        font-family: 'Playfair Display', serif;
+        margin-left: 24px;
+        margin-top: 10px;
+    }
+    .main-sidebar {
+        display: flex !important;
+        align-items: baseline;
+        justify-content: space-between;
+        margin-bottom: 20px;
+    }
+    .wallet-content h2 {
+        display: none;
+    }
+    .wallet-content {
+        margin-left: 0;
+        padding: 0 15px;
+    }
+    .wallet-dashboard-grid {
+        grid-template-columns: 1fr;
+        gap: 25px;
+    }
+    .joyory-digital-card {
+        max-width: 100%;
+    }
+    .balance-breakdown-row {
+        max-width: 100%;
+    }
+    .wallet-benefits-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+}
+
+@media (max-width: 768px) {
+    .wallet-content {
+        padding: 0 !important;
+    }
 }

@@ -926,8 +926,7 @@ export default function ProductPage() {
                     {/* Brand */}
                     <div className="brand-name text-muted small mb-1 fw-medium mt-2 text-start">{getBrandName(prod)}</div>
 
-                    {/* Product Name */}
-                    <h5
+                    {/* Product Name */}<div className="product-card-title-wrap"><h5
                         className="card-title mt-2 align-items-center gap-1 page-title-main-name"
                         style={{ cursor: "pointer" }}
                         onClick={() => navigate(`/product/${slugPr}`)}
@@ -936,9 +935,7 @@ export default function ProductPage() {
                             const varName = displayVariant ? getVariantDisplayText(displayVariant) : "";
                             return varName && varName.toUpperCase() !== "DEFAULT" ? `${prod.name} - ${varName}` : prod.name;
                         })()}
-                    </h5>
-
-                    {/* Price */}
+                    </h5></div>{/* Price */}
                     <p className="fw-bold mb-3 mt-2 page-title-main-name" style={{ fontSize: 16 }}>
                         {(() => {
                             const price = displayVariant?.displayPrice || displayVariant?.discountedPrice || prod.price || 0;
@@ -954,6 +951,11 @@ export default function ProductPage() {
                             ) : <>₹{orig}</>;
                         })()}
                     </p>
+                  {prod.nextOrderDiscountMessage && (
+                    <div className="next-order-discount-tag" title={prod.nextOrderDiscountMessage} onClick={(e) => { e.stopPropagation(); window.showDiscountPopup && window.showDiscountPopup(prod.nextOrderDiscountMessage, e.currentTarget); }}>
+                      <span className="text-truncate">{prod.nextOrderDiscountMessage}</span>
+                    </div>
+                  )}
 
                     {/* Add to Cart Button */}
                     <div className="mt-3">

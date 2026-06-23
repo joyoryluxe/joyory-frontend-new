@@ -356,6 +356,19 @@ const OrderSuccess = () => {
     };
   }, [orderId, location.state]);
 
+  // Disable browser back to payment/checkout page
+  useEffect(() => {
+    window.history.pushState(null, "", window.location.href);
+    const handlePopState = () => {
+      window.history.pushState(null, "", window.location.href);
+      navigate("/", { replace: true });
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [navigate]);
+
   if (loading) {
     return (
       <div className="container py-5 text-center">

@@ -248,6 +248,7 @@ function ProductCard({ product, navigate, location }) {
     }
 
     const pName = product?.product?.name || product?.name || 'Unnamed Product';
+    const discountMessage = product?.nextOrderDiscountMessage || product?.product?.nextOrderDiscountMessage;
 
     return (
         <div className="foryou-card-wrapper">
@@ -360,8 +361,7 @@ function ProductCard({ product, navigate, location }) {
                         {/* Brand Name */}
                         <div className="brand-name small text-muted mb-1 mt-2 text-start">{getBrandName()}</div>
 
-                        {/* Product Name */}
-                        <h6
+                        {/* Product Name */}<div className="product-card-title-wrap"><h6
                             className="foryou-name font-family-Poppins m-0 p-0"
                             onClick={() => {
                                 if (showOutOfStock) {
@@ -379,9 +379,7 @@ function ProductCard({ product, navigate, location }) {
                                 const varText = displayVariant ? getVariantDisplayText(displayVariant) : "";
                                 return varText && varText.toUpperCase() !== "DEFAULT" ? `${pName} - ${varText}` : pName;
                             })()}
-                        </h6>
-
-                        {/* Show out of stock message in variant area */}
+                        </h6></div>{/* Show out of stock message in variant area */}
                         {showOutOfStock && (
                             <div className="mt-2 mb-2">
                                 <span
@@ -417,6 +415,11 @@ function ProductCard({ product, navigate, location }) {
                                 )}
                             </div>
                         </div>
+                        {discountMessage && (
+                            <div className="next-order-discount-tag" title={discountMessage} onClick={(e) => { e.stopPropagation(); window.showDiscountPopup && window.showDiscountPopup(discountMessage, e.currentTarget); }}>
+                                <span className="text-truncate">{discountMessage}</span>
+                            </div>
+                        )}
 
                         {/* Add to Cart / Select Variant / Out of Stock Button */}
                         <div className="cart-section">
@@ -1330,6 +1333,15 @@ function SidePanel({ isOpen, isClosing, onClose, showQuizContent, quizData, load
                                                 </p>
                                             </div>
                                         )}
+                                                                      }} />
+                                                                      Selected
+                                                                  </div>}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+>>>>>>> origin/main
                                     </div>
 
                                     <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 24 }}>

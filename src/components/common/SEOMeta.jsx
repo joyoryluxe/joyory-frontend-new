@@ -403,7 +403,11 @@ const SEOMeta = ({ type = "home", slug = "", page = "" }) => {
       updateOrCreateMeta("name", "twitter:description", ogDescription);
       updateOrCreateMeta("name", "twitter:image", ogImage);
 
-      // 6. JSON-LD Structured Data
+      // 6. Dynamic Indexing Control (robots) for staging/dev privacy
+      const isProduction = window.location.hostname === "joyory.com" || window.location.hostname === "www.joyory.com";
+      updateOrCreateMeta("name", "robots", isProduction ? "index, follow" : "noindex, nofollow");
+
+      // 7. JSON-LD Structured Data
       if (data.jsonLd) {
         injectJsonLd(data.jsonLd);
       } else if (fallback.jsonLd) {

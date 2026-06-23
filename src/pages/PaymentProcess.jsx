@@ -146,6 +146,7 @@ const PaymentProcess = () => {
         throw new Error("COD confirmation failed.");
 
       navigate(`/ordersuccess/${orderId}`, {
+        replace: true,
         state: {
           paymentResponse: confirmData,
           backendResponse: confirmData,
@@ -244,6 +245,7 @@ const PaymentProcess = () => {
             return alert("Payment verification failed.");
 
           navigate(`/ordersuccess/${orderId}`, {
+            replace: true,
             state: {
               paymentResponse: response,
               backendResponse: verifyData,
@@ -323,6 +325,7 @@ const PaymentProcess = () => {
 
       // navigate("/ordersuccess", {
       navigate(`/ordersuccess/${orderId}`, {
+        replace: true,
         state: {
           paymentResponse: data,
           backendResponse: data,
@@ -388,6 +391,7 @@ const PaymentProcess = () => {
         throw new Error(data.message || "Gift Card payment failed.");
 
       navigate(`/ordersuccess/${orderId}`, {
+        replace: true,
         state: {
           paymentResponse: data,
           backendResponse: data,

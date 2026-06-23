@@ -227,8 +227,7 @@ const Wishlist = () => {
                   </div>
 
                   <div className="card-body d-flex flex-column p-3">
-                    {/* Product Name */}
-                    <h6
+                    {/* Product Name */}<div className="product-card-title-wrap"><h6
                       className="foryou-name font-family-Poppins m-0 p-0 mt-2"
                       style={{ cursor: "pointer" }}
                       onClick={() => navigate(`/product/${getCleanProductSlug(item)}`)}
@@ -237,9 +236,7 @@ const Wishlist = () => {
                         const variantText = (item.variantName || item.variant || "").trim().toUpperCase();
                         return variantText && variantText !== "DEFAULT" ? `${item.name} - ${variantText}` : item.name;
                       })()}
-                    </h6>
-
-                    {/* Price Section */}
+                    </h6></div>{/* Price Section */}
                     <div className="price-section mb-3">
                       <div className="d-flex align-items-baseline flex-wrap">
                         <span className="current-price fw-400 fs-5">
@@ -265,6 +262,11 @@ const Wishlist = () => {
                         )}
                       </div>
                     </div>
+                  {item.nextOrderDiscountMessage && (
+                    <div className="next-order-discount-tag" title={item.nextOrderDiscountMessage} onClick={(e) => { e.stopPropagation(); window.showDiscountPopup && window.showDiscountPopup(item.nextOrderDiscountMessage, e.currentTarget); }}>
+                      <span className="text-truncate">{item.nextOrderDiscountMessage}</span>
+                    </div>
+                  )}
 
                     {/* Action Buttons */}
                     <div className="mt-md-auto mt-0">
