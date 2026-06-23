@@ -354,9 +354,9 @@ export default function Recommendations() {
               />
 
               {prod?.supportsVTO && (
-                <div 
-                  className="support-beauty-badge" 
-                  title="Try It On" 
+                <div
+                  className="support-beauty-badge"
+                  title="Try It On"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleProductClick(prod);

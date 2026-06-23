@@ -51,8 +51,37 @@ const TopCategories = () => {
         <p className="text-center text-muted page-title-main-name">Loading categories...</p>
       ) : categories.length === 0 ? (
         <p className="text-center text-muted page-title-main-name">No categories found.</p>
+      ) : categories.length < 3 ? (
+        <div className="container-fluid px-lg-5">
+          <div className="row g-4 justify-content-center">
+            {categories.map((cat, i) => (
+              <div key={cat._id || i} className="col-6 col-md-5 col-lg-5">
+                <div
+                  className="slide-item"
+                  onClick={() => navigate(`/category/${cat.slug}`)}
+                  style={{ cursor: "pointer" }}
+                >
+                  <div className="border-0 top-cat-card">
+                    <img
+                      src={cat.thumbnailImage || `https://picsum.photos/400/200?random=${i}`}
+                      alt={cat.name || "Category"}
+                      className="top-cat-img top-category-image responsive-imagesss"
+                      onError={(e) => {
+                        e.currentTarget.src = `https://picsum.photos/400/200?random=${i}`;
+                      }}
+                    />
+                    <div className="top-cat-body text-start">
+                      <h5 className="top-cat-title mb-0 mt-3 font-weightss top-category-name-font">
+                        {cat.name || "Unnamed"}
+                      </h5>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       ) : (
-        
         <div className="mobile-responsive-code" >
         <Swiper
           modules={[Autoplay, Pagination, Navigation]} // Added Navigation
@@ -79,7 +108,7 @@ const TopCategories = () => {
                 onClick={() => navigate(`/category/${cat.slug}`)}
                 style={{ cursor: "pointer" }}
               >
-                <div className="border-0">
+                <div className="border-0 top-cat-card">
                   <img
                     src={cat.thumbnailImage || `https://picsum.photos/400/200?random=${i}`}
                     alt={cat.name || "Category"}

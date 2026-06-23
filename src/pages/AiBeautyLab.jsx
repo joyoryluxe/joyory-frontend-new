@@ -49,6 +49,14 @@ const AiBeautyLab = () => {
 
   const tools = [
     {
+      title: "AI Skin Diagnosis",
+      description: "Upload a selfie or capture a photo in real-time. Our AI evaluates skin tone, undertones, hydration levels, and targets concerns to build a customized product list.",
+      image: scannerImg,
+      cta: "Scan Skin Now",
+      action: () => navigate("/skin-diagnosis"),
+      badge: "AI Derm"
+    },
+    {
       title: "AI Virtual Try-On",
       description: "Instantly test lipstick, blush, and eyeshadow shades in real-time. Experience hyper-realistic color matching directly from your camera.",
       image: virtualTryOnImg,

@@ -33,6 +33,9 @@ const AddressSelection = () => {
     bagDiscount: 0,
     autoDiscount: 0,
     couponDiscount: 0,
+    pointsDiscount: 0,
+    pointsUsed: 0,
+    referralPointsUsed: 0,
     shipping: 0,
     taxableAmount: 0,
     gstRate: "0%",
@@ -59,6 +62,9 @@ const AddressSelection = () => {
         bagDiscount: location.state.priceDetails.bagDiscount || 0,
         autoDiscount: location.state.priceDetails.autoDiscount || 0,
         couponDiscount: location.state.priceDetails.couponDiscount || 0,
+        pointsDiscount: location.state.priceDetails.pointsDiscount || 0,
+        pointsUsed: location.state.priceDetails.pointsUsed || 0,
+        referralPointsUsed: location.state.priceDetails.referralPointsUsed || 0,
         shipping: location.state.priceDetails.shipping || 0,
         taxableAmount: location.state.priceDetails.taxableAmount || 0,
         gstRate: location.state.priceDetails.gstRate || "0%",
@@ -134,6 +140,9 @@ const AddressSelection = () => {
         bagDiscount: priceDetailsData.bagDiscount || 0,
         autoDiscount: priceDetailsData.autoDiscount || 0,
         couponDiscount: priceDetailsData.couponDiscount || 0,
+        pointsDiscount: data.wallet?.pointsDiscount || 0,
+        pointsUsed: data.wallet?.pointsUsed || 0,
+        referralPointsUsed: data.wallet?.pointsUsed || 0,
         shipping: priceDetailsData.shippingCharge || 0,
         taxableAmount: priceDetailsData.taxableAmount || 0,
         gstRate: priceDetailsData.gstRate || "0%",
@@ -277,7 +286,7 @@ const AddressSelection = () => {
 
       const payload = {
         discountCode: priceDetails?.appliedCoupon?.code || null,
-        pointsToUse: priceDetails?.referralPointsUsed || 0,
+        pointsToUse: priceDetails?.pointsUsed || priceDetails?.referralPointsUsed || 0,
         giftCardCode: priceDetails?.giftCard?.code || null,
         giftCardPin: priceDetails?.giftCard?.pin || null,
         giftCardAmount: priceDetails?.giftCard?.amount || 0,
@@ -352,6 +361,9 @@ const AddressSelection = () => {
               payable: priceDetails?.payable || 0,
               bagDiscount: priceDetails?.bagDiscount || 0,
               couponDiscount: priceDetails?.couponDiscount || 0,
+              pointsDiscount: priceDetails?.pointsDiscount || 0,
+              pointsUsed: priceDetails?.pointsUsed || 0,
+              referralPointsUsed: priceDetails?.referralPointsUsed || 0,
               shipping: priceDetails?.shipping || 0,
               totalSavings: priceDetails?.totalSavings || 0,
               savingsMessage: priceDetails?.savingsMessage || "",
@@ -579,6 +591,13 @@ const AddressSelection = () => {
               <div className="price-row">
                 <span>Coupon Discount:</span>
                 <span className="discount-amount">-₹{formatCurrency(priceDetails.couponDiscount)}</span>
+              </div>
+            )}
+
+            {priceDetails.pointsDiscount > 0 && (
+              <div className="price-row">
+                <span>Points Discount:</span>
+                <span className="discount-amount">-₹{formatCurrency(priceDetails.pointsDiscount)}</span>
               </div>
             )}
 

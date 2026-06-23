@@ -49,6 +49,8 @@ const PaymentProcess = () => {
     gstMessage = "",
   } = priceDetails;
 
+  const pointsDiscount = priceDetails.pointsDiscount || priceDetails.referralPointsDiscount || 0;
+
   const loadRazorpayScript = () =>
     new Promise((resolve) => {
       if (window.Razorpay) return resolve(true);
@@ -150,13 +152,13 @@ const PaymentProcess = () => {
           shippingCharge: priceDetails.shipping || 0,
           discountDetails: {
             bagDiscount: priceDetails.bagDiscount || 0,
-            // autoDiscount: priceDetails.autoDiscount || 0,
             couponDiscount: priceDetails.couponDiscount || 0,
+            pointsDiscount: pointsDiscount,
           },
           totalDiscount:
             (priceDetails.bagDiscount || 0) +
-            // (priceDetails.autoDiscount || 0) +
-            (priceDetails.couponDiscount || 0),
+            (priceDetails.couponDiscount || 0) +
+            pointsDiscount,
           payable: priceDetails.payable || 0,
           bagMrp: priceDetails.bagMrp || 0,
           gstRate,
@@ -248,13 +250,13 @@ const PaymentProcess = () => {
               shippingCharge: priceDetails.shipping || 0,
               discountDetails: {
                 bagDiscount: priceDetails.bagDiscount || 0,
-                // autoDiscount: priceDetails.autoDiscount || 0,
                 couponDiscount: priceDetails.couponDiscount || 0,
+                pointsDiscount: pointsDiscount,
               },
               totalDiscount:
                 (priceDetails.bagDiscount || 0) +
-                // (priceDetails.autoDiscount || 0) +
-                (priceDetails.couponDiscount || 0),
+                (priceDetails.couponDiscount || 0) +
+                pointsDiscount,
               payable: priceDetails.payable || 0,
               bagMrp: priceDetails.bagMrp || 0,
               gstRate,
@@ -327,13 +329,13 @@ const PaymentProcess = () => {
           shippingCharge: priceDetails.shipping || 0,
           discountDetails: {
             bagDiscount: priceDetails.bagDiscount || 0,
-            // autoDiscount: priceDetails.autoDiscount || 0,
             couponDiscount: priceDetails.couponDiscount || 0,
+            pointsDiscount: pointsDiscount,
           },
           totalDiscount:
             (priceDetails.bagDiscount || 0) +
-            // (priceDetails.autoDiscount || 0) +
-            (priceDetails.couponDiscount || 0),
+            (priceDetails.couponDiscount || 0) +
+            pointsDiscount,
           payable: priceDetails.payable || 0,
           bagMrp: priceDetails.bagMrp || 0,
           gstRate,
@@ -392,13 +394,13 @@ const PaymentProcess = () => {
           shippingCharge: priceDetails.shipping || 0,
           discountDetails: {
             bagDiscount: priceDetails.bagDiscount || 0,
-            // autoDiscount: priceDetails.autoDiscount || 0,
             couponDiscount: priceDetails.couponDiscount || 0,
+            pointsDiscount: pointsDiscount,
           },
           totalDiscount:
             (priceDetails.bagDiscount || 0) +
-            // (priceDetails.autoDiscount || 0) +
-            (priceDetails.couponDiscount || 0),
+            (priceDetails.couponDiscount || 0) +
+            pointsDiscount,
           payable: priceDetails.payable || 0,
           bagMrp: priceDetails.bagMrp || 0,
           gstRate,
@@ -657,6 +659,12 @@ const PaymentProcess = () => {
                   <span className="summary-header-left fw-normal">Coupon Discount</span>
                   <span className="summary-value">Rs {priceDetails.couponDiscount}/-</span>
                 </div>
+                {pointsDiscount > 0 && (
+                  <div className="summary-row p-0">
+                    <span className="summary-header-left fw-normal">Points Discount</span>
+                    <span className="summary-value">Rs {pointsDiscount}/-</span>
+                  </div>
+                )}
 
                 <div className="taxable-section p-0">
                   {/* <h4 className="summary-header-left fw-normal">Taxable Summary</h4> */}

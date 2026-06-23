@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { X, ChevronLeft, ChevronDown, ChevronUp, Edit2 } from 'lucide-react';
+import { X, ChevronLeft, ChevronDown, ChevronUp, Edit2, Droplet, Sun, Smile, Shield, Flame, Layers, Activity, Sparkles, Heart, Award, Sparkle, Wind } from 'lucide-react';
 import { Container, Row, Col } from 'react-bootstrap';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Pagination, Navigation } from 'swiper/modules';
@@ -1145,11 +1145,107 @@ function ProfileResult({ profileData, onNextFromProfile, onEditQuestion }) {
 function SidePanel({ isOpen, isClosing, onClose, showQuizContent, quizData, loading, error, currentQuestionIndex, selectedAnswers, expandedOption, onOptionSelect, onToggleExpand, onPrevQuestion, onSubmitQuiz, onStartQuiz, profileData, profileLoading, showProfile, onNextFromProfile, onEditQuestion }) {
     if (!isOpen) return null;
     const currentQuestion = quizData?.[currentQuestionIndex];
+    const options = currentQuestion?.options || [];
+    const selectedVal = selectedAnswers[currentQuestion?._id];
+    const selectedIndex = options.findIndex(opt => opt.value === selectedVal);
+
+    // Skincare Wheel custom local state
+    const [wheelRotation, setWheelRotation] = useState(0);
+    const [isSpinning, setIsSpinning] = useState(false);
+    const [transitionSpeed, setTransitionSpeed] = useState('0.8s');
+    const [transitionTiming, setTransitionTiming] = useState('cubic-bezier(0.34, 1.56, 0.64, 1)');
+
+    // Sync wheel to active question selected option
+    useEffect(() => {
+        if (currentQuestion) {
+            if (selectedIndex !== -1) {
+                const angleStep = 360 / options.length;
+                setWheelRotation(-selectedIndex * angleStep);
+            } else {
+                setWheelRotation(0);
+            }
+            setTransitionSpeed('0.8s');
+            setTransitionTiming('cubic-bezier(0.34, 1.56, 0.64, 1)');
+        }
+    }, [currentQuestionIndex, currentQuestion?._id]);
+
+    const getShortLabel = (label) => {
+        if (!label) return '';
+        const part = label.split(':')[0].trim();
+        return part;
+    };
+
+    const getOptionIcon = (label) => {
+        const l = (label || '').toLowerCase();
+        if (l.includes('dry')) return <Droplet size={18} style={{ marginBottom: 4 }} />;
+        if (l.includes('oily')) return <Flame size={18} style={{ marginBottom: 4 }} />;
+        if (l.includes('combination') || l.includes('combo') || l.includes('zone')) return <Layers size={18} style={{ marginBottom: 4 }} />;
+        if (l.includes('sensitive')) return <Shield size={18} style={{ marginBottom: 4 }} />;
+        if (l.includes('normal')) return <Smile size={18} style={{ marginBottom: 4 }} />;
+        if (l.includes('acne') || l.includes('blemish') || l.includes('redness')) return <Activity size={18} style={{ marginBottom: 4 }} />;
+        if (l.includes('wrinkle') || l.includes('line') || l.includes('spot') || l.includes('dull')) return <Sparkles size={18} style={{ marginBottom: 4 }} />;
+        if (l.includes('clean') || l.includes('wash')) return <Wind size={18} style={{ marginBottom: 4 }} />;
+        if (l.includes('ton')) return <Sparkle size={18} style={{ marginBottom: 4 }} />;
+        if (l.includes('serum')) return <Sparkles size={18} style={{ marginBottom: 4 }} />;
+        if (l.includes('moist') || l.includes('cream')) return <Heart size={18} style={{ marginBottom: 4 }} />;
+        if (l.includes('sun')) return <Sun size={18} style={{ marginBottom: 4 }} />;
+        if (l.includes('under') || l.includes('rs') || l.includes('budget') || l.includes('above')) return <Award size={18} style={{ marginBottom: 4 }} />;
+        return <Sparkles size={18} style={{ marginBottom: 4 }} />;
+    };
+
+    const handleNodeClick = (option, index) => {
+        if (isSpinning) return;
+        
+        setTransitionSpeed('0.8s');
+        setTransitionTiming('cubic-bezier(0.34, 1.56, 0.64, 1)');
+        
+        const angleStep = 360 / options.length;
+        const targetBaseAngle = -index * angleStep;
+        
+        const currentRot = wheelRotation;
+        const currentCycle = Math.round(currentRot / 360);
+        let targetRotation = currentCycle * 360 + targetBaseAngle;
+        
+        if (targetRotation - currentRot > 180) {
+            targetRotation -= 360;
+        } else if (targetRotation - currentRot < -180) {
+            targetRotation += 360;
+        }
+        
+        setWheelRotation(targetRotation);
+        onOptionSelect(currentQuestion._id, option.value);
+    };
+
+    const handleRandomSpin = () => {
+        if (isSpinning || !options.length) return;
+        setIsSpinning(true);
+        
+        setTransitionSpeed('2.5s');
+        setTransitionTiming('cubic-bezier(0.25, 1, 0.5, 1)');
+        
+        const randomIndex = Math.floor(Math.random() * options.length);
+        const randomOpt = options[randomIndex];
+        const angleStep = 360 / options.length;
+        
+        const targetBaseAngle = -randomIndex * angleStep;
+        const extraSpins = 3 + Math.floor(Math.random() * 3); // 3 to 5 full spins
+        
+        const targetRotation = wheelRotation - (extraSpins * 360) + (targetBaseAngle - (wheelRotation % 360));
+        
+        setWheelRotation(targetRotation);
+        
+        setTimeout(() => {
+            setIsSpinning(false);
+            onOptionSelect(currentQuestion._id, randomOpt.value);
+        }, 2500);
+    };
+
+    const selectedOptionData = options.find(opt => opt.value === selectedVal);
 
     return (
         <>
             <div className="j-backdrop" onClick={onClose} />
-            <div className={`j-panel${isClosing ? ' closing' : ''}`}>
+            <div className={`j-panel${isClosing ? ' closing' : ''}${showQuizContent ? ' quiz-mode' : ''}`}>
                 <div className="j-panel-header">
                     <h2 className="j-panel-title page-title-main-name">For You</h2>
                     <button className="j-panel-close page-title-main-name" onClick={onClose}><X size={22} /></button>
@@ -1178,43 +1274,69 @@ function SidePanel({ isOpen, isClosing, onClose, showQuizContent, quizData, load
                                         </div>
                                     </div>
 
-                                    <p className="j-panel-eyebrow" style={{ marginBottom: 8 }}>SKINCARE QUIZ</p>
-                                    <h3 className="j-panel-heading fs-6" style={{ marginBottom: 12 }}>{currentQuestion?.questionText}</h3>
-                                    {currentQuestion?.description && <p style={{ fontSize: 13, color: '#6b7280', marginBottom: 20 }}>{currentQuestion.description}</p>}
+                                    <p className="j-panel-eyebrow" style={{ marginBottom: 4 }}>SKINCARE QUIZ</p>
+                                    <h3 className="j-panel-heading fs-6" style={{ marginBottom: 8 }}>{currentQuestion?.questionText}</h3>
+                                    {currentQuestion?.description && <p style={{ fontSize: 13, color: '#6b7280', marginBottom: 16 }}>{currentQuestion.description}</p>}
 
-                                    <div style={{ marginBottom: 24 }}>
-                                        {currentQuestion?.options.map((option) => {
-                                            const isSelected = selectedAnswers[currentQuestion._id] === option.value;
-                                            const isExpanded = expandedOption === option._id;
-                                            return (
-                                                <div key={option._id} style={{ marginBottom: 12, border: `2px solid ${isSelected ? '#1f2937' : '#e5e7eb'}`, borderRadius: 8, background: isSelected ? '#f9fafb' : 'white', overflow: 'hidden' }}>
-                                                    <div onClick={() => onToggleExpand(option._id)} style={{ padding: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: isExpanded ? '#f3f4f6' : 'transparent' }}>
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1 }}>
-                                                            <div onClick={(e) => { e.stopPropagation(); onOptionSelect(currentQuestion._id, option.value); }} style={{ width: 20, height: 20, borderRadius: '50%', border: `2px solid ${isSelected ? '#1f2937' : '#d1d5db'}`, background: isSelected ? '#1f2937' : 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                                                                {isSelected && <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'white' }} />}
-                                                            </div>
-                                                            <h5 style={{ fontSize: 14, fontWeight: 600, margin: 0, color: '#374151' }}>{option.label}</h5>
-                                                        </div>
-                                                        {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                                    {/* SKINCARE WHEEL COMPONENT */}
+                                    <div 
+                                        className="skincare-wheel-container"
+                                        style={{
+                                            '--wheel-transition-speed': transitionSpeed,
+                                            '--wheel-transition-timing': transitionTiming
+                                        }}
+                                    >
+                                        <div className="skincare-wheel-pointer" />
+                                        <div className="skincare-wheel-outer" style={{ transform: `rotate(${wheelRotation}deg)` }}>
+                                            {options.map((option, index) => {
+                                                const isSelected = selectedVal === option.value;
+                                                const angleStep = 360 / options.length;
+                                                const nodeAngle = index * angleStep;
+                                                return (
+                                                    <div
+                                                        key={option._id}
+                                                        className={`wheel-node${isSelected ? ' selected' : ''}`}
+                                                        onClick={() => handleNodeClick(option, index)}
+                                                        style={{
+                                                            transform: `rotate(${nodeAngle}deg) translate(var(--wheel-radius)) rotate(${-nodeAngle - wheelRotation}deg)`
+                                                        }}
+                                                    >
+                                                        {getOptionIcon(option.label)}
+                                                        <span className="node-label">{getShortLabel(option.label)}</span>
                                                     </div>
-                                                    {isExpanded && (
-                                                        <div style={{ padding: '0 16px 16px 48px' }}>
-                                                            <p style={{ fontSize: 13, color: '#6b7280', margin: '12px 0 0 0', lineHeight: 1.5 }}>{option.subtext}</p>
-                                                            {!isSelected
-                                                                ? <button onClick={() => onOptionSelect(currentQuestion._id, option.value)} style={{ marginTop: 12, padding: '8px 16px', fontSize: 12, fontWeight: 600, color: '#1f2937', background: 'transparent', border: '1px solid #1f2937', borderRadius: 6, cursor: 'pointer' }}>Select This Option</button>
-                                                                : <div style={{ marginTop: 12, padding: '8px 16px', fontSize: 12, fontWeight: 600, color: 'white', background: '#1f2937', borderRadius: 6, display: 'inline-flex', alignItems: 'center', gap: 8 }}><div style={{ width: 12, height: 12, borderRadius: '50%', background: '#22c55e' }} />Selected</div>}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            );
-                                        })}
+                                                );
+                                            })}
+                                        </div>
+                                        <div 
+                                            className={`wheel-hub-btn${isSpinning ? ' disabled' : ''}`}
+                                            onClick={handleRandomSpin}
+                                        >
+                                            <Sparkles size={20} style={{ color: '#d4af37' }} />
+                                            <span className="hub-label">{isSpinning ? 'Spinning' : 'Spin'}</span>
+                                        </div>
+                                    </div>
+
+                                    {/* SELECTION DESCRIPTION */}
+                                    <div style={{ minHeight: '110px' }}>
+                                        {selectedOptionData ? (
+                                            <div className="wheel-selection-description">
+                                                <h4 className="desc-title">{selectedOptionData.label}</h4>
+                                                <p className="desc-text">{selectedOptionData.subtext || 'No additional details available.'}</p>
+                                            </div>
+                                        ) : (
+                                            <div className="wheel-selection-description" style={{ opacity: 0.8, textAlign: 'center' }}>
+                                                <p className="desc-text" style={{ fontStyle: 'italic', color: '#888' }}>
+                                                    Tap a choice on the dial, or click <strong>SPIN</strong> to decide!
+                                                </p>
+                                            </div>
+                                        )}
                                     </div>
 
                                     <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 24 }}>
-                                        <button onClick={onPrevQuestion} disabled={currentQuestionIndex === 0} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', background: 'transparent', border: 'none', color: currentQuestionIndex === 0 ? '#9ca3af' : '#374151', cursor: currentQuestionIndex === 0 ? 'not-allowed' : 'pointer', opacity: currentQuestionIndex === 0 ? 0.5 : 1 }}>
+                                        <button onClick={onPrevQuestion} disabled={currentQuestionIndex === 0 || isSpinning} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', background: 'transparent', border: 'none', color: (currentQuestionIndex === 0 || isSpinning) ? '#9ca3af' : '#374151', cursor: (currentQuestionIndex === 0 || isSpinning) ? 'not-allowed' : 'pointer', opacity: (currentQuestionIndex === 0 || isSpinning) ? 0.5 : 1 }}>
                                             <ChevronLeft size={18} /> Previous
                                         </button>
-                                        <button onClick={() => onSubmitQuiz(currentQuestionIndex === quizData.length - 1)} disabled={!selectedAnswers[currentQuestion?._id]} style={{ padding: '10px 24px', background: selectedAnswers[currentQuestion?._id] ? '#1f2937' : '#9ca3af', color: 'white', border: 'none', borderRadius: 6, fontWeight: 600, cursor: selectedAnswers[currentQuestion?._id] ? 'pointer' : 'not-allowed' }}>
+                                        <button onClick={() => onSubmitQuiz(currentQuestionIndex === quizData.length - 1)} disabled={!selectedVal || isSpinning} style={{ padding: '10px 24px', background: (selectedVal && !isSpinning) ? '#1f2937' : '#9ca3af', color: 'white', border: 'none', borderRadius: 6, fontWeight: 600, cursor: (selectedVal && !isSpinning) ? 'pointer' : 'not-allowed' }}>
                                             Submit
                                         </button>
                                     </div>

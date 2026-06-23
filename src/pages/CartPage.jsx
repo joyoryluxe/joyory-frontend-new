@@ -2898,6 +2898,8 @@ const CartPage = () => {
   const [loading, setLoading] = useState(true);
   const [initiating, setInitiating] = useState(false);
   const [stockError, setStockError] = useState("");
+  const [usePoints, setUsePoints] = useState(() => localStorage.getItem("useRewardPoints") === "true");
+  const [pointsToUseState, setPointsToUseState] = useState(() => localStorage.getItem("useRewardPoints") === "true" ? 99999999 : 0);
 
   // Recommendations
   const [recommendations, setRecommendations] = useState([]);
@@ -2973,13 +2975,29 @@ const CartPage = () => {
   };
 
   // ── fetch cart ──────────────────────────────────────────────────────────────
-  const fetchCart = async (discountCode = null, silent = false) => {
+  const fetchCart = async (discountCode = null, silent = false, pointsVal = null) => {
     cartCallCount++;
     try {
       if (!silent) setLoading(true);
-      const url = discountCode
-        ? `${API_BASE}/summary?discount=${discountCode}`
-        : `${API_BASE}/summary`;
+
+      const queryParams = new URLSearchParams();
+      if (discountCode) {
+        queryParams.append("discount", discountCode);
+      }
+
+      let finalPoints = 0;
+      if (pointsVal !== null) {
+        finalPoints = Number(pointsVal);
+      } else if (usePoints) {
+        finalPoints = Number(pointsToUseState);
+      }
+
+      if (finalPoints > 0) {
+        queryParams.append("pointsToUse", finalPoints);
+      }
+
+      const queryString = queryParams.toString();
+      const url = queryString ? `${API_BASE}/summary?${queryString}` : `${API_BASE}/summary`;
       const res = await fetch(url, { credentials: "include" });
 
       if (res.status === 400) {
@@ -3035,7 +3053,26 @@ const CartPage = () => {
         promotions: data.appliedPromotions || [], totalSavings: p.totalSavings || 0,
         savingsMessage: p.savingsMessage || "", grandTotal: data.grandTotal || p.payable || 0,
         shippingMessage: p.shippingMessage || "",
+        wallet: data.wallet || null,
       });
+
+      if (data.wallet) {
+        if (!data.wallet.canUsePoints) {
+          setUsePoints(false);
+          setPointsToUseState(0);
+          localStorage.setItem("useRewardPoints", "false");
+        } else {
+          if (data.wallet.pointsUsed > 0) {
+            setUsePoints(true);
+            setPointsToUseState(data.wallet.pointsUsed);
+            localStorage.setItem("useRewardPoints", "true");
+          } else {
+            setUsePoints(false);
+            localStorage.setItem("useRewardPoints", "false");
+            setPointsToUseState(data.wallet.rewardPoints);
+          }
+        }
+      }
       const offender = (data.cart || []).find((i) => !i.canCheckout);
       setStockError(offender ? offender.stockMessage : "");
     } catch (err) {
@@ -3296,7 +3333,7 @@ const CartPage = () => {
 
       const body = {
         discountCode: cartData?.appliedCoupon?.code || null,
-        pointsToUse: cartData?.pointsToUse || 0,
+        pointsToUse: cartData?.wallet?.pointsUsed || 0,
         giftCardCode: cartData?.giftCardApplied?.code || null,
         giftCardPin: cartData?.giftCardApplied?.pin || null,
         giftCardAmount: cartData?.giftCardApplied?.amount || 0,
@@ -3333,6 +3370,9 @@ const CartPage = () => {
               bagDiscount: cartData.bagDiscount,
               autoDiscount: cartData.autoDiscount,
               couponDiscount: cartData.couponDiscount,
+              pointsDiscount: cartData?.wallet?.pointsDiscount || 0,
+              pointsUsed: cartData?.wallet?.pointsUsed || 0,
+              referralPointsUsed: cartData?.wallet?.pointsUsed || 0,
               shipping: cartData.shipping,
               taxableAmount: cartData.taxableAmount,
               gstRate: cartData.gstRate,
@@ -3372,7 +3412,7 @@ const CartPage = () => {
   useEffect(() => {
     const handlePendingCartAction = async () => {
       if (!user || user.guest) return; // Wait until authenticated user is loaded
-      
+
       const pendingActionStr = localStorage.getItem("pendingCartAction");
       if (pendingActionStr) {
         try {
@@ -3416,6 +3456,15 @@ const CartPage = () => {
       return () => clearTimeout(timer);
     }
   }, [couponMessage]);
+
+  // ── Clear reward points from localStorage if cart is empty ─────────────────
+  useEffect(() => {
+    if (cartData && cartData.cart.length === 0 && cartData.freebies?.length === 0) {
+      localStorage.removeItem("useRewardPoints");
+      setUsePoints(false);
+      setPointsToUseState(0);
+    }
+  }, [cartData]);
 
   // ── loading / empty states ──────────────────────────────────────────────────
   if (loading)
@@ -3664,6 +3713,49 @@ const CartPage = () => {
                 <i className="bi bi-chevron-right margin-left-right" onClick={() => setShowCouponModal(true)} style={{ cursor: "pointer" }}></i>
               </div>
               <hr className="border-color-blacks" />
+
+              {/* Reward Points Widget */}
+              {cartData.wallet && cartData.wallet.rewardPoints > 0 && (
+                <>
+                  <div className="p-3 mb-3" style={{ borderRadius: "8px", border: "1px solid #ddd", background: "#fdfdfd" }}>
+                    <div className="d-flex justify-content-between align-items-center mb-2">
+                      <div className="fw-600 fs-6 page-title-main-name">
+                        🪙 Joyory Reward Points
+                      </div>
+                      <div className="form-check form-switch m-0" title={!cartData.wallet.canUsePoints ? "Reward points can only be used on orders ₹499 and above." : ""}>
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          id="useRewardPointsCheckbox"
+                          checked={usePoints}
+                          disabled={!cartData.wallet.canUsePoints}
+                          onChange={(e) => {
+                            const checked = e.target.checked;
+                            localStorage.setItem("useRewardPoints", checked ? "true" : "false");
+                            window.location.reload();
+                          }}
+                          style={{ cursor: cartData.wallet.canUsePoints ? "pointer" : "not-allowed" }}
+                        />
+                      </div>
+                    </div>
+                    <div className="small text-muted mb-2 page-title-main-name">
+                      You have <strong>{cartData.wallet.rewardPoints}</strong> points available (worth <strong>₹{cartData.wallet.pointsValue}</strong>).
+                    </div>
+                    {!cartData.wallet.canUsePoints && (
+                      <div className="small text-danger fw-semibold mb-2 page-title-main-name">
+                        ⚠️ Reward points can only be used on orders ₹499 and above.
+                      </div>
+                    )}
+                    {cartData.wallet.pointsMessage && (
+                      <div className={`small fw-semibold page-title-main-name ${usePoints ? "text-success" : "text-danger"}`}>
+                        {cartData.wallet.pointsMessage}
+                      </div>
+                    )}
+                  </div>
+                  <hr className="border-color-blacks" />
+                </>
+              )}
+
               <h5 className="ms-3 fs-5 fw-600 page-title-main-name">Order Summary</h5>
               <hr className="border-color-blacks" />
 
@@ -3695,6 +3787,12 @@ const CartPage = () => {
                   <div className="d-flex justify-content-between mb-1 text-success margin-left-right-repert pb-2 page-title-main-name">
                     <span>Coupon Discount:</span>
                     <span>-₹{cartData.couponDiscount?.toFixed(2) || "0.00"}</span>
+                  </div>
+                )}
+                {cartData.wallet?.pointsDiscount > 0 && (
+                  <div className="d-flex justify-content-between mb-1 text-success margin-left-right-repert pb-2 page-title-main-name">
+                    <span>Points Discount:</span>
+                    <span>-₹{cartData.wallet.pointsDiscount.toFixed(2)}</span>
                   </div>
                 )}
                 <hr className="border-color-blacks" />
