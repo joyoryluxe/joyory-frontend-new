@@ -101,6 +101,7 @@
     0% {
         transform: rotate(0deg);
     }
+
     100% {
         transform: rotate(360deg);
     }
@@ -349,35 +350,44 @@
     .search-page-content {
         padding: 10px;
     }
+
     .search-page-header {
         padding: 15px;
     }
+
     .search-title {
         font-size: 20px;
     }
+
     .search-page-input {
         font-size: 14px;
         padding: 10px 15px;
         padding-right: 45px;
     }
+
     .search-page-btn {
         width: 35px;
         height: 35px;
     }
+
     .search-results-grid {
         grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
         gap: 15px;
     }
+
     .product-image-container {
         height: 160px;
     }
+
     .product-name {
         font-size: 14px;
         height: 38px;
     }
+
     .current-price {
         font-size: 16px;
     }
+
     .search-header-sticky {
         position: sticky;
         top: 0;
@@ -396,9 +406,11 @@
         grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
         gap: 12px;
     }
+
     .product-image-container {
         height: 140px;
     }
+
     .product-info {
         padding: 10px;
     }
@@ -809,6 +821,7 @@
     0% {
         transform: rotate(0deg);
     }
+
     100% {
         transform: rotate(360deg);
     }
@@ -995,27 +1008,34 @@
     .search-page-content {
         padding: 15px;
     }
+
     .search-title {
         font-size: 22px;
     }
+
     .search-results-grid {
         grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
         gap: 15px;
     }
+
     .quick-filters {
         padding: 10px;
     }
+
     .filter-btn {
         padding: 6px 12px;
         font-size: 13px;
     }
+
     .search-suggestions {
         gap: 8px;
     }
+
     .search-suggestions button {
         padding: 8px 15px;
         font-size: 13px;
     }
+
     .popular-tag {
         padding: 6px 12px;
         font-size: 13px;
@@ -1026,6 +1046,7 @@
     .search-results-grid {
         grid-template-columns: 1fr;
     }
+
     .product-image-container {
         height: 180px;
     }
@@ -1037,7 +1058,7 @@
 .search-page-container {
     background-color: var(--bg-light);
     min-height: 100vh;
-    padding-bottom: 40px;
+    /* padding-bottom: 40px; */
 }
 
 .search-main-wrapper {
@@ -1127,6 +1148,7 @@
     from {
         transform: rotate(0deg);
     }
+
     to {
         transform: rotate(360deg);
     }
@@ -1376,18 +1398,22 @@
     .search-header-sticky {
         padding: 10px 0;
     }
+
     /* Force exactly 2 columns on Mobile */
     .grid-layout {
         grid-template-columns: repeat(2, 1fr);
         gap: 10px;
     }
+
     .search-results-meta {
         font-size: 12px;
     }
+
     .image-box {
         padding-top: 130%;
         /* Taller images on mobile */
     }
+
     .product-name {
         font-size: 13px;
         /* Slightly smaller text on mobile */

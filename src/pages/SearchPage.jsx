@@ -13,6 +13,7 @@ import "../styles/BestSellers.css";
 import Bag from "../assets/Bag.svg";
 import updownarrow from "../assets/updownarrow.svg";
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import Loader from "../components/common/Loader";
 import filtering from "../assets/filtering.svg";
 import BrandFilter from "../components/common/BrandFilter";
 
@@ -140,6 +141,14 @@ const WISHLIST_CACHE_KEY = "guestWishlist";
 const PRODUCT_ALL_API = "https://beauty.joyory.com/api/user/products/all";
 
 // ==================== HELPER FUNCTIONS ====================
+const sanitizeSearchQuery = (query) => {
+  if (!query) return "";
+  return query
+    .replace(/[+*?^$()\[\]{}|\\/]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+};
+
 const getSku = (v) => v?.sku || v?.variantSku || `sku-${v?._id || 'default'}`;
 
 const isValidHexColor = (hex) => {
@@ -455,6 +464,7 @@ const SearchPage = () => {
   }, [location.search]);
 
   const [allProducts, setAllProducts] = useState([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [categories, setCategories] = useState([]);
   const [brandsList, setBrandsList] = useState([]);
   const [isMetadataLoaded, setIsMetadataLoaded] = useState(false);
@@ -496,20 +506,24 @@ const SearchPage = () => {
     const p = new URLSearchParams();
 
     if (searchTerm) {
-      const { brand, category, remaining } = parseSemanticQuery(searchTerm, categories, brandsList);
+      const sanitizedSearchTerm = sanitizeSearchQuery(searchTerm);
+      const { brand, category, remaining } = parseSemanticQuery(sanitizedSearchTerm, categories, brandsList);
 
-
-      if (brand && (!filters.brandIds || filters.brandIds.length === 0)) {
+      // Only automatically append parsed brand if remaining is empty (i.e. not a keyword/product name search)
+      if (brand && (!filters.brandIds || filters.brandIds.length === 0) && !remaining) {
         p.append("brandIds", brand.slug || brand._id);
       }
-      if (category && (!filters.categoryIds || filters.categoryIds.length === 0)) {
+      
+      // Only append the automatically parsed category if remaining is empty (i.e., it's a pure category search like "Lips")
+      // This prevents matching a category from a word in a product name and filtering out the product.
+      if (category && (!filters.categoryIds || filters.categoryIds.length === 0) && !remaining) {
         p.append("categoryIds", category.slug || category._id);
       }
 
       if (remaining) {
-        p.append("q", remaining);
+        p.append("q", sanitizedSearchTerm);
       } else if (!brand && !category) {
-        p.append("q", searchTerm);
+        p.append("q", sanitizedSearchTerm);
       }
     }
 
@@ -543,7 +557,13 @@ const SearchPage = () => {
     if (currentCursor) {
       p.append("cursor", currentCursor);
     }
-    p.append("limit", "12");
+    
+    // Set limit to 50 for search term query to fetch all relevant products on the first page, allowing accurate re-ranking
+    if (searchTerm) {
+      p.append("limit", "50");
+    } else {
+      p.append("limit", "9");
+    }
 
     return p.toString();
   }, [searchTerm, filters, categories, brandsList]);
@@ -589,6 +609,17 @@ const SearchPage = () => {
           products.forEach(p => productMap.set(p._id, p));
           return Array.from(productMap.values());
         });
+      }
+
+      if (response.data && response.data.titleMessage) {
+        const match = response.data.titleMessage.match(/\d+/);
+        if (match) {
+          setTotalCount(parseInt(match[0], 10));
+        } else {
+          setTotalCount(prev => reset ? products.length : prev + products.length);
+        }
+      } else {
+        setTotalCount(prev => reset ? products.length : prev + products.length);
       }
 
       setHasMore(pagination.hasMore || false);
@@ -860,20 +891,62 @@ const SearchPage = () => {
     const getProductRating = (prod) => {
       return prod.avgRating || prod.rating || 0;
     };
+
+    // Relevance scoring for search term
+    const getSearchScore = (prod) => {
+      if (!searchTerm) return 0;
+
+      const sanitizeForScore = (str) => {
+        if (!str) return "";
+        return str
+          .toLowerCase()
+          .replace(/[+*?^$()\[\]{}|\\/-]/g, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+      };
+
+      const nameCleaned = sanitizeForScore(prod.name);
+      const termCleaned = sanitizeForScore(searchTerm);
+
+      if (nameCleaned === termCleaned) return 1000;
+      if (nameCleaned.includes(termCleaned)) return 500;
+
+      const words = termCleaned.split(/\s+/).filter(Boolean);
+      if (words.length === 0) return 0;
+
+      let matchedWords = 0;
+      words.forEach(word => {
+        if (nameCleaned.includes(word)) matchedWords++;
+      });
+      return matchedWords / words.length;
+    };
+
     const sorted = [...allProducts];
-    if (filters.sort === 'priceHighToLow') {
-      sorted.sort((a, b) => getProductPrice(b) - getProductPrice(a));
-    } else if (filters.sort === 'priceLowToHigh') {
-      sorted.sort((a, b) => getProductPrice(a) - getProductPrice(b));
-    } else if (filters.sort === 'rating') {
-      sorted.sort((a, b) => getProductRating(b) - getProductRating(a));
-    } else if (filters.sort === 'discountHighToLow') {
-      sorted.sort((a, b) => getProductDiscount(b) - getProductDiscount(a));
-    } else if (filters.sort === 'discountLowToHigh') {
-      sorted.sort((a, b) => getProductDiscount(a) - getProductDiscount(b));
-    }
+    sorted.sort((a, b) => {
+      const scoreA = getSearchScore(a);
+      const scoreB = getSearchScore(b);
+
+      if (scoreA !== scoreB) {
+        return scoreB - scoreA; // higher relevance first
+      }
+
+      // Fallback sorting
+      if (filters.sort === 'priceHighToLow') {
+        return getProductPrice(b) - getProductPrice(a);
+      } else if (filters.sort === 'priceLowToHigh') {
+        return getProductPrice(a) - getProductPrice(b);
+      } else if (filters.sort === 'rating') {
+        return getProductRating(b) - getProductRating(a);
+      } else if (filters.sort === 'discountHighToLow') {
+        return getProductDiscount(b) - getProductDiscount(a);
+      } else if (filters.sort === 'discountLowToHigh') {
+        return getProductDiscount(a) - getProductDiscount(b);
+      }
+      return 0;
+    });
+
     return sorted;
-  }, [allProducts, filters.sort, selectedVariants, tempSelectedVariants]);
+  }, [allProducts, searchTerm, filters.sort, selectedVariants, tempSelectedVariants]);
 
   // ==================== HANDLERS ====================
   const handleInputChange = (e) => {
@@ -1069,7 +1142,7 @@ const SearchPage = () => {
     else if (currentVariantOutOfStock) btnText = "Out of Stock";
 
     return (
-      <div key={prod._id} className="col-6 col-sm-4 col-lg-4 mb-4 position-relative">
+      <div key={prod._id} className="col-6 col-sm-4 col-lg-4 position-relative">
         <div className="foryou-card-wrapper">
           <div className="foryou-card">
             {/* Product Image with Overlays */}
@@ -1263,11 +1336,11 @@ const SearchPage = () => {
                     })()}
                   </div>
                 </div>
-                  {prod.nextOrderDiscountMessage && (
-                    <div className="next-order-discount-tag" title={prod.nextOrderDiscountMessage} onClick={(e) => { e.stopPropagation(); window.showDiscountPopup && window.showDiscountPopup(prod.nextOrderDiscountMessage, e.currentTarget); }}>
-                      <span className="text-truncate">{prod.nextOrderDiscountMessage}</span>
-                    </div>
-                  )}
+                {prod.nextOrderDiscountMessage && (
+                  <div className="next-order-discount-tag" title={prod.nextOrderDiscountMessage} onClick={(e) => { e.stopPropagation(); window.showDiscountPopup && window.showDiscountPopup(prod.nextOrderDiscountMessage, e.currentTarget); }}>
+                    <span className="text-truncate">{prod.nextOrderDiscountMessage}</span>
+                  </div>
+                )}
 
                 {/* Cart Button */}
                 <div className="cart-section">
@@ -1487,6 +1560,35 @@ const SearchPage = () => {
       {/* <ToastContainer position="top-right" autoClose={3000} /> */}
       <Header />
 
+      {isLoading && (
+        <div
+          className="position-fixed top-0 start-0 w-100 h-100 d-flex flex-column justify-content-center align-items-center"
+          style={{
+            backgroundColor: 'rgba(255, 255, 255, 0.97)',
+            zIndex: 9999,
+            backdropFilter: 'blur(10px)',
+          }}
+        >
+          <div className="text-center">
+            <DotLottieReact
+              className="mb-4"
+              src="https://lottie.host/73673e65-df58-41a5-87e7-b837c5d00fe8/dJVGVbJuYJ.lottie"
+              loop
+              autoplay
+              style={{ width: '200px', height: '200px' }}
+            />
+            <p className="text-muted mb-0 page-title-main-name">
+              Finding the perfect products just for you
+            </p>
+            <div className="d-flex justify-content-center gap-1 mt-4">
+              <div className="dot-pulse"></div>
+              <div className="dot-pulse"></div>
+              <div className="dot-pulse"></div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* <div className="search-main-wrapper"> */}
       <div className="container-lg-fluid px-lg-5 px-3 pt-lg-5 mt-lg-5 mt-0 pt-0">
         {/* Sticky Search Bar */}
@@ -1508,7 +1610,7 @@ const SearchPage = () => {
               <span>Initializing catalog...</span>
             ) : (
               <p>
-                Showing <b>{filteredProducts.length}</b> items
+                Showing <b>{totalCount}</b> items
                 {searchTerm && <> for "<b>{searchTerm}</b>"</>}
               </p>
             )}
@@ -1624,7 +1726,7 @@ const SearchPage = () => {
             <div className="col-12 col-lg-9">
               <div className="mb-3 d-flex justify-content-between align-items-center">
                 <span className="text-muted page-title-main-name">
-                  {filteredProducts.length > 0 ? `Showing ${filteredProducts.length} products` : "No products found"}
+                  {totalCount > 0 ? `Showing ${totalCount} products` : "No products found"}
                 </span>
                 <div className="d-flex align-items-center gap-3">
                   {/* {isAnyFilterActive && (
@@ -1701,19 +1803,12 @@ const SearchPage = () => {
                   style={{
                     minHeight: "50vh",
                     width: "100%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center"
                   }}
                 >
-                  <div className="text-center">
-                    <DotLottieReact className='foryoulanding-css'
-                      src="https://lottie.host/73673e65-df58-41a5-87e7-b837c5d00fe8/dJVGVbJuYJ.lottie"
-                      loop
-                      autoplay
-                      style={{ height: 200 }}
-                    />
-                    <p className="text-muted mb-0">
-                      Please wait while we prepare the best products for you...
-                    </p>
-                  </div>
+                  <Loader text="Please wait while we prepare the best products for you..." height={200} />
                 </div>
               ) : error ? (
                 <div className="error-box text-center py-5">
@@ -1747,10 +1842,7 @@ const SearchPage = () => {
 
                   {/* 🔥 Infinite Scroll Loader */}
                   {isFetchingMore && (
-                    <div className="text-center py-4">
-                      <div className="spinner-border text-dark" role="status"></div>
-                      <p className="mt-2 text-muted">Loading more products...</p>
-                    </div>
+                    <Loader text="Loading more products..." height={100} />
                   )}
 
                   {/* Optional End Message */}

@@ -14,6 +14,10 @@
   --font-serif: 'playfair', serif;
 }
 
+*{
+   font-family: 'Montserrat';
+}
+
 .ic-container {
   /* margin: 8rem 3.75rem 0; */
   margin: 9rem auto 5rem;
@@ -30,14 +34,12 @@
 }
 
 .ic-card h2 {
-  font-family: var(--font-serif);
   font-weight: 700;
   color: var(--joyory-black) !important;
   letter-spacing: 0.5px;
 }
 
 .ic-card p.text-muted {
-  font-family: var(--font-sans);
   color: var(--joyory-charcoal-light) !important;
 }
 
@@ -62,7 +64,6 @@
   padding: 10px 20px;
   font-size: 13px;
   font-weight: 600;
-  font-family: var(--font-sans);
   text-transform: uppercase;
   letter-spacing: 1px;
   color: var(--joyory-charcoal-light);
@@ -91,7 +92,6 @@
   border: 1px solid var(--joyory-border) !important;
   border-radius: 12px;
   background-color: var(--joyory-white);
-  font-family: var(--font-sans);
   font-size: 13.5px;
   color: var(--joyory-black) !important;
   padding: 12px 16px;
@@ -123,7 +123,6 @@
   border-radius: 12px;
   font-size: 12px;
   font-weight: 600;
-  font-family: var(--font-sans);
   text-transform: uppercase;
   letter-spacing: 1.5px;
   flex-grow: 1;
@@ -314,7 +313,6 @@
 }
 
 .ic-suggestion-item strong {
-  font-family: var(--font-sans);
   color: var(--joyory-black);
   font-weight: 600;
 }
@@ -386,7 +384,6 @@
   border: none !important;
   background: transparent !important;
   font-size: 13.5px;
-  font-family: var(--font-sans);
   padding: 8px 0 !important;
   box-shadow: none !important;
   width: 100%;
@@ -431,7 +428,6 @@
 }
 
 .ic-product-compare-name {
-  font-family: var(--font-sans);
   font-weight: 700;
   color: var(--joyory-black);
   font-size: 13.5px;
@@ -587,7 +583,6 @@
 }
 
 .ic-mini-card-title {
-  font-family: var(--font-sans);
   font-weight: 700;
   color: var(--joyory-black);
   font-size: 11.5px;
@@ -684,7 +679,6 @@
   font-weight: 500;
   border-radius: 30px;
   transition: all 0.25s ease;
-  font-family: var(--font-sans);
 }
 
 .ic-decoded-safe {
@@ -738,7 +732,7 @@
   border: 1px solid var(--joyory-border);
   box-shadow: 0 2px 4px rgba(0, 119, 182, 0.03);
   transition: all 0.2s ease-in-out;
-  font-family: var(--font-sans);
+  cursor: pointer;
 }
 
 .ic-safe-badge:hover {
@@ -747,6 +741,15 @@
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(0, 119, 182, 0.08);
 }
+
+.ic-clickable-ingredient {
+  transition: color 0.2s ease;
+}
+
+.ic-clickable-ingredient:hover {
+  color: var(--joyory-blue) !important;
+}
+
 
 /* Severity Badges (Result Cards) */
 .ic-severity-badge {
@@ -759,7 +762,6 @@
   border-radius: 20px;
   letter-spacing: 0.5px;
   text-transform: uppercase;
-  font-family: var(--font-sans);
 }
 
 .ic-severity-high {
@@ -790,7 +792,6 @@
   border-radius: 4px;
   margin-top: 6px;
   border: 1px solid var(--joyory-border);
-  font-family: var(--font-sans);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -842,7 +843,6 @@
 }
 
 .ic-result-compare-name {
-  font-family: var(--font-sans);
   font-weight: 700;
   font-size: 13px;
   color: var(--joyory-black);
@@ -1022,7 +1022,7 @@
 
   .ic-tab-btn {
     flex: 1 1 0px;
-    border-radius: 24px;
+    border-radius: 10px;
     padding: 8px 4px;
     font-size: 8.5px;
     font-weight: 700;

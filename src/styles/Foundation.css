@@ -30,7 +30,7 @@
 .btn-for-shadetones {
     background-color: #000;
     color: #fff;
-    border-radius: 0px;
+    border-radius: 0px !important;
     border: 1px solid #000;
     display: inline-flex;
     align-items: center;

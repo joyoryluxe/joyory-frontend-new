@@ -10,6 +10,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import updownarrow from "../assets/updownarrow.svg";
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import Loader from "../components/common/Loader";
 import filtering from "../assets/filtering.svg";
 import Bag from "../assets/Bag.svg";
 
@@ -1416,12 +1417,7 @@ const DiscountProductsPage = () => {
 
             {/* Infinite Scroll Loading - MATCHING ProductPage */}
             {loadingMore && (
-              <div className="text-center mt-4 py-4">
-                <div className="spinner-border text-primary" role="status">
-                  <span className="visually-hidden">Loading more products...</span>
-                </div>
-                <p className="mt-2">Loading more products...</p>
-              </div>
+              <Loader text="Loading more products..." height={100} />
             )}
 
             {/* Sentinel Element for Observer */}

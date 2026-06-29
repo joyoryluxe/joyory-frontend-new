@@ -6,7 +6,8 @@ import {
   checkCompatibility,
   listIngredients,
   listAllProducts,
-  scanIngredientText
+  scanIngredientText,
+  getIngredientByName
 } from "../api/ingredientApi";
 import IngredientDetailsDrawer from "./IngredientDetailsDrawer";
 import {
@@ -418,6 +419,49 @@ export default function IngredientCompatibility() {
     setIsDrawerOpen(true);
   };
 
+  const handleIngredientNameClick = async (name) => {
+    if (!name) return;
+    try {
+      // 1. Try to find in dbIngredients which is already loaded on mount
+      let found = dbIngredients.find(
+        ing => ing.name.toLowerCase() === name.toLowerCase() ||
+               ing.aliases?.some(a => a.toLowerCase() === name.toLowerCase())
+      );
+
+      if (found) {
+        handleIngredientClick(found);
+      } else {
+        // 2. Fetch from backend by name
+        const res = await getIngredientByName(name);
+        if (res.data.success && res.data.ingredient) {
+          handleIngredientClick(res.data.ingredient);
+        } else {
+          // Construct minimal object so drawer still opens
+          handleIngredientClick({
+            name: name,
+            category: "Active",
+            description: "No description available in the database for this ingredient.",
+            benefits: [],
+            goodForSkinTypes: [],
+            usageTips: []
+          });
+        }
+      }
+    } catch (err) {
+      console.error("Error loading ingredient details:", err);
+      // Fallback
+      handleIngredientClick({
+        name: name,
+        category: "Active",
+        description: "No description available in the database for this ingredient.",
+        benefits: [],
+        goodForSkinTypes: [],
+        usageTips: []
+      });
+    }
+  };
+
+
   return (
     <>
       <Header />
@@ -503,7 +547,7 @@ export default function IngredientCompatibility() {
                   <button
                     className="btn btn-dark px-3 ingredient-add"
                     onClick={() => addIngredient(searchInput)}
-                    // disabled={!searchInput.trim()}
+                  // disabled={!searchInput.trim()}
                   >
                     <FaPlus /> Add
                   </button>
@@ -606,7 +650,23 @@ export default function IngredientCompatibility() {
                           <div key={idx} className="p-3 border rounded bg-white shadow-sm">
                             <div className="ic-conflict-header">
                               <h6 className="fw-bold mb-0 text-dark" style={{ fontSize: "14px" }}>
-                                {conflict.ingredient1} + {conflict.ingredient2}
+                                <span
+                                  className="ic-clickable-ingredient"
+                                  onClick={() => handleIngredientNameClick(conflict.ingredient1)}
+                                  style={{ cursor: "pointer", textDecoration: "underline" }}
+                                  title={`Inspect ${conflict.ingredient1}`}
+                                >
+                                  {conflict.ingredient1}
+                                </span>
+                                {" + "}
+                                <span
+                                  className="ic-clickable-ingredient"
+                                  onClick={() => handleIngredientNameClick(conflict.ingredient2)}
+                                  style={{ cursor: "pointer", textDecoration: "underline" }}
+                                  title={`Inspect ${conflict.ingredient2}`}
+                                >
+                                  {conflict.ingredient2}
+                                </span>
                               </h6>
                               <span className={`ic-severity-badge ic-severity-${conflict.severity || 'low'}`}>
                                 {conflict.severity?.toUpperCase()} SEVERITY
@@ -634,7 +694,13 @@ export default function IngredientCompatibility() {
                       </h5>
                       <div className="d-flex flex-wrap gap-2">
                         {Array.from(new Set(result.safe)).map((ing, idx) => (
-                          <span key={idx} className="ic-safe-badge">
+                          <span
+                            key={idx}
+                            className="ic-safe-badge"
+                            style={{ cursor: "pointer" }}
+                            onClick={() => handleIngredientNameClick(ing)}
+                            title="Click to inspect details"
+                          >
                             {ing}
                           </span>
                         ))}
@@ -986,7 +1052,23 @@ export default function IngredientCompatibility() {
                           <div key={idx} className="p-3 border rounded bg-white shadow-sm">
                             <div className="ic-conflict-header">
                               <h6 className="fw-bold mb-0 text-dark" style={{ fontSize: "14px" }}>
-                                {conflict.ingredientA} vs {conflict.ingredientB}
+                                <span
+                                  className="ic-clickable-ingredient"
+                                  onClick={() => handleIngredientNameClick(conflict.ingredientA)}
+                                  style={{ cursor: "pointer", textDecoration: "underline" }}
+                                  title={`Inspect ${conflict.ingredientA}`}
+                                >
+                                  {conflict.ingredientA}
+                                </span>
+                                {" vs "}
+                                <span
+                                  className="ic-clickable-ingredient"
+                                  onClick={() => handleIngredientNameClick(conflict.ingredientB)}
+                                  style={{ cursor: "pointer", textDecoration: "underline" }}
+                                  title={`Inspect ${conflict.ingredientB}`}
+                                >
+                                  {conflict.ingredientB}
+                                </span>
                               </h6>
                               <span className={`ic-severity-badge ic-severity-${conflict.severity || 'low'}`}>
                                 {conflict.severity?.toUpperCase()} SEVERITY

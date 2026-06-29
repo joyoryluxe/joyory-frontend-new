@@ -10,6 +10,7 @@ import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
 import Header from '../components/common/Header';
+import Loader from '../components/common/Loader';
 import "../styles/common/bootstrap.min.css";
 import "../styles/Blog.css";
 import "../styles/BestSellers.css";
@@ -635,8 +636,7 @@ const Blog = () => {
   if (loading) {
     return (
       <div className="d-flex flex-column align-items-center justify-content-center" style={{ minHeight: '100vh' }}>
-        <Spinner animation="border" variant="primary" />
-        <p className="mt-3 text-muted">Loading your beauty feed...</p>
+        <Loader text="Loading your beauty feed..." height={150} />
       </div>
     );
   }

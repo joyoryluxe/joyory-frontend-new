@@ -89,7 +89,7 @@ import CategoryLandingPage from "./pages/CategoryLandingPage";
 import Offerlanding from "./pages/OfferLanding";
 import Foryoulanding from "./pages/ForYouLanding";
 import AiBeautyLab from "./pages/AiBeautyLab";
-import SkinDiagnosis from "./pages/SkinDiagnosis";
+// import SkinDiagnosis from "./pages/SkinDiagnosis";
 import Makeupquiz from "./pages/MakeupQuiz";
 // import AddressSection from "./component/AddressSection";
 import AddressSections from "./pages/AddressSections";
@@ -285,7 +285,7 @@ function App() {
               <Route path="/Offerlanding" element={<Offerlanding />} />
               <Route path="/Foryoulanding" element={<Foryoulanding />} />
               <Route path="/ai-beauty-lab" element={<AiBeautyLab />} />
-              <Route path="/skin-diagnosis" element={<SkinDiagnosis />} />
+              {/* <Route path="/skin-diagnosis" element={<SkinDiagnosis />} /> */}
               <Route path="/Makeupquiz" element={<Makeupquiz />} />
               <Route path="/routines" element={<RoutineBuilder />} />
               <Route path="/routines/:shareToken" element={<RoutineBuilder />} />

@@ -1,5 +1,5 @@
-.founder-section {
-  background-color: #d2f0f8; /* light blue background */
+/* .founder-section {
+  background-color: #d2f0f8;
   position: relative;
   border-radius: 20px;
 }
@@ -71,7 +71,6 @@
   width: 50px;
 }
 
-/* Decorative stars */
 .founder-section::before,
 .founder-section::after {
   content: "✦";
@@ -88,4 +87,4 @@
 .founder-section::after {
   bottom: 15px;
   right: 15px;
-}
+} */

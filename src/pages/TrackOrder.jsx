@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
+import Loader from "../components/common/Loader";
 import "../styles/TrackOrder.css";
 
 const TrackOrder = () => {
@@ -103,8 +104,7 @@ const TrackOrder = () => {
   if (loading)
     return (
       <div className="d-flex flex-column align-items-center justify-content-center vh-100 text-center">
-        <div className="spinner-border text-primary mb-3" role="status"></div>
-        <h6>Fetching tracking details...</h6>
+        <Loader text="Fetching tracking details..." height={150} />
       </div>
     );
 

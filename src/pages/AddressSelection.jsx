@@ -129,7 +129,26 @@ const AddressSelection = () => {
   const loadCart = async () => {
     try {
       setProcessingMessage("Loading cart data...");
-      const res = await fetch(CART_API, { credentials: "include" });
+      const queryParams = new URLSearchParams();
+      
+      const wantPoints = localStorage.getItem("useRewardPoints") === "true";
+      if (wantPoints) {
+        const savedAmount = localStorage.getItem("rewardPointsAmount");
+        const pointsToUse = savedAmount ? Number(savedAmount) : 99999999;
+        queryParams.append("pointsToUse", String(pointsToUse));
+      } else {
+        queryParams.append("pointsToUse", "0");
+      }
+
+      const savedCoupon = localStorage.getItem("appliedCoupon");
+      if (savedCoupon) {
+        queryParams.append("discount", savedCoupon);
+      }
+
+      const queryString = queryParams.toString();
+      const url = queryString ? `${CART_API}?${queryString}` : CART_API;
+
+      const res = await fetch(url, { credentials: "include" });
       if (!res.ok) throw new Error("Failed to fetch cart");
       const data = await res.json();
 
@@ -395,7 +414,7 @@ const AddressSelection = () => {
 
   const getStepStatus = (stepIndex) => {
     const isError = processingMessage.startsWith("Error");
-    
+
     if (isError) {
       if (processingMessage.includes("Preparing")) return stepIndex === 1 ? "error" : (stepIndex > 1 ? "pending" : "completed");
       if (processingMessage.includes("Validating") || processingMessage.includes("payment")) return stepIndex === 2 ? "error" : (stepIndex === 1 ? "completed" : "pending");
@@ -436,10 +455,10 @@ const AddressSelection = () => {
     const isError = processingMessage.startsWith("Error");
 
     return (
-      <Modal 
-        show={showProcessingModal} 
-        backdrop="static" 
-        keyboard={false} 
+      <Modal
+        show={showProcessingModal}
+        backdrop="static"
+        keyboard={false}
         centered
         dialogClassName="checkout-processing-modal"
       >
@@ -448,8 +467,8 @@ const AddressSelection = () => {
             <div className="checkout-badge-icon mb-3">
               {isSuccess ? (
                 <svg className="success-checkmark-svg" viewBox="0 0 52 52">
-                  <circle className="success-checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
-                  <path className="success-checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+                  <circle className="success-checkmark-circle" cx="26" cy="26" r="25" fill="none" />
+                  <path className="success-checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
                 </svg>
               ) : isError ? (
                 <div className="error-alert-icon">⚠️</div>
@@ -466,10 +485,10 @@ const AddressSelection = () => {
               {isSuccess ? "Order Confirmed!" : isError ? "Checkout Failed" : "Secure Checkout"}
             </h4>
             <p className="checkout-modal-subtitle text-muted">
-              {isSuccess 
-                ? "Your order has been created successfully." 
-                : isError 
-                  ? "Please review details and try again." 
+              {isSuccess
+                ? "Your order has been created successfully."
+                : isError
+                  ? "Please review details and try again."
                   : "We are finalizing your payment process securely."}
             </p>
           </div>

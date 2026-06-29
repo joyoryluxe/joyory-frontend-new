@@ -368,6 +368,8 @@ const ProductDetailsHero = ({
     discountPercent = Math.round(((originalPrice - displayPrice) / originalPrice) * 100);
   }
 
+  const nextOrderDiscountMessage = selectedShade?.nextOrderDiscountMessage || product?.nextOrderDiscountMessage;
+
   return (
     <article className="product-hero-container pb-lg-0 pb-0">
 
@@ -667,6 +669,12 @@ const ProductDetailsHero = ({
             <span className="product-discount-label">({discountPercent}% off)</span>
           )}
         </div>
+
+        {nextOrderDiscountMessage && (
+          <div className="next-order-discount-tag mt-2 mb-3" style={{ cursor: "pointer", width: "fit-content" }} title={nextOrderDiscountMessage} onClick={(e) => { e.stopPropagation(); window.showDiscountPopup && window.showDiscountPopup(nextOrderDiscountMessage, e.currentTarget); }}>
+            <span className="text-truncate">{nextOrderDiscountMessage}</span>
+          </div>
+        )}
 
         {/* Selected Variant Display */}
         {selectedShade && (

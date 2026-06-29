@@ -17,7 +17,7 @@ import "../../styles/ForYou.css";
 import bagIcon from "../../assets/bag.svg";
 
 // 🆕 Import DotLottie loader (same package as ProductPage)
-import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import Loader from "./Loader";
 
 // Wishlist cache key
 const WISHLIST_CACHE_KEY = "guestWishlist";
@@ -738,18 +738,7 @@ const RecommendationSlider = ({ title, products: initialProducts }) => {
             backdropFilter: 'blur(10px)',
           }}
         >
-          <div className="text-center">
-            <DotLottieReact
-              className="mb-4"
-              src="https://lottie.host/73673e65-df58-41a5-87e7-b837c5d00fe8/dJVGVbJuYJ.lottie"
-              loop
-              autoplay
-              style={{ width: '200px', height: '200px' }}
-            />
-            <p className="text-muted mb-0 page-title-main-name">
-              Loading recommendations...
-            </p>
-          </div>
+          <Loader text="Loading recommendations..." height={200} />
         </div>
       )}
 

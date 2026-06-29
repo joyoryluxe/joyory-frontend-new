@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/common/Header";
 import Footer from "../components/common/Footer";
+import Loader from "../components/common/Loader";
 import axios from "axios";
 import {
   FaArrowLeft, FaBoxOpen, FaExchangeAlt, FaUndo, FaTruck,
@@ -87,9 +88,8 @@ const ReturnReplace = () => {
     return (
       <>
         <Header />
-        <div className="container py-5 text-center" style={{ minHeight: "60vh" }}>
-          <div className="spinner-border text-primary" role="status"></div>
-          <p className="mt-2 text-muted">Loading your requests...</p>
+        <div className="container py-5 text-center" style={{ minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <Loader text="Loading your requests..." height={150} />
         </div>
         <Footer />
       </>

@@ -6,6 +6,7 @@ import { Container } from 'react-bootstrap';
 import "bootstrap/dist/css/bootstrap.min.css";
 import Header from "../components/common/Header";
 import Footer from "../components/common/Footer";
+import Loader from "../components/common/Loader";
 import "../styles/ShadeFinder.css";
 
 export default function SkinToneSelector() {
@@ -107,12 +108,7 @@ export default function SkinToneSelector() {
       <>
         <Header />
         <div className="bg-white py-5" style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <div className="text-center">
-            <div className="spinner-border text-primary" role="status">
-              <span className="visually-hidden">Loading...</span>
-            </div>
-            <p className="mt-3 text-secondary">Loading shades...</p>
-          </div>
+          <Loader text="Loading shades..." height={150} />
         </div>
         <Footer />
       </>

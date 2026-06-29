@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import Header from "../components/common/Header";
 import Footer from "../components/common/Footer";
+import Loader from "../components/common/Loader";
 import "../styles/OrderTrack.css";
 
 import {
@@ -93,13 +94,8 @@ const OrderTrack = () => {
     return (
       <>
         <Header />
-        <div className="container mt-4">
-          <div className="text-center">
-            <div className="spinner-border text-primary" role="status">
-              <span className="visually-hidden">Loading...</span>
-            </div>
-            <p className="mt-2">Loading tracking details...</p>
-          </div>
+        <div className="container mt-4" style={{ minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <Loader text="Loading tracking details..." height={150} />
         </div>
         <Footer />
       </>

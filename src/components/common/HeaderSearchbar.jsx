@@ -139,6 +139,14 @@ const getSearchableString = (p) => {
   ].filter(Boolean).join(" ");
 };
 
+const sanitizeSearchQuery = (query) => {
+  if (!query) return "";
+  return query
+    .replace(/[+*?^$()\[\]{}|\\/]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+};
+
 const HeaderSearchBar = ({ isMobile, isTablet, showMobileSearch, setShowMobileSearch }) => {
   const navigate = useNavigate();
 
@@ -302,22 +310,75 @@ const HeaderSearchBar = ({ isMobile, isTablet, showMobileSearch, setShowMobileSe
       setSearchResults([]);
       return;
     }
-    const term = debouncedSearchText.toLowerCase().trim();
+    const sanitized = sanitizeSearchQuery(debouncedSearchText);
+    if (!sanitized) {
+      setSearchResults([]);
+      return;
+    }
+    const term = sanitized.toLowerCase();
 
     // Check if the search term exactly matches any category in the tree hierarchically
     const specs = getCategoryAndDescendantSpecs(categories, term);
 
     let results;
     if (specs.ids.size > 0) {
-      results = searchIndex
+      // Find category matching products
+      const catResults = searchIndex
         .filter(({ product }) => matchesCategory(product, specs))
         .map(({ product }) => product);
+
+      // Find products whose name matches the search term keywords
+      const words = term.split(/\s+/);
+      const nameResults = searchIndex
+        .filter(({ product }) => {
+          const productName = (product.name || "").toLowerCase();
+          return words.every(word => productName.includes(word));
+        })
+        .map(({ product }) => product);
+
+      // Combine and deduplicate
+      const combined = [...nameResults];
+      catResults.forEach(p => {
+        if (!combined.some(c => c._id === p._id)) {
+          combined.push(p);
+        }
+      });
+      results = combined;
     } else {
       const words = term.split(/\s+/);
       results = searchIndex
         .filter(({ searchString }) => words.every(word => searchString.includes(word)))
         .map(({ product }) => product);
     }
+
+    // Normalization utility for scoring
+    const sanitizeForScore = (str) => {
+      if (!str) return "";
+      return str
+        .toLowerCase()
+        .replace(/[+*?^$()\[\]{}|\\/-]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    };
+
+    // Sort results by name similarity score
+    const getSearchScore = (prod) => {
+      const nameCleaned = sanitizeForScore(prod.name);
+      const termCleaned = sanitizeForScore(term);
+      if (nameCleaned === termCleaned) return 1000;
+      if (nameCleaned.includes(termCleaned)) return 500;
+
+      const words = termCleaned.split(/\s+/).filter(Boolean);
+      if (words.length === 0) return 0;
+
+      let matchedWords = 0;
+      words.forEach(word => {
+        if (nameCleaned.includes(word)) matchedWords++;
+      });
+      return matchedWords / words.length;
+    };
+
+    results.sort((a, b) => getSearchScore(b) - getSearchScore(a));
 
     setSearchResults(results.slice(0, 10));
   }, [debouncedSearchText, searchIndex, categories]);

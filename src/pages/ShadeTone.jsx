@@ -4,6 +4,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "../styles/ShadeTone.css";
 import Footer from "../components/common/Footer";
 import Header from "../components/common/Header";
+import Loader from "../components/common/Loader";
 
 export default function Shadetone() {
   const location = useLocation();
@@ -104,9 +105,8 @@ export default function Shadetone() {
           <h5 className="mb-3 mb-md-4 text-start page-title-main-name" style={{ fontWeight: "400", fontSize: "0.9rem" }}>Swipe left/right to choose the skin tone closest to yours.</h5>
 
           {loadingFamilies ? (
-            <div className="py-5">
-              <div className="spinner-border text-primary" role="status"></div>
-              <p className="mt-2">Finding your matches...</p>
+            <div className="py-5" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Loader text="Finding your matches..." height={150} />
             </div>
           ) : families.length > 0 ? (
             <>

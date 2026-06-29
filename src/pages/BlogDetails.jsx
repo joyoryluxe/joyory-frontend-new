@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useContext, useMemo } from 'react';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { Spinner } from 'react-bootstrap';
+import Loader from '../components/common/Loader';
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination, Navigation } from "swiper/modules";
 import "swiper/css";
@@ -287,7 +288,11 @@ const BlogDetail = () => {
   }, [blog, getProductDisplayData]);
 
   if (loading) {
-    return <div className="text-center py-5"><Spinner animation="border" /><p>Loading article...</p></div>;
+    return (
+      <div className="text-center py-5" style={{ minHeight: "50vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <Loader text="Loading article..." height={150} />
+      </div>
+    );
   }
 
   if (error || !blog) {

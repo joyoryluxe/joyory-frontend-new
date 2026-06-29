@@ -13,6 +13,7 @@ import { CartContext } from "../../../context/CartContext";
 import tick from "../../../assets/tick.svg";
 import { UserContext } from "../../../context/UserContext.jsx";
 import { ToastContainer, toast } from "react-toastify";
+import Loader from "../../common/Loader";
 import "react-toastify/dist/ReactToastify.css";
 import bagIcon from "../../../assets/bag.svg";
 import { FaHeart, FaRegHeart, FaChevronDown, FaTimes, FaCheck } from "react-icons/fa";
@@ -782,10 +783,7 @@ const Foryou = () => {
 
       {loading && (
         <div className="text-center">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
-          <p className="text-muted mt-2 page-title-main-name fs-4 text-black">Loading recommendations...</p>
+          <Loader text="Loading recommendations..." height={120} />
         </div>
       )}
 

@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
+import { Modal } from "react-bootstrap";
 import Header from "../components/common/Header";
 import Footer from "../components/common/Footer";
 import "../styles/PaymentProcess.css";
@@ -36,6 +37,30 @@ const PaymentProcess = () => {
   const [activeTab, setActiveTab] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
+
+  const [customAlert, setCustomAlert] = useState({
+    show: false,
+    title: "Notification",
+    message: "",
+    type: "info", // "success" | "error" | "warning" | "info"
+    onClose: null,
+  });
+
+  const showAlert = (message, title = "Notification", type = "info", onClose = null) => {
+    setCustomAlert({
+      show: true,
+      title,
+      message,
+      type,
+      onClose,
+    });
+  };
+
+  const handleCloseAlert = () => {
+    const cb = customAlert.onClose;
+    setCustomAlert((prev) => ({ ...prev, show: false, onClose: null }));
+    if (cb) cb();
+  };
 
   const orderId = location.state?.orderId;
   const cartItems = location.state?.cartItems || [];
@@ -169,7 +194,7 @@ const PaymentProcess = () => {
       });
     } catch (err) {
       console.error("COD Exception:", err);
-      alert(err.message || "COD process failed.");
+      showAlert(err.message || "COD process failed.", "COD Error", "error");
     } finally {
       setIsProcessing(false);
     }
@@ -187,7 +212,7 @@ const PaymentProcess = () => {
 
       const loaded = await loadRazorpayScript();
       if (!loaded || !window.Razorpay)
-        return alert("Razorpay SDK failed to load.");
+        return showAlert("Razorpay SDK failed to load.", "SDK Error", "error");
 
       const orderRes = await fetch(RAZORPAY_ORDER_API, {
         method: "POST",
@@ -197,7 +222,7 @@ const PaymentProcess = () => {
       });
       const orderData = await orderRes.json();
       if (!orderRes.ok || !orderData.success || !orderData.razorpayOrderId)
-        return alert(orderData.message || "Failed to create Razorpay order.");
+        return showAlert(orderData.message || "Failed to create Razorpay order.", "Order Error", "error");
 
       const finalAmountToPay = Math.round(
         (priceDetails.payable || orderData.amount) * 100
@@ -242,7 +267,7 @@ const PaymentProcess = () => {
           });
           const verifyData = await verifyRes.json();
           if (!verifyRes.ok || !verifyData.success)
-            return alert("Payment verification failed.");
+            return showAlert("Payment verification failed.", "Payment Verification", "error");
 
           navigate(`/ordersuccess/${orderId}`, {
             replace: true,
@@ -269,21 +294,23 @@ const PaymentProcess = () => {
         },
         modal: {
           ondismiss: () => {
-            alert("Payment popup closed.");
-            navigate("/cartpage");
+            showAlert("Payment popup closed.", "Payment Cancelled", "warning", () => {
+              navigate("/cartpage");
+            });
           },
         },
       };
 
       const rzp = new window.Razorpay(options);
       rzp.on("payment.failed", (response) => {
-        alert("Payment Failed: " + response.error.description);
-        navigate("/cartpage");
+        showAlert("Payment Failed: " + response.error.description, "Payment Failed", "error", () => {
+          navigate("/cartpage");
+        });
       });
       rzp.open();
     } catch (error) {
       console.error("Error starting Razorpay:", error);
-      alert("Failed to open Razorpay.");
+      showAlert("Failed to open Razorpay.", "Error", "error");
     } finally {
       setIsProcessing(false);
     }
@@ -291,7 +318,7 @@ const PaymentProcess = () => {
 
   const handleWalletPayment = async () => {
     if (!orderId || !selectedAddress) {
-      alert("Missing order ID or shipping address.");
+      showAlert("Missing order ID or shipping address.", "Missing Info", "warning");
       return;
     }
 
@@ -348,7 +375,7 @@ const PaymentProcess = () => {
       });
     } catch (err) {
       console.error("Wallet payment error:", err);
-      alert(err.message || "Wallet payment failed.");
+      showAlert(err.message || "Wallet payment failed.", "Payment Failed", "error");
     } finally {
       setIsProcessing(false);
     }
@@ -356,7 +383,7 @@ const PaymentProcess = () => {
 
   const handleGiftCardPayment = async (giftCardCode, giftCardPin) => {
     if (!orderId || !selectedAddress) {
-      alert("Missing order ID or shipping address.");
+      showAlert("Missing order ID or shipping address.", "Missing Info", "warning");
       return;
     }
 
@@ -414,7 +441,7 @@ const PaymentProcess = () => {
       });
     } catch (err) {
       console.error("Gift Card payment error:", err);
-      alert(err.message || "Gift Card payment failed.");
+      showAlert(err.message || "Gift Card payment failed.", "Payment Failed", "error");
     } finally {
       setIsProcessing(false);
     }
@@ -441,11 +468,11 @@ const PaymentProcess = () => {
           <>
             <h3 className="mb-3 text-start page-title-main-name margin-top-in-payments">Select Payment Method</h3>
 
-      
+
 
             <div className="payment-container">
               <div className="row g-4">
-               
+
 
                 <div className="d-lg-flex gap-4">
 
@@ -641,67 +668,67 @@ const PaymentProcess = () => {
 
 
 
-                   <div className="col-lg-7 col-md-12 mt-lg-0 mt-4 order-1 order-lg-2">
-            <div className="summary-card">
-              {/* Header */}
-              <div className="summary-header">
-                <div className="summary-header-left">Order Summary</div>
-                <div className="summary-header-right">Total</div>
-              </div>
+                  <div className="col-lg-7 col-md-12 mt-lg-0 mt-4 order-1 order-lg-2">
+                    <div className="summary-card">
+                      {/* Header */}
+                      <div className="summary-header">
+                        <div className="summary-header-left">Order Summary</div>
+                        <div className="summary-header-right">Total</div>
+                      </div>
 
-              {/* Body */}
-              <div className="summary-body">
-                <div className="summary-row p-0">
-                  <span className="summary-header-left fw-normal">Bag MRP</span>
-                  <span className="summary-value">Rs {priceDetails.bagMrp}/-</span>
-                </div>
-                <div className="summary-row p-0">
-                  <span className="summary-header-left fw-normal">Bag Discount</span>
-                  <span className="summary-value">Rs {priceDetails.bagDiscount}/-</span>
-                </div>
-                <div className="summary-row p-0">
-                  <span className="summary-header-left fw-normal">Coupon Discount</span>
-                  <span className="summary-value">Rs {priceDetails.couponDiscount}/-</span>
-                </div>
-                {pointsDiscount > 0 && (
-                  <div className="summary-row p-0">
-                    <span className="summary-header-left fw-normal">Points Discount</span>
-                    <span className="summary-value">Rs {pointsDiscount}/-</span>
-                  </div>
-                )}
+                      {/* Body */}
+                      <div className="summary-body">
+                        <div className="summary-row p-0">
+                          <span className="summary-header-left fw-normal">Bag MRP</span>
+                          <span className="summary-value">Rs {priceDetails.bagMrp}/-</span>
+                        </div>
+                        <div className="summary-row p-0">
+                          <span className="summary-header-left fw-normal">Bag Discount</span>
+                          <span className="summary-value">Rs {priceDetails.bagDiscount}/-</span>
+                        </div>
+                        <div className="summary-row p-0">
+                          <span className="summary-header-left fw-normal">Coupon Discount</span>
+                          <span className="summary-value">Rs {priceDetails.couponDiscount}/-</span>
+                        </div>
+                        {pointsDiscount > 0 && (
+                          <div className="summary-row p-0">
+                            <span className="summary-header-left fw-normal">Points Discount</span>
+                            <span className="summary-value">Rs {pointsDiscount}/-</span>
+                          </div>
+                        )}
 
-                <div className="taxable-section p-0">
-                  {/* <h4 className="summary-header-left fw-normal">Taxable Summary</h4> */}
-                  
-                  <div className="summary-row p-0">
-                    <span className="summary-header-left fw-normal">GST {gstRate}</span>
-                    <span className="summary-value">Rs {gstAmount}/-</span>
-                  </div>
-                  {/* <div className="summary-row p-0">
+                        <div className="taxable-section p-0">
+                          {/* <h4 className="summary-header-left fw-normal">Taxable Summary</h4> */}
+
+                          <div className="summary-row p-0">
+                            <span className="summary-header-left fw-normal">GST {gstRate}</span>
+                            <span className="summary-value">Rs {gstAmount}/-</span>
+                          </div>
+                          {/* <div className="summary-row p-0">
                     <span className="summary-header-left fw-normal">{gstMessage}</span>
                     <span className="summary-value">Rs {gstAmount}/-</span>
                   </div> */}
-                  <div className="summary-row p-0">
-                    <span className="summary-header-left fw-normal">Shipping</span>
-                    <span className="summary-value">Rs {priceDetails.shipping}/-</span>
+                          <div className="summary-row p-0">
+                            <span className="summary-header-left fw-normal">Shipping</span>
+                            <span className="summary-value">Rs {priceDetails.shipping}/-</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Footer - Total Payable */}
+                      <div className="summary-footer">
+                        <div className="total-label">Total Payable</div>
+                        <div className="total-value">Rs {priceDetails.payable}</div>
+                      </div>
+                    </div>
+
+                    {/* Savings Message */}
+                    {priceDetails.savingsMessage && (
+                      <p className="savings-message">
+                        {priceDetails.savingsMessage}
+                      </p>
+                    )}
                   </div>
-                </div>
-              </div>
-
-              {/* Footer - Total Payable */}
-              <div className="summary-footer">
-                <div className="total-label">Total Payable</div>
-                <div className="total-value">Rs {priceDetails.payable}</div>
-              </div>
-            </div>
-
-            {/* Savings Message */}
-            {priceDetails.savingsMessage && (
-              <p className="savings-message">
-                {priceDetails.savingsMessage}
-              </p>
-            )}
-          </div>
 
                 </div>
 
@@ -712,6 +739,32 @@ const PaymentProcess = () => {
           </>
         )}
       </div>
+
+      {/* Premium Alert Modal */}
+      <Modal
+        show={customAlert.show}
+        onHide={handleCloseAlert}
+        centered
+        dialogClassName="premium-alert-dialog"
+        contentClassName="premium-alert-content"
+        backdrop="static"
+        keyboard={false}
+      >
+        <Modal.Body className="text-center p-4">
+          <div className={`alert-icon-wrapper ${customAlert.type} mb-3`}>
+            {customAlert.type === "success" && <i className="bi bi-check-lg" style={{ fontSize: "2rem" }}></i>}
+            {customAlert.type === "error" && <i className="bi bi-exclamation-triangle" style={{ fontSize: "2rem" }}></i>}
+            {customAlert.type === "warning" && <i className="bi bi-exclamation-circle" style={{ fontSize: "2rem" }}></i>}
+            {customAlert.type === "info" && <i className="bi bi-info-lg" style={{ fontSize: "2rem" }}></i>}
+          </div>
+          {/* <h4 className="premium-alert-title mb-2">{customAlert.title}</h4> */}
+          <p className="premium-alert-message mb-4">{customAlert.message}</p>
+          <button className="premium-alert-btn px-4 py-2" onClick={handleCloseAlert}>
+            OK
+          </button>
+        </Modal.Body>
+      </Modal>
+
       <Footer />
     </>
   );

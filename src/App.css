@@ -525,7 +525,7 @@ button:hover img {
         /* Keep relative for potential other overlays, but buttons are static */
         display: flex !important;
         flex-direction: column !important;
-        height: 212px !important;
+        height: 207px !important;
         /* Unified compact height to align cards perfectly and prevent button clipping */
         min-height: unset !important;
     }

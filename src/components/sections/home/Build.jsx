@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import Loader from "../../common/Loader";
 import "../../../styles/Build.css";
 
 const FEATURE_BANNER_API = "https://beauty.joyory.com/api/user/categories/category/skin/landing";
@@ -66,9 +67,7 @@ const FeatureBanners = () => {
     return (
       <section className="py-5">
         <div className="container text-center">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading banners...</span>
-          </div>
+          <Loader text="Loading banners..." height={100} />
         </div>
       </section>
     );

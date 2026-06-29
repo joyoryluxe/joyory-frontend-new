@@ -17,6 +17,7 @@ import { FaStar, FaHeart, FaRegHeart, FaChevronDown, FaTimes, FaCheck } from "re
 import Header from "../components/common/Header";
 import SEOMeta from "../components/common/SEOMeta";
 import Footer from "../components/common/Footer";
+import Loader from "../components/common/Loader";
 import { CartContext } from "../Context/CartContext";
 import { UserContext } from "../context/UserContext.jsx";
 import BrandFilter from "../components/common/BrandFilter";
@@ -75,6 +76,7 @@ export default function BrandPage() {
 
   /* ── state ──────────────────────────────────────────────────────────────── */
   const [allProducts, setAllProducts] = useState([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [pageTitle, setPageTitle] = useState("Products");
   const [bannerImages, setBannerImages] = useState([]);
 
@@ -552,6 +554,17 @@ export default function BrandPage() {
       if (reset) setAllProducts(prods);
       else setAllProducts((prev) => [...prev, ...prods]);
 
+      if (data.titleMessage) {
+        const match = data.titleMessage.match(/\d+/);
+        if (match) {
+          setTotalCount(parseInt(match[0], 10));
+        } else {
+          setTotalCount((prev) => reset ? prods.length : prev + prods.length);
+        }
+      } else {
+        setTotalCount((prev) => reset ? prods.length : prev + prods.length);
+      }
+
       setHasMore(pg.hasMore || false);
       setNextCursor(pg.nextCursor || null);
     } catch (e) {
@@ -953,11 +966,11 @@ export default function BrandPage() {
                     })()}
                   </div>
                 </div>
-                  {prod.nextOrderDiscountMessage && (
-                    <div className="next-order-discount-tag" title={prod.nextOrderDiscountMessage} onClick={(e) => { e.stopPropagation(); window.showDiscountPopup && window.showDiscountPopup(prod.nextOrderDiscountMessage, e.currentTarget); }}>
-                      <span className="text-truncate">{prod.nextOrderDiscountMessage}</span>
-                    </div>
-                  )}
+                {prod.nextOrderDiscountMessage && (
+                  <div className="next-order-discount-tag" title={prod.nextOrderDiscountMessage} onClick={(e) => { e.stopPropagation(); window.showDiscountPopup && window.showDiscountPopup(prod.nextOrderDiscountMessage, e.currentTarget); }}>
+                    <span className="text-truncate">{prod.nextOrderDiscountMessage}</span>
+                  </div>
+                )}
 
                 {/* Cart Button */}
                 <div className="cart-section">
@@ -1614,8 +1627,8 @@ export default function BrandPage() {
           <div className="col-12 col-lg-9">
             <div className="mb-3 d-flex justify-content-between align-items-center">
               <span className="text-muted page-title-main-name mt-lg-3">
-                {pageTitle || `Showing ${allProducts.length} products`}
-                {hasMore && pageTitle && " (Scroll for more)"}
+                {totalCount > 0 ? `Showing ${totalCount} products` : "No products found"}
+                {/* {hasMore && " (Scroll for more)"} */}
               </span>
               <div className="d-flex align-items-center gap-3">
                 {/* {isAnyFilterActive && (
@@ -1739,14 +1752,7 @@ export default function BrandPage() {
             </div>
 
             {loadingMore && (
-              <div className="text-center mt-4 py-4">
-                <div className="spinner-border text-primary" role="status">
-                  <span className="visually-hidden">
-                    Loading more products...
-                  </span>
-                </div>
-                <p className="mt-2">Loading more products...</p>
-              </div>
+              <Loader text="Loading more products..." height={100} />
             )}
 
             <div ref={loaderRef} style={{ height: 20, marginTop: 20 }} />

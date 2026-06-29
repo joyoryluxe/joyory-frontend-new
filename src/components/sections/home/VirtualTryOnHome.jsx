@@ -4,6 +4,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination, Navigation, EffectFade } from "swiper/modules";
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import Loader from "../../common/Loader";
 import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
@@ -131,10 +132,8 @@ const Virtualtryonhome = () => {
   if (loading) {
     return (
       <div className="px-0 Virtualtryonhome-container-width">
-        <div className="banner-loading">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading virtual try on...</span>
-          </div>
+        <div className="banner-loading" style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "200px" }}>
+          <Loader text="Loading virtual try on..." height={100} />
         </div>
       </div>
     );
@@ -203,8 +202,7 @@ const Virtualtryonhome = () => {
                   {navLoading && (
                     <div className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-dark bg-opacity-50">
                       <div className="text-center text-white">
-                        <div className="spinner-border text-primary mb-2" style={{ width: '2rem', height: '2rem' }} />
-                        <div className="fs-6 fw-bold">Loading...</div>
+                        <Loader text="Loading..." height={80} style={{ color: "#fff" }} />
                       </div>
                     </div>
                   )}

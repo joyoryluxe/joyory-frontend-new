@@ -32,6 +32,7 @@ import { UserContext } from "../context/UserContext";
 import Header from "../components/common/Header";
 import Footer from "../components/common/Footer";
 import Sidebarcomon from "../components/common/SidebarCommon";
+import Loader from "../components/common/Loader";
 import "../styles/RoutineBuilder.css";
 
 const SKINCARE_LAYER_ORDER = [
@@ -1364,10 +1365,7 @@ const RoutineBuilder = () => {
         <>
           <Header />
           <div className="rb-loader-container page-title-main-name">
-            <div className="spinner-border text-primary" role="status">
-              <span className="visually-hidden">Loading shared routine...</span>
-            </div>
-            <p className="mt-3">Unlocking routine details...</p>
+            <Loader text="Unlocking routine details..." height={150} />
           </div>
           <Footer />
         </>
@@ -1541,10 +1539,7 @@ const RoutineBuilder = () => {
 
             {authLoading || loading ? (
               <div className="rb-loader-container page-title-main-name">
-                <div className="spinner-border text-primary" role="status">
-                  <span className="visually-hidden">Loading Routine Tracker...</span>
-                </div>
-                <p className="mt-3">Analyzing beauty schedules...</p>
+                <Loader text="Analyzing beauty schedules..." height={150} />
               </div>
             ) : !user || user.guest ? (
               <div className="rb-login-card page-title-main-name">

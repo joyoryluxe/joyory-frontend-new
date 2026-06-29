@@ -19,6 +19,7 @@ import { CartContext } from '../context/CartContext';
 import { UserContext } from '../context/UserContext.jsx';
 import { ToastContainer, toast } from 'react-toastify';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import Loader from '../components/common/Loader';
 import 'react-toastify/dist/ReactToastify.css';
 import bagIcon from '../assets/bag.svg';
 import { FaChevronDown, FaHeart, FaRegHeart, FaTimes, FaCheck } from 'react-icons/fa';
@@ -1044,9 +1045,7 @@ function ThankYouPage() {
             <Header />
             <main className="flex-grow-1 d-flex justify-content-center align-items-center">
                 <div className="text-center j-reveal">
-                    <h2 className="j-hero-title-main mb-3">Thank You!</h2>
-                    <p style={{ color: '#6b7280', fontSize: '1.1rem' }}>We are curating your personalized beauty recommendations...</p>
-                    <div className="spinner-border mt-4" style={{ color: '#1f2937', width: '3rem', height: '3rem' }} />
+                    <Loader text="We are curating your personalized beauty recommendations..." height={180} />
                 </div>
             </main>
             <Footer />
@@ -1314,7 +1313,7 @@ function SidePanel({ isOpen, isClosing, onClose, showQuizContent, quizData, load
                                             className={`wheel-hub-btn${isSpinning ? ' disabled' : ''}`}
                                             onClick={handleRandomSpin}
                                         >
-                                            <Sparkles size={20} style={{ color: '#d4af37' }} />
+                                            <Sparkles size={20} style={{ color: '#0077b6' }} />
                                             <span className="hub-label">{isSpinning ? 'Spinning' : 'Spin'}</span>
                                         </div>
                                     </div>
@@ -1433,7 +1432,7 @@ function HomePage({ onOpenPanel, isPanelOpen, isClosing, onClosePanel, showQuizC
                                                 padding: '4px 12px',
                                                 background: '#10b981',
                                                 color: 'white',
-                                                borderRadius: '20px',
+                                                borderRadius: '2px',
                                                 fontSize: '12px',
                                                 display: 'inline-block',
                                                 fontWeight: '600'
@@ -1784,10 +1783,7 @@ export default function Foryoulanding() {
     if (initialLoading) {
         return (
             <div style={{ minHeight: '100vh', background: 'var(--j-cream)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                <div className="text-center">
-                    <div className="spinner-border text-dark mb-3" role="status" />
-                    <p className="text-muted">Loading...</p>
-                </div>
+                <Loader text="Loading..." height={150} />
             </div>
         );
     }

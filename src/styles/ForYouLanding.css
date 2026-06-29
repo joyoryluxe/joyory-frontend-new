@@ -613,9 +613,9 @@ body {
 }
 
 .skincare-wheel-container {
-    --wheel-size: 290px;
+    --wheel-size: 300px;
     --wheel-radius: 105px;
-    --node-size: 64px;
+    --node-size: 70px; /* Enlarge nodes for better text and icon layout */
     position: relative;
     width: var(--wheel-size);
     height: var(--wheel-size);
@@ -624,9 +624,9 @@ body {
 
 @media (max-width: 480px) {
     .skincare-wheel-container {
-        --wheel-size: 245px;
-        --wheel-radius: 88px;
-        --node-size: 54px;
+        --wheel-size: 260px; /* Slightly larger on mobile to prevent crowding */
+        --wheel-radius: 94px;
+        --node-size: 58px;
     }
 }
 
@@ -639,8 +639,8 @@ body {
     height: 0;
     border-left: 10px solid transparent;
     border-right: 10px solid transparent;
-    border-top: 15px solid #d4af37; /* Champagne Gold Pointer */
-    filter: drop-shadow(0 3px 6px rgba(212, 175, 55, 0.45));
+    border-top: 15px solid var(--primary); /* Brand Blue Pointer */
+    filter: drop-shadow(0 3px 6px rgba(0, 119, 182, 0.35));
     z-index: 10;
     animation: pointer-bob 1.5s ease-in-out infinite;
 }
@@ -674,8 +674,8 @@ body {
     margin-top: calc(-1 * var(--node-size) / 2);
     border-radius: 50%;
     background: #ffffff;
-    border: 2px solid #e5e7eb;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(0, 119, 182, 0.12);
+    box-shadow: 0 4px 12px rgba(0, 119, 182, 0.04);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -684,14 +684,16 @@ body {
     user-select: none;
     transition: 
         transform var(--wheel-transition-speed, 0.8s) var(--wheel-transition-timing, cubic-bezier(0.34, 1.56, 0.64, 1)), 
+        scale 0.25s ease,
         background-color 0.3s, 
         border-color 0.3s, 
         box-shadow 0.3s;
 }
 
 .wheel-node:hover {
-    border-color: #1f2937;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+    border-color: var(--primary);
+    box-shadow: 0 6px 18px rgba(0, 119, 182, 0.12);
+    scale: 1.08; /* Independent scale doesn't conflict with layout transforms */
 }
 
 .wheel-node.selected {
@@ -700,25 +702,31 @@ body {
     box-shadow: 0 0 20px rgba(31, 41, 55, 0.35);
 }
 
-.wheel-node.selected .node-label {
+.wheel-node.selected .node-label, .wheel-node.selected svg {
     color: #ffffff;
 }
 
+.wheel-node svg {
+    color: var(--primary);
+    transition: color 0.3s ease;
+}
+
 .wheel-node .node-label {
-    font-size: 10px;
+    font-size: 8.5px; /* Clean, elegant sizing to prevent text clipping */
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.02em;
     color: #4b5563;
     text-align: center;
     padding: 0 4px;
-    word-break: break-word;
-    line-height: 1.25;
+    word-break: normal;
+    white-space: normal;
+    line-height: 1.1;
 }
 
 @media (max-width: 480px) {
     .wheel-node .node-label {
-        font-size: 9px;
+        font-size: 8px;
     }
 }
 
@@ -758,8 +766,8 @@ body {
 
 .wheel-hub-btn:hover {
     transform: scale(1.06);
-    border-color: #d4af37;
-    box-shadow: 0 12px 30px rgba(212, 175, 55, 0.2);
+    border-color: var(--primary);
+    box-shadow: 0 12px 30px rgba(0, 119, 182, 0.15);
 }
 
 .wheel-hub-btn.disabled {
@@ -785,7 +793,7 @@ body {
     position: absolute;
     inset: -5px;
     border-radius: 50%;
-    border: 1.5px solid rgba(212, 175, 55, 0.35);
+    border: 1.5px solid rgba(0, 119, 182, 0.25);
     animation: hub-pulse 2s infinite;
     pointer-events: none;
 }

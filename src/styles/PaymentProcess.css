@@ -171,6 +171,7 @@
     0% {
         transform: rotate(0deg);
     }
+
     100% {
         transform: rotate(360deg);
     }
@@ -439,7 +440,10 @@
     color: #000 !important;
 }
 
-.gift-card-inputs::placeholder {
+.gift-card-inputs::placeholder,
+.gift-card-inputs:active,
+.gift-card-inputs:focus,
+.gift-card-inputs:focus-within {
     color: #000 !important;
 }
 
@@ -453,18 +457,22 @@
         margin-top: 85px !important;
         margin-left: 0;
     }
+
     .stepper-wrapper {
         display: flex;
         align-items: center;
         justify-content: center;
         margin-bottom: 40px;
         padding: 0 24px;
-        margin-top: 70px;
+        padding-top: 24px !important;
+        margin-top: 90px !important;
     }
+
     .margin-top-in-payments {
         margin-left: 0 !important;
         text-align: center !important;
     }
+
     .summary-value {
         width: 140px;
         font-size: 15px;
@@ -852,34 +860,42 @@
     .payment-page-container {
         padding: 15px 0;
     }
+
     .payment-methods-card {
         margin-bottom: 20px;
     }
+
     .payment-method-item {
         padding: 16px;
     }
+
     .summary-header-left,
     .summary-header-right {
         padding: 16px 20px;
         font-size: 16px;
     }
+
     .summary-header-right,
     .summary-value,
     .total-value {
         width: 150px !important;
     }
+
     .summary-row {
         padding: 12px 20px;
     }
+
     .taxable-title {
         padding: 0 20px 12px;
         font-size: 16px;
     }
+
     .total-label,
     .total-value {
         padding: 16px 20px;
         font-size: 16px;
     }
+
     .total-value {
         width: 140px;
         text-align: start;
@@ -893,46 +909,57 @@
     .payment-page-container {
         padding: 10px;
     }
+
     .payment-method-item {
         padding: 14px;
     }
+
     .payment-method-icon {
         width: 36px;
         height: 36px;
         margin-right: 12px;
     }
+
     .payment-method-name {
         font-size: 15px;
     }
+
     .payment-method-subtitle {
         font-size: 12px;
     }
+
     .summary-header-left,
     .summary-header-right {
         padding: 14px 16px;
         font-size: 15px;
     }
+
     .summary-header-right,
     .summary-value,
     .total-value {
         width: 100px;
     }
+
     .summary-row {
         padding: 10px 16px;
     }
+
     .summary-label,
     .summary-value {
         font-size: 14px;
     }
+
     .taxable-title {
         padding: 0 16px 10px;
         font-size: 15px;
     }
+
     .total-label,
     .total-value {
         padding: 14px 16px;
         font-size: 15px;
     }
+
     .btn-pay-now {
         padding: 12px 20px;
         font-size: 14px;
@@ -940,18 +967,110 @@
 }
 
 @media (max-width: 480px) {
+
     .summary-header-right,
     .summary-value,
     .total-value {
         width: 90px;
     }
+
     .payment-method-header {
         flex-wrap: wrap;
         gap: 6px;
     }
+
     .upi-app-icons {
         margin-left: 0;
     }
 }
 
-.payment-method-font-size {}
+
+/* Premium Alert Modal Styles */
+.premium-alert-dialog {
+    max-width: 420px;
+    margin: 1.75rem auto;
+}
+
+.premium-alert-content {
+    border-radius: 20px !important;
+    border: 1px solid rgba(212, 175, 55, 0.3) !important;
+    /* Premium gold border hint */
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15) !important;
+    background: #ffffff !important;
+    padding: 10px;
+}
+
+.alert-icon-wrapper {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    margin-bottom: 15px;
+}
+
+.alert-icon-wrapper.error {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+}
+
+.alert-icon-wrapper.warning {
+    background-color: rgba(255, 193, 7, 0.1);
+    color: #ffc107;
+}
+
+.alert-icon-wrapper.success {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+}
+
+.alert-icon-wrapper.info {
+    background-color: rgba(23, 162, 184, 0.1);
+    color: #17a2b8;
+}
+
+.premium-alert-title {
+    font-family: "Playfair Display", serif;
+    font-weight: 700;
+    font-size: 22px;
+    color: #1a1a1a;
+    letter-spacing: 0.5px;
+}
+
+.premium-alert-message {
+    font-family: "DM Sans", sans-serif;
+    font-size: 15px;
+    color: #555555;
+    line-height: 1.5;
+    padding: 0 15px;
+}
+
+.premium-alert-btn {
+    background: #1a1a1a;
+    color: #ffffff;
+    border: 1px solid #1a1a1a;
+    padding: 10px 30px;
+    border-radius: 10px;
+    font-family: "DM Sans", sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    width: 100px;
+}
+
+.premium-alert-btn:hover {
+    background: #ffffff;
+    color: #1a1a1a;
+    border-color: #1a1a1a;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+}
+
+@media (max-width: 900px) {
+    .premium-alert-content {
+        margin: auto 20px !important;
+    }
+}

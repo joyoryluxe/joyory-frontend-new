@@ -8,6 +8,7 @@ import { UserContext } from "../context/UserContext.jsx";
 import BrandFilter from "../components/common/BrandFilter";
 import axiosInstance from "../utils/axiosInstance.js";
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import Loader from "../components/common/Loader";
 import updownarrow from "../assets/updownarrow.svg";
 import filtering from "../assets/filtering.svg";
 import Bag from "../assets/Bag.svg";
@@ -850,10 +851,7 @@ const PromotionProducts = () => {
             </div>
 
             {loadingMore && (
-              <div className="text-center mt-4 py-4">
-                <div className="spinner-border text-primary" role="status" />
-                <p className="mt-2">Loading more products...</p>
-              </div>
+              <Loader text="Loading more products..." height={100} />
             )}
 
             <div ref={loaderRef} style={{ height: 20, marginTop: 20 }} />

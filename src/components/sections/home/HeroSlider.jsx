@@ -8,6 +8,7 @@ import { Autoplay, Pagination, Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
+import Loader from "../../common/Loader";
 import "../../../styles/HeroSlider.css";
 
 const API_URL = "https://beauty.joyory.com/api/media";
@@ -62,7 +63,7 @@ export default function HeroSlider() {
   if (loading) {
     return (
       <div className="hero-slider d-flex justify-content-center align-items-center" style={{ height: "500px" }}>
-        <div className="spinner-border text-primary" />
+        <Loader text="Loading hero slider..." height={100} />
       </div>
     );
   }

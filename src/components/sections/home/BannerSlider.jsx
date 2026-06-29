@@ -8,6 +8,7 @@ import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
 import "swiper/css/effect-fade";
+import Loader from "../../common/Loader";
 import "../../../styles/BannerSlider.css";
 
 const BannerSlider = () => {
@@ -111,10 +112,8 @@ const BannerSlider = () => {
   if (loading) {
     return (
       <div className="px-0 Virtualtryonhome-container-width">
-        <div className="banner-loading">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading shade finder...</span>
-          </div>
+        <div className="banner-loading" style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "200px" }}>
+          <Loader text="Loading shade finder..." height={100} />
         </div>
       </div>
     );

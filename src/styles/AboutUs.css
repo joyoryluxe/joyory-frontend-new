@@ -179,7 +179,7 @@
         font-size: 1rem;
         margin-bottom: 2rem;
         max-width: 560px;
-        font-weight: 500;
+        font-weight: 600;
     }
 
     .hero-buttons {
@@ -616,12 +616,16 @@
 
     @media(max-width:768px) {
         .about-hero {
-            height: 85vh !important;
-            padding: 7rem 1.5rem;
+            height: auto !important;
+            min-height: calc(100vh - 350px) !important;
+            padding: 5rem 0 2rem;
             margin: 0;
             background: url("../assets/about-hero-small.jpg");
             background-size: cover;
-            background-position: center;
+            background-position: center center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .about-hero::before {
@@ -629,29 +633,51 @@
             position: absolute;
             inset: 0;
             z-index: 1;
-            /* White overlay */
-            background: rgba(255, 255, 255, 0.6);
-            /* background: rgba(255, 255, 255, 0.45); */
+            background: rgba(255, 255, 255, 0.14);
         }
 
         .about-hero-content {
             position: relative;
             z-index: 2;
-            padding-top: 80px;
+            padding: 2.25rem 1.5rem;
+            /* background: rgba(255, 255, 255, 0.88); */
+            backdrop-filter: blur(1px);
+            -webkit-backdrop-filter: blur(1px);
+            border-radius: 20px;
+            /* border: 1px solid rgba(255, 255, 255, 0.6); */
+            /* box-shadow: 0 10px 30px rgba(0, 119, 182, 0.06); */
+            width: 100%;
+            max-width: 480px;
+            margin: 0 auto;
         }
 
         .about-tag {
-            font-size: 10px !important;
-            margin-bottom: 20px;
+            font-size: 11px !important;
+            margin-bottom: 1.25rem;
+            padding: 8px 16px;
+            background: rgba(0, 119, 182, 0.08);
+            border: 1px solid rgba(0, 119, 182, 0.15);
+            color: var(--primary);
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
 
         .about-hero h1 {
-            font-size: 2.8rem;
-            margin-bottom: 20px;
+            font-size: 2.25rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+            font-weight: 700;
+            line-height: 1.2;
         }
 
         .about-hero p {
-            margin-bottom: 70px;
+            margin-bottom: 2rem;
+            color: #2c2c2c;
+            line-height: 1.6;
+            font-size: 0.95rem;
+            font-weight: 600;
         }
 
         .story-section,
@@ -666,7 +692,23 @@
         }
 
         .hero-buttons {
-            flex-direction: column;
+            /* flex-direction: column; */
+            gap: 12px;
+            /* width: 100%; */
+        }
+
+        .primary-btn,
+        .outline-btn,
+        .cta-btn {
+            /* width: 100%; */
+            text-align: center;
+            justify-content: center;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 12px;
+            font-size: 12px;
+            border-radius: 0px;
         }
 
         .about-cta {

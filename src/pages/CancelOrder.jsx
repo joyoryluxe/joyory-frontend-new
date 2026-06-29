@@ -2,12 +2,13 @@ import React, { useEffect, useState, useContext, useMemo, useCallback } from "re
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Modal, Button, Alert, Badge, Spinner } from "react-bootstrap";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import Loader from "../components/common/Loader";
 import { createPortal } from "react-dom";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { UserContext } from "../context/UserContext.jsx";
 import { CartContext } from "../Context/Cartcontext";
 import { FaTimes, FaHeart, FaRegHeart, FaCheck } from "react-icons/fa";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
 import bagIcon from "../assets/bag.svg";
@@ -1101,11 +1102,8 @@ const CancelOrder = () => {
 
   if (loading) {
     return (
-      <div className="container py-5 text-center">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
-        <p className="mt-3">Loading order details...</p>
+      <div className="container py-5 text-center" style={{ minHeight: "50vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <Loader text="Loading order details..." height={150} />
       </div>
     );
   }
@@ -1207,8 +1205,7 @@ const CancelOrder = () => {
         </div>
       )}
 
-      {/* ✅ Toast notifications */}
-      <ToastContainer position="top-right" autoClose={3000} />
+
 
 
     </div>

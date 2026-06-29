@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { FaTimes, FaChevronRight, FaChevronDown, FaChevronUp } from "react-icons/fa";
+import Loader from "./Loader";
 import "../../styles/BrandFilter.css";
 
 // Default empty filter shape used as fallback
@@ -272,7 +273,11 @@ const BrandFilter = ({
     };
 
     if (!filterData) {
-        return <div className="p-4 text-center"><div className="spinner-border text-primary" /></div>;
+        return (
+            <div className="p-4 text-center" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Loader text="Loading filters..." height={80} />
+            </div>
+        );
     }
 
     return (

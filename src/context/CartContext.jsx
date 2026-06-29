@@ -595,10 +595,28 @@ const CartProvider = ({ children }) => {
 
   const syncCartFromBackend = async () => {
     try {
-      const res = await fetch(
-        "https://beauty.joyory.com/api/user/cart/summary",
-        { credentials: "include" }
-      );
+      const queryParams = new URLSearchParams();
+      // Add cache buster
+      queryParams.append("t", Date.now().toString());
+
+      const wantPoints = localStorage.getItem("useRewardPoints") === "true";
+      if (wantPoints) {
+        const savedAmount = localStorage.getItem("rewardPointsAmount");
+        const pointsToUse = savedAmount ? Number(savedAmount) : 99999999;
+        queryParams.append("pointsToUse", String(pointsToUse));
+      } else {
+        queryParams.append("pointsToUse", "0");
+      }
+
+      const savedCoupon = localStorage.getItem("appliedCoupon") || "";
+      queryParams.append("discount", savedCoupon);
+
+      const queryString = queryParams.toString();
+      const url = queryString
+        ? `https://beauty.joyory.com/api/user/cart/summary?${queryString}`
+        : `https://beauty.joyory.com/api/user/cart/summary?t=${Date.now()}`;
+
+      const res = await fetch(url, { cache: "no-store", credentials: "include" });
       if (res.status === 400 || res.status === 401) {
         // Fallback to localStorage guest cart
         const guestCart = getGuestCart();

@@ -28,7 +28,7 @@ const Certificate = () => {
           <div className="item p-0 ms-lg-0">
             <div className="icon"><img src={containertruck} width={"40px"} alt="Image-Not-Found" /></div>
             <div className="title mt-lg-3 mt-3 title-main text-center fs-6">Free Shipping</div>
-            <div className="mt-2 subtitle-Certificate text-center">On all orders above ₹299</div>
+            <div className="mt-2 subtitle-Certificate text-center">On all orders above ₹499</div>
           </div>
         </div>
 

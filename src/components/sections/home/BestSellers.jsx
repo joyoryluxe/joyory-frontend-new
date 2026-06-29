@@ -7,6 +7,7 @@ import "swiper/css/pagination";
 import "swiper/css/navigation";
 import "../../../styles/BestSellers.css";
 import "../../../App.css";
+import Loader from "../../common/Loader";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
@@ -731,10 +732,7 @@ const BestSellers = () => {
 
             {loading && (
                 <div className="text-center">
-                    <div className="spinner-border text-primary" role="status">
-                        <span className="visually-hidden">Loading...</span>
-                    </div>
-                    <p className="text-muted mt-2 page-title-main-name text-black fs-4">Loading best sellers...</p>
+                    <Loader text="Loading best sellers..." height={120} />
                 </div>
             )}
 

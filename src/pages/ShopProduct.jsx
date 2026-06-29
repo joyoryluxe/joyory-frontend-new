@@ -19,6 +19,7 @@ import updownarrow from "../assets/updownarrow.svg";
 import filtering from "../assets/filtering.svg";
 import Bag from "../assets/Bag.svg";
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import Loader from "../components/common/Loader";
 
 const CART_API_BASE = "https://beauty.joyory.com/api/user/cart";
 const PRODUCT_ALL_API = "https://beauty.joyory.com/api/user/products/all";
@@ -1586,12 +1587,7 @@ export default function ProductPage() {
 
                         {/* Loading more spinner */}
                         {loadingMore && (
-                            <div className="text-center mt-4 py-4">
-                                <div className="spinner-border text-primary" role="status">
-                                    <span className="visually-hidden">Loading more products...</span>
-                                </div>
-                                <p className="mt-2">Loading more products...</p>
-                            </div>
+                            <Loader text="Loading more products..." height={100} />
                         )}
 
                         <div ref={loaderRef} style={{ height: 20, marginTop: 20 }} />
