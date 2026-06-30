@@ -336,8 +336,30 @@ const RoutineBuilder = () => {
         setSteps(newSteps);
         
         // Map routine goal & details
-        const detectedGoal = data.aiMeta?.primaryGoals?.[0] || "general_wellness";
+        const rawGoal = data.aiMeta?.primaryGoals?.[0] || "general_wellness";
+        const mapGoalToEnum = (primaryGoal) => {
+          if (!primaryGoal) return "general_wellness";
+          const g = primaryGoal.toLowerCase();
+          if (g.includes("acne") || g.includes("blackhead") || g.includes("pore") || g.includes("pimple") || g.includes("blemish")) {
+            return "acne_clearance";
+          }
+          if (g.includes("spot") || g.includes("pigment") || g.includes("dark") || g.includes("bright") || g.includes("glow") || g.includes("melasma") || g.includes("arbutin") || g.includes("scar")) {
+            return "dark_spot_fading";
+          }
+          if (g.includes("barrier") || g.includes("sensitive") || g.includes("red") || g.includes("sooth") || g.includes("calm") || g.includes("irritat") || g.includes("rosacea") || g.includes("cica")) {
+            return "barrier_repair";
+          }
+          if (g.includes("aging") || g.includes("wrinkle") || g.includes("fine line") || g.includes("mature") || g.includes("retinol") || g.includes("peptide") || g.includes("firm")) {
+            return "anti_aging";
+          }
+          if (g.includes("hydrat") || g.includes("dry") || g.includes("dehydrat") || g.includes("moist") || g.includes("water")) {
+            return "hydration";
+          }
+          return "general_wellness";
+        };
+        const detectedGoal = mapGoalToEnum(rawGoal);
         setRoutineGoal(detectedGoal);
+
         setRoutineName(data.routineName || "Personalized AI Regimen");
         setRoutineDesc(data.aiMeta?.skinConcernSummary || "AI custom generated sequence.");
         setMilestoneTitle(data.aiMeta?.expectedTimeline ? `Timeline: ${data.aiMeta.expectedTimeline.substring(0, 50)}...` : "Personalized Goal Journey");
