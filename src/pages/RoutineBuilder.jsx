@@ -2732,6 +2732,25 @@ const RoutineBuilder = () => {
                                     )}
                                     <div className="rb-selected-detail">
                                       <div className="rb-selected-name">{step.productName}</div>
+                                      
+                                      {step.product && steps.filter(s => String(s.product) === String(step.product)).length > 1 && (
+                                        <div style={{
+                                          display: "inline-flex",
+                                          alignItems: "center",
+                                          gap: "4px",
+                                          background: "#ecfdf5",
+                                          color: "#059669",
+                                          fontSize: "0.72rem",
+                                          fontWeight: "600",
+                                          padding: "2px 8px",
+                                          borderRadius: "12px",
+                                          marginTop: "4px",
+                                          border: "1px solid #a7f3d0",
+                                          width: "fit-content"
+                                        }}>
+                                          <span>✨</span> Shared AM/PM Product
+                                        </div>
+                                      )}
 
                                       {step.variants && step.variants.length > 1 ? (
                                         <div className="mt-2">
