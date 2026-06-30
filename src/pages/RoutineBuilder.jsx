@@ -133,6 +133,7 @@ const RoutineBuilder = () => {
   const [aiDetectLoading, setAiDetectLoading] = useState(false);
   const [aiDetectResult, setAiDetectResult] = useState(null);
   const [aiDetectRecommendations, setAiDetectRecommendations] = useState(null);
+  const [aiBudgetSummary, setAiBudgetSummary] = useState(null);
   const [aiStepOwnership, setAiStepOwnership] = useState({});
   const [photoUploading, setPhotoUploading] = useState(false);
   const [showReminderDrawer, setShowReminderDrawer] = useState(false);
@@ -274,70 +275,93 @@ const RoutineBuilder = () => {
 
     try {
       setAiDetectLoading(true);
-      const res = await axiosInstance.post("/api/user/routines/ai-detect-goals", { query: aiPromptQuery });
+      const res = await axiosInstance.post("/api/user/routines/ai-build", { query: aiPromptQuery });
       if (res.data && res.data.success) {
-        setAiDetectResult(res.data.aiResult);
-        setAiDetectRecommendations(res.data.recommendations || {});
+        const data = res.data;
+        const newSteps = [];
 
-        // Prefill default selections to 'bestMatch'
-        const initialSelections = {};
-        const initialOwnership = {};
-        res.data.aiResult.recommendedCategories.forEach(cat => {
-          initialSelections[cat] = "bestMatch";
-          initialOwnership[cat] = false;
-        });
-        setSelectedAIMatches(initialSelections);
-        setAiStepOwnership(initialOwnership);
-        setShowAIDetectModal(true);
-        toast.success("AI analyzed your concerns successfully!");
+        const processStep = (s) => {
+          if (!s.productFound || !s.product) {
+            // Placeholder step if product not found in catalog
+            return {
+              product: "",
+              productName: s.stepLabel || "Select Product",
+              productImage: "",
+              selectedSku: "",
+              note: s.purpose || "AI recommended step type",
+              applicationTip: s.tip || "Apply as directed.",
+              timeOfDay: s.timeOfDay || "both",
+              allergenAlert: false,
+              allergenAlertMessage: null,
+              variants: [],
+              isOwned: false,
+              isRequired: true,
+              ownershipType: null,
+              purchaseSource: null
+            };
+          }
+
+          // Real product found
+          const product = s.product;
+          // Find matching catalog product to load full variants list
+          const localProduct = allProducts.find(p => String(p._id) === String(product._id)) || {};
+
+          return {
+            product: product._id,
+            productName: product.name,
+            productImage: product.productImage || product.variants?.[0]?.images?.[0] || localProduct.image || "",
+            selectedSku: product.selectedSku || product.variants?.[0]?.sku || "",
+            note: s.purpose || "AI recommended step",
+            applicationTip: s.applicationTip || s.tip || "Apply as directed.",
+            timeOfDay: s.timeOfDay || "both",
+            allergenAlert: s.allergenAlert || false,
+            allergenAlertMessage: s.allergenAlertMessage || null,
+            variants: product.variants || localProduct.variants || [],
+            isOwned: false,
+            isRequired: true,
+            ownershipType: null,
+            purchaseSource: null
+          };
+        };
+
+        // Combine AM and PM steps sequentially
+        if (data.amSteps && data.amSteps.length > 0) {
+          data.amSteps.forEach(s => newSteps.push(processStep(s)));
+        }
+        if (data.pmSteps && data.pmSteps.length > 0) {
+          data.pmSteps.forEach(s => newSteps.push(processStep(s)));
+        }
+
+        setSteps(newSteps);
+        
+        // Map routine goal & details
+        const detectedGoal = data.aiMeta?.primaryGoals?.[0] || "general_wellness";
+        setRoutineGoal(detectedGoal);
+        setRoutineName(data.routineName || "Personalized AI Regimen");
+        setRoutineDesc(data.aiMeta?.skinConcernSummary || "AI custom generated sequence.");
+        setMilestoneTitle(data.aiMeta?.expectedTimeline ? `Timeline: ${data.aiMeta.expectedTimeline.substring(0, 50)}...` : "Personalized Goal Journey");
+        setDurationDays(data.aiMeta?.durationDays || 30);
+        setTimeOfDay("AM+PM");
+        setIsAISuggested(true);
+        setActiveTab("builder");
+        setAiBudgetSummary(data.budgetSummary || null);
+        
+        if (data.budgetSummary?.budgetNote) {
+          toast.success(`AI Routine Generated! ${data.budgetSummary.budgetNote}`, { autoClose: 7000 });
+        } else {
+          toast.success("AI generated routine sequence loaded! Customize it below.");
+        }
       }
     } catch (err) {
-      console.error("AI goal detection error:", err);
-      toast.error(err.response?.data?.message || "Failed to analyze skin concerns.");
+      console.error("AI routine builder error:", err);
+      toast.error(err.response?.data?.message || "Failed to analyze skin concerns and build routine.");
     } finally {
       setAiDetectLoading(false);
     }
   };
 
   const loadAIDetectedRoutine = () => {
-    if (!aiDetectResult) return;
-
-    const newSteps = [];
-
-    aiDetectResult.recommendedCategories.forEach((cat) => {
-      const option = selectedAIMatches[cat] || "bestMatch";
-      const product = aiDetectRecommendations[cat]?.[option];
-
-      if (product) {
-        const localProduct = allProducts.find(p => String(p._id) === String(product._id)) || {};
-
-        newSteps.push({
-          product: product._id,
-          productName: product.name,
-          productImage: product.variants?.[0]?.images?.[0] || product.image || localProduct.image || "",
-          selectedSku: product.variants?.[0]?.sku || "",
-          note: `AI selected ${option === 'bestMatch' ? 'Recommended Match' : option === 'budgetMatch' ? 'Budget Match' : 'Premium Match'} for ${cat}`,
-          applicationTip: product.howToUse?.[0] || localProduct.howToUse?.[0] || "Apply as directed.",
-          timeOfDay: cat.toLowerCase().includes("sun") || cat.toLowerCase().includes("spf") ? "AM" : (cat.toLowerCase().includes("night") || cat.toLowerCase().includes("retinol") ? "PM" : "both"),
-          allergenAlert: false,
-          allergenAlertMessage: null,
-          variants: product.variants || localProduct.variants || [],
-          isOwned: aiStepOwnership[cat] || false,
-          isRequired: true,
-          ownershipType: aiStepOwnership[cat] ? "purchased_elsewhere" : null,
-          purchaseSource: aiStepOwnership[cat] ? "Already Owned" : null
-        });
-      }
-    });
-
-    setSteps(newSteps);
-    setRoutineGoal(aiDetectResult.goals?.[0] || "general_wellness");
-    setRoutineName(aiDetectResult.routineName || `${aiDetectResult.goals?.[0] ? formatGoalName(aiDetectResult.goals[0]) : "Personalized"} AI Regimen`);
-    setMilestoneTitle(`${aiDetectResult.goals?.[0] ? formatGoalName(aiDetectResult.goals[0]) : "Personalized"} Goal Journey`);
-    setIsAISuggested(true);
-    setActiveTab("builder");
-    setShowAIDetectModal(false);
-    toast.success("AI generated sequence loaded! Customize it below.");
+    // Legacy function - bypassed by new direct loading flow
   };
 
   const handleDismissReminder = (idx) => {
@@ -1308,6 +1332,7 @@ const RoutineBuilder = () => {
     setEstimatedMinutes("");
     setSteps([]);
     setIsAISuggested(false);
+    setAiBudgetSummary(null);
     setRoutineGoal("general_wellness");
     setMilestoneTitle("");
     setDurationDays(30);
@@ -2380,6 +2405,180 @@ const RoutineBuilder = () => {
                       <h2>{editingRoutineId ? "Edit Routine Journey" : "Design A Goal Skincare Journey"}</h2>
                       <p className="text-muted text-journey">Outline your step-by-step product layering. Customize allergen slots and tracking durations.</p>
                     </div>
+
+                    {/* New AI Budget & Optimization Insights Dashboard */}
+                    {isAISuggested && aiBudgetSummary && (
+                      <div className="mb-4" style={{
+                        background: "rgba(255, 255, 255, 0.95)",
+                        border: "1px solid #e1e8ed",
+                        borderRadius: "16px",
+                        padding: "20px",
+                        boxShadow: "0 8px 30px rgba(0, 0, 0, 0.05)",
+                        backdropFilter: "blur(10px)"
+                      }}>
+                        <div className="d-flex justify-content-between align-items-center mb-3" style={{ borderBottom: "1px solid #f1f4f6", paddingBottom: "12px" }}>
+                          <span style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "6px",
+                            fontWeight: "700",
+                            fontSize: "0.95rem",
+                            color: "#1e293b",
+                            letterSpacing: "-0.01em"
+                          }}>
+                            <span style={{ fontSize: "1.2rem" }}>✨</span> Joyory Smart Optimizer
+                          </span>
+                          <span style={{
+                            background: aiBudgetSummary.withinBudget ? "#ecfdf5" : "#fffbeb",
+                            color: aiBudgetSummary.withinBudget ? "#065f46" : "#92400e",
+                            border: `1px solid ${aiBudgetSummary.withinBudget ? "#a7f3d0" : "#fde68a"}`,
+                            borderRadius: "20px",
+                            padding: "4px 12px",
+                            fontSize: "0.85rem",
+                            fontWeight: "600"
+                          }}>
+                            Routine Cost: <strong>₹{aiBudgetSummary.totalEstimated}</strong> {aiBudgetSummary.budgetINR && `(Limit: ₹${aiBudgetSummary.budgetINR})`}
+                          </span>
+                        </div>
+                        
+                        <div style={{
+                          background: aiBudgetSummary.withinBudget ? "#f0fdf4" : "#fffdf5",
+                          borderLeft: `4px solid ${aiBudgetSummary.withinBudget ? "#22c55e" : "#eab308"}`,
+                          borderRadius: "8px",
+                          padding: "16px",
+                          marginBottom: "16px"
+                        }}>
+                          <div className="d-flex align-items-start gap-2">
+                            <span style={{ fontSize: "1.2rem", lineHeight: "1.4" }}>
+                              {aiBudgetSummary.withinBudget ? "✅" : "⚠️"}
+                            </span>
+                            <div style={{ flex: 1 }}>
+                              <p style={{
+                                margin: 0,
+                                fontWeight: "600",
+                                fontSize: "0.9rem",
+                                color: aiBudgetSummary.withinBudget ? "#166534" : "#854d0e",
+                                lineHeight: "1.5"
+                              }}>
+                                {aiBudgetSummary.budgetNote}
+                              </p>
+                              {aiBudgetSummary.budgetRecommendation && (
+                                <p style={{
+                                  margin: "8px 0 0 0",
+                                  fontSize: "0.85rem",
+                                  color: "#475569",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "6px"
+                                }}>
+                                  <span style={{ fontSize: "1.1rem" }}>💡</span>
+                                  {aiBudgetSummary.budgetRecommendation}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {aiBudgetSummary.priorityPurchaseOrder && (
+                          <div style={{ marginBottom: "16px" }}>
+                            <div style={{
+                              fontWeight: "600",
+                              fontSize: "0.8rem",
+                              color: "#64748b",
+                              textTransform: "uppercase",
+                              letterSpacing: "0.05em",
+                              marginBottom: "8px"
+                            }}>
+                              Clinical Priority Purchase Sequence:
+                            </div>
+                            <div style={{
+                              display: "flex",
+                              flexWrap: "wrap",
+                              alignItems: "center",
+                              gap: "8px"
+                            }}>
+                              {aiBudgetSummary.priorityPurchaseOrder.split(" → ").map((step, sIdx) => (
+                                <React.Fragment key={sIdx}>
+                                  {sIdx > 0 && <span style={{ color: "#cbd5e1", fontWeight: "bold" }}>→</span>}
+                                  <span style={{
+                                    background: "#f8fafc",
+                                    border: "1px solid #e2e8f0",
+                                    borderRadius: "8px",
+                                    padding: "6px 12px",
+                                    fontSize: "0.85rem",
+                                    fontWeight: "500",
+                                    color: "#334155"
+                                  }}>
+                                    {step}
+                                  </span>
+                                </React.Fragment>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {aiBudgetSummary.droppedSteps && aiBudgetSummary.droppedSteps.length > 0 && (
+                          <div>
+                            <div style={{
+                              fontWeight: "600",
+                              fontSize: "0.8rem",
+                              color: "#64748b",
+                              textTransform: "uppercase",
+                              letterSpacing: "0.05em",
+                              marginBottom: "8px"
+                            }}>
+                              Skipped Steps (Add when budget allows):
+                            </div>
+                            <div style={{
+                              display: "grid",
+                              gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+                              gap: "10px"
+                            }}>
+                              {aiBudgetSummary.droppedSteps.map((step, dIdx) => (
+                                <div key={dIdx} style={{
+                                  background: "#fdfdfd",
+                                  border: "1px dashed #cbd5e1",
+                                  borderRadius: "10px",
+                                  padding: "10px 14px",
+                                  position: "relative"
+                                }}>
+                                  <span style={{
+                                    position: "absolute",
+                                    right: "10px",
+                                    top: "10px",
+                                    fontSize: "0.7rem",
+                                    fontWeight: "700",
+                                    textTransform: "uppercase",
+                                    padding: "2px 6px",
+                                    borderRadius: "4px",
+                                    background: step.timeOfDay === "AM" ? "#fff7ed" : "#f1f5f9",
+                                    color: step.timeOfDay === "AM" ? "#c2410c" : "#475569"
+                                  }}>
+                                    {step.timeOfDay}
+                                  </span>
+                                  <div style={{
+                                    fontWeight: "600",
+                                    fontSize: "0.85rem",
+                                    color: "#334155",
+                                    marginBottom: "4px"
+                                  }}>
+                                    {step.stepLabel}
+                                  </div>
+                                  <div style={{
+                                    fontSize: "0.75rem",
+                                    color: "#64748b",
+                                    lineHeight: "1.3"
+                                  }}>
+                                    {step.purpose}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
 
                     {/* Metadata Fields */}
                     <div className="rb-form-grid">
