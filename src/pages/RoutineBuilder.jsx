@@ -134,6 +134,7 @@ const RoutineBuilder = () => {
   const [aiDetectResult, setAiDetectResult] = useState(null);
   const [aiDetectRecommendations, setAiDetectRecommendations] = useState(null);
   const [aiBudgetSummary, setAiBudgetSummary] = useState(null);
+  const [aiSafetyAdvice, setAiSafetyAdvice] = useState("");
   const [aiStepOwnership, setAiStepOwnership] = useState({});
   const [photoUploading, setPhotoUploading] = useState(false);
   const [showReminderDrawer, setShowReminderDrawer] = useState(false);
@@ -345,6 +346,7 @@ const RoutineBuilder = () => {
         setIsAISuggested(true);
         setActiveTab("builder");
         setAiBudgetSummary(data.budgetSummary || null);
+        setAiSafetyAdvice(data.aiMeta?.safetyAdvice || "");
         
         if (data.budgetSummary?.budgetNote) {
           toast.success(`AI Routine Generated! ${data.budgetSummary.budgetNote}`, { autoClose: 7000 });
@@ -1333,6 +1335,7 @@ const RoutineBuilder = () => {
     setSteps([]);
     setIsAISuggested(false);
     setAiBudgetSummary(null);
+    setAiSafetyAdvice("");
     setRoutineGoal("general_wellness");
     setMilestoneTitle("");
     setDurationDays(30);
@@ -2479,6 +2482,41 @@ const RoutineBuilder = () => {
                           </div>
                         </div>
 
+                        {aiSafetyAdvice && (
+                          <div style={{
+                            background: "#fff1f2",
+                            borderLeft: "4px solid #f43f5e",
+                            borderRadius: "8px",
+                            padding: "12px 16px",
+                            marginBottom: "16px"
+                          }}>
+                            <div className="d-flex align-items-start gap-2">
+                              <span style={{ fontSize: "1.2rem", lineHeight: "1.3" }}>🛡️</span>
+                              <div style={{ flex: 1 }}>
+                                <div style={{
+                                  fontWeight: "700",
+                                  fontSize: "0.85rem",
+                                  color: "#9f1239",
+                                  marginBottom: "4px",
+                                  textTransform: "uppercase",
+                                  letterSpacing: "0.03em"
+                                }}>
+                                  Clinical Safety Warning & Patch Testing Guidance:
+                                </div>
+                                <p style={{
+                                  margin: 0,
+                                  fontSize: "0.85rem",
+                                  color: "#be123c",
+                                  lineHeight: "1.4"
+                                }}>
+                                  {aiSafetyAdvice}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+
                         {aiBudgetSummary.priorityPurchaseOrder && (
                           <div style={{ marginBottom: "16px" }}>
                             <div style={{
@@ -2714,317 +2752,394 @@ const RoutineBuilder = () => {
                         <p className="text-muted mb-0">No steps defined. Add a step to search and select products.</p>
                       </div>
                     ) : (
-                      <div className="rb-steps-list">
-                        {steps.map((step, idx) => (
-                          <div key={idx} className={`rb-step-card ${step.allergenAlert ? "allergen-warning-border" : ""} ${(!step.isOwned && step.isRequired !== false) ? "rb-step-unowned-highlight" : ""}`}>
-                            <div className="rb-step-number">{idx + 1}</div>
+                      <div className="rb-steps-container-layout">
+                        {/* Define the local step card renderer to avoid duplicating code */}
+                        {(() => {
+                          const renderStepCard = (step, idx, displayOrder) => (
+                            <div key={idx} className={`rb-step-card ${step.allergenAlert ? "allergen-warning-border" : ""} ${(!step.isOwned && step.isRequired !== false) ? "rb-step-unowned-highlight" : ""}`} style={{ marginBottom: "16px" }}>
+                              <div className="rb-step-number">{displayOrder}</div>
 
-                            <div className="rb-step-content">
+                              <div className="rb-step-content">
 
-                              {/* Product Selector */}
-                              <div className="rb-product-selector">
-                                <label className="rb-label">Select Product *</label>
+                                {/* Product Selector */}
+                                <div className="rb-product-selector">
+                                  <label className="rb-label">Select Product *</label>
 
-                                {step.product ? (
-                                  <div className="rb-selected-product-info">
-                                    {step.productImage && (
-                                      <img src={step.productImage} alt={step.productName} className="rb-selected-img" />
-                                    )}
-                                    <div className="rb-selected-detail">
-                                      <div className="rb-selected-name">{step.productName}</div>
-                                      
-                                      {step.product && steps.filter(s => String(s.product) === String(step.product)).length > 1 && (
-                                        <div style={{
-                                          display: "inline-flex",
-                                          alignItems: "center",
-                                          gap: "4px",
-                                          background: "#ecfdf5",
-                                          color: "#059669",
-                                          fontSize: "0.72rem",
-                                          fontWeight: "600",
-                                          padding: "2px 8px",
-                                          borderRadius: "12px",
-                                          marginTop: "4px",
-                                          border: "1px solid #a7f3d0",
-                                          width: "fit-content"
-                                        }}>
-                                          <span>✨</span> Shared AM/PM Product
-                                        </div>
+                                  {step.product ? (
+                                    <div className="rb-selected-product-info">
+                                      {step.productImage && (
+                                        <img src={step.productImage} alt={step.productName} className="rb-selected-img" />
                                       )}
+                                      <div className="rb-selected-detail">
+                                        <div className="rb-selected-name">{step.productName}</div>
+                                        
+                                        {step.product && steps.filter(s => String(s.product) === String(step.product)).length > 1 && (
+                                          <div style={{
+                                            display: "inline-flex",
+                                            alignItems: "center",
+                                            gap: "4px",
+                                            background: "#ecfdf5",
+                                            color: "#059669",
+                                            fontSize: "0.72rem",
+                                            fontWeight: "600",
+                                            padding: "2px 8px",
+                                            borderRadius: "12px",
+                                            marginTop: "4px",
+                                            border: "1px solid #a7f3d0",
+                                            width: "fit-content"
+                                          }}>
+                                            <span>✨</span> Shared AM/PM Product
+                                          </div>
+                                        )}
 
-                                      {step.variants && step.variants.length > 1 ? (
-                                        <div className="mt-2">
-                                          <select
-                                            value={step.selectedSku}
-                                            onChange={(e) => handleStepVariantChange(idx, e.target.value)}
-                                            className="rb-select"
-                                            style={{ padding: "4px 8px", fontSize: "0.8rem" }}
-                                          >
-                                            {step.variants.map((v, vIdx) => (
-                                              <option key={vIdx} value={v.sku}>
-                                                {v.shadeName || v.name || v.sku}
-                                              </option>
-                                            ))}
-                                          </select>
+                                        {step.variants && step.variants.length > 1 ? (
+                                          <div className="mt-2">
+                                            <select
+                                              value={step.selectedSku}
+                                              onChange={(e) => handleStepVariantChange(idx, e.target.value)}
+                                              className="rb-select"
+                                              style={{ padding: "4px 8px", fontSize: "0.8rem" }}
+                                            >
+                                              {step.variants.map((v, vIdx) => (
+                                                <option key={vIdx} value={v.sku}>
+                                                  {v.shadeName || v.name || v.sku}
+                                                </option>
+                                              ))}
+                                            </select>
+                                          </div>
+                                        ) : step.selectedSku ? (
+                                          <div className="rb-selected-brand">SKU: {step.selectedSku}</div>
+                                        ) : null}
+
+                                        <div className="d-flex align-items-center gap-2 mt-2 alr-chk">
+                                          <input
+                                            type="checkbox"
+                                            id={`step-own-${idx}`}
+                                            checked={step.isOwned || false}
+                                            onChange={(e) => handleStepTextChange(idx, "isOwned", e.target.checked)}
+                                            style={{ cursor: "pointer", width: "16px", height: "16px" }}
+                                          />
+                                          <label htmlFor={`step-own-${idx}`} style={{ margin: 0, fontSize: "0.85rem", cursor: "pointer", fontWeight: "600", color: "var(--joyory-charcoal)" }}>
+                                            I already own this product
+                                          </label>
                                         </div>
-                                      ) : step.selectedSku ? (
-                                        <div className="rb-selected-brand">SKU: {step.selectedSku}</div>
-                                      ) : null}
+                                      </div>
+                                      <div className="d-flex flex-column gap-2 alt-rmv">
+                                        <button
+                                          type="button"
+                                          className="rb-remove-selected-btn"
+                                          style={{ color: "#000000", fontWeight: "600", fontSize: "0.80rem" }}
+                                          onClick={() => handleOpenAlternatives(step.product, idx)}
+                                        >
+                                          Alternatives
+                                        </button>
 
-                                      <div className="d-flex align-items-center gap-2 mt-2 alr-chk">
-                                        <input
-                                          type="checkbox"
-                                          id={`step-own-${idx}`}
-                                          checked={step.isOwned || false}
-                                          onChange={(e) => handleStepTextChange(idx, "isOwned", e.target.checked)}
-                                          style={{ cursor: "pointer", width: "16px", height: "16px" }}
-                                        />
-                                        <label htmlFor={`step-own-${idx}`} style={{ margin: 0, fontSize: "0.85rem", cursor: "pointer", fontWeight: "600", color: "var(--joyory-charcoal)" }}>
-                                          I already own this product
-                                        </label>
+                                        <button
+                                          type="button"
+                                          className="rb-remove-selected-btn"
+                                          onClick={() => handleStepProductSelect(idx, { _id: "", name: "", variants: [] })}
+                                        >
+                                          Remove
+                                        </button>
                                       </div>
                                     </div>
-                                    <div className="d-flex flex-column gap-2 alt-rmv">
-                                      <button
-                                        type="button"
-                                        className="rb-remove-selected-btn"
-                                        style={{ color: "#000000", fontWeight: "600", fontSize: "0.80rem" }}
-                                        onClick={() => handleOpenAlternatives(step.product, idx)}
-                                      >
-                                        Alternatives
-                                      </button>
+                                  ) : (
+                                    <div>
+                                      <div className="d-flex align-items-center bg-white border rounded px-3" style={{ position: "relative" }}>
+                                        <FaSearch className="text-muted mr-2" />
+                                        <input
+                                          type="text"
+                                          placeholder="Search product from catalog..."
+                                          value={searchQueries[idx] || ""}
+                                          onChange={(e) => {
+                                            const text = e.target.value;
+                                            setSearchQueries(prev => ({ ...prev, [idx]: text }));
+                                            setShowDropdown(prev => ({ ...prev, [idx]: true }));
+                                          }}
+                                          className="rb-input w-100 border-0 pl-1"
+                                          style={{ boxShadow: "none" }}
+                                        />
+                                      </div>
 
-                                      <button
-                                        type="button"
-                                        className="rb-remove-selected-btn"
-                                        onClick={() => handleStepProductSelect(idx, { _id: "", name: "", variants: [] })}
-                                      >
-                                        Remove
-                                      </button>
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <div>
-                                    <div className="d-flex align-items-center bg-white border rounded px-3" style={{ position: "relative" }}>
-                                      <FaSearch className="text-muted mr-2" />
-                                      <input
-                                        type="text"
-                                        placeholder="Search product from catalog..."
-                                        value={searchQueries[idx] || ""}
-                                        onChange={(e) => {
-                                          const text = e.target.value;
-                                          setSearchQueries(prev => ({ ...prev, [idx]: text }));
-                                          setShowDropdown(prev => ({ ...prev, [idx]: true }));
-                                        }}
-                                        className="rb-input w-100 border-0 pl-1"
-                                        style={{ boxShadow: "none" }}
-                                      />
-                                    </div>
-
-                                    {showDropdown[idx] && searchQueries[idx]?.trim() && (
-                                      <div className="rb-search-results-dropdown">
-                                        {getFilteredProducts(searchQueries[idx]).length === 0 ? (
-                                          <div className="p-3 text-muted text-center" style={{ fontSize: "0.85rem" }}>
-                                            No matching products found.
-                                          </div>
-                                        ) : (
-                                          getFilteredProducts(searchQueries[idx]).map(prod => (
-                                            <div
-                                              key={prod._id}
-                                              className="rb-search-item"
-                                              onClick={() => handleStepProductSelect(idx, prod)}
-                                            >
-                                              <img src={prod.variants?.[0]?.images?.[0] || prod.image || "/placeholder.png"} alt={prod.name} className="rb-search-item-img" />
-                                              <div className="rb-search-item-info">
-                                                <div className="rb-search-item-name">{prod.name}</div>
-                                                <div className="rb-search-item-brand">{typeof prod.brand === "string" ? prod.brand : prod.brand?.name}</div>
-                                              </div>
+                                      {showDropdown[idx] && searchQueries[idx]?.trim() && (
+                                        <div className="rb-search-results-dropdown">
+                                          {getFilteredProducts(searchQueries[idx]).length === 0 ? (
+                                            <div className="p-3 text-muted text-center" style={{ fontSize: "0.85rem" }}>
+                                              No matching products found.
                                             </div>
-                                          ))
-                                        )}
+                                          ) : (
+                                            getFilteredProducts(searchQueries[idx]).map(prod => (
+                                              <div
+                                                key={prod._id}
+                                                className="rb-search-item"
+                                                onClick={() => handleStepProductSelect(idx, prod)}
+                                              >
+                                                <img src={prod.variants?.[0]?.images?.[0] || prod.image || "/placeholder.png"} alt={prod.name} className="rb-search-item-img" />
+                                                <div className="rb-search-item-info">
+                                                  <div className="rb-search-item-name">{prod.name}</div>
+                                                  <div className="rb-search-item-brand">{typeof prod.brand === "string" ? prod.brand : prod.brand?.name}</div>
+                                                </div>
+                                              </div>
+                                            ))
+                                          )}
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* Form Row for Custom Note, Tip and Time Slot */}
+                                <div className="rb-step-fields-row">
+                                  <div className="rb-form-group">
+                                    <label className="rb-label">Apply Slot</label>
+                                    <select
+                                      value={step.timeOfDay}
+                                      onChange={(e) => handleStepTextChange(idx, "timeOfDay", e.target.value)}
+                                      className="rb-select"
+                                    >
+                                      <option value="both">AM + PM Both</option>
+                                      <option value="AM">AM Only</option>
+                                      <option value="PM">PM Only</option>
+                                    </select>
+                                  </div>
+                                  <div className="rb-form-group">
+                                    <label className="rb-label">Personal Note</label>
+                                    <input
+                                      type="text"
+                                      placeholder="e.g. Apply 3 drops, massage upward"
+                                      value={step.note}
+                                      onChange={(e) => handleStepTextChange(idx, "note", e.target.value)}
+                                      className="rb-input"
+                                    />
+                                  </div>
+                                  <div className="rb-form-group">
+                                    <label className="rb-label">Application Tip</label>
+                                    <input
+                                      type="text"
+                                      placeholder="e.g. Best applied on damp skin"
+                                      value={step.applicationTip}
+                                      onChange={(e) => handleStepTextChange(idx, "applicationTip", e.target.value)}
+                                      className="rb-input"
+                                    />
+                                  </div>
+                                </div>
+
+                                {/* Product Ownership Panel */}
+                                {step.product && (
+                                  <div className="rb-step-ownership-panel mt-3 p-3 rounded-lg bg-light border">
+                                    <div className="rb-step-fields-row" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "15px" }}>
+                                      <div className="rb-form-group">
+                                        <label className="rb-label">Step Importance</label>
+                                        <select
+                                          value={step.isRequired !== false ? "true" : "false"}
+                                          onChange={(e) => handleStepTextChange(idx, "isRequired", e.target.value === "true")}
+                                          className="rb-select"
+                                          style={{ padding: "8px 12px" }}
+                                        >
+                                          <option value="true">Required Step (Crucial)</option>
+                                          <option value="false">Optional Step (Flexible)</option>
+                                        </select>
+                                      </div>
+                                      <div className="rb-form-group">
+                                        <label className="rb-label">Do you already own this product?</label>
+                                        <select
+                                          value={step.isOwned ? "true" : "false"}
+                                          onChange={(e) => handleStepTextChange(idx, "isOwned", e.target.value === "true")}
+                                          className="rb-select"
+                                          style={{ padding: "8px 12px" }}
+                                        >
+                                          <option value="false">No (Need to Buy)</option>
+                                          <option value="true">Yes (Already Owned)</option>
+                                        </select>
+                                      </div>
+                                      {step.isOwned && (
+                                        <>
+                                          <div className="rb-form-group">
+                                            <label className="rb-label">Where did you buy it?</label>
+                                            <select
+                                              value={step.ownershipType || "purchased_from_us"}
+                                              onChange={(e) => handleStepTextChange(idx, "ownershipType", e.target.value || null)}
+                                              className="rb-select"
+                                              style={{ padding: "8px 12px" }}
+                                            >
+                                              <option value="purchased_from_us">Joyory Store</option>
+                                              <option value="purchased_elsewhere">Elsewhere / Other Brand</option>
+                                              <option value="">Received as Gift / Other</option>
+                                            </select>
+                                          </div>
+                                          <div className="rb-form-group">
+                                            <label className="rb-label">Purchase Source</label>
+                                            <input
+                                              type="text"
+                                              placeholder="e.g. Website, Store, Gifted"
+                                              value={step.purchaseSource || ""}
+                                              onChange={(e) => handleStepTextChange(idx, "purchaseSource", e.target.value)}
+                                              className="rb-input"
+                                              style={{ padding: "8px 12px" }}
+                                            />
+                                          </div>
+                                        </>
+                                      )}
+                                    </div>
+
+                                    {!step.isOwned && (
+                                      <div className="d-flex align-items-center justify-content-between p-3 mt-3 rounded bg-white flex-wrap gap-2" style={{ fontSize: "0.85rem", border: "1px dashed #000000", color: "#000000" }}>
+                                        <div className="d-flex align-items-center gap-2 n-own">
+                                          <span><strong>Not Owned:</strong> Buy from Joyory to unlock our 99% Satisfaction Guarantee, custom AI Coach tips, and daily progress analytics!</span>
+                                        </div>
+                                        <button
+                                          type="button"
+                                          className="rb-create-btn"
+                                          style={{ padding: "6px 14px", fontSize: "0.8rem", background: "var(--joyory-charcoal)", color: "white", border: "none", borderRadius: "20px" }}
+                                          onClick={async () => {
+                                            try {
+                                              const matchedProd = allProducts.find(p => String(p._id) === String(step.product));
+                                              if (matchedProd) {
+                                                const res = await axiosInstance.post("/api/user/cart/add", {
+                                                  productId: step.product,
+                                                  quantity: 1,
+                                                  variants: step.selectedSku ? [{ variantSku: step.selectedSku, quantity: 1 }] : []
+                                                });
+                                                if (res.data && res.data.success) {
+                                                  toast.success("Added product to cart! 🛍️");
+                                                }
+                                              }
+                                            } catch (err) {
+                                              console.error("Cart error", err);
+                                              toast.error(err.response?.data?.message || "Failed to add product to cart.");
+                                            }
+                                          }}
+                                        >
+                                          Buy Now
+                                        </button>
                                       </div>
                                     )}
                                   </div>
                                 )}
-                              </div>
 
-                              {/* Form Row for Custom Note, Tip and Time Slot */}
-                              <div className="rb-step-fields-row">
-                                <div className="rb-form-group">
-                                  <label className="rb-label">Apply Slot</label>
-                                  <select
-                                    value={step.timeOfDay}
-                                    onChange={(e) => handleStepTextChange(idx, "timeOfDay", e.target.value)}
-                                    className="rb-select"
-                                  >
-                                    <option value="both">AM + PM Both</option>
-                                    <option value="AM">AM Only</option>
-                                    <option value="PM">PM Only</option>
-                                  </select>
-                                </div>
-                                <div className="rb-form-group">
-                                  <label className="rb-label">Personal Note</label>
-                                  <input
-                                    type="text"
-                                    placeholder="e.g. Apply 3 drops, massage upward"
-                                    value={step.note}
-                                    onChange={(e) => handleStepTextChange(idx, "note", e.target.value)}
-                                    className="rb-input"
-                                  />
-                                </div>
-                                <div className="rb-form-group">
-                                  <label className="rb-label">Application Tip</label>
-                                  <input
-                                    type="text"
-                                    placeholder="e.g. Best applied on damp skin"
-                                    value={step.applicationTip}
-                                    onChange={(e) => handleStepTextChange(idx, "applicationTip", e.target.value)}
-                                    className="rb-input"
-                                  />
-                                </div>
-                              </div>
-
-                              {/* Product Ownership Panel */}
-                              {step.product && (
-                                <div className="rb-step-ownership-panel mt-3 p-3 rounded-lg bg-light border">
-                                  <div className="rb-step-fields-row" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "15px" }}>
-                                    <div className="rb-form-group">
-                                      <label className="rb-label">Step Importance</label>
-                                      <select
-                                        value={step.isRequired !== false ? "true" : "false"}
-                                        onChange={(e) => handleStepTextChange(idx, "isRequired", e.target.value === "true")}
-                                        className="rb-select"
-                                        style={{ padding: "8px 12px" }}
-                                      >
-                                        <option value="true">Required Step (Crucial)</option>
-                                        <option value="false">Optional Step (Flexible)</option>
-                                      </select>
-                                    </div>
-                                    <div className="rb-form-group">
-                                      <label className="rb-label">Do you already own this product?</label>
-                                      <select
-                                        value={step.isOwned ? "true" : "false"}
-                                        onChange={(e) => handleStepTextChange(idx, "isOwned", e.target.value === "true")}
-                                        className="rb-select"
-                                        style={{ padding: "8px 12px" }}
-                                      >
-                                        <option value="false">No (Need to Buy)</option>
-                                        <option value="true">Yes (Already Owned)</option>
-                                      </select>
-                                    </div>
-                                    {step.isOwned && (
-                                      <>
-                                        <div className="rb-form-group">
-                                          <label className="rb-label">Where did you buy it?</label>
-                                          <select
-                                            value={step.ownershipType || "purchased_from_us"}
-                                            onChange={(e) => handleStepTextChange(idx, "ownershipType", e.target.value || null)}
-                                            className="rb-select"
-                                            style={{ padding: "8px 12px" }}
-                                          >
-                                            <option value="purchased_from_us">Joyory Store</option>
-                                            <option value="purchased_elsewhere">Elsewhere / Other Brand</option>
-                                            <option value="">Received as Gift / Other</option>
-                                          </select>
-                                        </div>
-                                        <div className="rb-form-group">
-                                          <label className="rb-label">Purchase Source</label>
-                                          <input
-                                            type="text"
-                                            placeholder="e.g. Website, Store, Gifted"
-                                            value={step.purchaseSource || ""}
-                                            onChange={(e) => handleStepTextChange(idx, "purchaseSource", e.target.value)}
-                                            className="rb-input"
-                                            style={{ padding: "8px 12px" }}
-                                          />
-                                        </div>
-                                      </>
-                                    )}
+                                {/* Step Allergen Warning Alert Box */}
+                                {step.allergenAlert && (
+                                  <div className="rb-allergen-alert-box">
+                                    <FaExclamationTriangle />
+                                    <span>{step.allergenAlertMessage || "Warning: Matches user allergy profile ingredients!"}</span>
                                   </div>
+                                )}
 
-                                  {!step.isOwned && (
-                                    <div className="d-flex align-items-center justify-content-between p-3 mt-3 rounded bg-white flex-wrap gap-2" style={{ fontSize: "0.85rem", border: "1px dashed #000000", color: "#000000" }}>
-                                      <div className="d-flex align-items-center gap-2 n-own">
-                                        {/* <span>🛒</span> */}
-                                        <span><strong>Not Owned:</strong> Buy from Joyory to unlock our 99% Satisfaction Guarantee, custom AI Coach tips, and daily progress analytics!</span>
-                                      </div>
-                                      <button
-                                        type="button"
-                                        className="rb-create-btn"
-                                        style={{ padding: "6px 14px", fontSize: "0.8rem", background: "var(--joyory-charcoal)", color: "white", border: "none", borderRadius: "20px" }}
-                                        onClick={async () => {
-                                          try {
-                                            const matchedProd = allProducts.find(p => String(p._id) === String(step.product));
-                                            if (matchedProd) {
-                                              const res = await axiosInstance.post("/api/user/cart/add", {
-                                                productId: step.product,
-                                                quantity: 1,
-                                                variants: step.selectedSku ? [{ variantSku: step.selectedSku, quantity: 1 }] : []
-                                              });
-                                              if (res.data && res.data.success) {
-                                                toast.success("Added product to cart! 🛍️");
-                                              }
-                                            }
-                                          } catch (err) {
-                                            console.error("Cart error", err);
-                                            toast.error(err.response?.data?.message || "Failed to add product to cart.");
-                                          }
-                                        }}
-                                      >
-                                        Buy Now
-                                      </button>
-                                    </div>
-                                  )}
-                                </div>
-                              )}
+                              </div>
 
-                              {/* Step Allergen Warning Alert Box */}
-                              {step.allergenAlert && (
-                                <div className="rb-allergen-alert-box">
-                                  <FaExclamationTriangle />
-                                  <span>{step.allergenAlertMessage || "Warning: Matches user allergy profile ingredients!"}</span>
+                              {/* Reordering Controls */}
+                              <div className="rb-step-side-actions">
+                                <button
+                                  type="button"
+                                  className="rb-icon-btn delete"
+                                  title="Remove Step"
+                                  onClick={() => handleRemoveStep(idx)}
+                                >
+                                  <FaTrash />
+                                </button>
+
+                                <div className="rb-step-move-controls">
+                                  <button
+                                    type="button"
+                                    className="rb-icon-btn"
+                                    disabled={idx === 0}
+                                    title="Move Up"
+                                    onClick={() => handleMoveStep(idx, "up")}
+                                  >
+                                    <FaArrowUp />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="rb-icon-btn"
+                                    disabled={idx === steps.length - 1}
+                                    title="Move Down"
+                                    onClick={() => handleMoveStep(idx, "down")}
+                                  >
+                                    <FaArrowDown />
+                                  </button>
                                 </div>
-                              )}
+                              </div>
 
                             </div>
+                          );
 
-                            {/* Reordering Controls */}
-                            <div className="rb-step-side-actions">
-                              <button
-                                type="button"
-                                className="rb-icon-btn delete"
-                                title="Remove Step"
-                                onClick={() => handleRemoveStep(idx)}
-                              >
-                                <FaTrash />
-                              </button>
+                          // Calculate the AM and PM steps
+                          const amStepsList = steps.map((s, i) => ({ step: s, index: i })).filter(item => item.step.timeOfDay === "AM" || item.step.timeOfDay === "both");
+                          const pmStepsList = steps.map((s, i) => ({ step: s, index: i })).filter(item => item.step.timeOfDay === "PM" || item.step.timeOfDay === "both");
 
-                              <div className="rb-step-move-controls">
-                                <button
-                                  type="button"
-                                  className="rb-icon-btn"
-                                  disabled={idx === 0}
-                                  title="Move Up"
-                                  onClick={() => handleMoveStep(idx, "up")}
-                                >
-                                  <FaArrowUp />
-                                </button>
-                                <button
-                                  type="button"
-                                  className="rb-icon-btn"
-                                  disabled={idx === steps.length - 1}
-                                  title="Move Down"
-                                  onClick={() => handleMoveStep(idx, "down")}
-                                >
-                                  <FaArrowDown />
-                                </button>
+                          return (
+                            <div style={{
+                              display: "flex",
+                              flexWrap: "wrap",
+                              gap: "24px",
+                              width: "100%",
+                              marginTop: "20px"
+                            }}>
+                              {/* Morning Routine Column */}
+                              <div style={{
+                                flex: "1 1 450px",
+                                background: "rgba(255, 255, 255, 0.6)",
+                                borderRadius: "16px",
+                                padding: "20px",
+                                border: "1px solid #e2e8f0"
+                              }}>
+                                <div style={{
+                                  background: "#fefce8",
+                                  border: "1px solid #fef08a",
+                                  borderRadius: "12px",
+                                  padding: "12px 16px",
+                                  marginBottom: "20px",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "10px",
+                                  fontWeight: "700",
+                                  color: "#854d0e",
+                                  fontSize: "1rem"
+                                }}>
+                                  <span style={{ fontSize: "1.3rem" }}>☀️</span> Morning Sequence (AM)
+                                </div>
+                                {amStepsList.length === 0 ? (
+                                  <p className="text-muted text-center py-4">No morning steps defined.</p>
+                                ) : (
+                                  amStepsList.map((item, amIdx) => renderStepCard(item.step, item.index, amIdx + 1))
+                                )}
+                              </div>
+
+                              {/* Evening Routine Column */}
+                              <div style={{
+                                flex: "1 1 450px",
+                                background: "rgba(255, 255, 255, 0.6)",
+                                borderRadius: "16px",
+                                padding: "20px",
+                                border: "1px solid #e2e8f0"
+                              }}>
+                                <div style={{
+                                  background: "#f8fafc",
+                                  border: "1px solid #cbd5e1",
+                                  borderRadius: "12px",
+                                  padding: "12px 16px",
+                                  marginBottom: "20px",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "10px",
+                                  fontWeight: "700",
+                                  color: "#334155",
+                                  fontSize: "1rem"
+                                }}>
+                                  <span style={{ fontSize: "1.3rem" }}>🌙</span> Evening Sequence (PM)
+                                </div>
+                                {pmStepsList.length === 0 ? (
+                                  <p className="text-muted text-center py-4">No evening steps defined.</p>
+                                ) : (
+                                  pmStepsList.map((item, pmIdx) => renderStepCard(item.step, item.index, pmIdx + 1))
+                                )}
                               </div>
                             </div>
-
-                          </div>
-                        ))}
+                          );
+                        })()}
                       </div>
                     )}
+
 
                     {/* Layering Validation Warnings */}
                     {layeringWarnings.length > 0 && (
