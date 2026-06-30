@@ -306,10 +306,10 @@ const BlogDetail = () => {
       {/* <ToastContainer position="top-right" autoClose={3000} /> */}
 
       {/* Hero Section */}
-      <section className="trending-hero overflow-hidden margin-top-responsive-design">
+      <section className="trending-hero margin-top-responsive-design">
         <div className='container-fluid-lg padding-left-rightss-blog'>
-          <div className="row align-items-center g-5 background-colorsss">
-            <div className="col-lg-7 ps-lg-5 ps-3">
+          <div className="row g-5 background-colorsss">
+            <div className="col-lg-7 ps-lg-5 ps-3 d-flex flex-column justify-content-center">
               <div className="mb-3 hero-section-main-name page-title-main-name fw-normal small tracking-widest">
                 {blog.categoryName || blog.category?.name} · {blog.label || "Article"}
               </div>
@@ -320,7 +320,7 @@ const BlogDetail = () => {
                 <p className="lead mb-5 opacity-90 blog-excerpt-main-file">{blog.readingTime ? `${blog.readingTime} min read` : ''}</p>
               </div>
             </div>
-            <div className="col-lg-5 hero-image-div p-3 margin-topss-hero-image">
+            <div className="col-lg-5 hero-image-div p-3 margin-topss-hero-image position-relative">
               <div className='Blog-Hero-image-main'>
                 {blog.coverImage && <img src={getImageUrl(blog.coverImage)} alt={blog.title} className="img-fluid hero-image" />}
               </div>

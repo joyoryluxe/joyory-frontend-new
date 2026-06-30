@@ -1197,23 +1197,23 @@ function SidePanel({ isOpen, isClosing, onClose, showQuizContent, quizData, load
 
     const handleNodeClick = (option, index) => {
         if (isSpinning) return;
-        
+
         setTransitionSpeed('0.8s');
         setTransitionTiming('cubic-bezier(0.34, 1.56, 0.64, 1)');
-        
+
         const angleStep = 360 / options.length;
         const targetBaseAngle = -index * angleStep;
-        
+
         const currentRot = wheelRotation;
         const currentCycle = Math.round(currentRot / 360);
         let targetRotation = currentCycle * 360 + targetBaseAngle;
-        
+
         if (targetRotation - currentRot > 180) {
             targetRotation -= 360;
         } else if (targetRotation - currentRot < -180) {
             targetRotation += 360;
         }
-        
+
         setWheelRotation(targetRotation);
         onOptionSelect(currentQuestion._id, option.value);
     };
@@ -1221,21 +1221,21 @@ function SidePanel({ isOpen, isClosing, onClose, showQuizContent, quizData, load
     const handleRandomSpin = () => {
         if (isSpinning || !options.length) return;
         setIsSpinning(true);
-        
+
         setTransitionSpeed('2.5s');
         setTransitionTiming('cubic-bezier(0.25, 1, 0.5, 1)');
-        
+
         const randomIndex = Math.floor(Math.random() * options.length);
         const randomOpt = options[randomIndex];
         const angleStep = 360 / options.length;
-        
+
         const targetBaseAngle = -randomIndex * angleStep;
         const extraSpins = 3 + Math.floor(Math.random() * 3); // 3 to 5 full spins
-        
+
         const targetRotation = wheelRotation - (extraSpins * 360) + (targetBaseAngle - (wheelRotation % 360));
-        
+
         setWheelRotation(targetRotation);
-        
+
         setTimeout(() => {
             setIsSpinning(false);
             onOptionSelect(currentQuestion._id, randomOpt.value);
@@ -1281,7 +1281,7 @@ function SidePanel({ isOpen, isClosing, onClose, showQuizContent, quizData, load
                                     {currentQuestion?.description && <p style={{ fontSize: 13, color: '#6b7280', marginBottom: 16 }}>{currentQuestion.description}</p>}
 
                                     {/* SKINCARE WHEEL COMPONENT */}
-                                    <div 
+                                    <div
                                         className="skincare-wheel-container"
                                         style={{
                                             '--wheel-transition-speed': transitionSpeed,
@@ -1309,7 +1309,7 @@ function SidePanel({ isOpen, isClosing, onClose, showQuizContent, quizData, load
                                                 );
                                             })}
                                         </div>
-                                        <div 
+                                        <div
                                             className={`wheel-hub-btn${isSpinning ? ' disabled' : ''}`}
                                             onClick={handleRandomSpin}
                                         >

@@ -123,7 +123,7 @@
 import React, { useEffect, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination, Navigation } from "swiper/modules"; // Added Navigation
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation"; // Import navigation CSS
@@ -134,6 +134,33 @@ const TopCategories = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+
+  const location = useLocation();
+  // Conditional SEO meta tag configuration to prevent Google sitelinks indexing
+  useEffect(() => {
+    if (location.pathname === "/topcategories") {
+      let meta = document.querySelector('meta[name="robots"]');
+      let isNew = false;
+      if (!meta) {
+        meta = document.createElement('meta');
+        meta.name = 'robots';
+        isNew = true;
+      }
+      const originalContent = meta.content;
+      meta.content = 'noindex, nofollow';
+      if (isNew) {
+        document.head.appendChild(meta);
+      }
+      return () => {
+        if (originalContent) {
+          meta.content = originalContent;
+        } else if (meta && meta.parentNode) {
+          meta.parentNode.removeChild(meta);
+        }
+      };
+    }
+  }, [location.pathname]);
+
 
   // Fetch categories from API
   useEffect(() => {

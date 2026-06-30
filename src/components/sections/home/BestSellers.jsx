@@ -77,6 +77,31 @@ const BestSellers = () => {
     const location = useLocation();
     const { user } = useContext(UserContext);
 
+    // Conditional SEO meta tag configuration to prevent Google sitelinks indexing
+    useEffect(() => {
+        if (location.pathname === "/bestsellers") {
+            let meta = document.querySelector('meta[name="robots"]');
+            let isNew = false;
+            if (!meta) {
+                meta = document.createElement('meta');
+                meta.name = 'robots';
+                isNew = true;
+            }
+            const originalContent = meta.content;
+            meta.content = 'noindex, nofollow';
+            if (isNew) {
+                document.head.appendChild(meta);
+            }
+            return () => {
+                if (originalContent) {
+                    meta.content = originalContent;
+                } else if (meta && meta.parentNode) {
+                    meta.parentNode.removeChild(meta);
+                }
+            };
+        }
+    }, [location.pathname]);
+
     // Toast Utility
     const showToastMsg = (message, type = "error", duration = 3000) => {
         if (type === "success") {
@@ -1010,11 +1035,11 @@ const BestSellers = () => {
                                                             )}
                                                         </div>
                                                     </div>
-                  {item.nextOrderDiscountMessage && (
-                    <div className="next-order-discount-tag" title={item.nextOrderDiscountMessage} onClick={(e) => { e.stopPropagation(); window.showDiscountPopup && window.showDiscountPopup(item.nextOrderDiscountMessage, e.currentTarget); }}>
-                      <span className="text-truncate">{item.nextOrderDiscountMessage}</span>
-                    </div>
-                  )}
+                                                    {item.nextOrderDiscountMessage && (
+                                                        <div className="next-order-discount-tag" title={item.nextOrderDiscountMessage} onClick={(e) => { e.stopPropagation(); window.showDiscountPopup && window.showDiscountPopup(item.nextOrderDiscountMessage, e.currentTarget); }}>
+                                                            <span className="text-truncate">{item.nextOrderDiscountMessage}</span>
+                                                        </div>
+                                                    )}
 
                                                     {/* Add to Cart / Select Variant / Out of Stock Button */}
                                                     <div className="cart-section">

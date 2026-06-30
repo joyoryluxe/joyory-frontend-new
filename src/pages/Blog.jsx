@@ -659,13 +659,13 @@ const Blog = () => {
       <SEOMeta type="bloglist" /> {/* Add this */}
       <Header />
       {/* <ToastContainer position="top-right" autoClose={3000} /> */}
-      <div className="blog-landing-container margin-topss page-title-main-name overflow-hidden">
+      <div className="blog-landing-container margin-topss page-title-main-name">
         {/* Trending Hero Section - UNCHANGED */}
         {data.trendingBlog && (
           <section className="trending-hero">
             <div className='container-fluid-lg padding-left-rightss-blog'>
-              <Row className="align-items-center g-5 background-colorsss">
-                <Col lg={7} className="ps-lg-5 ps-3">
+              <Row className="g-5 background-colorsss">
+                <Col lg={7} className="ps-lg-5 ps-3 d-flex flex-column justify-content-center">
                   <Link
                     to={`/blog/${data.trendingBlog.slug}`}
                     className="text-white text-decoration-none border-bottom border-white pb-1 fw-medium"
@@ -689,7 +689,7 @@ const Blog = () => {
                     </div>
                   </Link>
                 </Col>
-                <Col lg={5} className="hero-image-div p-3 margin-topss-hero-image">
+                <Col lg={5} className="hero-image-div p-3 margin-topss-hero-image position-relative">
                   <div className='Blog-Hero-image-main'>
                     <img
                       src={getImageUrl(data.trendingBlog.coverImage)}
@@ -705,12 +705,12 @@ const Blog = () => {
         )}
 
         {/* Category Navigation - UNCHANGED */}
-        <nav className="backgorund-category-names py-2" style={{ zIndex: 1000 }}>
+        <nav className="backgorund-category-names py-2 mt-lg-3" style={{ zIndex: 1000 }}>
           <Container>
             <div
-              className="d-flex flex-nowrap overflow-auto no-scrollbar justify-content-center"
+              className="d-flex flex-nowrap overflow-auto no-scrollbar category-nav-container"
               style={{
-                gap: '0.5rem',
+                gap: '1rem',
                 scrollBehavior: 'smooth',
                 WebkitOverflowScrolling: 'touch',
               }}
@@ -718,7 +718,7 @@ const Blog = () => {
               {data.categoryNav.map(cat => (
                 <button
                   key={cat._id}
-                  className={`category-nav-link border-0 bg-transparent ${selectedCategory === cat._id ? 'active' : ''}`}
+                  className={`category-nav-link bg-transparent ${selectedCategory === cat._id ? 'active' : ''}`}
                   onClick={() => handleCategoryChange(cat._id)}
                   style={{ whiteSpace: 'nowrap' }}
                 >
