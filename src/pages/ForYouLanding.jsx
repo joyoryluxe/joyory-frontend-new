@@ -24,6 +24,14 @@ import 'react-toastify/dist/ReactToastify.css';
 import bagIcon from '../assets/bag.svg';
 import { FaChevronDown, FaHeart, FaRegHeart, FaTimes, FaCheck } from 'react-icons/fa';
 
+import fyCollage1 from '../assets/Foryou/foryou1.png';
+import fyCollage2 from '../assets/Foryou/foryou2.png';
+import fyCollage3 from '../assets/Foryou/foryou3.png';
+import fyCollage4 from '../assets/Foryou/foryou4.png';
+import fyCollage5 from '../assets/Foryou/foryou5.png';
+import fyCollage6 from '../assets/Foryou/foryou6.png';
+import fyCollage7 from '../assets/Foryou/foryou7.png';
+
 /* ─────────────────────────────────────────────
    SHARED CONSTANTS & HELPERS
 ───────────────────────────────────────────── */
@@ -1349,17 +1357,17 @@ function SidePanel({ isOpen, isClosing, onClose, showQuizContent, quizData, load
                                     <h3 className="j-panel-heading page-title-main-name fs-6">Your Tailored Shopping Experience</h3>
                                     <div className="j-collage">
                                         <div className="j-collage-col">
-                                            <img src="https://picsum.photos/seed/face1/200/200" alt="" referrerPolicy="no-referrer" />
-                                            <img src="https://picsum.photos/seed/face2/200/200" alt="" referrerPolicy="no-referrer" />
+                                            <img src={fyCollage1} alt="Clean radiant glowing skin makeup Joyory" />
+                                            <img src={fyCollage2} alt="Skincare face serum dropper bottle Joyory" />
                                         </div>
                                         <div className="j-collage-col">
-                                            <img src="https://picsum.photos/seed/face3/200/200" alt="" referrerPolicy="no-referrer" />
-                                            <img src="https://picsum.photos/seed/face4/200/200" alt="" referrerPolicy="no-referrer" />
-                                            <img src="https://picsum.photos/seed/face5/200/200" alt="" referrerPolicy="no-referrer" />
+                                            <img src={fyCollage3} alt="Luxury powder eyeshadow palette Joyory" />
+                                            <img src={fyCollage4} alt="Rose pink lipstick smear swatch Joyory" />
+                                            <img src={fyCollage5} alt="Natural freckled clean model face Joyory" />
                                         </div>
                                         <div className="j-collage-col">
-                                            <img src="https://picsum.photos/seed/face6/200/200" alt="" referrerPolicy="no-referrer" />
-                                            <img src="https://picsum.photos/seed/face7/200/200" alt="" referrerPolicy="no-referrer" />
+                                            <img src={fyCollage6} alt="Face moisturizer cream jar on pedestal Joyory" />
+                                            <img src={fyCollage7} alt="Liquid foundation shade swatches Joyory" />
                                         </div>
                                     </div>
                                     <h4 className="page-title-main-name" style={{ fontSize: 14, fontWeight: 600, marginBottom: 12, color: '#374151' }}>Let's Get Personal</h4>
@@ -1680,7 +1688,7 @@ export default function Foryoulanding() {
 
     const handleCategoryClick = (category) => {
         if (category.toLowerCase().includes('makeup')) {
-            navigate('/makeupquiz');
+            navigate('/shadefinder');
         } else {
             if ((!user || user.guest) && view === 'recommendations') {
                 navigate('/login', { state: { from: location.pathname } });

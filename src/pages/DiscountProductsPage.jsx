@@ -812,11 +812,11 @@ const DiscountProductsPage = () => {
                     )}
                   </div>
                 </div>
-                  {prod.nextOrderDiscountMessage && (
-                    <div className="next-order-discount-tag" title={prod.nextOrderDiscountMessage} onClick={(e) => { e.stopPropagation(); window.showDiscountPopup && window.showDiscountPopup(prod.nextOrderDiscountMessage, e.currentTarget); }}>
-                      <span className="text-truncate">{prod.nextOrderDiscountMessage}</span>
-                    </div>
-                  )}
+                {prod.nextOrderDiscountMessage && (
+                  <div className="next-order-discount-tag" title={prod.nextOrderDiscountMessage} onClick={(e) => { e.stopPropagation(); window.showDiscountPopup && window.showDiscountPopup(prod.nextOrderDiscountMessage, e.currentTarget); }}>
+                    <span className="text-truncate">{prod.nextOrderDiscountMessage}</span>
+                  </div>
+                )}
 
                 {/* Add to Cart / Select Variant / Out of Stock Button */}
                 <div className="cart-section">

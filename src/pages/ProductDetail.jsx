@@ -278,9 +278,8 @@ const ProductDetail = () => {
     if (!product?._id) return;
     try {
       // Fetch all reviews; filtering by shade, rating, and photos is done on the frontend to ensure 100% reliability
-      const query = `?sort=${
-        filters.sort === "Most Helpful" ? "helpful" : "recent"
-      }`;
+      const query = `?sort=${filters.sort === "Most Helpful" ? "helpful" : "recent"
+        }`;
 
       const res = await axiosInstance.get(
         `/api/reviews/product/${product._id}${query}`

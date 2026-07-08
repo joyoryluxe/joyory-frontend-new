@@ -820,7 +820,7 @@ export default function IngredientDetail() {
               <span className="ing-category-badge mb-2">
                 {typeof ingredient.category === "string" ? ingredient.category : (ingredient.category?.name || "Active")}
               </span>
-              <h1 className="fw-bold text-dark mb-1 page-title-main-name">{ingredient.name}</h1>
+              <h1 className="fw-bold text-dark mb-1 page-title-main-name text-capitalize">{ingredient.name.toLowerCase()}</h1>
               {ingredient.aliases?.length > 0 && (
                 <p className="text-muted small mb-0">Also known as: {ingredient.aliases.join(", ")}</p>
               )}
@@ -862,7 +862,7 @@ export default function IngredientDetail() {
 
               {/* Description */}
               <div className="mb-4">
-                <h4 className="fw-bold text-dark border-bottom pb-2 mb-2" style={{ fontSize: "16px" }}>What is {ingredient.name}?</h4>
+                <h4 className="fw-bold text-dark border-bottom pb-2 mb-2 text-capitalize" style={{ fontSize: "16px" }}>What is {ingredient.name.toLowerCase()}?</h4>
                 <p className="text-muted" style={{ fontSize: "14px", lineHeight: "1.7" }}>
                   {ingredient.description || "A premium active cosmetic ingredient featured in upscale skincare and cosmetics. It is widely recognized for its clinical effectiveness and capability to deliver targeted skin improvements."}
                 </p>
@@ -977,8 +977,8 @@ export default function IngredientDetail() {
         {/* Catalog Products shelf containing this ingredient */}
         <section className="catalog-shelf mt-5">
           <div className="border-bottom pb-2 mb-4 text-start">
-            <h3 className="fw-bold text-dark mb-1">Catalog Products containing {ingredient.name}</h3>
-            <p className="text-muted small mb-0">Shop Joyory products formulated with active {ingredient.name} ({totalProducts} match{totalProducts !== 1 && "es"} found)</p>
+            <h3 className="fw-bold text-dark mb-1 text-capitalize">Catalog Products containing {ingredient.name.toLowerCase()}</h3>
+            <p className="text-muted small mb-0">Shop Joyory products formulated with active <span className="text-capitalize">{ingredient.name.toLowerCase()}</span> ({totalProducts} match{totalProducts !== 1 && "es"} found)</p>
           </div>
 
           {products.length === 0 ? (

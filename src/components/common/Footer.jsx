@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "../../styles/Footer.css";
 import logo from "../../assets/logo.png";
 import mastercard from "../../assets/footer.png";
@@ -10,8 +10,28 @@ import linkedin from "../../assets/linkedin.svg";
 
 
 const Footer = () => {
+  const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
+  const [openSections, setOpenSections] = useState({
+    joyory: false,
+    categories: false,
+    service: false
+  });
+
+  const toggleSection = (section) => {
+    setOpenSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
+  const handleAiToolClick = (toolId) => {
+    navigate(`/ai-beauty-lab#${toolId}`);
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent("scroll-to-ai-tool", { detail: toolId }));
+    }, 100);
+  };
 
   // Fetch dynamic categories and brands for the footer
   useEffect(() => {
@@ -41,23 +61,7 @@ const Footer = () => {
   }, []);
 
   const fallbackCategories = [
-    // {
-    //   _id: 'fb1',
-    //   name: 'Bath & Body',
-    //   slug: 'bath-body',
-    //   flatList: [
-    //     { name: 'Body Wash & Shower Gel', path: '/category/bath-body/body-wash-shower-gel' },
-    //     { name: 'Body Lotions & Moisturizers', path: '/category/bath-body/body-lotions-moisturizers' },
-    //     { name: 'Body Scrubs & Exfoliants', path: '/category/bath-body/body-scrubs-exfoliants' },
-    //     { name: 'Epilators', path: '/category/bath-body/epilators' },
-    //     { name: 'Bath Kits & Sets', path: '/category/bath-body/bath-kits-sets' },
-    //     { name: 'Hand Creams & Masks', path: '/category/bath-body/hand-creams-masks' },
-    //     { name: 'Soaps', path: '/category/bath-body/soaps' },
-    //     { name: 'Massage Oil', path: '/category/bath-body/massage-oil' },
-    //     { name: 'Body Butters', path: '/category/bath-body/body-butters' },
-    //     { name: 'Talc', path: '/category/bath-body/talc' }
-    //   ]
-    // },
+ 
     {
       _id: 'fb2',
       name: 'Skin',
@@ -75,22 +79,7 @@ const Footer = () => {
         { name: 'Lip Masks', path: '/category/skin/lip-masks' }
       ]
     },
-    // {
-    //   _id: 'fb3',
-    //   name: 'Hair',
-    //   slug: 'hair',
-    //   flatList: [
-    //     { name: 'Shampoo', path: '/category/hair/shampoo' },
-    //     { name: 'Hair Serum', path: '/category/hair/hair-serum' },
-    //     { name: 'Hair Mask', path: '/category/hair/hair-mask' },
-    //     { name: 'Hair Oil', path: '/category/hair/hair-oil' },
-    //     { name: 'Conditioner', path: '/category/hair/conditioner' },
-    //     { name: 'Hair Straighteners', path: '/category/hair/hair-straighteners' },
-    //     { name: 'Trimmers', path: '/category/hair/trimmers' },
-    //     { name: 'Hair Spray', path: '/category/hair/hair-spray' },
-    //     { name: 'Rollers & Curlers', path: '/category/hair/rollers-curlers' }
-    //   ]
-    // },
+ 
     {
       _id: 'fb4',
       name: 'Makeup',
@@ -108,23 +97,7 @@ const Footer = () => {
         { name: 'Loose Powder', path: '/category/makeup/face/loose-powder' }
       ]
     },
-    // {
-    //   _id: 'fb5',
-    //   name: 'Fragrance',
-    //   slug: 'fragrance',
-    //   flatList: [
-    //     { name: 'Fragrance', path: '/category/fragrance' },
-    //     { name: 'Mens Perfumes (EDT & EDP)', path: '/category/fragrance/mens-perfumes' },
-    //     { name: 'Perfume', path: '/category/fragrance/perfume' },
-    //     { name: 'Unisex Perfumes (EDT & EDP)', path: '/category/fragrance/unisex-perfumes' },
-    //     { name: 'Womens Deodorants & Roll-Ons', path: '/category/fragrance/womens-deodorants' },
-    //     { name: 'Rollers & Curlers', path: '/category/fragrance/rollers-curlers' },
-    //     { name: 'Mens Deodorants & Roll-Ons', path: '/category/fragrance/mens-deodorants' },
-    //     { name: 'Body Mists & Sprays', path: '/category/fragrance/body-mists' },
-    //     { name: 'Unisex Body Mist & Sprays', path: '/category/fragrance/unisex-body-mists' },
-    //     { name: 'Unisex Deodorants & Roll-Ons', path: '/category/fragrance/unisex-deodorants' }
-    //   ]
-    // }
+   
   ];
 
   const getSubcategoriesList = (cat) => {
@@ -182,69 +155,101 @@ const Footer = () => {
 
         {/* Dynamic Categories Column */}
         {/* About Us Column */}
-        <div className="footer-col">
-          <h4 className="footer-title">Joyory</h4>
+        <div className={`footer-col ${openSections.joyory ? "open" : ""}`}>
+          <h4 className="footer-title" onClick={() => toggleSection("joyory")}>
+            Joyory
+            <span className="footer-toggle-icon">
+              {openSections.joyory ? "−" : "+"}
+            </span>
+          </h4>
           <ul>
-            {/* <li><Link className="page-title-main-name border-none" to="/aboutus">Who we are</Link></li> */}
-            {/* <li><Link className="page-title-main-name border-none" to="/help">FAQs</Link></li> */}
-            {/* <li><Link className="page-title-main-name border-none" to="#">Brands</Link></li> */}
             <li><Link className="page-title-main-name border-none" to="/Offerlanding">Offers</Link></li>
             <li><Link className="page-title-main-name border-none" to="/Foryoulanding">For you</Link></li>
-            <li><Link className="page-title-main-name border-none" to="/ShadeFinder">Shade finder</Link></li>
-            <li><Link className="page-title-main-name border-none" to="/virtualtryon">Virtual Try-on</Link></li>
-            {/* <li><Link className="page-title-main-name border-none" to="/blogs">Blogs</Link></li> */}
+            <li>
+              <Link
+                className="page-title-main-name border-none"
+                to="/ai-beauty-lab#smart-beauty-quiz"
+                onClick={(e) => { e.preventDefault(); handleAiToolClick("smart-beauty-quiz"); }}
+              >
+                Smart Beauty Quiz
+              </Link>
+            </li>
+            <li>
+              <Link
+                className="page-title-main-name border-none"
+                to="/ai-beauty-lab#ai-virtual-try-on"
+                onClick={(e) => { e.preventDefault(); handleAiToolClick("ai-virtual-try-on"); }}
+              >
+                AI Virtual Try-On
+              </Link>
+            </li>
+            <li>
+              <Link
+                className="page-title-main-name border-none"
+                to="/ai-beauty-lab#skincare-routine-builder"
+                onClick={(e) => { e.preventDefault(); handleAiToolClick("skincare-routine-builder"); }}
+              >
+                Skincare Routine Builder
+              </Link>
+            </li>
+            <li>
+              <Link
+                className="page-title-main-name border-none"
+                to="/ai-beauty-lab#foundation-shade-finder"
+                onClick={(e) => { e.preventDefault(); handleAiToolClick("foundation-shade-finder"); }}
+              >
+                Foundation Shade Finder
+              </Link>
+            </li>
+            <li>
+              <Link
+                className="page-title-main-name border-none"
+                to="/ai-beauty-lab#ingredient-compatibility"
+                onClick={(e) => { e.preventDefault(); handleAiToolClick("ingredient-compatibility"); }}
+              >
+                Ingredient Compatibility
+              </Link>
+            </li>
+            <li>
+              <Link
+                className="page-title-main-name border-none"
+                to="/ai-beauty-lab#ai-beauty-concierge"
+                onClick={(e) => { e.preventDefault(); handleAiToolClick("ai-beauty-concierge"); }}
+              >
+                AI Beauty Concierge
+              </Link>
+            </li>
             <li><Link className="page-title-main-name border-none" to="/terms">Terms & Condition</Link></li>
-            {/* <li><Link className="page-title-main-name border-none" to="/collab">Influencer Collab</Link></li> */}
           </ul>
         </div>
-        <div className="footer-col">
-          <h4 className="footer-title">CATEGORIES</h4>
+        <div className={`footer-col ${openSections.categories ? "open" : ""}`}>
+          <h4 className="footer-title" onClick={() => toggleSection("categories")}>
+            CATEGORIES
+            <span className="footer-toggle-icon">
+              {openSections.categories ? "−" : "+"}
+            </span>
+          </h4>
           <ul>
-            {/* {categories.length > 0 ? (
-              categories.map((cat) => (
-                <li key={cat._id}>
-                  <Link
-                    to={`/category/${cat.slug}`}
-                    className="footer-link page-title-main-name border-none"
-                    style={{ textDecoration: 'none', color: 'inherit' }}
-                  >
-                    {cat.name}
-                  </Link>
-                </li>
-                
-              ))
-            ) : (
-              <> */}
-            {/* Fallback items while loading or if API fails */}
-            {/* <li>Eyes</li>
-                <li>Lips</li>
-                <li>Face</li>
-                <li>Fragrance</li> */}
-            {/* </>
-            )} */}
-
             <li><Link className="page-title-main-name border-none" to="/category/makeup">Makeup</Link></li>
             <li><Link className="page-title-main-name border-none" to="/category/makeup/face">Face</Link></li>
             <li><Link className="page-title-main-name border-none" to="/category/makeup/eyes">Eyes</Link></li>
             <li><Link className="page-title-main-name border-none" to="/category/skin">Skin</Link></li>
             <li><Link className="page-title-main-name border-none" to="/category/skin/skin-moisturizer">Moisturizer</Link></li>
-            {/* <li><Link className="page-title-main-name border-none" to="/category/skin/skin-lip-care">Lip Care</Link></li> */}
-
           </ul>
         </div>
 
         {/* Customer Service Column */}
-        <div className="footer-col">
-          <h4 className="footer-title">CUSTOMER SERVICE</h4>
+        <div className={`footer-col ${openSections.service ? "open" : ""}`}>
+          <h4 className="footer-title" onClick={() => toggleSection("service")}>
+            CUSTOMER SERVICE
+            <span className="footer-toggle-icon">
+              {openSections.service ? "−" : "+"}
+            </span>
+          </h4>
           <ul>
-            {/* <li><Link className="page-title-main-name border-none" to="/contact">Contact Us</Link></li> */}
             <li><Link className="page-title-main-name border-none" to="/Myorders">Track Your Order</Link></li>
-            {/* <li><Link className="page-title-main-name border-none" to="/returns">Returns Policy</Link></li> */}
             <li><Link className="page-title-main-name border-none" to="/privacy-policy">Privacy Policy</Link></li>
-            {/* <li><Link className="page-title-main-name border-none" to="/affiliate">Joyory Affiliate Program</Link></li> */}
             <li><Link className="page-title-main-name border-none" to="/help">Help Center</Link></li>
-            {/* <li><Link className="page-title-main-name border-none" to="/shipping-policy">Shipping Policy</Link></li> */}
-            {/* <li><Link className="page-title-main-name border-none" to="/sell">Sell on Joyory</Link></li> */}
           </ul>
         </div>
 

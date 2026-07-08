@@ -969,3 +969,20 @@
         font-weight: 500;
     }
 }
+
+@media (min-width: 1600px) {
+    .ua-page {
+        min-height: auto;
+        gap: 50px;
+        padding: 50px;
+    }
+    
+    .ua-title {
+        font-size: 26px;
+        margin-bottom: 24px;
+    }
+    
+    .ua-card {
+        padding: 40px;
+    }
+}

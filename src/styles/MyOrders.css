@@ -440,3 +440,10 @@
         /* width: 100% !important; */
     }
 }
+
+/* Override min-height only on large desktop and 4K viewports to prevent empty scrolling */
+@media (min-width: 1600px) {
+    .orders-page-wrapper {
+        min-height: 55vh;
+    }
+}

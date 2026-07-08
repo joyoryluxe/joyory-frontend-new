@@ -87,6 +87,13 @@ const Mobileheaderview = ({
 
   const mobileMenuRef = useRef(null);
 
+  const handleCloseMenu = () => {
+    setTimeout(() => {
+      closeMenu();
+    }, 200);
+  };
+
+
 
 
   //   const [wishlistCount, setWishlistCount] = useState(0);
@@ -156,7 +163,7 @@ const Mobileheaderview = ({
               {/* Sub Category → Product Listing Page */}
               <Link
                 to={`/products/category/${sub.slug}`}
-                onClick={closeMenu}
+                onClick={handleCloseMenu}
                 className="mobile-subcategory-link p-0"
               >
                 {sub.name}
@@ -294,7 +301,7 @@ const Mobileheaderview = ({
       {/* Main Mobile Header */}
       <header className="header d-block">
         <div className="d-flex justify-content-between margin-padding-header align-items-center">
-          <Link to="/" className="logo" onClick={closeMenu}>
+          <Link to="/" className="logo" onClick={handleCloseMenu}>
             <img src={logo} className="ps-sm-0 ps-4 ms-sm-0" alt="JOYORY Logo" />
           </Link>
 
@@ -307,7 +314,7 @@ const Mobileheaderview = ({
               <div className="mobile-search-icon-wrapper" onClick={() => setShowMobileSearch(true)}>
                 <img src={search} alt="Search" />
               </div>
-              <Link to="/cartpage" className="mobile-cart-icon" onClick={closeMenu}>
+              <Link to="/cartpage" className="mobile-cart-icon" onClick={handleCloseMenu}>
                 <img src={Cart} alt="Cart" />
                 {cartCount > 0 && <span className="cart-count page-title-main-name">{cartCount > 99 ? '99+' : cartCount}</span>}
               </Link>
@@ -321,7 +328,7 @@ const Mobileheaderview = ({
             <div className="mobile-menu-logo">
               <img src={logo} alt="JOYORY Logo" />
             </div>
-            <div className="menu-close" onClick={closeMenu}>
+            <div className="menu-close" onClick={handleCloseMenu}>
               <FaTimes size={22} />
             </div>
           </div>
@@ -329,7 +336,7 @@ const Mobileheaderview = ({
           <div className="nav-links-container w-100">
             {/* Home */}
             <div className="border-top-bottom">
-              <Link to="/" onClick={closeMenu} className="nav-link d-flex ms-3 page-title-main-name margin-top-home">
+              <Link to="/" onClick={handleCloseMenu} className="nav-link d-flex ms-3 page-title-main-name margin-top-home">
                 Home
               </Link>
             </div>
@@ -342,7 +349,7 @@ const Mobileheaderview = ({
                     {/* Main Category Click → Category Landing Page */}
                     <Link
                       to={`/category/${cat.slug}`}
-                      onClick={closeMenu}
+                      onClick={handleCloseMenu}
                       className="mobile-category-name page-title-main-name p-0"
                     >
                       {cat.name}
@@ -369,7 +376,7 @@ const Mobileheaderview = ({
 
             {/* Shade Finder */}
             {/* <div className="border-top-bottom mobile-category-header">
-              <Link to="/FoundationShadeFinder" onClick={closeMenu} className="mt-1 pb-1 page-title-main-name shadefinder-name-mobile-tabalte">
+              <Link to="/FoundationShadeFinder" onClick={handleCloseMenu} className="mt-1 pb-1 page-title-main-name shadefinder-name-mobile-tabalte">
                 Shade Finder
               </Link>
             </div> */}
@@ -388,7 +395,7 @@ const Mobileheaderview = ({
                       >
                         <Link
                           to="/ai-beauty-lab"
-                          onClick={closeMenu}
+                          onClick={handleCloseMenu}
                           className="mobile-category-name page-title-main-name p-0"
                         >
                           {item.label}
@@ -408,9 +415,11 @@ const Mobileheaderview = ({
                           <div className="mobile-subcategory-item ps-3 page-title-main-name">
                             <Link
                               to="/ai-beauty-lab#ai-beauty-concierge"
-                              onClick={closeMenu}
+                              onClick={() => {
+                                handleCloseMenu();
+                                window.dispatchEvent(new CustomEvent("scroll-to-ai-tool", { detail: "ai-beauty-concierge" }));
+                              }}
                               className="mobile-subcategory-link p-0 d-flex align-items-center gap-2"
-                              style={{ display: "flex", alignItems: "center" }}
                             >
                               <FaCommentDots size={16} style={{ color: "#000" }} /> AI Beauty Concierge
                             </Link>
@@ -418,9 +427,11 @@ const Mobileheaderview = ({
                           <div className="mobile-subcategory-item ps-3 page-title-main-name">
                             <Link
                               to="/ai-beauty-lab#skincare-routine-builder"
-                              onClick={closeMenu}
+                              onClick={() => {
+                                handleCloseMenu();
+                                window.dispatchEvent(new CustomEvent("scroll-to-ai-tool", { detail: "skincare-routine-builder" }));
+                              }}
                               className="mobile-subcategory-link p-0 d-flex align-items-center gap-2"
-                              style={{ display: "flex", alignItems: "center" }}
                             >
                               <FaMagic size={16} style={{ color: "#000" }} /> Skincare Routine Builder
                             </Link>
@@ -428,9 +439,11 @@ const Mobileheaderview = ({
                           <div className="mobile-subcategory-item ps-3 page-title-main-name">
                             <Link
                               to="/ai-beauty-lab#ingredient-compatibility"
-                              onClick={closeMenu}
+                              onClick={() => {
+                                handleCloseMenu();
+                                window.dispatchEvent(new CustomEvent("scroll-to-ai-tool", { detail: "ingredient-compatibility" }));
+                              }}
                               className="mobile-subcategory-link p-0 d-flex align-items-center gap-2"
-                              style={{ display: "flex", alignItems: "center" }}
                             >
                               <FaFlask size={16} style={{ color: "#000" }} /> Ingredient Compatibility
                             </Link>
@@ -438,9 +451,11 @@ const Mobileheaderview = ({
                           <div className="mobile-subcategory-item ps-3 page-title-main-name">
                             <Link
                               to="/ai-beauty-lab#ai-virtual-try-on"
-                              onClick={closeMenu}
+                              onClick={() => {
+                                handleCloseMenu();
+                                window.dispatchEvent(new CustomEvent("scroll-to-ai-tool", { detail: "ai-virtual-try-on" }));
+                              }}
                               className="mobile-subcategory-link p-0 d-flex align-items-center gap-2"
-                              style={{ display: "flex", alignItems: "center" }}
                             >
                               <FaCamera size={16} style={{ color: "#000" }} /> AI Virtual Try-On
                             </Link>
@@ -448,9 +463,11 @@ const Mobileheaderview = ({
                           <div className="mobile-subcategory-item ps-3 page-title-main-name">
                             <Link
                               to="/ai-beauty-lab#foundation-shade-finder"
-                              onClick={closeMenu}
+                              onClick={() => {
+                                handleCloseMenu();
+                                window.dispatchEvent(new CustomEvent("scroll-to-ai-tool", { detail: "foundation-shade-finder" }));
+                              }}
                               className="mobile-subcategory-link p-0 d-flex align-items-center gap-2"
-                              style={{ display: "flex", alignItems: "center" }}
                             >
                               <FaPalette size={16} style={{ color: "#000" }} /> Foundation Shade Finder
                             </Link>
@@ -458,9 +475,11 @@ const Mobileheaderview = ({
                           <div className="mobile-subcategory-item ps-3 page-title-main-name">
                             <Link
                               to="/ai-beauty-lab#smart-beauty-quiz"
-                              onClick={closeMenu}
+                              onClick={() => {
+                                handleCloseMenu();
+                                window.dispatchEvent(new CustomEvent("scroll-to-ai-tool", { detail: "smart-beauty-quiz" }));
+                              }}
                               className="mobile-subcategory-link p-0 d-flex align-items-center gap-2"
-                              style={{ display: "flex", alignItems: "center" }}
                             >
                               <FaClipboardList size={16} style={{ color: "#000" }} /> Smart Beauty Quiz
                             </Link>
@@ -484,7 +503,7 @@ const Mobileheaderview = ({
                       } else if (item.path) {
                         navigate(item.path);
                       }
-                      closeMenu();
+                      handleCloseMenu();
                     }}
                     className="nav-link d-flex ms-3 page-title-main-name mt-1 pb-1 cursor-pointer"
                   >
@@ -496,12 +515,12 @@ const Mobileheaderview = ({
 
             {/* User Links */}
             <div className="border-top-bottom page-title-main-name">
-              <Link to="/useraccount" onClick={closeMenu} className="nav-link mobile-profile-link ms-3 d-flex mt-1 pb-1">
+              <Link to="/useraccount" onClick={handleCloseMenu} className="nav-link mobile-profile-link ms-3 d-flex mt-1 pb-1">
                 My Account
               </Link>
             </div>
             <div className="border-top-bottom page-title-main-name">
-              <Link to="/Myorders" onClick={closeMenu} className="nav-link ms-3 d-flex mt-1 pb-1">
+              <Link to="/Myorders" onClick={handleCloseMenu} className="nav-link ms-3 d-flex mt-1 pb-1">
                 My Orders
               </Link>
             </div>
@@ -512,7 +531,7 @@ const Mobileheaderview = ({
                   Logout
                 </div>
               ) : (
-                <Link to="/login" onClick={closeMenu} className="nav-link ms-3 d-flex mt-1 pb-1 page-title-main-name">
+                <Link to="/login" onClick={handleCloseMenu} className="nav-link ms-3 d-flex mt-1 pb-1 page-title-main-name">
                   Login
                 </Link>
               )}

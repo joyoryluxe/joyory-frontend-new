@@ -84,9 +84,31 @@ const SectionSlider = ({
         320: { slidesPerView: 2, spaceBetween: 10 },
         576: { slidesPerView: 3, spaceBetween: 15 },
         768: { slidesPerView: Math.min(slidesPerView, 3), spaceBetween: 20 },
+        1200: { slidesPerView: Math.min(slidesPerView, 4), spaceBetween: 20 },
+        1600: { slidesPerView: Math.min(slidesPerView + 1, 5), spaceBetween: 24 },
+        1920: { slidesPerView: Math.min(slidesPerView + 2, 6), spaceBetween: 24 },
+        2560: { slidesPerView: Math.min(slidesPerView + 4, 8), spaceBetween: 30 },
+        3840: { slidesPerView: Math.min(slidesPerView + 6, 10), spaceBetween: 30 }
     };
 
-    const mergedBreakpoints = { ...defaultBreakpoints, ...breakpoints };
+    const baseBreakpoints = { ...defaultBreakpoints, ...breakpoints };
+    const finalBreakpoints = {};
+
+    Object.keys(baseBreakpoints).forEach((key) => {
+        const width = parseInt(key, 10);
+        const bp = baseBreakpoints[key];
+        if (width >= 992) {
+            finalBreakpoints[key] = {
+                ...bp,
+                slidesPerView: slidesPerView,
+            };
+        } else {
+            finalBreakpoints[key] = {
+                ...bp,
+                slidesPerView: Math.min(bp.slidesPerView, slidesPerView),
+            };
+        }
+    });
 
     return (
         <div className="position-relative margintop-sss">
@@ -94,7 +116,7 @@ const SectionSlider = ({
                 ref={swiperRef}
                 slidesPerView={1}
                 spaceBetween={spaceBetween}
-                breakpoints={mergedBreakpoints}
+                breakpoints={finalBreakpoints}
                 navigation={false}
                 className="section-slider"
             >
@@ -826,11 +848,11 @@ export default function CategoryLandingPage() {
                                         })()}
                                     </div>
                                 </div>
-                  {prod.nextOrderDiscountMessage && (
-                    <div className="next-order-discount-tag" title={prod.nextOrderDiscountMessage} onClick={(e) => { e.stopPropagation(); window.showDiscountPopup && window.showDiscountPopup(prod.nextOrderDiscountMessage, e.currentTarget); }}>
-                      <span className="text-truncate">{prod.nextOrderDiscountMessage}</span>
-                    </div>
-                  )}
+                                {prod.nextOrderDiscountMessage && (
+                                    <div className="next-order-discount-tag" title={prod.nextOrderDiscountMessage} onClick={(e) => { e.stopPropagation(); window.showDiscountPopup && window.showDiscountPopup(prod.nextOrderDiscountMessage, e.currentTarget); }}>
+                                        <span className="text-truncate">{prod.nextOrderDiscountMessage}</span>
+                                    </div>
+                                )}
 
                                 {/* Cart Button */}
                                 <div className="cart-section">
@@ -1189,7 +1211,7 @@ export default function CategoryLandingPage() {
                 {subCategories?.length > 0 && (
                     <section className="mb padding-left-right-sub-category">
                         <div className="mt-3 d-flex justify-content-between align-items-center">
-                            <h2 className="top-categories-title mb-0 page-title-main-name fw-normal">
+                            <h2 className="top-categories-title mb-3 page-title-main-name fw-normal">
                                 {subCategoriesTitle || "Top Categories"}
                             </h2>
                         </div>
@@ -1197,20 +1219,20 @@ export default function CategoryLandingPage() {
                             {subCategories.map((sub) => (
                                 <SwiperSlide key={sub._id}>
                                     <div
-                                        className="h-100 border-0 text-center cursor-pointer mt-1"
+                                        className="border-0 top-cat-card cursor-pointer mt-1"
                                         onClick={() => navigate(`/category/${slug}/${sub.slug}`)}
                                     >
                                         {sub.thumbnailImage?.[0] && (
                                             <img
                                                 src={sub.thumbnailImage[0]}
                                                 alt={sub.name}
-                                                className="mx-auto mt-3 img-fluid object-fit-contain"
+                                                className="top-cat-img top-category-image img-fluid"
                                             />
                                         )}
-                                        <div className="card-body p-2">
-                                            <h6 className="mt-3 text-start ms-1 page-title-main-name">
+                                        <div className="top-cat-body text-center">
+                                            <h5 className="top-cat-title mb-0 mt-3 font-weightss top-category-name-font text-start">
                                                 {sub.name}
-                                            </h6>
+                                            </h5>
                                         </div>
                                     </div>
                                 </SwiperSlide>
@@ -1291,6 +1313,11 @@ export default function CategoryLandingPage() {
                                 576: { slidesPerView: 2, spaceBetween: 15 },
                                 768: { slidesPerView: 3, spaceBetween: 20 },
                                 1024: { slidesPerView: 3, spaceBetween: 20 },
+                                1280: { slidesPerView: 4, spaceBetween: 20 },
+                                1600: { slidesPerView: 5, spaceBetween: 20 },
+                                1920: { slidesPerView: 6, spaceBetween: 25 },
+                                2560: { slidesPerView: 8, spaceBetween: 30 },
+                                3840: { slidesPerView: 10, spaceBetween: 35 },
                             }}
                         >
                             {promotions.map((promo) => {
@@ -1407,6 +1434,10 @@ export default function CategoryLandingPage() {
                                 768: { slidesPerView: 4, spaceBetween: 20 },
                                 1024: { slidesPerView: 4, spaceBetween: 20 },
                                 1280: { slidesPerView: 4, spaceBetween: 20 },
+                                1600: { slidesPerView: 5, spaceBetween: 20 },
+                                1920: { slidesPerView: 6, spaceBetween: 25 },
+                                2560: { slidesPerView: 8, spaceBetween: 30 },
+                                3840: { slidesPerView: 10, spaceBetween: 35 },
                             }}
                         >
                             {section.products?.map((prod) => (
@@ -1494,14 +1525,18 @@ export default function CategoryLandingPage() {
                         </div>
 
                         <SectionSlider
-                            slidesPerView={6}
+                            slidesPerView={4}
                             spaceBetween={15}
                             breakpoints={{
                                 320: { slidesPerView: 2, spaceBetween: 12 },
                                 576: { slidesPerView: 3, spaceBetween: 12 },
-                                768: { slidesPerView: 4, spaceBetween: 12 },
+                                768: { slidesPerView: 3, spaceBetween: 12 },
                                 1024: { slidesPerView: 4, spaceBetween: 10 },
-                                1280: { slidesPerView: 4, spaceBetween: 10 },
+                                1280: { slidesPerView: 4, spaceBetween: 12 },
+                                1600: { slidesPerView: 4, spaceBetween: 15 },
+                                1920: { slidesPerView: 4, spaceBetween: 20 },
+                                2560: { slidesPerView: 4, spaceBetween: 25 },
+                                3840: { slidesPerView: 4, spaceBetween: 30 },
                             }}
                         >
                             {shopByIngredients.map((ing) => {
@@ -1539,8 +1574,8 @@ export default function CategoryLandingPage() {
                                                     }}
                                                 />
                                             )}
-                                            <p className="mt-2 mb-0 small fw-medium page-title-main-name text-start ms-1">
-                                                {ing.name || "Unknown"}
+                                            <p className="mt-2 mb-0 small fw-medium page-title-main-name text-start ms-1 text-capitalize">
+                                                {(ing.name || "Unknown").toLowerCase()}
                                             </p>
                                         </div>
                                     </SwiperSlide>
@@ -1610,7 +1645,7 @@ export default function CategoryLandingPage() {
                                 {brandsTitle || "Top Brands"}
                             </h3>
                         </div>
-                        <SectionSlider slidesPerView={8} spaceBetween={15}>
+                        <SectionSlider slidesPerView={4} spaceBetween={15}>
                             {brands.map((brand) => (
                                 <SwiperSlide key={brand._id}>
                                     <div
@@ -1644,14 +1679,19 @@ export default function CategoryLandingPage() {
                         </div>
 
                         <SectionSlider
-                            slidesPerView={3}
+                            slidesPerView={4}
                             spaceBetween={15}
                             breakpoints={{
                                 320: { slidesPerView: 2, spaceBetween: 10 },
                                 576: { slidesPerView: 3, spaceBetween: 10 },
                                 768: { slidesPerView: 3, spaceBetween: 15 },
                                 1024: { slidesPerView: 4, spaceBetween: 15 },
-                                1280: { slidesPerView: 4, spaceBetween: 15 },
+                                1200: { slidesPerView: 4, spaceBetween: 15 },
+                                1400: { slidesPerView: 4, spaceBetween: 15 },
+                                1600: { slidesPerView: 4, spaceBetween: 15 },
+                                1920: { slidesPerView: 4, spaceBetween: 15 },
+                                2560: { slidesPerView: 4, spaceBetween: 15 },
+                                3840: { slidesPerView: 4, spaceBetween: 15 },
                             }}
                         >
                             {skinTypes.map((st) => {

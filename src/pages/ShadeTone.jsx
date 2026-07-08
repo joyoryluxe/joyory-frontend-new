@@ -5,6 +5,27 @@ import "../styles/ShadeTone.css";
 import Footer from "../components/common/Footer";
 import Header from "../components/common/Header";
 import Loader from "../components/common/Loader";
+const getImagesArray = (sampleImages) => {
+  if (!sampleImages) return [];
+  if (Array.isArray(sampleImages)) {
+    return sampleImages.flat().map(img => typeof img === 'string' ? img.trim() : (img?.url || '')).filter(Boolean);
+  }
+  if (typeof sampleImages === "string") {
+    if (sampleImages.trim().startsWith("[") && sampleImages.trim().endsWith("]")) {
+      try {
+        const parsed = JSON.parse(sampleImages);
+        if (Array.isArray(parsed)) return parsed.map(img => typeof img === 'string' ? img.trim() : (img?.url || '')).filter(Boolean);
+      } catch (e) {
+        // Fallback
+      }
+    }
+    if (sampleImages.includes(",")) {
+      return sampleImages.split(",").map(img => img.trim()).filter(Boolean);
+    }
+    return [sampleImages.trim()];
+  }
+  return [];
+};
 
 export default function Shadetone() {
   const location = useLocation();
@@ -49,6 +70,14 @@ export default function Shadetone() {
   const getCardClass = (index) => {
     const total = families.length;
     const offset = (index - currentIndex + total) % total;
+
+    const activeFamily = families[currentIndex];
+    const activeImages = activeFamily ? getImagesArray(activeFamily.sampleImages) : [];
+
+    if (activeImages.length >= 1) {
+      if (offset === 0) return "card-3d center multi-images";
+      return "card-3d hidden";
+    }
 
     if (offset === 0) return "card-3d center";
     if (offset === 1) return "card-3d right-1";
@@ -110,27 +139,56 @@ export default function Shadetone() {
             </div>
           ) : families.length > 0 ? (
             <>
-              {/* 2. 3D Carousel Container */}
-              <div className="carousel-container-3d">
-                <button className="nav-arrow-3d left" onClick={handlePrev}>‹</button>
+              {(() => {
+                const activeFamily = families[currentIndex];
+                const activeImages = activeFamily ? getImagesArray(activeFamily.sampleImages) : [];
+                const hasMultiImages = activeImages.length >= 1;
 
-                <div className="carousel-track-3d mt-5">
-                  {families.map((family, index) => (
-                    <div
-                      key={family._id}
-                      className={getCardClass(index)}
-                      onClick={() => setCurrentIndex(index)}
-                    >
-                      <img
-                        src={family.sampleImages || "https://via.placeholder.com/280x380"}
-                        alt={family.name}
-                      />
+                return (
+                  <div className={`carousel-container-3d ${hasMultiImages ? "multi-images" : ""}`}>
+                    {families.length > 1 && (
+                      <button className="nav-arrow-3d left" onClick={handlePrev}>‹</button>
+                    )}
+
+                    <div className="carousel-track-3d mt-5">
+                      {families.map((family, index) => {
+                        const isCenter = index === currentIndex;
+                        const images = getImagesArray(family.sampleImages);
+
+                        return (
+                          <div
+                            key={family._id}
+                            className={getCardClass(index)}
+                            onClick={() => setCurrentIndex(index)}
+                          >
+                            {isCenter && images.length >= 1 ? (
+                              <div className="center-card-grid">
+                                {images.map((imgUrl, i) => (
+                                  <div key={i} className="multi-image-item">
+                                    <img
+                                      src={imgUrl}
+                                      alt={`${family.name} - ${i + 1}`}
+                                    />
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <img
+                                src={images[0] || "https://via.placeholder.com/280x380"}
+                                alt={family.name}
+                              />
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
-                  ))}
-                </div>
 
-                <button className="nav-arrow-3d right" onClick={handleNextSlide}>›</button>
-              </div>
+                    {families.length > 1 && (
+                      <button className="nav-arrow-3d right" onClick={handleNextSlide}>›</button>
+                    )}
+                  </div>
+                );
+              })()}
 
               {/* 3. NEW POSITION: Selected Shade Info AFTER the Image */}
               <div className="member-info-3d page-title-main-name mt-5 ">

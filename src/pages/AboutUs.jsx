@@ -102,35 +102,34 @@ const AboutUs = () => {
 
         {/* STORY */}
         <section className="story-section" ref={storyRef}>
-          <div
-            className={`story-left ${storyVisible ? "anim-fade-right" : ""
-              }`}
-          >
-            <span className="small-title">OUR STORY</span>
+          <div className="story-left">
+            <div className={`story-left-content ${storyVisible ? "anim-fade-right" : ""}`}>
+              <span className="small-title">OUR STORY</span>
 
-            <h2>
-              Started in 2025 with one simple vision — make beauty shopping
-              more personal, easier, and smarter.
-            </h2>
+              <h2>
+                Started in 2025 with one simple vision — make beauty shopping
+                more personal, easier, and smarter.
+              </h2>
 
-            <p>
-              In a world filled with endless products and confusing choices,
-              JOYORY was created to help people discover what truly works for
-              them.
-            </p>
+              <p>
+                In a world filled with endless products and confusing choices,
+                JOYORY was created to help people discover what truly works for
+                them.
+              </p>
 
-            <p>
-              We are building more than just another beauty marketplace. Our
-              goal is to combine curated beauty products, intelligent
-              technology, and customer-first experiences that simplify everyday
-              beauty shopping.
-            </p>
+              <p>
+                We are building more than just another beauty marketplace. Our
+                goal is to combine curated beauty products, intelligent
+                technology, and customer-first experiences that simplify everyday
+                beauty shopping.
+              </p>
 
-            <p>
-              From skincare and makeup essentials to emerging beauty brands,
-              JOYORY brings together trusted products designed for every skin
-              tone, preference, and personality.
-            </p>
+              <p>
+                From skincare and makeup essentials to emerging beauty brands,
+                JOYORY brings together trusted products designed for every skin
+                tone, preference, and personality.
+              </p>
+            </div>
           </div>
 
           <div
@@ -140,23 +139,33 @@ const AboutUs = () => {
             {[
               {
                 icon: <Sparkles size={28} />,
-                title: "Curated Beauty",
-                text: "Carefully selected products from trusted and trending beauty brands.",
+                title: "Smart Beauty Quiz",
+                text: "Decode your skin concerns and goals through an intelligent questionnaire for custom advice.",
               },
               {
                 icon: <ScanFace size={28} />,
-                title: "Virtual Try-On",
-                text: "Experience products digitally before purchasing with smart beauty technology.",
+                title: "Foundation Shade Finder",
+                text: "Scan and detect your exact undertone and shade matches in real-time using our AI camera tool.",
               },
               {
                 icon: <Wand2 size={28} />,
-                title: "Shade Finder",
-                text: "Find your perfect makeup shades tailored to your unique skin tone.",
+                title: "AI Virtual Try-On",
+                text: "Instantly test lipstick shades, eye palettes, and blush overlays with a virtual mirror.",
+              },
+              {
+                icon: <BadgeCheck size={28} />,
+                title: "Ingredient Compatibility",
+                text: "Analyze ingredients side-by-side to ensure compatibility and verify safety ratings.",
+              },
+              {
+                icon: <ShoppingBag size={28} />,
+                title: "Skincare Routine Builder",
+                text: "Build tailored day-and-night skincare regimens based on skin compatibility profiles.",
               },
               {
                 icon: <HeartHandshake size={28} />,
-                title: "Beauty Quiz",
-                text: "Personalized recommendations based on your beauty goals and preferences.",
+                title: "AI Beauty Concierge",
+                text: "Chat 24/7 with our trained beauty assistant for instant routine and product suggestions.",
               },
             ].map((item, index) => (
               <div className="story-card" key={index}>

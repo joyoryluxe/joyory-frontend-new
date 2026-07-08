@@ -134,6 +134,19 @@ export default function ProductPage() {
     const [tempSelectedVariants, setTempSelectedVariants] = useState({});
     const [addingToCart, setAddingToCart] = useState({});
 
+    const [filters, setFilters] = useState(() => parseFiltersFromSearchParams(searchParams));
+
+    const currentUrlKey = `${location.pathname}${location.search}`;
+    const [prevUrlKey, setPrevUrlKey] = useState(currentUrlKey);
+
+    if (currentUrlKey !== prevUrlKey) {
+        setPrevUrlKey(currentUrlKey);
+        const parsed = parseFiltersFromSearchParams(searchParams);
+        if (JSON.stringify(filters) !== JSON.stringify(parsed)) {
+            setFilters(parsed);
+        }
+    }
+
     const sortedProducts = useMemo(() => {
         if (!allProducts || !Array.isArray(allProducts)) return [];
         const getProductPrice = (prod) => {
@@ -175,19 +188,6 @@ export default function ProductPage() {
 
     const [wishlistLoading, setWishlistLoading] = useState({});
     const [wishlistData, setWishlistData] = useState([]);
-
-    const [filters, setFilters] = useState(() => parseFiltersFromSearchParams(searchParams));
-
-    const currentUrlKey = `${location.pathname}${location.search}`;
-    const [prevUrlKey, setPrevUrlKey] = useState(currentUrlKey);
-
-    if (currentUrlKey !== prevUrlKey) {
-        setPrevUrlKey(currentUrlKey);
-        const parsed = parseFiltersFromSearchParams(searchParams);
-        if (JSON.stringify(filters) !== JSON.stringify(parsed)) {
-            setFilters(parsed);
-        }
-    }
 
     const [showFilterOffcanvas, setShowFilterOffcanvas] = useState(false);
     const [showSortOffcanvas, setShowSortOffcanvas] = useState(false);
@@ -952,11 +952,11 @@ export default function ProductPage() {
                             ) : <>₹{orig}</>;
                         })()}
                     </p>
-                  {prod.nextOrderDiscountMessage && (
-                    <div className="next-order-discount-tag" title={prod.nextOrderDiscountMessage} onClick={(e) => { e.stopPropagation(); window.showDiscountPopup && window.showDiscountPopup(prod.nextOrderDiscountMessage, e.currentTarget); }}>
-                      <span className="text-truncate">{prod.nextOrderDiscountMessage}</span>
-                    </div>
-                  )}
+                    {prod.nextOrderDiscountMessage && (
+                        <div className="next-order-discount-tag" title={prod.nextOrderDiscountMessage} onClick={(e) => { e.stopPropagation(); window.showDiscountPopup && window.showDiscountPopup(prod.nextOrderDiscountMessage, e.currentTarget); }}>
+                            <span className="text-truncate">{prod.nextOrderDiscountMessage}</span>
+                        </div>
+                    )}
 
                     {/* Add to Cart Button */}
                     <div className="mt-3">
@@ -1293,10 +1293,10 @@ export default function ProductPage() {
                                 <button
                                     key={ing.slug}
                                     onClick={() => handleIngredientClick(ing)}
-                                    className={`btn rounded-pill px-4 py-2 page-title-main-name flex-shrink-0 ${isActive ? "btn-dark" : "btn-outline-secondary"}`}
+                                    className={`btn rounded-pill px-4 py-2 page-title-main-name flex-shrink-0 text-capitalize ${isActive ? "btn-dark" : "btn-outline-secondary"}`}
                                     style={{ fontSize: 13, fontWeight: isActive ? 600 : 400 }}
                                 >
-                                    {ing.name}
+                                    {(ing.name || "").toLowerCase()}
                                 </button>
                             );
                         })}
@@ -1543,7 +1543,7 @@ export default function ProductPage() {
                             </div>
                         </div>
 
-                        <div className="row g-4 position-relative">
+                        <div className="row g-4 position-relative responsive-product-grid">
                             {/* Loading Overlay - shown when loading but products exist */}
                             {loading && (
                                 <div

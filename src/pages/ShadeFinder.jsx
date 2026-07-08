@@ -65,6 +65,15 @@ export default function SkinToneSelector() {
     fetchTones();
   }, []);
 
+  // Scroll to top when loading is completed
+  useEffect(() => {
+    if (!loading) {
+      window.scrollTo(0, 0);
+      if (document.documentElement) document.documentElement.scrollTop = 0;
+      if (document.body) document.body.scrollTop = 0;
+    }
+  }, [loading]);
+
   // Update selectedShade when currentIndex changes
   useEffect(() => {
     if (tones.length > 0 && tones[currentIndex]) {

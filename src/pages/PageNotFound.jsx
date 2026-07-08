@@ -34,11 +34,9 @@ const PageNotFound = () => {
               <button className="pnf__link" onClick={() => navigate("/virtualtryon")}>
                 Virtual Try-On
               </button>
-              <span className="pnf__dot" aria-hidden="true">•</span>
               <button className="pnf__link" onClick={() => navigate("/foryoulanding")}>
                 For You
               </button>
-              <span className="pnf__dot" aria-hidden="true">•</span>
               <button className="pnf__link" onClick={() => navigate("/shadefinder")}>
                 Shade Finder
               </button>

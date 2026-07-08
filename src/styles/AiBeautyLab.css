@@ -23,7 +23,7 @@
 /* Hero Section */
 .lab-hero {
   position: relative;
-  min-height: 80vh;
+  min-height: 550px;
   display: flex;
   align-items: center;
   justify-content: flex-start;
@@ -195,7 +195,7 @@
     grid-template-columns: 1fr;
   }
 
-  
+
 }
 
 .tool-card {
@@ -208,6 +208,7 @@
   transition: all 0.3s ease;
   display: flex;
   flex-direction: column;
+  cursor: pointer;
 }
 
 .tool-card:hover {
@@ -215,6 +216,29 @@
   box-shadow: 0 15px 40px rgba(0, 0, 0, 0.08);
   border-color: #0077b6;
 }
+
+/* Navigated target highlighting styling */
+.tool-card.highlighted {
+  border: 3.5px solid #0077b6 !important;
+  box-shadow: 0 15px 45px rgba(0, 119, 182, 0.35) !important;
+  transform: translateY(-8px);
+  z-index: 10;
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: cardPulseGlow 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes cardPulseGlow {
+  0% {
+    box-shadow: 0 10px 30px rgba(0, 119, 182, 0.2);
+    border-color: #0077b6;
+  }
+  100% {
+    box-shadow: 0 20px 50px rgba(0, 119, 182, 0.6);
+    border-color: #00b4d8;
+  }
+}
+
 
 .tool-card-image {
   position: relative;
@@ -511,7 +535,8 @@
   .lab-hero {
     min-height: 60vh;
     padding: 100px 20px 60px 20px;
-    margin: 0px;
+    margin-top: 0px !important;
+    margin: 0;
     justify-content: center;
     text-align: center;
     background-position: right !important;

@@ -1,4 +1,4 @@
-import React, { useEffect, useContext } from "react";
+import React, { useEffect, useContext, useState, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import Header from "../components/common/Header";
 import Footer from "../components/common/Footer";
@@ -20,18 +20,89 @@ const AiBeautyLab = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useContext(UserContext);
+  const [highlightedId, setHighlightedId] = useState(null);
+  const scrollTimeoutRef = useRef(null);
+  const highlightTimeoutRef = useRef(null);
+
+  const scrollToAndHighlight = (id) => {
+    const element = document.getElementById(id);
+    if (element) {
+      setHighlightedId(null);
+      
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+      if (highlightTimeoutRef.current) {
+        clearTimeout(highlightTimeoutRef.current);
+      }
+      
+      const isMobileDevice = window.innerWidth <= 991 || /Mobi|Android|iPhone/i.test(navigator.userAgent);
+      const scrollDelay = isMobileDevice ? 650 : 150;
+
+      scrollTimeoutRef.current = setTimeout(() => {
+        // 1. Try standard scrollIntoView
+        try {
+          element.scrollIntoView({ behavior: "smooth", block: "center" });
+        } catch (err) {
+          console.warn("scrollIntoView failed", err);
+        }
+
+        // 2. Multi-container absolute coordinate fallback scrolling
+        try {
+          const rect = element.getBoundingClientRect();
+          const scrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop;
+          const absoluteTop = rect.top + scrollTop;
+          const targetScrollY = Math.max(0, absoluteTop - (window.innerHeight / 2) + (rect.height / 2));
+          
+          const scrollOptions = { top: targetScrollY, behavior: "smooth" };
+          window.scrollTo(scrollOptions);
+          if (document.documentElement) document.documentElement.scrollTo(scrollOptions);
+          if (document.body) document.body.scrollTo(scrollOptions);
+        } catch (err) {
+          console.error("Fallback scroll failed", err);
+        }
+        
+        setHighlightedId(id);
+        
+        // Fades/removes highlight after 3.5 seconds
+        highlightTimeoutRef.current = setTimeout(() => {
+          setHighlightedId((current) => current === id ? null : current);
+        }, 3500);
+      }, scrollDelay);
+    }
+  };
 
   useEffect(() => {
     if (location.hash) {
       const id = location.hash.substring(1);
-      const element = document.getElementById(id);
-      if (element) {
-        setTimeout(() => {
-          element.scrollIntoView({ behavior: "smooth", block: "center" });
-        }, 150);
-      }
+      scrollToAndHighlight(id);
     }
-  }, [location]);
+  }, [location.hash, location.pathname]); // Run on hash or route changes
+
+  useEffect(() => {
+    const handleScrollEvent = (e) => {
+      const id = e.detail;
+      if (id) {
+        scrollToAndHighlight(id);
+      }
+    };
+
+    window.addEventListener("scroll-to-ai-tool", handleScrollEvent);
+    return () => {
+      window.removeEventListener("scroll-to-ai-tool", handleScrollEvent);
+    };
+  }, [scrollToAndHighlight]);
+
+  useEffect(() => {
+    return () => {
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+      if (highlightTimeoutRef.current) {
+        clearTimeout(highlightTimeoutRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     // Scroll Reveal Intersection Observer
@@ -57,6 +128,7 @@ const AiBeautyLab = () => {
   };
 
   const handleQuizClick = () => {
+    window.scrollTo(0, 0);
     if (!user || user.guest) {
       navigate("/login", { state: { from: "/foryoulanding" } });
     } else {
@@ -70,7 +142,10 @@ const AiBeautyLab = () => {
     //   description: "Upload a selfie or capture a photo in real-time. Our AI evaluates skin tone, undertones, hydration levels, and targets concerns to build a customized product list.",
     //   image: scannerImg,
     //   cta: "Scan Skin Now",
-    //   action: () => navigate("/skin-diagnosis"),
+    //   action: () => {
+    //     window.scrollTo(0, 0);
+    //     navigate("/skin-diagnosis");
+    //   },
     //   badge: "AI Derm"
     // },
     {
@@ -78,7 +153,10 @@ const AiBeautyLab = () => {
       description: "Instantly test lipstick, blush, and eyeshadow shades in real-time. Experience hyper-realistic color matching directly from your camera.",
       image: virtualTryOnImg,
       cta: "Launch Try-On",
-      action: () => navigate("/Mainvirtualtryon"),
+      action: () => {
+        window.scrollTo(0, 0);
+        navigate("/Mainvirtualtryon");
+      },
       badge: "VTO Support"
     },
     {
@@ -86,7 +164,10 @@ const AiBeautyLab = () => {
       description: "Never buy the wrong shade again. Let our advanced analysis tool detect your exact undertone and matching foundations.",
       image: shadeFinderImg,
       cta: "Find Your Shade",
-      action: () => navigate("/shadefinder"),
+      action: () => {
+        window.scrollTo(0, 0);
+        navigate("/shadefinder");
+      },
       badge: "Tone Scanner"
     },
     {
@@ -94,7 +175,10 @@ const AiBeautyLab = () => {
       description: "Answer key skin concerns to design a structured AM/PM regimen. Watch your customized skincare planner optimize your daily hydration.",
       image: skincareImg,
       cta: "Build Routine",
-      action: () => navigate("/routines"),
+      action: () => {
+        window.scrollTo(0, 0);
+        navigate("/routines");
+      },
       badge: "Routine AI"
     },
     {
@@ -102,7 +186,10 @@ const AiBeautyLab = () => {
       description: "Audit ingredients from any product. Cross-check actives like Retinol and Vitamin C for sensitivity, allergen alerts, and maximum efficacy.",
       image: ingredientCheckerImg,
       cta: "Scan Ingredients",
-      action: () => navigate("/ingredient-compatibility"),
+      action: () => {
+        window.scrollTo(0, 0);
+        navigate("/ingredient-compatibility");
+      },
       badge: "Lab Check"
     },
     {
@@ -154,21 +241,36 @@ const AiBeautyLab = () => {
         </div>
 
         <div className="tools-grid">
-          {tools.map((tool, idx) => (
-            <div key={idx} id={tool.title.toLowerCase().replace(/\s+/g, "-")} className="tool-card reveal-on-scroll">
-              <div className="tool-card-image">
-                <img src={tool.image} alt={tool.title} />
-                <span className="tool-card-badge">{tool.badge}</span>
+          {tools.map((tool, idx) => {
+            const toolId = tool.title.toLowerCase().replace(/\s+/g, "-");
+            const isHighlighted = highlightedId === toolId;
+            return (
+              <div
+                key={idx}
+                id={toolId}
+                className={`tool-card ${isHighlighted ? "highlighted" : ""}`}
+                onClick={tool.action}
+              >
+                <div className="tool-card-image">
+                  <img src={tool.image} alt={tool.title} />
+                  <span className="tool-card-badge">{tool.badge}</span>
+                </div>
+                <div className="tool-card-content">
+                  <h3 className="tool-card-title page-title-main-name">{tool.title}</h3>
+                  <p className="tool-card-desc">{tool.description}</p>
+                  <button 
+                    className="btn-tool-cta" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      tool.action();
+                    }}
+                  >
+                    {tool.cta} <span className="arrow-icon">&rarr;</span>
+                  </button>
+                </div>
               </div>
-              <div className="tool-card-content">
-                <h3 className="tool-card-title page-title-main-name">{tool.title}</h3>
-                <p className="tool-card-desc">{tool.description}</p>
-                <button className="btn-tool-cta" onClick={tool.action}>
-                  {tool.cta} <span className="arrow-icon">&rarr;</span>
-                </button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
 

@@ -175,8 +175,8 @@ const CancelOrderPopup = ({ show, handleClose, order }) => {
           <Form.Group className="mb-3">
             <Form.Label>Reason for Cancellation*</Form.Label>
             <Dropdown className="w-100" onSelect={(val) => setReason(val)}>
-              <Dropdown.Toggle 
-                variant="outline-dark" 
+              <Dropdown.Toggle
+                variant="outline-dark"
                 className="w-100 text-start d-flex justify-content-between align-items-center custom-select-black select-text"
                 disabled={loading || !isAuthenticated}
               >
@@ -325,7 +325,19 @@ const OrderSuccess = () => {
       if (!response || !response.ok) throw new Error("Failed to load order");
 
       const data = await response.json();
-      const orderData = data.order || data;
+      
+      if (data && data.success === false) {
+        throw new Error(data.message || "Failed to load order");
+      }
+
+      let orderData = null;
+      if (data && typeof data === "object") {
+        if ("order" in data) {
+          orderData = data.order;
+        } else {
+          orderData = data;
+        }
+      }
       setOrder(orderData);
 
       // Track Purchase in Meta Pixel
@@ -369,6 +381,12 @@ const OrderSuccess = () => {
     };
   }, [navigate]);
 
+  useEffect(() => {
+    if (!loading && (!order || error)) {
+      navigate("/404", { replace: true });
+    }
+  }, [loading, order, error, navigate]);
+
   if (loading) {
     return (
       <div className="container py-5 text-center">
@@ -379,17 +397,7 @@ const OrderSuccess = () => {
   }
 
   if (error || !order) {
-    return (
-      <div className="container py-5">
-        <div className="alert alert-danger">
-          <h5>Failed to load order details</h5>
-          <p>{error || "Order not found"}</p>
-          <Button variant="primary" onClick={() => fetchOrderDetails()}>
-            Retry
-          </Button>
-        </div>
-      </div>
-    );
+    return null; // Return null instead of error alert box so it redirects cleanly
   }
 
   const currentOrder = cancelledOrder || order;
@@ -433,7 +441,7 @@ const OrderSuccess = () => {
                 </button>
                 <button
                   className="btn btn-light continue-shopping-btn"
-                  onClick={() => navigate("/")}
+                  onClick={() => navigate("/", { replace: true })}
                 >
                   Continue Shopping
                 </button>

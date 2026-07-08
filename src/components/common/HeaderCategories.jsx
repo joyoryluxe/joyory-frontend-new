@@ -54,13 +54,24 @@ const HeaderCategories = () => {
     }
   };
 
+  const [isHoverDisabled, setIsHoverDisabled] = useState(false);
+
+  const handleDropdownAction = (actionFn) => {
+    setActiveCategoryId(null);
+    setActiveStaticItem(null);
+    setIsHoverDisabled(true);
+    actionFn();
+  };
+
   const handleMouseEnter = (catId) => {
+    if (isHoverDisabled) return;
     if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
     setActiveCategoryId(catId);
     setActiveStaticItem(null);
   };
 
   const handleStaticItemEnter = (itemLabel) => {
+    if (isHoverDisabled) return;
     if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
     setActiveStaticItem(itemLabel);
     setActiveCategoryId(null);
@@ -70,7 +81,7 @@ const HeaderCategories = () => {
     hoverTimeoutRef.current = setTimeout(() => {
       setActiveCategoryId(null);
       setActiveStaticItem(null);
-    }, 200);
+    }, 350);
   };
 
   const renderSubCategories = (subCategories, parentSlug = "", level = 1) => {
@@ -168,8 +179,10 @@ const HeaderCategories = () => {
         //   setActiveStaticItem(null);
         // }
         action: () => {
-          navigate("/ai-beauty-lab#ai-beauty-concierge");
-          setActiveStaticItem(null);
+          handleDropdownAction(() => {
+            navigate("/ai-beauty-lab#ai-beauty-concierge");
+            window.dispatchEvent(new CustomEvent("scroll-to-ai-tool", { detail: "ai-beauty-concierge" }));
+          });
         }
       },
       {
@@ -177,8 +190,10 @@ const HeaderCategories = () => {
         description: "Build a structured AM/PM skincare regimen.",
         icon: <FaMagic />,
         action: () => {
-          navigate("/ai-beauty-lab#skincare-routine-builder");
-          setActiveStaticItem(null);
+          handleDropdownAction(() => {
+            navigate("/ai-beauty-lab#skincare-routine-builder");
+            window.dispatchEvent(new CustomEvent("scroll-to-ai-tool", { detail: "skincare-routine-builder" }));
+          });
         }
       },
       {
@@ -186,8 +201,10 @@ const HeaderCategories = () => {
         description: "Scan ingredients for sensitivity & allergens.",
         icon: <FaFlask />,
         action: () => {
-          navigate("/ai-beauty-lab#ingredient-compatibility");
-          setActiveStaticItem(null);
+          handleDropdownAction(() => {
+            navigate("/ai-beauty-lab#ingredient-compatibility");
+            window.dispatchEvent(new CustomEvent("scroll-to-ai-tool", { detail: "ingredient-compatibility" }));
+          });
         }
       },
       {
@@ -195,8 +212,10 @@ const HeaderCategories = () => {
         description: "Try makeup shades instantly using your camera.",
         icon: <FaCamera />,
         action: () => {
-          navigate("/ai-beauty-lab#ai-virtual-try-on");
-          setActiveStaticItem(null);
+          handleDropdownAction(() => {
+            navigate("/ai-beauty-lab#ai-virtual-try-on");
+            window.dispatchEvent(new CustomEvent("scroll-to-ai-tool", { detail: "ai-virtual-try-on" }));
+          });
         }
       },
       {
@@ -204,8 +223,10 @@ const HeaderCategories = () => {
         description: "Find your perfect shade matching your skin tone.",
         icon: <FaPalette />,
         action: () => {
-          navigate("/ai-beauty-lab#foundation-shade-finder");
-          setActiveStaticItem(null);
+          handleDropdownAction(() => {
+            navigate("/ai-beauty-lab#foundation-shade-finder");
+            window.dispatchEvent(new CustomEvent("scroll-to-ai-tool", { detail: "foundation-shade-finder" }));
+          });
         }
       },
       {
@@ -213,8 +234,10 @@ const HeaderCategories = () => {
         description: "Take our quiz for skin type recommendations.",
         icon: <FaClipboardList />,
         action: () => {
-          navigate("/ai-beauty-lab#smart-beauty-quiz");
-          setActiveStaticItem(null);
+          handleDropdownAction(() => {
+            navigate("/ai-beauty-lab#smart-beauty-quiz");
+            window.dispatchEvent(new CustomEvent("scroll-to-ai-tool", { detail: "smart-beauty-quiz" }));
+          });
         }
       }
     ];
@@ -252,7 +275,13 @@ const HeaderCategories = () => {
       {/* 🔥 NEW: FULL PAGE OVERLAY WHEN DROPDOWN IS OPEN */}
       {isDropdownOpen && <div className="mega-menu-overlay" onMouseEnter={handleMouseLeave}></div>}
 
-      <div className="header-categories w-100 page-title-main-name">
+      <div
+        className="header-categories w-100 page-title-main-name"
+        onMouseLeave={() => {
+          handleMouseLeave();
+          setIsHoverDisabled(false);
+        }}
+      >
         <div className="container-fluid d-flex align-items-center justify-content-evenly">
 
           {/* Dynamic Categories */}

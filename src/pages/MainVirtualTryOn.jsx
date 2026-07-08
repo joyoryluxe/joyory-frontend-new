@@ -1015,14 +1015,16 @@ const MainVirtualTryon = () => {
             {/* 🟢 FULL VIRTUALTRYON PAGE UNDERLAY */}
             <div className="vto-bg-content-underlay">
               <div className="virtualtryon-container pt-5 mt-2">
-                <header className="hero-sections mt-lg-5 pt-lg-5 mt-2 w-100">
-                  <img
-                    src={vtoHero}
-                    alt="Virtual Try-On"
-                    className="hero-image img-fluid"
-                    style={{ width: "100%", maxHeight: "500px", objectFit: "cover" }}
-                  />
-                </header>
+                <section className="hero-slider w-100">
+                  <div className="position-relative w-100 h-100 mt-xl-4 mt-3 padding-left-rightss">
+                    <img
+                      src={vtoHero}
+                      alt="Virtual Try-On"
+                      className="slide-media pt-0"
+                      style={{ width: "100%", objectFit: "cover" }}
+                    />
+                  </div>
+                </section>
 
                 {/* How It Works Section */}
                 <section className="how-it-works-section container mt-5" style={{ paddingBottom: '120px' }}>

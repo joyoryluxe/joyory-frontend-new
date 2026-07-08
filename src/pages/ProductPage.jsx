@@ -1025,11 +1025,11 @@ export default function ProductPage() {
                                         })()}
                                     </div>
                                 </div>
-                  {prod.nextOrderDiscountMessage && (
-                    <div className="next-order-discount-tag" title={prod.nextOrderDiscountMessage} onClick={(e) => { e.stopPropagation(); window.showDiscountPopup && window.showDiscountPopup(prod.nextOrderDiscountMessage, e.currentTarget); }}>
-                      <span className="text-truncate">{prod.nextOrderDiscountMessage}</span>
-                    </div>
-                  )}
+                                {prod.nextOrderDiscountMessage && (
+                                    <div className="next-order-discount-tag" title={prod.nextOrderDiscountMessage} onClick={(e) => { e.stopPropagation(); window.showDiscountPopup && window.showDiscountPopup(prod.nextOrderDiscountMessage, e.currentTarget); }}>
+                                        <span className="text-truncate">{prod.nextOrderDiscountMessage}</span>
+                                    </div>
+                                )}
 
                                 {/* Cart Button */}
                                 <div className="cart-section">
@@ -1414,10 +1414,10 @@ export default function ProductPage() {
                                 <button
                                     key={ing.slug}
                                     onClick={() => handleIngredientClick(ing)}
-                                    className={`btn rounded-pill px-4 py-2 page-title-main-name flex-shrink-0 ${isActive ? "btn-dark" : "btn-outline-secondary"}`}
+                                    className={`btn rounded-pill px-4 py-2 page-title-main-name flex-shrink-0 text-capitalize ${isActive ? "btn-dark" : "btn-outline-secondary"}`}
                                     style={{ fontSize: 13, fontWeight: isActive ? 600 : 400 }}
                                 >
-                                    {ing.name}
+                                    {(ing.name || "").toLowerCase()}
                                 </button>
                             );
                         })}
@@ -1610,7 +1610,7 @@ export default function ProductPage() {
                             </div>
                         </div>
 
-                        <div className="row g-4 position-relative">
+                        <div className="row g-4 position-relative responsive-product-grid">
                             {/* NEW Loading Overlay - shown when loading but products exist */}
                             {/* {loading && allProducts.length > 0 && (
                                 <div className="position-absolute w-100 h-100 d-flex justify-content-center align-items-start pt-5"

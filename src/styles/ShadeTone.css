@@ -170,6 +170,7 @@
     text-align: center;
     width: 100%;
     margin: 0 auto;
+    margin-bottom: 30px;
 }
 
 .member-role-3d {
@@ -206,7 +207,7 @@
     background-color: #000;
     color: #fff;
     border-radius: 0px;
-   
+
 }
 
 .btn-for-shadetones:hover {
@@ -235,7 +236,7 @@
 
 @media (max-width: 991px) {
     .margin-bottom-after-button {
-        margin-bottom: 120px !important;
+        margin-bottom: 150px !important;
     }
 }
 
@@ -246,24 +247,30 @@
     .shadetone-wrapper {
         padding-top: 85px !important;
     }
+
     .about-title {
         font-size: 3rem;
         top: 10px;
     }
+
     .card-3d {
         width: 180px;
         height: 250px;
     }
+
     .card-3d.left-1 {
         transform: translateX(-100px) scale(0.8);
     }
+
     .card-3d.right-1 {
         transform: translateX(100px) scale(0.8);
     }
+
     .card-3d.left-2,
     .card-3d.right-2 {
         display: none;
     }
+
     .carousel-container-3d {
         width: 100%;
         /* max-width: 1000px; */
@@ -273,14 +280,21 @@
         perspective: 1000px;
         z-index: 1;
     }
+
     .member-info-3d {
         margin-top: 30px;
         min-height: 15px;
-        
+
     }
+
+    .member-name-3d {
+        font-size: 20px;
+    }
+
     .margin-topsssa {
         display: none;
     }
+
     .btn-for-shadetones,
     .btn-for-back-buttons {
         width: auto !important;
@@ -291,16 +305,17 @@
 }
 
 @media (max-width: 480px) {
-  .btn-for-shadetones,
-.btn-for-back-buttons {
-    min-width: 145px;
-    height: 42px;
-    font-size: 16px;
-    border-radius: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
+
+    .btn-for-shadetones,
+    .btn-for-back-buttons {
+        min-width: 145px;
+        height: 42px;
+        font-size: 16px;
+        border-radius: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
 }
 
 @media (min-width: 1024px) {
@@ -308,20 +323,103 @@
         top: 100% !important;
 
     }
-      .btn-for-shadetones,
-.btn-for-back-buttons {
-    min-width: 245px;
-    height: 42px;
-    font-size: 16px;
-    border-radius: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
+
+    .btn-for-shadetones,
+    .btn-for-back-buttons {
+        min-width: 245px;
+        height: 42px;
+        font-size: 16px;
+        border-radius: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
 }
 
 @media (max-width: 390px) {
     .main-ways {
         top: 100% !important;
+    }
+}
+
+/* Multiple Backend Images Grid & Responsive Layouts */
+
+.carousel-container-3d.multi-images {
+    height: auto !important;
+    min-height: 320px;
+    padding-bottom: 20px;
+}
+
+.card-3d.center.multi-images {
+    width: 100% !important;
+    max-width: 1100px !important;
+    height: auto !important;
+    position: relative !important;
+    transform: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+    cursor: default !important;
+}
+
+.center-card-grid {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 25px;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+.multi-image-item {
+    /* width: 190px; */
+    width: auto;
+    height: 270px;
+    background: #fff;
+    border-radius: 0px;
+    overflow: hidden;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(0, 0, 0, 0.04);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.multi-image-item:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 119, 182, 0.12);
+    border-color: rgba(0, 119, 182, 0.2);
+}
+
+.multi-image-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+    .carousel-container-3d.multi-images {
+        min-height: 250px;
+    }
+
+    .center-card-grid {
+        gap: 15px;
+    }
+
+    .multi-image-item {
+        /* width: 140px; */
+        height: 200px;
+        border-radius: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .multi-image-item {
+        /* width: 120px; */
+        height: 170px;
+    }
+
+    .center-card-grid {
+        gap: 10px;
     }
 }

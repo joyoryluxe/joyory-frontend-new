@@ -2061,3 +2061,55 @@
     padding-right: 5px;
   }
 }
+
+@media (min-width: 1600px) {
+  .rb-tab-btn {
+    font-size: 1.15rem;
+    padding: 12px 30px;
+  }
+  
+  .rb-create-btn {
+    font-size: 1.1rem;
+    padding: 12px 24px;
+  }
+  
+  .rb-ai-banner-content h4 {
+    font-size: 1.6rem;
+  }
+  
+  .rb-ai-banner-content p {
+    font-size: 1.15rem;
+  }
+  
+  .rb-ai-btn {
+    font-size: 1.15rem;
+    padding: 14px 28px;
+  }
+  
+  .rb-container h4 {
+    font-size: 1.5rem;
+  }
+  
+  .rb-container p {
+    font-size: 1.15rem;
+  }
+  
+  .rb-login-card h2 {
+    font-size: 2.5rem;
+  }
+  
+  .rb-login-card p {
+    font-size: 1.25rem;
+  }
+  
+  .rb-btn-primary {
+    font-size: 1.2rem;
+    padding: 15px 40px;
+  }
+
+  .rb-ai-banner textarea,
+  .rb-textarea {
+    font-size: 1.15rem !important;
+    padding: 15px !important;
+  }
+}

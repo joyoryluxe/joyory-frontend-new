@@ -240,3 +240,127 @@
     margin-bottom: 4px !important;
   }
 }
+
+@media (min-width: 1600px) {
+  .ing-detail-page {
+    max-width: 1600px;
+    width: 70%;
+  }
+
+  /* Hero Section */
+  .ing-hero-card {
+    padding: 50px 60px;
+    border-radius: 24px;
+  }
+  
+  .ing-hero-card h1 {
+    font-size: 48px !important;
+  }
+
+  .ing-hero-card span.ing-category-badge {
+    font-size: 14px;
+    padding: 6px 16px;
+  }
+
+  .ing-hero-card small.text-muted {
+    font-size: 16px;
+  }
+
+  .ing-profile-badge {
+    padding: 15px 24px;
+    min-width: 240px;
+    gap: 16px;
+    border-radius: 12px;
+  }
+
+  .ing-badge-icon {
+    font-size: 28px;
+  }
+
+  .ing-badge-info span {
+    font-size: 14px;
+  }
+
+  .ing-badge-info strong {
+    font-size: 18px;
+  }
+
+  /* Content Cards */
+  .ing-card {
+    border-radius: 24px;
+    padding: 40px !important;
+  }
+  
+  .ing-card h4,
+  .ing-card h5 {
+    font-size: 24px !important;
+    margin-bottom: 20px;
+  }
+
+  .ing-card p {
+    font-size: 16px !important;
+    line-height: 1.7;
+  }
+
+  .ing-card li {
+    font-size: 16px !important;
+    line-height: 1.7;
+    margin-bottom: 8px;
+  }
+
+  /* Suitability & Compatibility Badges */
+  .ing-skin-badge,
+  .ing-skin-badge-avoid {
+    padding: 10px 20px;
+    font-size: 15px;
+    border-radius: 6px;
+  }
+
+  .ing-compatible-badge {
+    padding: 12px 24px;
+    font-size: 16px;
+    border-radius: 30px;
+  }
+
+  .ing-conflict-card {
+    padding: 24px;
+    border-radius: 12px;
+    font-size: 16px;
+  }
+
+  .ing-severity-high,
+  .ing-severity-medium {
+    font-size: 12px;
+    padding: 4px 10px;
+  }
+
+  .ing-conflict-advice {
+    padding: 15px 20px;
+    font-size: 15px;
+    border-radius: 6px;
+  }
+
+  /* Product Catalog Cards */
+  .hover-card .card-img-top {
+    height: 280px;
+  }
+
+  .hover-card .card-title {
+    font-size: 18px !important;
+    margin-bottom: 8px;
+  }
+
+  .hover-card .card-body {
+    padding: 20px !important;
+  }
+
+  .hover-card p.text-muted,
+  .hover-card span,
+  .hover-card strong {
+    font-size: 15px !important;
+  }
+
+  .ing-product-price {
+    font-size: 18px !important;
+  }
+}

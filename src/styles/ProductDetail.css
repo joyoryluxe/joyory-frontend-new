@@ -11,7 +11,7 @@ body {
 
 .product-detail-page {
     padding: 32px 16px;
-    max-width: max-content;
+    /* max-width: max-content; */
     margin: auto;
 }
 
@@ -238,6 +238,13 @@ body {
 .product-detail-page {
     padding: 0px 24px;
 }
+
+.product-detail-container {
+    max-width: 1300px;
+    margin: 0 auto;
+    width: 100%;
+}
+
 
 .product-card {
     flex-direction: row;

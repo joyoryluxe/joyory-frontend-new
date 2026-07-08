@@ -790,3 +790,10 @@
     background-color: #000 !important;
     color: #fff !important;
 }
+
+/* Override min-height only on large desktop and 4K viewports to prevent empty scrolling */
+@media (min-width: 1600px) {
+    .order-success-page {
+        min-height: 55vh;
+    }
+}

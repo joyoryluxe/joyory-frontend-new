@@ -204,3 +204,41 @@ body {
     background: transparent !important;
     background-color: transparent !important;
 }
+
+/* -------------------------------------------------------------
+   4K, ULTRA-WIDE, AND LARGE DESKTOP RESPONSIVE DESIGN SYSTEM
+   ------------------------------------------------------------- */
+
+/* Container caps at higher screen resolutions to prevent infinite stretching */
+@media (min-width: 1600px) {
+
+    .container,
+    .container-lg,
+    .container-xl,
+    .container-xxl {
+        max-width: 1520px !important;
+    }
+}
+
+/* 
+   Proportional zoom system for ultra-wide and 4K/TV screens (1920px - 3840px+).
+   This scales all sizes, spacing, grid layouts, and elements to look exactly 
+   like the desktop layout, preserving the desktop's proportions and column counts.
+*/
+@media (min-width: 1920px) {
+    html {
+        zoom: 1.2 !important;
+    }
+}
+
+@media (min-width: 2560px) {
+    html {
+        zoom: 1.6 !important;
+    }
+}
+
+@media (min-width: 3840px) {
+    html {
+        zoom: 2.4 !important;
+    }
+}

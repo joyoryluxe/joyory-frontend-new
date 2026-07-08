@@ -32,8 +32,6 @@ import BrandPage from "./pages/BrandPage";
 import PromotionProductsPage from "./pages/PromotionProductsPage";
 import Aboutus from "./pages/AboutUs";
 import VideoSlider from "./components/sections/home/VideoSlider";
-import MissionVisionSection from "./components/sections/about/MissionVisionSection";
-import TeamSlider from "./components/sections/about/TeamSlider";
 import FoundationShadeFinder from "./pages/FoundationShadeFinder";
 import Shadefinder from "./pages/ShadeFinder";
 import Shadefinderundertone from "./pages/ShadeFinderUndertone";
@@ -48,7 +46,6 @@ import Referral from "./pages/Referral";
 import Sidebarcomon from "./components/common/SidebarCommon";
 import Gifting from "./pages/Gifting";
 import RecommendationSlider from "./components/common/RecommendationSlider";
-import AboutusHero from "./components/sections/about/AboutUsHero";
 import MyGiftCard from "./pages/MyGiftCard";
 import Giftcardinnersection from "./pages/Giftcardinnersection";
 import Addtocard from "./components/common/AddToCard";
@@ -89,8 +86,7 @@ import CategoryLandingPage from "./pages/CategoryLandingPage";
 import Offerlanding from "./pages/OfferLanding";
 import Foryoulanding from "./pages/ForYouLanding";
 import AiBeautyLab from "./pages/AiBeautyLab";
-// import SkinDiagnosis from "./pages/SkinDiagnosis";
-import Makeupquiz from "./pages/MakeupQuiz";
+import SkinDiagnosis from "./pages/SkinDiagnosis";
 // import AddressSection from "./component/AddressSection";
 import AddressSections from "./pages/AddressSections";
 import PageNotFound from "./pages/PageNotFound";
@@ -219,12 +215,10 @@ function App() {
               <Route path="/Products/promotion/:slug" element={<ProductPage />} />
               <Route path="/Products/:slug" element={<ProductPage />} />
 
-              <Route path="/TeamSlider" element={<TeamSlider />} />
               <Route path="/Aboutus" element={<Aboutus />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/privacy-policy" element={<Privacy />} />
               <Route path="/VideoSlider" element={<VideoSlider />} />
-              <Route path="/MissionVisionSection" element={<MissionVisionSection />} />
               <Route path="/FoundationShadeFinder" element={<FoundationShadeFinder />} />
               <Route path="/shadefinder" element={<Shadefinder />} />
               <Route path="/Shadefinderundertone" element={<Shadefinderundertone />} />
@@ -241,7 +235,6 @@ function App() {
               <Route path="/Sidebarcomon" element={<Sidebarcomon />} />
               <Route path="/Gifting" element={<Gifting />} />
               <Route path="/RecommendationSlider" element={<RecommendationSlider />} />
-              <Route path="/AboutusHero" element={<AboutusHero />} />
               <Route path="/Giftcardinnersection/:id" element={<Giftcardinnersection />} />
               <Route path="/Giftcardinnersection" element={<Giftcardinnersection />} />
               <Route path="/CartPage" element={<CartPage />} />
@@ -285,8 +278,7 @@ function App() {
               <Route path="/Offerlanding" element={<Offerlanding />} />
               <Route path="/Foryoulanding" element={<Foryoulanding />} />
               <Route path="/ai-beauty-lab" element={<AiBeautyLab />} />
-              {/* <Route path="/skin-diagnosis" element={<SkinDiagnosis />} /> */}
-              <Route path="/Makeupquiz" element={<Makeupquiz />} />
+              <Route path="/skin-diagnosis" element={<SkinDiagnosis />} />
               <Route path="/routines" element={<RoutineBuilder />} />
               <Route path="/routines/:shareToken" element={<RoutineBuilder />} />
               <Route path="/ingredient-compatibility" element={<IngredientCompatibility />} />

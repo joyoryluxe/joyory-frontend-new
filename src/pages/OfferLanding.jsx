@@ -76,7 +76,24 @@ const SectionSlider = ({
         768: { slidesPerView: Math.min(slidesPerView, 4), spaceBetween: 20 },
     };
 
-    const mergedBreakpoints = { ...defaultBreakpoints, ...breakpoints };
+    const baseBreakpoints = { ...defaultBreakpoints, ...breakpoints };
+    const finalBreakpoints = {};
+
+    Object.keys(baseBreakpoints).forEach((key) => {
+        const width = parseInt(key, 10);
+        const bp = baseBreakpoints[key];
+        if (width >= 992) {
+            finalBreakpoints[key] = {
+                ...bp,
+                slidesPerView: slidesPerView,
+            };
+        } else {
+            finalBreakpoints[key] = {
+                ...bp,
+                slidesPerView: Math.min(bp.slidesPerView, slidesPerView),
+            };
+        }
+    });
 
     return (
         <div className="position-relative margintop-sss py-2">
@@ -110,7 +127,7 @@ const SectionSlider = ({
                 ref={swiperRef}
                 slidesPerView={1}
                 spaceBetween={spaceBetween}
-                breakpoints={mergedBreakpoints}
+                breakpoints={finalBreakpoints}
                 navigation={false}
                 className="section-slider px-1"
             >
@@ -659,11 +676,11 @@ export default function OffersPage() {
                                     )}
                                 </div>
                             </div>
-                  {prod.nextOrderDiscountMessage && (
-                    <div className="next-order-discount-tag" title={prod.nextOrderDiscountMessage} onClick={(e) => { e.stopPropagation(); window.showDiscountPopup && window.showDiscountPopup(prod.nextOrderDiscountMessage, e.currentTarget); }}>
-                      <span className="text-truncate">{prod.nextOrderDiscountMessage}</span>
-                    </div>
-                  )}
+                            {prod.nextOrderDiscountMessage && (
+                                <div className="next-order-discount-tag" title={prod.nextOrderDiscountMessage} onClick={(e) => { e.stopPropagation(); window.showDiscountPopup && window.showDiscountPopup(prod.nextOrderDiscountMessage, e.currentTarget); }}>
+                                    <span className="text-truncate">{prod.nextOrderDiscountMessage}</span>
+                                </div>
+                            )}
 
                             {/* Add to Cart / Select Variant / Out of Stock Button */}
                             <div className="cart-section">
@@ -983,7 +1000,7 @@ export default function OffersPage() {
                 </section>
             )}
 
-            <div className="container-fluid ps-md-5 pt-0 mt-0 bg-white">
+            <div className="container-fluid px-md-5 pt-0 mt-0 bg-white">
                 {/* 2. Manual Products Mapping (Offer Products) - WITH SAME DESIGN AS CATEGORYLANDINGPAGE */}
                 {offerProducts?.length > 0 &&
                     offerProducts.map((section) => (
@@ -1230,7 +1247,7 @@ export default function OffersPage() {
                             {cantMissThis.title}
                         </h3>
                         <SectionSlider
-                            slidesPerView={5}
+                            slidesPerView={3}
                             spaceBetween={15}
                             breakpoints={{
                                 320: { slidesPerView: 2, spaceBetween: 10 },

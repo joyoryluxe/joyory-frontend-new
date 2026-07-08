@@ -812,3 +812,10 @@
     flex-wrap: wrap;
     gap: 8px;
 }
+
+/* Override min-height only on large desktop and 4K viewports to prevent empty scrolling */
+@media (min-width: 1600px) {
+    .order-details-page {
+        min-height: 55vh;
+    }
+}

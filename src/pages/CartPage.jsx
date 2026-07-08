@@ -3580,7 +3580,7 @@ const CartPage = () => {
         <div className="container mt-xl-5 pt-xl-5">
           <div className="p-4 text-center mt-5 cartpage-empty-Main-section">
             <h2 className="page-title-main-name cartpage-titles playfair-font-bold">Oops!</h2>
-            <h5 className="mb-2 page-title-main-name">Your cart is empty 🛒</h5>
+            <h5 className="mb-2 page-title-main-name empty-cart-message">Your cart is empty 🛒</h5>
             <button
               className="page-title-main-name Shop-now-Button"
               onClick={() => navigate("/")}

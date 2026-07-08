@@ -40,7 +40,7 @@ export default function Virtualtryon() {
         }}
       >
         <div className="text-center">
-          <DotLottieReact 
+          <DotLottieReact
             style={{ height: '80%', width: '100%' }}
             src="https://lottie.host/73673e65-df58-41a5-87e7-b837c5d00fe8/dJVGVbJuYJ.lottie"
             loop
@@ -59,14 +59,16 @@ export default function Virtualtryon() {
       <Header />
       <div className="virtualtryon-container">
         {/* Hero Section */}
-        <header className="hero-sections mt-lg-5 pt-lg-5 mt-2 w-100">
-          <img
-            src={virtualTryOnHero}
-            alt="Virtual Try-On"
-            className="hero-image img-fluid"
-            style={{ width: "100%", maxHeight: "500px", objectFit: "cover" }}
-          />
-        </header>
+        <section className="hero-slider w-100 mt-lg-4">
+          <div className="position-relative w-100 h-100 mt-xl-5 mt-3 padding-left-rightss">
+            <img
+              src={virtualTryOnHero}
+              alt="Virtual Try-On"
+              className="slide-media pt-0"
+              style={{ width: "100%", objectFit: "cover" }}
+            />
+          </div>
+        </section>
 
         {/* How It Works Section */}
         <section className="how-it-works-section container">

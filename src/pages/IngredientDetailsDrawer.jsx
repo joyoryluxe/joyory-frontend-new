@@ -54,7 +54,7 @@ export default function IngredientDetailsDrawer({ isOpen, onClose, ingredient })
             <span className="badge bg-secondary mb-1 text-uppercase small" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>
               {typeof ingredient.category === "string" ? ingredient.category : (ingredient.category?.name || "Ingredient")}
             </span>
-            <h4 className="fw-bold text-dark mb-0 page-title-main-name">{ingredient.name}</h4>
+            <h4 className="fw-bold text-dark mb-0 page-title-main-name text-capitalize">{ingredient.name.toLowerCase()}</h4>
             {ingredient.aliases?.length > 0 && (
               <small className="text-muted">Also known as: {ingredient.aliases.join(", ")}</small>
             )}

@@ -1387,7 +1387,7 @@ export default function BrandPage() {
               return (
                 <SwiperSlide key={index}>
                   <div
-                    className="position-relative w-100 h-100 hero-slider-image-responsive"
+                    className="position-relative w-100 h-100 hero-slider-image-responsive mt-lg-0 mt-md-0"
                     style={{ cursor: targetLink ? "pointer" : "default" }}
                     onClick={() => {
                       if (!targetLink) return;

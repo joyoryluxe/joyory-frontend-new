@@ -513,7 +513,7 @@ const SearchPage = () => {
       if (brand && (!filters.brandIds || filters.brandIds.length === 0) && !remaining) {
         p.append("brandIds", brand.slug || brand._id);
       }
-      
+
       // Only append the automatically parsed category if remaining is empty (i.e., it's a pure category search like "Lips")
       // This prevents matching a category from a word in a product name and filtering out the product.
       if (category && (!filters.categoryIds || filters.categoryIds.length === 0) && !remaining) {
@@ -557,7 +557,7 @@ const SearchPage = () => {
     if (currentCursor) {
       p.append("cursor", currentCursor);
     }
-    
+
     // Set limit to 50 for search term query to fetch all relevant products on the first page, allowing accurate re-ranking
     if (searchTerm) {
       p.append("limit", "50");
@@ -1818,11 +1818,11 @@ const SearchPage = () => {
                 </div>
               ) : filteredProducts.length === 0 ? (
                 <div className="no-results text-center py-5">
-                  <FaSearch size={64} className="text-muted mb-3" />
+                  <FaSearch size={40} className="text-muted mb-3" />
                   <h3>No matches found</h3>
                   <p className="text-muted">Try different keywords or adjust your filters.</p>
                   {(searchTerm || isAnyFilterActive) && (
-                    <button className="btn btn-dark mt-3" onClick={() => {
+                    <button className="btn btn-dark mt-2 px-4" onClick={() => {
                       clearSearch();
                       handleClearAllFilters();
                     }}>

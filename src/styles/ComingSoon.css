@@ -67,7 +67,7 @@ body {
 }
 
 .cs-panel {
-    background: linear-gradient( 180deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.72));
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.72));
     border: 1px solid var(--line);
     /* border-radius: 26px; */
     /* box-shadow: var(--shadow); */
@@ -109,7 +109,7 @@ body {
     content: "";
     position: absolute;
     inset: 0;
-    background: linear-gradient( 180deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.62)), radial-gradient( 900px 380px at 15% 25%, rgba(0, 119, 182, 0.22), transparent 60%), radial-gradient( 700px 420px at 85% 35%, rgba(0, 119, 182, 0.16), transparent 58%), url("/images/joyory-right-bg.jpg");
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.62)), radial-gradient(900px 380px at 15% 25%, rgba(0, 119, 182, 0.22), transparent 60%), radial-gradient(700px 420px at 85% 35%, rgba(0, 119, 182, 0.16), transparent 58%), url("/images/joyory-right-bg.jpg");
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
@@ -282,7 +282,7 @@ body {
 .cs-hero {
     border-radius: 22px;
     border: 1px solid rgba(20, 18, 26, 0.1);
-    background: radial-gradient( 900px 380px at 15% 25%, rgba(0, 119, 182, 0.26), transparent 60%), radial-gradient( 700px 420px at 85% 35%, rgba(0, 119, 182, 0.18), transparent 58%), linear-gradient(180deg, rgba(239, 248, 255, 0.98), rgba(255, 255, 255, 0.78));
+    background: radial-gradient(900px 380px at 15% 25%, rgba(0, 119, 182, 0.26), transparent 60%), radial-gradient(700px 420px at 85% 35%, rgba(0, 119, 182, 0.18), transparent 58%), linear-gradient(180deg, rgba(239, 248, 255, 0.98), rgba(255, 255, 255, 0.78));
     padding: 18px;
     min-height: 220px;
     display: flex;
@@ -341,7 +341,8 @@ body {
     padding: 16px;
     border-radius: 18px;
     border: 1px solid rgba(20, 18, 26, 0.1);
-    background: radial-gradient( 900px 380px at 15% 25%, rgba(0, 119, 182, 0.18), transparent 60%), linear-gradient(180deg, rgba(239, 248, 255, 0.98), rgba(255, 255, 255, 0.78));
+    /* background: radial-gradient( 900px 380px at 15% 25%, rgba(0, 119, 182, 0.18), transparent 60%), linear-gradient(180deg, rgba(239, 248, 255, 0.98), rgba(255, 255, 255, 0.78)); */
+    background: #EBF2F5;
 }
 
 .cs-countdown {
@@ -380,6 +381,7 @@ body {
     .cs-countdown {
         grid-template-columns: repeat(2, 1fr);
     }
+
     .cs-wrap {
         min-height: 100vh;
         display: grid;
@@ -439,4 +441,95 @@ body {
 
 .cs-small {
     color: rgba(20, 18, 26, 0.55);
+}
+
+@media (min-width: 992px) {
+    .cs-root.light {
+        min-height: auto;
+        /* padding-top: 130px; */
+        /* clear fixed header height */
+    }
+
+    .cs-wrap {
+        min-height: auto;
+        padding: 40px 3.75rem;
+    }
+}
+
+@media (min-width: 1600px) {
+    .cs-wrap {
+        padding: 60px 2rem;
+    }
+
+    .cs-shell {
+        justify-self: stretch;
+        width: 100%;
+    }
+
+    .cs-panel.cs-single {
+        padding: 60px;
+        gap: 30px;
+        min-width: 90%;
+        margin: 0 auto;
+    }
+
+    .cs-brandName {
+        font-size: 28px;
+    }
+
+    .cs-pill {
+        font-size: 16px;
+        padding: 12px 18px;
+    }
+
+    .cs-h1 {
+        font-size: 54px;
+        line-height: 1.15;
+    }
+
+    .cs-sub {
+        font-size: 20px;
+        max-width: 65ch;
+    }
+
+    .cs-tag {
+        font-size: 16px;
+        padding: 10px 16px;
+    }
+
+    .cs-tile {
+        padding: 50px 20px;
+    }
+
+    .cs-num {
+        font-size: 38px;
+    }
+
+    .cs-lbl {
+        font-size: 14px;
+        margin-top: 10px;
+    }
+
+    .cs-formTitle {
+        font-size: 20px;
+    }
+
+    .cs-form input {
+        width: 50%;
+        padding: 18px 20px;
+        font-size: 18px;
+    }
+
+    .cs-form button {
+        padding: 18px 30px;
+        font-size: 18px;
+    }
+
+    .cs-foot {
+        font-size: 16px;
+    }
+
+    .cs-small {
+        font-size: 16px;
+    }
 }

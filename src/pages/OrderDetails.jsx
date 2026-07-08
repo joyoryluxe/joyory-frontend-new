@@ -69,10 +69,11 @@ const OrderDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  /* cancellation */
+  /* cancellation
   const [cancelling, setCancelling] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
+  */
 
   /* return / replace */
   const [returnForms, setReturnForms] = useState({});
@@ -160,7 +161,7 @@ const OrderDetails = () => {
     }
   };
 
-  /* ---- cancellation logic ---- */
+  /* ---- cancellation logic ----
   const isCancellable = (st) => {
     if (!st) return false;
     const blocked = ["picked up", "in transit", "out for delivery", "delivered", "cancelled", "rto initiated", "rto delivered"];
@@ -197,6 +198,7 @@ const OrderDetails = () => {
       setCancelling(false);
     }
   };
+  */
 
   /* ---------- RETURN / REPLACE ---------- */
   const openReturnForm = (idx, type) => {
@@ -505,12 +507,13 @@ const OrderDetails = () => {
               </span>
             </div>
 
-            {/* Cancel Shipment Button */}
+            {/* Cancel Shipment Button
             {isCancellable(shipmentData.shipmentStatus) && getWaybill(shipmentData) && !isReturnActive && (
               <button className="btn-premium-action btn-danger-p" onClick={initiateCancellation}>
                 <FaBan /> Cancel Shipment
               </button>
             )}
+            */}
 
             {/* Download Invoice Button */}
             <button
@@ -1008,7 +1011,7 @@ const OrderDetails = () => {
           </div>
         </div>
 
-        {/* Cancel shipment modal using custom premium styles */}
+        {/* Cancel shipment modal using custom premium styles
         {showCancelModal && (
           <div className="od-modal-overlay">
             <div className="od-modal-content">
@@ -1038,6 +1041,7 @@ const OrderDetails = () => {
             </div>
           </div>
         )}
+        */}
       </div>
       <Footer />
     </div>
