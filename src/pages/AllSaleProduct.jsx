@@ -46,7 +46,7 @@ const Allsaleproduct = () => {
 
   return (
     <div className="container-fluid my-4 ">
-      <h2 className="fw-bold mt-3 mb-4 mb-lg-5 mt-lg-5 font-family-Playfair text-center spacing">Special Offers</h2>
+      <h2 className="fw-bold mt-3 mb-4 mb-lg-5 mt-lg-5 text-center spacing">Special Offers</h2>
 
       {loading ? (
         <p className="text-center text-muted">Loading offers...</p>

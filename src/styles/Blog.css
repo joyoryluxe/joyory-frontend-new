@@ -267,13 +267,12 @@ html {
 :root {
     --primary-brown: #A35200;
     --text-muted: #666;
-    --font-serif: 'Cormorant Garamond', serif;
     --font-sans: 'Inter', sans-serif;
     --font-display: 'Montserrat', sans-serif;
 }
 
 body {
-    font-family: var(--font-sans);
+  font-family: 'Montserrat', sans-serif;
     background-color: #fff;
     color: #333;
 }

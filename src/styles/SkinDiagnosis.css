@@ -2,7 +2,7 @@
 
 .skin-diagnosis-page {
   color: #000;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   min-height: 100vh;
   padding-top: 180px;
   overflow-x: hidden;
@@ -656,14 +656,14 @@
   gap: 10px;
 }
 
-.color-swatch {
+/* .color-swatch {
   width: 18px;
   height: 18px;
   border-radius: 50%;
   border: 1.5px solid rgba(255, 255, 255, 0.25);
   display: inline-block;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
-}
+} */
 
 .undertone-badge {
   font-size: 11px;

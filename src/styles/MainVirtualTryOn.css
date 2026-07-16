@@ -11,7 +11,7 @@
     /* display: flex; */
     /* justify-content: center; */
     align-items: center;
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Montserrat', sans-serif;
     overflow: hidden;
     transition: all 0.5s ease;
 }
@@ -535,7 +535,7 @@
 .vto-landing-bg-box {
     position: relative;
     width: 100%;
-    height: 450px;
+    height: 425px;
     background: #000;
     overflow: hidden;
     flex-shrink: 0;
@@ -681,7 +681,7 @@
 }
 
 .vto-title-landing {
-    font-family: 'Outfit', sans-serif;
+    font-family: 'Montserrat', sans-serif;
     font-weight: 400;
     font-size: 18px;
     letter-spacing: 4px;
@@ -848,7 +848,7 @@
 }
 
 .vto-exit-confirm-title {
-    font-family: 'Outfit', sans-serif;
+    font-family: 'Montserrat', sans-serif;
     font-size: 18px;
     font-weight: 700;
     color: #111;
@@ -910,7 +910,7 @@
 }
 
 .vto-instr-brand-text {
-    font-family: 'Outfit', sans-serif;
+    font-family: 'Montserrat', sans-serif;
     font-size: 16px;
     font-weight: 800;
     letter-spacing: 3px;
@@ -1469,7 +1469,7 @@
     left: 50%;
     transform: translateX(-50%);
     color: #fff;
-    font-family: 'Outfit', sans-serif;
+    font-family: 'Montserrat', sans-serif;
     font-size: 20px;
     font-weight: 500;
     letter-spacing: 5px;
@@ -1577,7 +1577,7 @@
 }
 
 .vto-shade-popup-product-name {
-    font-family: 'Poppins', 'Montserrat', sans-serif;
+    font-family: 'Montserrat', sans-serif;
     font-size: 8px;
     font-weight: 400;
     color: rgba(255, 255, 255, 0.6);
@@ -1590,7 +1590,7 @@
 }
 
 .vto-shade-popup-shade-name {
-    font-family: 'Poppins', 'Montserrat', sans-serif;
+    font-family: 'Montserrat', sans-serif;
     font-size: 11px;
     font-weight: 500;
     color: #fff;
@@ -1600,7 +1600,7 @@
 }
 
 .vto-shade-popup-price {
-    font-family: 'Poppins', sans-serif;
+    font-family: 'Montserrat', sans-serif;
     font-size: 13px;
     font-weight: 600;
     color: #fff;

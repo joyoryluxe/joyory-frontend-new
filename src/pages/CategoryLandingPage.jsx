@@ -401,12 +401,16 @@ export default function CategoryLandingPage() {
                 // ========== ENHANCED ERROR HANDLING ==========
 
                 // Check if it's a 400 error with isLandingPage: false (sub-category blocked)
+                // if (status === 400 && isLandingPage === false) {
+                //     setErrorMessage(
+                //         responseMessage ||
+                //         "This page is only available for top-level parent categories. Sub-categories are not accessible directly."
+                //     );
+                //     setShow404(true);
+                // }
                 if (status === 400 && isLandingPage === false) {
-                    setErrorMessage(
-                        responseMessage ||
-                        "This page is only available for top-level parent categories. Sub-categories are not accessible directly."
-                    );
-                    setShow404(true);
+                    navigate(`/Products/category/${effectiveSlug}`, { replace: true });
+                    return;
                 }
                 // Check if it's a 404 error (category not found)
                 else if (status === 404) {
@@ -774,7 +778,7 @@ export default function CategoryLandingPage() {
                                 </div>
 
                                 {/* Product Name */}<div className="product-card-title-wrap"><h6
-                                    className="foryou-name font-family-Poppins m-0 p-0"
+                                    className="foryou-name m-0 p-0"
                                     onClick={() => {
                                         if (showOutOfStock) {
                                             handleOutOfStockClick(prod.name);
@@ -1184,7 +1188,8 @@ export default function CategoryLandingPage() {
                                     >
                                         <img
                                             src={imgUrl}
-                                            alt={`${category.name} banner ${index + 1}`}
+                                            // alt={`${category.name} banner ${index + 1}`}
+                                            alt={`Shop Premium ${category.name} Products Online - Joyory`}
                                             className="slide-media hero-slider-image-responsive mt-5 pt-0"
                                             style={{ height: '100%' }}
                                         />
@@ -1199,7 +1204,7 @@ export default function CategoryLandingPage() {
             )}
 
             {/* Main Content Container */}
-            <div className="container-fluid p-md-5 p-lg-2 py-lg-4 ps-4 px-4 pt-lg-2">
+            <div className="container-fluid p-md-5 p-lg-2 py-lg-4 pt-lg-2">
                 {/* Category Title */}
                 <div
                     className="mb-0 cursor-pointer"

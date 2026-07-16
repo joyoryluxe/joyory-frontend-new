@@ -266,6 +266,7 @@ const OrderSuccess = () => {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(true);
   const [showCancelPopup, setShowCancelPopup] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [cancelledOrder, setCancelledOrder] = useState(null);
@@ -280,12 +281,15 @@ const OrderSuccess = () => {
       });
 
       if (!response.ok) {
+        setIsAuthenticated(false);
         sessionStorage.setItem("redirectAfterLogin", window.location.pathname);
         navigate("/login");
         return false;
       }
+      setIsAuthenticated(true);
       return true;
     } catch {
+      setIsAuthenticated(false);
       sessionStorage.setItem("redirectAfterLogin", window.location.pathname);
       navigate("/login");
       return false;
@@ -297,8 +301,8 @@ const OrderSuccess = () => {
       setLoading(true);
       setError(null);
 
-      const isAuthenticated = await checkAuthAndRedirect();
-      if (!isAuthenticated) return;
+      const isAuth = await checkAuthAndRedirect();
+      if (!isAuth) return;
 
       const orderIdToFetch = id || orderId;
       if (!orderIdToFetch) throw new Error("No order ID provided");
@@ -325,7 +329,7 @@ const OrderSuccess = () => {
       if (!response || !response.ok) throw new Error("Failed to load order");
 
       const data = await response.json();
-      
+
       if (data && data.success === false) {
         throw new Error(data.message || "Failed to load order");
       }
@@ -382,10 +386,10 @@ const OrderSuccess = () => {
   }, [navigate]);
 
   useEffect(() => {
-    if (!loading && (!order || error)) {
+    if (!loading && isAuthenticated && (!order || error)) {
       navigate("/404", { replace: true });
     }
-  }, [loading, order, error, navigate]);
+  }, [loading, order, error, isAuthenticated, navigate]);
 
   if (loading) {
     return (

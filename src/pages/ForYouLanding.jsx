@@ -371,7 +371,7 @@ function ProductCard({ product, navigate, location }) {
                         <div className="brand-name small text-muted mb-1 mt-2 text-start">{getBrandName()}</div>
 
                         {/* Product Name */}<div className="product-card-title-wrap"><h6
-                            className="foryou-name font-family-Poppins m-0 p-0"
+                            className="foryou-name m-0 p-0"
                             onClick={() => {
                                 if (showOutOfStock) {
                                     handleOutOfStockClick(pName);
@@ -1006,7 +1006,7 @@ function RecommendationsPage({ onBack, onBannerClick }) {
 
                 {productSections.map((section) => (
                     <div key={section.key} className="mb-lg-5">
-                        <h2 className="font-familys text-start foryou-heading ms-lg-3 ps-lg-4 mt-3 mb-2 mb-lg-4 mt-lg-3 fw-normal">
+                        <h2 className="text-start foryou-heading ms-lg-3 ps-lg-4 mt-3 mb-2 mb-lg-4 mt-lg-3 fw-normal">
                             {section.title}
                         </h2>
 

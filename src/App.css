@@ -3,6 +3,9 @@ body {
 
     background-color: #fff;
 }
+*{
+    font-family: 'Montserrat', sans-serif;
+}
 
 
 .spacing {
@@ -115,7 +118,6 @@ body {
 }
 
 .playfair-font-bold {
-    font-family: 'playfair', sans-serif !important;
     font-weight: 700;
 }
 
@@ -709,7 +711,7 @@ button:hover img {
 }
 
 .support-beauty-badge .vto-text {
-    font-family: 'Montserrat', 'Poppins', sans-serif !important;
+    font-family: 'Montserrat', sans-serif !important;
     font-size: 10px !important;
     font-weight: 700 !important;
     letter-spacing: 0.5px !important;
@@ -780,7 +782,7 @@ button:hover img {
     border-radius: 8px !important;
     box-shadow: 0 4px 15px rgba(0, 119, 182, 0.18) !important;
     padding: 8px 12px !important;
-    font-family: 'Poppins', 'Montserrat', sans-serif !important;
+    font-family: 'Montserrat', sans-serif !important;
     opacity: 0;
     transform: scale(0.95);
     transition: opacity 0.15s ease, transform 0.15s ease !important;

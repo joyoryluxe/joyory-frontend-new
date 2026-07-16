@@ -96,7 +96,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  font-family: "Inter", sans-serif;
+font-family: 'Montserrat', sans-serif;
   transform-origin: bottom right;
   animation: bc-open 0.3s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
@@ -268,7 +268,7 @@
   gap: 6px;
   letter-spacing: 0.1px;
   position: relative;
-  font-family: "Inter", sans-serif;
+  font-family: 'Montserrat', sans-serif;
   border-radius: 8px;
 }
 
@@ -563,7 +563,7 @@
   font-weight: 500;
   cursor: pointer;
   transition: var(--bc-transition);
-  font-family: "Inter", sans-serif;
+ font-family: 'Montserrat', sans-serif;
   white-space: nowrap;
 }
 
@@ -607,7 +607,7 @@
   background: transparent;
   color: #111111;
   font-size: 13px;
-  font-family: "Inter", sans-serif;
+ font-family: 'Montserrat', sans-serif;
   resize: none;
   outline: none;
   line-height: 1.5;
@@ -749,7 +749,7 @@
   cursor: pointer;
   text-align: left;
   transition: var(--bc-transition);
-  font-family: "Inter", sans-serif;
+font-family: 'Montserrat', sans-serif;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -805,7 +805,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: var(--bc-transition);
-  font-family: "Inter", sans-serif;
+font-family: 'Montserrat', sans-serif;
 }
 
 .bc-clear-btn:hover {
@@ -847,7 +847,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  font-family: "Inter", sans-serif;
+  font-family: 'Montserrat', sans-serif;
   text-align: left;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.02);
 }

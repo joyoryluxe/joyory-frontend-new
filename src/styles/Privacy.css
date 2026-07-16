@@ -35,7 +35,7 @@
 }
 
 .privacy-header-banner h1 {
-  font-family: 'playfair', sans-serif !important;
+  font-family: 'Montserrat', sans-serif;
   font-size: 3rem;
   font-weight: 700;
   letter-spacing: 2px;
@@ -178,7 +178,7 @@
 }
 
 .privacy-sidebar-title {
-  font-family: 'playfair', sans-serif !important;
+font-family: 'Montserrat', sans-serif;
   font-size: 1.25rem;
   font-weight: 700;
   margin-bottom: 20px;
@@ -292,7 +292,7 @@
 }
 
 .privacy-section-header h2 {
-  font-family: 'playfair', sans-serif !important;
+  font-family: 'Montserrat', sans-serif;
   font-size: 1.45rem;
   font-weight: 700;
   color: #111111;
@@ -384,7 +384,7 @@
 }
 
 .privacy-no-results h3 {
-  font-family: 'playfair', sans-serif !important;
+ font-family: 'Montserrat', sans-serif;
   font-size: 1.5rem;
   font-weight: 600;
   color: #111111;
@@ -636,7 +636,7 @@
 }
 
 .privacy-grievance-title {
-  font-family: 'playfair', sans-serif !important;
+font-family: 'Montserrat', sans-serif;
   font-size: 1.15rem;
   font-weight: 700;
   color: #111111;

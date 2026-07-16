@@ -5,7 +5,7 @@
 }
 
 @font-face {
-    font-family: slick;
+    font-family: 'Montserrat', sans-serif;
     font-weight: 400;
     font-style: normal;
     src: url(fonts/slick.eot);
@@ -55,7 +55,7 @@
 
 .slick-next:before,
 .slick-prev:before {
-    font-family: slick;
+    font-family: 'Montserrat', sans-serif;
     font-size: 20px;
     line-height: 1;
     opacity: .75;
@@ -148,7 +148,7 @@
 }
 
 .slick-dots li button:before {
-    font-family: slick;
+    font-family: 'Montserrat', sans-serif;
     font-size: 6px;
     line-height: 20px;
     position: absolute;

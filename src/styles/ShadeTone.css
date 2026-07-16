@@ -16,7 +16,7 @@
     transform: translateX(-50%);
     pointer-events: none;
     white-space: nowrap;
-    font-family: "Arial Black", sans-serif;
+  font-family: 'Montserrat', sans-serif;
     background: linear-gradient(to bottom, rgba(8, 42, 123, 0.15) 30%, transparent 80%);
     -webkit-background-clip: text;
     background-clip: text;

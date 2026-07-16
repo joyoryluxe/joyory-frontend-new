@@ -67,13 +67,13 @@ body {
     background-color: #F7F7F7;
     position: relative;
     width: 100%;
-    min-height: 360px;
+    min-height: 380px;
     height: auto;
     display: flex;
     align-items: stretch;
-    border-radius: 4px;
+    border-radius: 12px;
     overflow: visible;
-    margin-bottom: 40px;
+    margin-bottom: 120px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.01);
 }
 
@@ -85,63 +85,63 @@ body {
     display: flex;
     width: 100%;
     min-height: 100%;
-    align-items: center;
+    align-items: stretch;
     justify-content: space-between;
     padding: 50px !important;
 }
 
 .in-focus-image-col {
-    flex: 0 0 50%;
-    max-width: 50%;
+    flex: 0 0 35%;
+    max-width: 35%;
     height: 100%;
     position: relative;
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
+    /* background-color: #fff; */
+    /* border-top-left-radius: 12px;
+    border-bottom-left-radius: 12px; */
+    border-radius: 12px !important;
+    overflow: visible;
 }
 
 .in-focus-image-container {
     position: relative;
     width: 100%;
     height: 100%;
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
+    overflow: visible;
+
+
 }
 
 .in-focus-image {
     width: 100%;
-    aspect-ratio: 1.35 / 1;
-    max-height: 450px;
-    background: #fff;
+    height: auto;
+    min-height: 100%;
+    max-height: 460px;
     object-fit: contain;
-    border-radius: 8px;
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
+    /* border-top-left-radius: 12px;
+    border-bottom-left-radius: 12px;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0; */
+    border-radius: 12px !important;
     cursor: pointer;
-    transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1), box-shadow 0.4s ease;
+    transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
     position: absolute;
     left: 0;
     top: 0;
-    bottom: 0;
-    margin: auto;
-    transform: none;
-    padding: 10px;
 }
 
 .in-focus-image:hover {
     transform: scale(1.02);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
 }
 
 
 
 
 .in-focus-content-col {
-    flex: 0 0 50%;
-    max-width: 50%;
+    flex: 0 0 60%;
+    max-width: 60%;
     display: flex;
     align-items: center;
-    padding: 40px 60px 40px 40px;
+    padding: 60px 80px 60px 60px;
 }
 
 .in-focus-content {
@@ -159,7 +159,6 @@ body {
     letter-spacing: 2.5px;
     color: #8E8E93;
     margin-bottom: 16px;
-    font-family: 'Montserrat', 'Poppins', sans-serif;
 }
 
 .in-focus-title {
@@ -168,12 +167,12 @@ body {
     font-weight: 300;
     color: #1C1C1E;
     margin-bottom: 24px;
-    font-family: 'Playfair Display', 'Didot', Georgia, serif;
     word-break: break-word;
+    text-transform: capitalize;
 }
 
 .brand-highlight {
-    font-weight: 500;
+    font-weight: 400;
     color: #000;
 }
 
@@ -228,6 +227,10 @@ body {
     transform: translateX(6px);
 } */
 
+* {
+    font-family: 'Montserrat', sans-serif;
+}
+
 .in-focus-btn {
     background: transparent;
     border: none;
@@ -239,7 +242,6 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    font-family: 'Poppins', sans-serif;
     position: relative;
 }
 
@@ -333,8 +335,8 @@ body {
 
     .in-focus-section {
         position: relative;
-        margin-top: 50px !important;
-        margin-bottom: 50px !important;
+        margin-top: 0px !important;
+        margin-bottom: 30px !important;
     }
 }
 
@@ -412,15 +414,19 @@ body {
 /* RESPONSIVE DESIGN FOR IN FOCUS SECTION */
 @media (max-width: 1200px) {
     .in-focus-row {
-        padding: 30px !important;
+        padding: 0 !important;
     }
 
     .in-focus-content-col {
-        padding: 20px 30px 20px 20px;
+        padding: 10px 50px 10px 40px;
     }
 
     .in-focus-title {
         font-size: 26px;
+    }
+
+    .in-focus-image {
+        top: 0;
     }
 }
 
@@ -432,12 +438,11 @@ body {
     }
 
     .in-focus-row {
-        padding: 20px !important;
+        padding: 0 !important;
     }
 
     .in-focus-content-col {
         padding: 20px 30px 20px 20px;
-        background: #c5c4c4 !important;
     }
 
     .in-focus-title {
@@ -453,10 +458,14 @@ body {
 }
 
 @media (max-width: 700px) {
+    .in-focus-wrapper {
+        margin-bottom: 0px !important;
+    }
+
     .in-focus-card {
         height: auto !important;
         min-height: auto !important;
-        padding: 10px !important;
+        padding: 0px !important;
         overflow: hidden;
         background: #fff;
     }
@@ -466,7 +475,7 @@ body {
         gap: 20px;
         height: auto !important;
         min-height: auto !important;
-        padding: 15px !important;
+        padding: 0px !important;
     }
 
     .in-focus-image-col {
@@ -475,6 +484,7 @@ body {
         flex: none !important;
         height: auto !important;
         display: block !important;
+        border-radius: 12px 12px 0 0 !important;
     }
 
     .in-focus-image-container {
@@ -492,27 +502,37 @@ body {
         width: 100%;
         transform: none !important;
         object-fit: cover;
+        border-radius: 12px 12px 0 0 !important;
     }
 
     .in-focus-image:hover {
         transform: scale(1.02) !important;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
     }
 
     .in-focus-content-col {
         width: 100% !important;
         max-width: 100% !important;
         flex: none !important;
-        padding: 0 10px;
+        padding: 20px;
         display: block !important;
         height: auto !important;
+        background: #f7f7f7 !important;
+
     }
 
-    .in-focus-content {
+    /* .in-focus-content {
         display: flex;
         flex-direction: column;
         align-items: center;
         text-align: center;
+        width: 100%;
+    } */
+
+    .in-focus-content {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start !important;
+        text-align: left !important;
         width: 100%;
     }
 
@@ -527,12 +547,13 @@ body {
         padding: 20px 15px;
     }
 
-    .in-focus-row {
+    /* .in-focus-row {
         padding: 20px !important;
-    }
+    } */
 
     .in-focus-title {
-        font-size: 20px;
+        /* font-size: 21px; */
+        margin-bottom: 10px;
     }
 
     .in-focus-subtitle {

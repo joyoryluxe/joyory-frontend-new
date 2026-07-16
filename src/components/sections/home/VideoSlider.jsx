@@ -42,7 +42,7 @@ const VideoSlider = () => {
 
   return (
     <section className="container-fluid my-5 px-3">
-      <h2 className="text-center mt-3 mb-4 mb-lg-5 mt-lg-5 text-center font-family-Playfair fw-bold spacing">BEAUTY ADVICE</h2>
+      <h2 className="text-center mt-3 mb-4 mb-lg-5 mt-lg-5 text-center fw-bold spacing">BEAUTY ADVICE</h2>
 
       {videos.length > 0 ? (
         <div className="mobile-responsive-code">
@@ -93,7 +93,7 @@ const VideoSlider = () => {
                   <div className="text-center mt-2" style={{
                     lineHeight: "15px"
                   }}>
-                    <small className="font-family-Poppins">{video.title}</small>
+                    <small>{video.title}</small>
                   </div>
                 </div>
               </div>

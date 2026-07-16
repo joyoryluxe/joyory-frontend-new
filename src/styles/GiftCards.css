@@ -51,13 +51,13 @@
 .background-colors-for-gifting p {
   max-width: 510px;
   color: rgba(102, 102, 102, 1);
-  font-family: "Inter", sans-serif;
+ font-family: 'Montserrat', sans-serif;
   font-weight: 400;
   font-size: 15px;
 }
 
 .background-colors-for-gifting h2 {
-  font-family: "Inter", sans-serif;
+ font-family: 'Montserrat', sans-serif;
   font-weight: 700;
   color: rgba(54, 116, 152, 1);
 }

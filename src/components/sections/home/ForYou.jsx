@@ -777,7 +777,7 @@ const Foryou = () => {
     <div className="container-fluid my-4 position-relative margin-left-rights">
       {/* <ToastContainer position="top-right" autoClose={3000} /> */}
 
-      <h2 className="font-familys text-start foryou-heading ms-lg-3 ps-lg-4 ms-1 mt-3 mb-2 mb-lg-4 mt-lg-5 spacing fw-normal">
+      <h2 className="text-start foryou-heading ms-lg-3 ps-lg-4 ms-1 mt-3 mb-2 mb-lg-4 spacing fw-normal">
         Recommended For You
       </h2>
 
@@ -965,7 +965,7 @@ const Foryou = () => {
                           <div className="brand-name small text-muted text-start mb-1 mt-2">
                             {typeof item.brandName === 'string' ? item.brandName : "Unknown Brand"}
                           </div><div className="product-card-title-wrap"><h6
-                            className="foryou-name font-family-Poppins m-0 p-0"
+                            className="foryou-name m-0 p-0"
                             onClick={() => {
                               if (showOutOfStock) {
                                 handleOutOfStockClick(item.name);

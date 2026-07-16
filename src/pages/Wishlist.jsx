@@ -228,7 +228,7 @@ const Wishlist = () => {
 
                   <div className="card-body d-flex flex-column p-3">
                     {/* Product Name */}<div className="product-card-title-wrap"><h6
-                      className="foryou-name font-family-Poppins m-0 p-0 mt-2"
+                      className="foryou-name m-0 p-0 mt-2"
                       style={{ cursor: "pointer" }}
                       onClick={() => navigate(`/product/${getCleanProductSlug(item)}`)}
                     >

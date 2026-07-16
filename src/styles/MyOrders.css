@@ -113,7 +113,7 @@
 
 .order-id-value,
 .order-date-value {
-    font-family: 'Montserrat', 'Poppins', sans-serif !important;
+ font-family: 'Montserrat', sans-serif;
     font-size: 14px !important;
     font-weight: 700 !important;
     color: #0f172a !important;
@@ -249,7 +249,7 @@
 }
 
 .product-row h6 {
-    font-family: 'Poppins', 'Montserrat', sans-serif !important;
+    font-family: 'Montserrat', sans-serif;
     font-size: 14px !important;
     font-weight: 600 !important;
     color: #0f172a !important;
@@ -259,7 +259,7 @@
 }
 
 .product-row .text-muted {
-    font-family: 'Poppins', sans-serif !important;
+    font-family: 'Montserrat', sans-serif;
     font-size: 12px !important;
     color: #64748b !important;
 }
@@ -297,7 +297,7 @@
 }
 
 .order-footer span.fw-bold {
-    font-family: 'Montserrat', 'Poppins', sans-serif !important;
+    font-family: 'Montserrat', sans-serif !important;
     font-size: 18px !important;
     font-weight: 700 !important;
     color: #0f172a !important;

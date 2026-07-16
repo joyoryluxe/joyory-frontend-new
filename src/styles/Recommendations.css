@@ -241,7 +241,7 @@ button[title*="wishlist"]:hover {
 /* Toast Notifications */
 
 .toast-notification {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+   font-family: 'Montserrat', sans-serif;
     font-size: 14px;
     font-weight: 500;
     z-index: 9999;

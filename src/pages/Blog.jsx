@@ -933,7 +933,7 @@ const Blog = () => {
                                 </div>
 
                                 {/* Product Name */}<div className="product-card-title-wrap"><h6
-                                  className="foryou-name font-family-Poppins m-0 p-0"
+                                  className="foryou-name m-0 p-0"
                                   onClick={() => handleProductClick(item)}
                                   style={{ cursor: 'pointer' }}
                                 >

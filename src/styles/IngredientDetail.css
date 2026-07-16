@@ -1,13 +1,13 @@
 /* src/styles/IngredientDetail.css */
 *{
-   font-family: 'Montserrat';
+   font-family: 'Montserrat', sans-serif;
 }
 .ing-detail-page {
   max-width: 1100px;
   margin: 145px auto 60px;
   padding: 0 20px;
   box-sizing: border-box;
-  font-family: 'Montserrat';
+ font-family: 'Montserrat', sans-serif;
 }
 
 /* Hero Section */

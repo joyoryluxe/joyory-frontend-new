@@ -449,7 +449,7 @@ export default function Recommendations() {
                 </div>
 
                 {/* Product Name */}<div className="product-card-title-wrap"><h6
-                  className="foryou-name font-family-Poppins m-0 p-0 text-start"
+                  className="foryou-name m-0 p-0 text-start"
                   onClick={() => {
                     if (showOutOfStock) {
                       handleOutOfStockClick(prod.name);

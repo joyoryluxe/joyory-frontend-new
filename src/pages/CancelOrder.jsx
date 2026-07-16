@@ -379,7 +379,7 @@ const RecoProductCard = ({ product, navigate, user, onAddToCartSuccess }) => {
             <div className="brand-name small text-muted mb-1 mt-2 text-start">{getBrandName()}</div>
 
             {/* Product Name */}<div className="product-card-title-wrap"><h6
-              className="foryou-name font-family-Poppins m-0 p-0"
+              className="foryou-name m-0 p-0"
               onClick={() => {
                 if (showOutOfStock) {
                   handleOutOfStockClick(pName);
@@ -1171,7 +1171,7 @@ const CancelOrder = () => {
             return (
               <div key={section.key} className="mb-5">
                 <h3
-                  className="font-familys text-start foryou-heading ms-0 mt-3 mb-4 fw-normal"
+                  className="text-start foryou-heading ms-0 mt-3 mb-4 fw-normal"
                   style={{ fontSize: "1.6rem" }}
                 >
                   {section.title || "You May Also Like"}

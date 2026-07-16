@@ -10,8 +10,8 @@
   --text-muted: #666666;
   --border-color: #E2E2E2;
   --gold-tint: #D4AF37;
-  --font-display: 'Outfit', sans-serif;
-  --font-serif: 'Playfair Display', serif;
+  --font-display:'Montserrat', sans-serif;
+  --font-serif: 'Montserrat', sans-serif;
 }
 
 .phone-auth-container {

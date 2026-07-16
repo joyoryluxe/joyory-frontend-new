@@ -128,7 +128,7 @@
 }
 
 .support-beauty-badge .vto-text {
-    font-family: 'Montserrat', 'Poppins', sans-serif !important;
+  font-family: 'Montserrat', sans-serif;
     font-size: 10px !important;
     font-weight: 700 !important;
     letter-spacing: 0.5px !important;

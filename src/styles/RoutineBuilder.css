@@ -25,7 +25,7 @@
   padding: 10px;
   max-width: 1200px;
   margin: 0 auto;
-  font-family: 'Inter', sans-serif;
+font-family: 'Montserrat', sans-serif;
   color: var(--joyory-charcoal);
 }
 
@@ -48,7 +48,7 @@
 }
 
 .rb-login-card h2 {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-weight: 600;
   margin-bottom: 15px;
   font-size: 2rem;
@@ -179,7 +179,7 @@
 }
 
 .rb-ai-banner-content h4 {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   margin: 0 0 8px 0;
   font-size: 1.25rem;
   font-weight: 600;
@@ -470,7 +470,7 @@
 }
 
 .rb-form-header h2 {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   margin: 0 0 5px 0;
   font-size: 1.6rem;
 }
@@ -510,7 +510,7 @@
   outline: none;
   background-color: #ffffff;
   transition: var(--joyory-transition);
-  font-family: inherit;
+ font-family: 'Montserrat', sans-serif;
   margin-top: auto;
 }
 
@@ -524,7 +524,7 @@
 
 /* --- Step Customizer --- */
 .rb-section-title {
-  font-family: 'Outfit', sans-serif;
+ font-family: 'Montserrat', sans-serif;
   font-size: 1.3rem;
   margin: 35px 0 20px 0;
   border-bottom: 1px solid var(--joyory-border);
@@ -782,7 +782,7 @@
   font-size: 1.7rem;
   font-weight: 700;
   color: var(--joyory-charcoal);
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   margin-bottom: 4px;
 }
 
@@ -803,7 +803,7 @@
 }
 
 .rb-checkin-card h3 {
-  font-family: 'Outfit', sans-serif;
+ font-family: 'Montserrat', sans-serif;
   font-size: 1.25rem;
   margin: 0 0 15px 0;
   border-bottom: 1px solid var(--joyory-border);
@@ -1106,7 +1106,7 @@
 }
 
 .rb-public-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 2.2rem;
   font-weight: 700;
   margin: 0 0 5px 0;
@@ -1803,7 +1803,7 @@
 }
 
 .rb-guide-section-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 1.15rem;
   font-weight: 600;
   color: var(--joyory-charcoal);

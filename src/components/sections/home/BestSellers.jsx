@@ -751,7 +751,7 @@ const BestSellers = () => {
             )}
             {/* ===================== END OUT OF STOCK POPUP ===================== */}
 
-            <h2 className="mb-3 text-left ms-lg-3 ps-lg-4 mt-3 mb-2 mb-lg-4 mt-lg-5 best-seller-headings spacing fw-normal">
+            <h2 className="mb-3 text-left ms-lg-3 ps-lg-4 mb-2 mb-lg-4 best-seller-headings spacing fw-normal">
                 Best Sellers
             </h2>
 
@@ -976,7 +976,7 @@ const BestSellers = () => {
                                                     </div>
 
                                                     {/* Product Name */}<div className="product-card-title-wrap"><h6
-                                                        className="foryou-name font-family-Poppins m-0 p-0"
+                                                        className="foryou-name m-0 p-0"
                                                         onClick={() => {
                                                             if (showOutOfStock) {
                                                                 handleOutOfStockClick(item.name);

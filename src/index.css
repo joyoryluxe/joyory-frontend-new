@@ -16,6 +16,22 @@ body {
     -moz-osx-font-smoothing: grayscale;
 }
 
+/* Force scrollbar to remain visible when modals are open to prevent layout shifting */
+body.modal-open {
+    overflow-y: scroll !important;
+}
+
+/* Prevent dynamic padding-right adjustments from shifting content */
+body.modal-open,
+.modal-open .header,
+.modal-open .header-container,
+.modal-open .fixed-top,
+.modal-open .sticky-top,
+.modal-open .is-fixed,
+.modal-open .is-sticky {
+    padding-right: 0 !important;
+}
+
 /* Reusable transition helper classes for premium experience */
 .smooth-transition {
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);

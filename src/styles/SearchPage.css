@@ -1,6 +1,7 @@
 .search-page-container {
     min-height: 100vh;
-    background-color: #f8f9fa;
+    /* background-color: #f8f9fa; */
+    background: #fff !important;
 }
 
 .search-page-content {
@@ -512,7 +513,7 @@
     background: #f8f9fa;
     border-radius: 8px;
     font-size: 12px;
-    font-family: monospace;
+    font-family: 'Montserrat', sans-serif;
 }
 
 .debug-info summary {

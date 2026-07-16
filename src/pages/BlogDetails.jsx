@@ -493,7 +493,7 @@ const BlogDetail = () => {
                                 <div className="brand-name small text-muted mb-1 mt-2 text-start">
                                   {item.brandName}
                                 </div><div className="product-card-title-wrap"><h6
-                                  className="foryou-name font-family-Poppins m-0 p-0"
+                                  className="foryou-name m-0 p-0"
                                   onClick={() => navigate(`/product/${item.slug || item._id}`)}
                                   style={{ cursor: 'pointer' }}
                                 >

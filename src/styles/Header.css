@@ -345,7 +345,7 @@
 /*=========================================================================================DOne-Code(End)=================================================================*/
 
 .dropbtn {
-    font-family: "Poppins";
+  font-family: 'Montserrat', sans-serif;
     font-size: 14px;
 }
 
@@ -538,7 +538,6 @@
     /* No border initially */
     outline: none;
     /* Remove default browser outline */
-    /* font-family: "Poppins",sans-serif; */
 }
 
 

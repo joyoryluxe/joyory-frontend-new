@@ -1,7 +1,7 @@
 /*=============================================================First-Section(Start)==================================================*/
 
 body {
-    font-family: var(--font-family-sans-serif);
+  font-family: 'Montserrat', sans-serif;
     /* background-color: var(--background-light); */
     color: var(--text-dark);
     line-height: 1.6;

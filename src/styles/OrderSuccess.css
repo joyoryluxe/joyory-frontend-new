@@ -2,7 +2,7 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Montserrat';
+  font-family: 'Montserrat', sans-serif;
 }
 
 
@@ -717,7 +717,7 @@
     color: #fff !important;
     height: 48px !important;
     border-radius: 10px !important;
-    font-family: inherit !important;
+   font-family: 'Montserrat', sans-serif;
     font-size: 0.95rem !important;
     font-weight: 500 !important;
     display: flex !important;

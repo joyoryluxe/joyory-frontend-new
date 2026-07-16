@@ -513,6 +513,20 @@ const ProductDetailsHero = ({
           </button>
         </div>
 
+        {product?.cashback?.message && (
+          <div
+            className="next-order-discount-tag mt-2 mb-3"
+            style={{ cursor: "pointer", width: "fit-content" }}
+            title={product.cashback.message}
+            onClick={(e) => {
+              e.stopPropagation();
+              window.showDiscountPopup && window.showDiscountPopup(product.cashback.message, e.currentTarget);
+            }}
+          >
+            <span className="text-truncate">{product.cashback.message}</span>
+          </div>
+        )}
+
         <div className="product-rating-container d-flex align-items-center gap-1">
           {[...Array(5)].map((_, i) => (
             <FaStar
@@ -700,11 +714,12 @@ const ProductDetailsHero = ({
                     border: isSelected ? '2px solid #000' : '1px solid #ddd',
                     cursor: outOfStock ? 'not-allowed' : 'pointer',
                     opacity: outOfStock ? 0.5 : 1,
+                    borderRadius: '4px',
                   }}
                   title={outOfStock ? `${v.shadeName || v.name} - Out of Stock` : v.shadeName || v.name}
                 >
-                  {isSelected && !outOfStock && <span className="color-swatch-check">✓</span>}
-                  {outOfStock && <span className="color-swatch-cross">✕</span>}
+                  {isSelected && !outOfStock && <FaCheck className="color-swatch-check" />}
+                  {outOfStock && <FaTimes className="color-swatch-cross" />}
                 </div>
               );
             })}
@@ -837,19 +852,13 @@ const ProductDetailsHero = ({
                           alignItems: "center",
                           justifyContent: "center"
                         }}>
-                          {isSelected && (
-                            <span style={{ color: "#fff", fontWeight: "bold", fontSize: 14 }}>
-                              ✓
-                            </span>
+                          {isSelected && !outOfStock && (
+                            <FaCheck style={{ color: "#fff", fontSize: "12px", filter: "drop-shadow(0px 1px 1px rgba(0,0,0,0.4))" }} />
+                          )}
+                          {outOfStock && (
+                            <FaTimes style={{ color: "#ef4444", fontSize: "14px" }} />
                           )}
                         </div>
-                        {outOfStock && (
-                          <span style={{
-                            position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            color: "red", fontWeight: "bold", fontSize: 16, pointerEvents: "none"
-                          }}>✕</span>
-                        )}
                       </div>
                     );
                   })}
@@ -995,14 +1004,8 @@ const ProductDetailsHero = ({
                               justifyContent: "center"
                             }}
                           >
-                            {isSelected && <FaCheck style={{ color: "#fff", fontSize: "14px" }} />}
-                            {outOfStock && (
-                              <span style={{
-                                position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
-                                display: "flex", alignItems: "center", justifyContent: "center",
-                                color: "red", fontWeight: "bold", fontSize: 18, pointerEvents: "none"
-                              }}>✕</span>
-                            )}
+                            {isSelected && !outOfStock && <FaCheck style={{ color: "#fff", fontSize: "12px", filter: "drop-shadow(0px 1px 1px rgba(0,0,0,0.4))" }} />}
+                            {outOfStock && <FaTimes style={{ color: "#ef4444", fontSize: "14px" }} />}
                           </div>
                           <span className="mobile-sheet-variant-name" style={{ fontSize: "11px", marginTop: "4px" }}>
                             {v.shadeName || v.name}

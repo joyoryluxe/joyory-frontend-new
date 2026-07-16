@@ -2305,7 +2305,7 @@ const RecoProductCard = ({ product, navigate, user, onAddToCartSuccess }) => {
             <div className="brand-name small text-muted mb-1 mt-2 text-start">{getBrandName()}</div>
 
             {/* Product Name */}<div className="product-card-title-wrap"><h6
-              className="foryou-name font-family-Poppins m-0 p-0"
+              className="foryou-name m-0 p-0"
               onClick={() => {
                 if (showOutOfStock) {
                   handleOutOfStockClick(pName);
@@ -3610,7 +3610,7 @@ const CartPage = () => {
                   return (
                     <div key={section.key} className="mb-5">
                       <h2
-                        className="font-familys text-start foryou-heading ms-0 mt-3 mb-3 fw-normal"
+                        className="text-start foryou-heading ms-0 mt-3 mb-3 fw-normal"
                         style={{ fontSize: "1.4rem" }}
                       >
                         {section.title || "Trending Products"}
@@ -3889,7 +3889,7 @@ const CartPage = () => {
                       ) : (
                         usePoints && (cartData.wallet.pointsDiscount > 0 || cartData.wallet.pointsValue > 0) && (
                           <div className="reward-points-message msg-success mt-3 p-2 rounded text-center fw-semibold">
-                            🎉 Applied ₹${(cartData.wallet.pointsDiscount || cartData.wallet.pointsValue || 0).toFixed(2)} from your points! Add more items to your cart to unlock even more point savings.
+                            🎉 Applied ₹{(cartData.wallet.pointsDiscount || cartData.wallet.pointsValue || 0).toFixed(2)} from your points! Add more items to your cart to unlock even more point savings.
                           </div>
                         )
                       )}
@@ -3959,7 +3959,8 @@ const CartPage = () => {
                 <hr className="border-color-blacks" />
                 {cartData.savingsMessage && (
                   <div className="py-2 small margin-left-right-repert page-title-main-name">
-                    <i className="bi bi-coin me-1"></i>{cartData.savingsMessage}
+                    {/* <i className="bi bi-coin me-1"></i> */}
+                    {cartData.savingsMessage}
                   </div>
                 )}
               </div>
@@ -4030,7 +4031,7 @@ const CartPage = () => {
                 <div key={section.key} className="mb-5">
                   {/* Section Title */}
                   <h2
-                    className="font-familys text-start foryou-heading ms-0 mt-3 mb-3 fw-normal"
+                    className="text-start foryou-heading ms-0 mt-3 mb-3 fw-normal"
                     style={{ fontSize: "1.4rem" }}
                   >
                     {section.title}

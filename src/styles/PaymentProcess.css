@@ -433,7 +433,7 @@
 }
 
 .page-title-main-name {
-    font-family: inherit;
+   font-family: 'Montserrat', sans-serif;
 }
 
 .gift-card-inputs {
@@ -1031,7 +1031,7 @@
 }
 
 .premium-alert-title {
-    font-family: "Playfair Display", serif;
+   font-family: 'Montserrat', sans-serif;
     font-weight: 700;
     font-size: 22px;
     color: #1a1a1a;
@@ -1039,7 +1039,7 @@
 }
 
 .premium-alert-message {
-    font-family: "DM Sans", sans-serif;
+   font-family: 'Montserrat', sans-serif;
     font-size: 15px;
     color: #555555;
     line-height: 1.5;
@@ -1052,7 +1052,7 @@
     border: 1px solid #1a1a1a;
     padding: 10px 30px;
     border-radius: 10px;
-    font-family: "DM Sans", sans-serif;
+   font-family: 'Montserrat', sans-serif;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
