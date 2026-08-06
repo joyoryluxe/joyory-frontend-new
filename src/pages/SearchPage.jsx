@@ -149,6 +149,16 @@ const sanitizeSearchQuery = (query) => {
     .trim();
 };
 
+const normalizeText = (str) => {
+  if (!str) return "";
+  return str
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[-_.,;:'"`/\\()]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+};
+
 const getSku = (v) => v?.sku || v?.variantSku || `sku-${v?._id || 'default'}`;
 
 const isValidHexColor = (hex) => {
@@ -300,7 +310,7 @@ const getSearchableString = (p) => {
     ? p.tags.map(t => safeString(t)).join(" ").toLowerCase()
     : safeString(p.tags).toLowerCase();
 
-  return [
+  const raw = [
     productName,
     brandName,
     categoryName,
@@ -312,6 +322,9 @@ const getSearchableString = (p) => {
     finishText,
     tagsText
   ].filter(Boolean).join(" ");
+
+  const norm = normalizeText(raw);
+  return `${raw} ${norm}`;
 };
 
 const getVariantName = (variant) => {
@@ -502,29 +515,24 @@ const SearchPage = () => {
 
 
 
-  const buildQueryParams = useCallback((currentCursor = null) => {
+  const [visibleCount, setVisibleCount] = useState(9);
+
+  const buildQueryParams = useCallback((currentCursor = null, limitOverride = null) => {
     const p = new URLSearchParams();
 
     if (searchTerm) {
       const sanitizedSearchTerm = sanitizeSearchQuery(searchTerm);
       const { brand, category, remaining } = parseSemanticQuery(sanitizedSearchTerm, categories, brandsList);
 
-      // Only automatically append parsed brand if remaining is empty (i.e. not a keyword/product name search)
       if (brand && (!filters.brandIds || filters.brandIds.length === 0) && !remaining) {
         p.append("brandIds", brand.slug || brand._id);
       }
 
-      // Only append the automatically parsed category if remaining is empty (i.e., it's a pure category search like "Lips")
-      // This prevents matching a category from a word in a product name and filtering out the product.
       if (category && (!filters.categoryIds || filters.categoryIds.length === 0) && !remaining) {
         p.append("categoryIds", category.slug || category._id);
       }
 
-      if (remaining) {
-        p.append("q", sanitizedSearchTerm);
-      } else if (!brand && !category) {
-        p.append("q", sanitizedSearchTerm);
-      }
+      p.append("q", sanitizedSearchTerm);
     }
 
     filters.brandIds?.forEach((id) => p.append("brandIds", id));
@@ -534,36 +542,22 @@ const SearchPage = () => {
     filters.finishes?.forEach((s) => p.append("finishes", s));
     filters.ingredients?.forEach((s) => p.append("ingredients", s));
 
-    if (filters.minRating) {
-      p.append("minRating", filters.minRating);
-    }
+    if (filters.minRating) p.append("minRating", filters.minRating);
 
     if (filters.priceRange) {
       p.append("minPrice", filters.priceRange.min);
-      if (filters.priceRange.max != null) {
-        p.append("maxPrice", filters.priceRange.max);
-      }
+      if (filters.priceRange.max != null) p.append("maxPrice", filters.priceRange.max);
     }
 
     if (filters.discountMin && filters.discountMin > 0) {
       p.append("discountMin", filters.discountMin);
     }
 
-    // Do not pass sort to backend API due to cursor pagination limitation (nextCursor is null when sorting)
-    // if (filters.sort) {
-    //   p.append("sort", filters.sort);
-    // }
-
     if (currentCursor) {
       p.append("cursor", currentCursor);
     }
 
-    // Set limit to 50 for search term query to fetch all relevant products on the first page, allowing accurate re-ranking
-    if (searchTerm) {
-      p.append("limit", "50");
-    } else {
-      p.append("limit", "9");
-    }
+    p.append("limit", limitOverride ? String(limitOverride) : (searchTerm ? "500" : "9"));
 
     return p.toString();
   }, [searchTerm, filters, categories, brandsList]);
@@ -572,32 +566,88 @@ const SearchPage = () => {
     try {
       if (reset) {
         setIsLoading(true);
+        setVisibleCount(9);
         setCursor(null);
         setHasMore(true);
       } else {
         setIsFetchingMore(true);
       }
 
-      const queryString = buildQueryParams(currentCursor);
-      const response = await axiosInstance.get(`${PRODUCT_ALL_API}?${queryString}`, {
-        withCredentials: true
-      });
-
       let products = [];
       let pagination = {};
+      let titleMsg = null;
 
-      if (response.data && Array.isArray(response.data.products)) {
-        products = response.data.products;
-        pagination = response.data.pagination || {};
-      } else if (Array.isArray(response.data)) {
-        products = response.data;
-      }
+      const isCustomSort = filters.sort && filters.sort !== 'recent';
 
-      if (response.data.filters && !filterData) {
-        setFilterData(response.data.filters);
-      }
-      if (response.data.trendingCategories && trendingCategories.length === 0) {
-        setTrendingCategories(response.data.trendingCategories);
+      if ((searchTerm || isCustomSort) && reset) {
+        // Loop to fetch all pages of matching products when a search term or custom sort is supplied
+        let hasMorePages = true;
+        let pageCursor = currentCursor;
+        const productMap = new Map();
+
+        while (hasMorePages) {
+          const queryString = buildQueryParams(pageCursor, 50);
+          const response = await axiosInstance.get(`${PRODUCT_ALL_API}?${queryString}`, {
+            withCredentials: true
+          });
+
+          let pageProducts = [];
+          let pagePag = {};
+
+          if (response.data && Array.isArray(response.data.products)) {
+            pageProducts = response.data.products;
+            pagePag = response.data.pagination || {};
+          } else if (Array.isArray(response.data)) {
+            pageProducts = response.data;
+          }
+
+          if (response.data?.titleMessage) {
+            titleMsg = response.data.titleMessage;
+          }
+
+          if (response.data?.filters && !filterData) {
+            setFilterData(response.data.filters);
+          }
+          if (response.data?.trendingCategories && trendingCategories.length === 0) {
+            setTrendingCategories(response.data.trendingCategories);
+          }
+
+          pageProducts.forEach(p => {
+            const id = p._id || p.id;
+            if (id) productMap.set(id, p);
+          });
+
+          if (!pagePag.hasMore || !pagePag.nextCursor || pageProducts.length === 0) {
+            hasMorePages = false;
+            pagination = pagePag;
+          } else {
+            pageCursor = pagePag.nextCursor;
+          }
+        }
+        products = Array.from(productMap.values());
+      } else {
+        const queryString = buildQueryParams(currentCursor);
+        const response = await axiosInstance.get(`${PRODUCT_ALL_API}?${queryString}`, {
+          withCredentials: true
+        });
+
+        if (response.data && Array.isArray(response.data.products)) {
+          products = response.data.products;
+          pagination = response.data.pagination || {};
+        } else if (Array.isArray(response.data)) {
+          products = response.data;
+        }
+
+        if (response.data?.titleMessage) {
+          titleMsg = response.data.titleMessage;
+        }
+
+        if (response.data?.filters && !filterData) {
+          setFilterData(response.data.filters);
+        }
+        if (response.data?.trendingCategories && trendingCategories.length === 0) {
+          setTrendingCategories(response.data.trendingCategories);
+        }
       }
 
       if (reset) {
@@ -611,8 +661,8 @@ const SearchPage = () => {
         });
       }
 
-      if (response.data && response.data.titleMessage) {
-        const match = response.data.titleMessage.match(/\d+/);
+      if (titleMsg) {
+        const match = titleMsg.match(/\d+/);
         if (match) {
           setTotalCount(parseInt(match[0], 10));
         } else {
@@ -632,12 +682,29 @@ const SearchPage = () => {
       setIsLoading(false);
       setIsFetchingMore(false);
     }
-  }, [buildQueryParams, filterData, trendingCategories]);
+  }, [buildQueryParams, filterData, trendingCategories, searchTerm]);
 
   const fetchMoreProducts = useCallback(async () => {
-    if (isFetchingMore || !hasMore) return;
-    await fetchProducts(cursor, false);
-  }, [cursor, isFetchingMore, hasMore, fetchProducts]);
+    if (isFetchingMore) return;
+    const isCustomSort = filters.sort && filters.sort !== 'recent';
+    if (searchTerm || isCustomSort) {
+      if (visibleCount < allProducts.length) {
+        setIsFetchingMore(true);
+        setTimeout(() => {
+          setVisibleCount((prev) => {
+            const next = prev + 9;
+            if (next >= allProducts.length) setHasMore(false);
+            return next;
+          });
+          setIsFetchingMore(false);
+        }, 200);
+      }
+      return;
+    }
+    if (hasMore && cursor) {
+      await fetchProducts(cursor, false);
+    }
+  }, [cursor, isFetchingMore, hasMore, fetchProducts, searchTerm, filters.sort, visibleCount, allProducts.length]);
 
 
   // ==================== WISHLIST STATES ====================
@@ -896,29 +963,34 @@ const SearchPage = () => {
     const getSearchScore = (prod) => {
       if (!searchTerm) return 0;
 
-      const sanitizeForScore = (str) => {
-        if (!str) return "";
-        return str
-          .toLowerCase()
-          .replace(/[+*?^$()\[\]{}|\\/-]/g, " ")
-          .replace(/\s+/g, " ")
-          .trim();
-      };
+      const normName = normalizeText(prod.name || prod.title);
+      const normBrand = normalizeText(getBrandName(prod));
+      const normCategory = normalizeText(getCategoryName(prod));
+      const normTerm = normalizeText(searchTerm);
 
-      const nameCleaned = sanitizeForScore(prod.name);
-      const termCleaned = sanitizeForScore(searchTerm);
+      if (normName === normTerm) return 3000;
+      if (normName.includes(normTerm)) return 2000;
+      if (`${normBrand} ${normName}`.includes(normTerm)) return 1500;
 
-      if (nameCleaned === termCleaned) return 1000;
-      if (nameCleaned.includes(termCleaned)) return 500;
-
-      const words = termCleaned.split(/\s+/).filter(Boolean);
+      const words = normTerm.split(/\s+/).filter(Boolean);
       if (words.length === 0) return 0;
 
-      let matchedWords = 0;
+      let nameMatches = 0;
+      let brandCatMatches = 0;
+      const searchableStr = getSearchableString(prod);
+
       words.forEach(word => {
-        if (nameCleaned.includes(word)) matchedWords++;
+        if (normName.includes(word)) nameMatches++;
+        if (normBrand.includes(word) || normCategory.includes(word) || searchableStr.includes(word)) brandCatMatches++;
       });
-      return matchedWords / words.length;
+
+      if (nameMatches === 0 && brandCatMatches === 0) return 0;
+
+      const nameScore = (nameMatches / words.length) * 500;
+      const totalScore = (brandCatMatches / words.length) * 300;
+      const allWordsBonus = (nameMatches === words.length) ? 300 : 0;
+
+      return Math.max(nameScore, totalScore) + allWordsBonus;
     };
 
     const sorted = [...allProducts];
@@ -947,6 +1019,14 @@ const SearchPage = () => {
 
     return sorted;
   }, [allProducts, searchTerm, filters.sort, selectedVariants, tempSelectedVariants]);
+
+  const displayedProducts = useMemo(() => {
+    const isCustomSort = filters.sort && filters.sort !== 'recent';
+    if (searchTerm || isCustomSort) {
+      return filteredProducts.slice(0, visibleCount);
+    }
+    return filteredProducts;
+  }, [filteredProducts, searchTerm, filters.sort, visibleCount]);
 
   // ==================== HANDLERS ====================
   const handleInputChange = (e) => {
@@ -1590,7 +1670,7 @@ const SearchPage = () => {
       )}
 
       {/* <div className="search-main-wrapper"> */}
-      <div className="container-lg-fluid px-lg-5 px-3 pt-lg-5 mt-lg-5 mt-0 pt-0">
+      <div className="container-lg-fluid px-lg-5 px-3 pt-lg-5 mt-0 pt-0">
         {/* Sticky Search Bar */}
         <div className="search-header-sticky d-none">
           <div className="search-input-container">
@@ -1618,7 +1698,7 @@ const SearchPage = () => {
         </div>
 
         {/* Main Content with Sidebar */}
-        <div className="container-fluid py-4 pt-lg-4 mt-lg-5 mt-5 pt-5">
+        <div className="container-fluid py-4 pt-lg-4 mt-lg-2 mt-0 pt-2">
           <div className="row">
             {/* Desktop Sidebar Filter */}
             <div className="d-none d-lg-block col-lg-3">
@@ -1837,7 +1917,7 @@ const SearchPage = () => {
 
                 <>
                   <div className="row g-4">
-                    {filteredProducts.map(renderProductCard)}
+                    {displayedProducts.map(renderProductCard)}
                   </div>
 
                   {/* 🔥 Infinite Scroll Loader */}

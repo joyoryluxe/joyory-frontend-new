@@ -98,7 +98,7 @@ const ReturnReplace = () => {
   return (
     <>
       <Header />
-      <div className="container mt-4 mb-5" style={{ minHeight: "60vh" }}>
+      <div className="container mt-4 mb-5 mt-lg-5 pt-lg-3" style={{ minHeight: "60vh" }}>
         <div className="d-flex align-items-center mb-4">
           <button className="btn btn-outline-secondary me-3" onClick={() => navigate("/profile")}>
             <FaArrowLeft />

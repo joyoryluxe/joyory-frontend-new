@@ -128,7 +128,12 @@ export default function ProductPage() {
     const activeCategorySlug = useMemo(() => {
         return location.pathname.includes("/category/") && effectiveSlug ? effectiveSlug : null;
     }, [location.pathname, effectiveSlug]);
-    const [activeCategoryName, setActiveCategoryName] = useState("");
+    const activeCategoryName = useMemo(() => {
+        if (!activeCategorySlug) return "";
+        const found = trendingCategories.find((c) => c.slug === activeCategorySlug)
+            || filterData?.categories?.find((c) => c.slug === activeCategorySlug || c._id === activeCategorySlug);
+        return found ? found.name : "";
+    }, [activeCategorySlug, trendingCategories, filterData]);
 
     const [selectedVariants, setSelectedVariants] = useState({});
     const [tempSelectedVariants, setTempSelectedVariants] = useState({});
@@ -146,6 +151,8 @@ export default function ProductPage() {
             setFilters(parsed);
         }
     }
+
+    const [visibleCount, setVisibleCount] = useState(9);
 
     const sortedProducts = useMemo(() => {
         if (!allProducts || !Array.isArray(allProducts)) return [];
@@ -180,6 +187,13 @@ export default function ProductPage() {
         }
         return sorted;
     }, [allProducts, filters.sort, selectedVariants, tempSelectedVariants]);
+
+    const displayedProducts = useMemo(() => {
+        if (filters.sort && filters.sort !== 'recent') {
+            return sortedProducts.slice(0, visibleCount);
+        }
+        return sortedProducts;
+    }, [sortedProducts, filters.sort, visibleCount]);
 
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
@@ -456,7 +470,7 @@ export default function ProductPage() {
     }, [allProducts]);
 
     /* ── fetch products ─────────────────────────────────────────────────────── */
-    const buildQueryParams = (cursor = null) => {
+    const buildQueryParams = (cursor = null, limitOverride = null) => {
         const p = new URLSearchParams();
         const path = location.pathname.toLowerCase();
 
@@ -497,10 +511,8 @@ export default function ProductPage() {
             p.append("discountMin", filters.discountMin);
         }
 
-        // Do not pass sort to backend API due to cursor pagination limitation (nextCursor is null when sorting)
-        // if (filters.sort) p.append("sort", filters.sort);
         if (cursor) p.append("cursor", cursor);
-        p.append("limit", "9");
+        p.append("limit", limitOverride ? String(limitOverride) : "9");
 
         const queryString = p.toString();
         console.log("API Query ->", `${PRODUCT_ALL_API}?${queryString}`);
@@ -511,10 +523,101 @@ export default function ProductPage() {
         try {
             if (reset) {
                 setLoading(true);
+                setVisibleCount(9);
                 setNextCursor(null);
                 setHasMore(true);
             } else {
                 setLoadingMore(true);
+            }
+
+            const isCustomSort = filters.sort && filters.sort !== 'recent';
+
+            if (reset && isCustomSort) {
+                let allFetched = [];
+                let currentCursor = null;
+                let hasMorePages = true;
+                let lastData = null;
+
+                while (hasMorePages) {
+                    const { data } = await axios.get(
+                        `${PRODUCT_ALL_API}?${buildQueryParams(currentCursor, 50)}`,
+                        { withCredentials: true }
+                    );
+                    lastData = data;
+
+                    const prods = data.products || [];
+                    const pg = data.pagination || {};
+
+                    allFetched = [...allFetched, ...prods];
+
+                    if (pg.hasMore && pg.nextCursor) {
+                        currentCursor = pg.nextCursor;
+                    } else {
+                        hasMorePages = false;
+                    }
+                }
+
+                if (lastData) {
+                    const currentContext = `${location.pathname}-${effectiveSlug}-${searchParams.get("q") || searchParams.get("search") || ""}`;
+                    const isContextChanged = lastContextRef.current !== currentContext;
+
+                    if (isContextChanged) {
+                        const q = searchParams.get("q") || searchParams.get("search");
+                        if (q) setPageTitle(`Search Results for "${q}"`);
+                        else if (lastData.titleMessage) setPageTitle(lastData.titleMessage);
+                        else if (lastData.category?.name) setPageTitle(lastData.category.name);
+                        else if (lastData.promoMeta?.name) setPageTitle(lastData.promoMeta.name);
+                        else if (lastData.skinType?.name) setPageTitle(lastData.skinType.name);
+                        else if (activeCategoryName) setPageTitle(activeCategoryName);
+                        else setPageTitle("Shop Products");
+
+                        let extractedBanners = [];
+                        if (lastData.bannerImage && Array.isArray(lastData.bannerImage)) {
+                            extractedBanners = lastData.bannerImage;
+                        } else if (lastData.category?.bannerImage && Array.isArray(lastData.category.bannerImage)) {
+                            extractedBanners = lastData.category.bannerImage;
+                        } else if (lastData.promoMeta?.bannerImage && Array.isArray(lastData.promoMeta.bannerImage)) {
+                            extractedBanners = lastData.promoMeta.bannerImage;
+                        } else if (lastData.skinType?.bannerImage && Array.isArray(lastData.skinType.bannerImage)) {
+                            extractedBanners = lastData.skinType.bannerImage;
+                        } else if (lastData.bannerImage) {
+                            extractedBanners = [lastData.bannerImage];
+                        } else if (lastData.category?.bannerImage) {
+                            extractedBanners = [lastData.category.bannerImage];
+                        } else if (lastData.promoMeta?.bannerImage) {
+                            extractedBanners = [lastData.promoMeta.bannerImage];
+                        } else if (lastData.skinType?.bannerImage) {
+                            extractedBanners = [lastData.skinType.bannerImage];
+                        }
+                        setBannerImages(extractedBanners);
+
+                        if (lastData.skinTypes && Array.isArray(lastData.skinTypes)) setShopBySkinTypes(lastData.skinTypes);
+                        else setShopBySkinTypes([]);
+                        if (lastData.shopByIngredients && Array.isArray(lastData.shopByIngredients)) setShopByIngredients(lastData.shopByIngredients);
+                        else setShopByIngredients([]);
+                        if (lastData.promotions && Array.isArray(lastData.promotions)) setPromotions(lastData.promotions);
+                        else setPromotions([]);
+                        if (lastData.trendingCategories && Array.isArray(lastData.trendingCategories)) setTrendingCategories(lastData.trendingCategories);
+                        else setTrendingCategories([]);
+
+                        if (lastData.filters) setFilterData(lastData.filters);
+                        lastContextRef.current = currentContext;
+                    }
+
+                    if (lastData.titleMessage) {
+                        const match = lastData.titleMessage.match(/\d+/);
+                        if (match) setTotalCount(parseInt(match[0], 10));
+                        else setTotalCount(allFetched.length);
+                    } else {
+                        setTotalCount(allFetched.length);
+                    }
+                }
+
+                const uniqueFetched = Array.from(new Map(allFetched.map(p => [p._id, p])).values());
+                setAllProducts(uniqueFetched);
+                setHasMore(uniqueFetched.length > 9);
+                setNextCursor(null);
+                return;
             }
 
             const { data } = await axios.get(
@@ -575,16 +678,8 @@ export default function ProductPage() {
 
                 if (data.trendingCategories && Array.isArray(data.trendingCategories)) {
                     setTrendingCategories(data.trendingCategories);
-                    if (effectiveSlug && !activeCategoryName) {
-                        const found = data.trendingCategories.find((c) => c.slug === effectiveSlug);
-                        if (found) setActiveCategoryName(found.name);
-                    }
                 } else {
                     setTrendingCategories([]);
-                }
-
-                if (data.category?.name && !activeCategoryName && effectiveSlug) {
-                    setActiveCategoryName(data.category.name);
                 }
 
                 if (reset && data.filters) {
@@ -625,16 +720,7 @@ export default function ProductPage() {
         }
     };
 
-    useEffect(() => {
-        if (location.pathname.includes("/category/") && effectiveSlug) {
-            if (trendingCategories.length > 0) {
-                const found = trendingCategories.find(c => c.slug === effectiveSlug);
-                if (found) setActiveCategoryName(found.name);
-            }
-        } else {
-            setActiveCategoryName("");
-        }
-    }, [effectiveSlug, location.pathname, trendingCategories]);
+    // Removed activeCategoryName sync useEffect since it is now computed dynamically
 
 
 
@@ -708,9 +794,13 @@ export default function ProductPage() {
     }, [navigate, slug]);
 
     const handleCategoryCheckboxToggle = useCallback((cat) => {
+        const value = cat.slug || cat._id;
+        if (activeCategorySlug === value) {
+            handleClearCategory();
+            return;
+        }
         setFilters(prev => {
             const current = prev.categoryIds || [];
-            const value = cat.slug || cat._id;
             const isActive = current.includes(value);
             return {
                 ...prev,
@@ -719,7 +809,7 @@ export default function ProductPage() {
                     : [...current, value]
             };
         });
-    }, []);
+    }, [activeCategorySlug, handleClearCategory]);
 
     const handleTopCategoryClick = useCallback((cat) => {
         setFilters(prev => {
@@ -783,11 +873,29 @@ export default function ProductPage() {
 
     /* ── infinite scroll ────────────────────────────────────────────────────── */
     const loadMore = useCallback(() => {
-        if (nextCursor && hasMore && !loadingMore) fetchProducts(nextCursor, false);
-    }, [nextCursor, hasMore, loadingMore]);
+        if (loadingMore) return;
+        const isCustomSort = filters.sort && filters.sort !== 'recent';
+        if (isCustomSort) {
+            if (visibleCount < sortedProducts.length) {
+                setLoadingMore(true);
+                setTimeout(() => {
+                    setVisibleCount((prev) => {
+                        const next = prev + 9;
+                        if (next >= sortedProducts.length) setHasMore(false);
+                        return next;
+                    });
+                    setLoadingMore(false);
+                }, 200);
+            }
+            return;
+        }
+        if (nextCursor && hasMore) fetchProducts(nextCursor, false);
+    }, [nextCursor, hasMore, loadingMore, filters.sort, visibleCount, sortedProducts.length]);
 
     useEffect(() => {
-        if (!hasMore || loadingMore) return;
+        const isCustomSort = filters.sort && filters.sort !== 'recent';
+        const canMore = isCustomSort ? (visibleCount < sortedProducts.length) : hasMore;
+        if (!canMore || loadingMore) return;
         const obs = new IntersectionObserver(
             ([e]) => e.isIntersecting && loadMore(),
             { root: null, rootMargin: "100px", threshold: 0.1 }
@@ -795,7 +903,7 @@ export default function ProductPage() {
         const el = loaderRef.current;
         if (el) obs.observe(el);
         return () => el && obs.unobserve(el);
-    }, [loadMore, hasMore, loadingMore]);
+    }, [loadMore, hasMore, loadingMore, filters.sort, visibleCount, sortedProducts.length]);
 
     // Handle scroll for older browsers
     useEffect(() => {
@@ -1574,8 +1682,8 @@ export default function ProductPage() {
                                 </div>
                             )}
 
-                            {sortedProducts.length > 0
-                                ? sortedProducts.map(renderProductCard)
+                            {displayedProducts.length > 0
+                                ? displayedProducts.map(renderProductCard)
                                 : !loading
                                     ? <div className="col-12 text-center py-5">
                                         <h4>No products found</h4>

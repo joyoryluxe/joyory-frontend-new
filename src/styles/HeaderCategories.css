@@ -485,12 +485,11 @@
     top: 100px;
     /* Adjust this based on your actual navbar height so it starts BELOW the navbar */
     left: 0;
-    width: 100vw;
+    right: 12px;
+    width: auto;
     height: 100vh;
-    background: rgba(0, 0, 0, 0.5);
-    /* 50% Black opacity */
-    backdrop-filter: blur(4px);
-    /* Blurs the background behind it */
+    background: rgba(0, 0, 0, 0.4);
+    /* 40% Black opacity */
     z-index: 990;
     /* Must be below the dropdowns (1000) but above the rest of the page */
     animation: fadeOverlay 0.3s ease-in-out;

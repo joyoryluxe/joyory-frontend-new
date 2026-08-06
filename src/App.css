@@ -3,8 +3,12 @@ body {
 
     background-color: #fff;
 }
-*{
+
+* {
+    margin: 0;
+    padding: 0;
     font-family: 'Montserrat', sans-serif;
+    box-sizing: border-box;
 }
 
 
@@ -16,7 +20,7 @@ body {
 .mobile-responsive-code {
     /* margin-left: 70px; */
     margin-left: 40px;
-    margin-right: 50px;
+    margin-right: 40px;
 }
 
 @media (max-width:992px) {
@@ -146,7 +150,7 @@ body {
     margin-left: auto;
     margin-right: auto; */
     margin-left: 48px !important;
-    margin-right: 62px !important;
+    margin-right: 48px !important;
 }
 
 .padding-left-rightss {
@@ -365,7 +369,7 @@ button:hover img {
 
 /* Push main content below the fixed header on bannerless views */
 .non-hero-spacer {
-    height: 130px;
+    height: 60px;
     /* Desktop Header (85px) + Subnav Categories (45px) */
     width: 100%;
     display: block;
@@ -373,17 +377,12 @@ button:hover img {
 
 @media (max-width: 1024px) {
     .non-hero-spacer {
-        height: 85px;
+        height: 10px;
         /* Clear Tablet header height + safety gap */
     }
 }
 
-@media (max-width: 768px) {
-    .non-hero-spacer {
-        height: 80px;
-        /* Clear Mobile header height (68px) + safety gap */
-    }
-}
+
 
 /* ==========================================
    Standardized Bounded Card Variant Overlay

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useContext } from "react";
-import { FaTimes } from "react-icons/fa";
+import { FaTimes, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import "../../styles/Header.css";
 import "../../App.css";
@@ -45,6 +45,32 @@ const safeString = (val) => {
   }
   return String(val);
 };
+
+const TopAnnouncementBar = ({ isScrolled, isHomePage }) => {
+  if (!isHomePage || isScrolled) return null;
+
+  const items = [
+    "* Get Joy Points equal to what you spend on this order.",
+    "* Upto 20% Cashback on successful payment. Added to your wallet.",
+    "* Terms and Conditions are applied"
+  ];
+  const repeated = [...items, ...items, ...items, ...items];
+
+  return (
+    <div className={`top-announcement-container ${isScrolled ? "is-scrolled" : ""}`} style={isScrolled ? { display: "none" } : {}}>
+      <div className={`top-announcement-bar ${isScrolled ? "is-scrolled" : ""}`} style={isScrolled ? { display: "none" } : {}}>
+        <div className="top-announcement-track">
+          {repeated.map((text, idx) => (
+            <div key={idx} className="top-announcement-item">
+              <span>{text}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 
 const getCategoryAndDescendantSpecs = (categoriesList, searchSlugOrName) => {
   const term = searchSlugOrName.toLowerCase().trim();
@@ -107,6 +133,16 @@ const matchesCategory = (product, specs) => {
   return checkVal(product.category) || checkVal(product.originalCategory);
 };
 
+const normalizeText = (str) => {
+  if (!str) return "";
+  return str
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[-_.,;:'"`/\\()]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+};
+
 const getSearchableString = (p) => {
   const productName = safeString(p.name || p.title).toLowerCase();
   const brandName = safeString(getBrandName(p)).toLowerCase();
@@ -135,7 +171,7 @@ const getSearchableString = (p) => {
     ? p.tags.map(t => safeString(t)).join(" ").toLowerCase()
     : safeString(p.tags).toLowerCase();
 
-  return [
+  const raw = [
     productName,
     brandName,
     categoryName,
@@ -147,6 +183,9 @@ const getSearchableString = (p) => {
     finishText,
     tagsText
   ].filter(Boolean).join(" ");
+
+  const norm = normalizeText(raw);
+  return `${raw} ${norm}`;
 };
 
 const sanitizeSearchQuery = (query) => {
@@ -159,8 +198,33 @@ const sanitizeSearchQuery = (query) => {
 
 const Header = ({ hideCategories = false }) => {
   const navigate = useNavigate();
-  const _location = useLocation();
+  const location = useLocation();
+  const _location = location;
+  const isHomePage = location.pathname === "/";
   const { user, logoutUser } = useContext(UserContext);
+
+  // ---------- scroll state ----------
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = (e) => {
+      const target = e?.target;
+      const targetScroll = (target && target !== document && target !== window && target.scrollTop) ? target.scrollTop : 0;
+      const windowScroll = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+      const currentScroll = Math.max(windowScroll, targetScroll);
+      setIsScrolled(currentScroll > 10);
+    };
+
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, true);
+    window.addEventListener("touchmove", handleScroll, true);
+    document.addEventListener("scroll", handleScroll, true);
+    return () => {
+      window.removeEventListener("scroll", handleScroll, true);
+      window.removeEventListener("touchmove", handleScroll, true);
+      document.removeEventListener("scroll", handleScroll, true);
+    };
+  }, []);
 
   // ---------- responsive ----------
   // const [isMobile, setIsMobile] = useState(window.innerWidth <= 800);
@@ -186,7 +250,7 @@ const Header = ({ hideCategories = false }) => {
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [_isSearchLoading, setIsSearchLoading] = useState(false);
   const [recentSearches, setRecentSearches] = useState([]);
-  const [popularSearches, setPopularSearches] = useState(["Makeup", "Skin", "Eyes", "Minimalist", "Mars", "DOT & KEY"]);
+  const [popularSearches, setPopularSearches] = useState(["Makeup", "Skin", "Eyes", "Bath & Body", "Fragrances", "Minimalist", "Pilgrim", "Moody", "Mars", "DOT & KEY"]);
   const [categories, setCategories] = useState([]);
   const [listening, setListening] = useState(false);
   const [userDropdown, setUserDropdown] = useState(false);
@@ -197,6 +261,81 @@ const Header = ({ hideCategories = false }) => {
   const headerSearchRef = useRef(null);
   const hasFetchedProducts = useRef(false);
   const mobileSearchInputRef = useRef(null);
+
+  // Scrollable popular searches refs & state
+  const popularDesktopScrollRef = useRef(null);
+  const [showLeftArrowD, setShowLeftArrowD] = useState(false);
+  const [showRightArrowD, setShowRightArrowD] = useState(true);
+
+  const checkScrollButtonsD = () => {
+    if (popularDesktopScrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = popularDesktopScrollRef.current;
+      setShowLeftArrowD(scrollLeft > 2);
+      setShowRightArrowD(scrollLeft + clientWidth < scrollWidth - 2);
+    }
+  };
+
+  useEffect(() => {
+    const el = popularDesktopScrollRef.current;
+    if (el) {
+      el.addEventListener("scroll", checkScrollButtonsD);
+      checkScrollButtonsD();
+      const t = setTimeout(checkScrollButtonsD, 150);
+      window.addEventListener("resize", checkScrollButtonsD);
+      return () => {
+        el.removeEventListener("scroll", checkScrollButtonsD);
+        window.removeEventListener("resize", checkScrollButtonsD);
+        clearTimeout(t);
+      };
+    }
+  }, [popularSearches, showSearchResults]);
+
+  const scrollD = (direction) => {
+    if (popularDesktopScrollRef.current) {
+      const scrollAmount = 150;
+      popularDesktopScrollRef.current.scrollBy({
+        left: direction === "left" ? -scrollAmount : scrollAmount,
+        behavior: "smooth"
+      });
+    }
+  };
+
+  const popularMobileScrollRef = useRef(null);
+  const [showLeftArrowM, setShowLeftArrowM] = useState(false);
+  const [showRightArrowM, setShowRightArrowM] = useState(true);
+
+  const checkScrollButtonsM = () => {
+    if (popularMobileScrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = popularMobileScrollRef.current;
+      setShowLeftArrowM(scrollLeft > 2);
+      setShowRightArrowM(scrollLeft + clientWidth < scrollWidth - 2);
+    }
+  };
+
+  useEffect(() => {
+    const el = popularMobileScrollRef.current;
+    if (el) {
+      el.addEventListener("scroll", checkScrollButtonsM);
+      checkScrollButtonsM();
+      const t = setTimeout(checkScrollButtonsM, 150);
+      window.addEventListener("resize", checkScrollButtonsM);
+      return () => {
+        el.removeEventListener("scroll", checkScrollButtonsM);
+        window.removeEventListener("resize", checkScrollButtonsM);
+        clearTimeout(t);
+      };
+    }
+  }, [popularSearches, showMobileSearch, showSearchResults]);
+
+  const scrollM = (direction) => {
+    if (popularMobileScrollRef.current) {
+      const scrollAmount = 120;
+      popularMobileScrollRef.current.scrollBy({
+        left: direction === "left" ? -scrollAmount : scrollAmount,
+        behavior: "smooth"
+      });
+    }
+  };
 
 
 
@@ -381,6 +520,8 @@ const Header = ({ hideCategories = false }) => {
       return;
     }
     const term = sanitized.toLowerCase();
+    const normTerm = normalizeText(term);
+    const words = normTerm.split(/\s+/).filter(Boolean);
 
     // Check if the search term exactly matches any category in the tree hierarchically
     const specs = getCategoryAndDescendantSpecs(categories, term);
@@ -392,12 +533,11 @@ const Header = ({ hideCategories = false }) => {
         .filter(({ product }) => matchesCategory(product, specs))
         .map(({ product }) => product);
 
-      // Find products whose name matches the search term keywords
-      const words = term.split(/\s+/);
+      // Find products whose searchString matches the search term keywords
       const nameResults = searchIndex
-        .filter(({ product }) => {
-          const productName = (product.name || "").toLowerCase();
-          return words.every(word => productName.includes(word));
+        .filter(({ searchString }) => {
+          const normStr = normalizeText(searchString);
+          return words.every(word => searchString.includes(word) || normStr.includes(word));
         })
         .map(({ product }) => product);
 
@@ -410,43 +550,47 @@ const Header = ({ hideCategories = false }) => {
       });
       results = combined;
     } else {
-      const words = term.split(/\s+/);
       results = searchIndex
-        .filter(({ searchString }) => words.every(word => searchString.includes(word)))
+        .filter(({ searchString }) => {
+          const normStr = normalizeText(searchString);
+          return words.every(word => searchString.includes(word) || normStr.includes(word));
+        })
         .map(({ product }) => product);
     }
 
-    // Normalization utility for scoring
-    const sanitizeForScore = (str) => {
-      if (!str) return "";
-      return str
-        .toLowerCase()
-        .replace(/[+*?^$()\[\]{}|\\/-]/g, " ")
-        .replace(/\s+/g, " ")
-        .trim();
-    };
-
-    // Sort results by name similarity score
+    // Relevance scoring for search term
     const getSearchScore = (prod) => {
-      const nameCleaned = sanitizeForScore(prod.name);
-      const termCleaned = sanitizeForScore(term);
-      if (nameCleaned === termCleaned) return 1000;
-      if (nameCleaned.includes(termCleaned)) return 500;
+      const normName = normalizeText(prod.name || prod.title);
+      const normBrand = normalizeText(prod.brand);
+      const normCategory = normalizeText(prod.category);
 
-      const words = termCleaned.split(/\s+/).filter(Boolean);
+      if (normName === normTerm) return 3000;
+      if (normName.includes(normTerm)) return 2000;
+      if (`${normBrand} ${normName}`.includes(normTerm)) return 1500;
+
       if (words.length === 0) return 0;
 
-      let matchedWords = 0;
+      let nameMatches = 0;
+      let brandCatMatches = 0;
+      const searchableStr = getSearchableString(prod);
+
       words.forEach(word => {
-        if (nameCleaned.includes(word)) matchedWords++;
+        if (normName.includes(word)) nameMatches++;
+        if (normBrand.includes(word) || normCategory.includes(word) || searchableStr.includes(word)) brandCatMatches++;
       });
-      return matchedWords / words.length;
+
+      if (nameMatches === 0 && brandCatMatches === 0) return 0;
+
+      const nameScore = (nameMatches / words.length) * 500;
+      const totalScore = (brandCatMatches / words.length) * 300;
+      const allWordsBonus = (nameMatches === words.length) ? 300 : 0;
+
+      return Math.max(nameScore, totalScore) + allWordsBonus;
     };
 
     results.sort((a, b) => getSearchScore(b) - getSearchScore(a));
 
     setSearchResults(results.slice(0, 10));
-    setShowSearchResults(true);
   }, [debouncedSearchText, searchIndex, categories]);
 
   const extractPopularSearches = (products) => {
@@ -455,8 +599,8 @@ const Header = ({ hideCategories = false }) => {
       if (p.category) catCounts[p.category] = (catCounts[p.category] || 0) + 1;
       if (p.brand) brandCounts[p.brand] = (brandCounts[p.brand] || 0) + 1;
     });
-    const topCats = Object.entries(catCounts).sort((a, b) => b[1] - a[1]).slice(0, 3).map(x => x[0]);
-    const topBrands = Object.entries(brandCounts).sort((a, b) => b[1] - a[1]).slice(0, 3).map(x => x[0]);
+    const topCats = Object.entries(catCounts).sort((a, b) => b[1] - a[1]).slice(0, 5).map(x => x[0]);
+    const topBrands = Object.entries(brandCounts).sort((a, b) => b[1] - a[1]).slice(0, 5).map(x => x[0]);
     setPopularSearches([...topCats, ...topBrands]);
   };
 
@@ -538,6 +682,24 @@ const Header = ({ hideCategories = false }) => {
     setShowSearchResults(false);
   }, []);
 
+  const handleLogoClick = useCallback((e) => {
+    closeMenu();
+    if (_location.pathname === "/") {
+      e.preventDefault();
+      try {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        if (document.documentElement) {
+          document.documentElement.scrollTo({ top: 0, behavior: "smooth" });
+        }
+        if (document.body) {
+          document.body.scrollTo({ top: 0, behavior: "smooth" });
+        }
+      } catch (err) {
+        window.scrollTo(0, 0);
+      }
+    }
+  }, [closeMenu, _location.pathname]);
+
   const getDiscount = (p) => p.originalPrice > p.price ? Math.round(((p.originalPrice - p.price) / p.originalPrice) * 100) : 0;
 
   // ---------- RENDER ----------
@@ -585,7 +747,10 @@ const Header = ({ hideCategories = false }) => {
                 type="text"
                 placeholder="Search products, brands..."
                 value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
+                onChange={(e) => {
+                  setSearchText(e.target.value);
+                  setShowSearchResults(true);
+                }}
                 onFocus={() => setShowSearchResults(true)}
                 style={{
                   border: "none",
@@ -650,7 +815,7 @@ const Header = ({ hideCategories = false }) => {
             >
               {!searchText.trim() ? (
                 <div style={{ padding: "16px" }}>
-                  {recentSearches.length > 0 && (
+                  {/* {recentSearches.length > 0 && (
                     <div style={{ marginBottom: "20px" }}>
                       <div
                         style={{
@@ -694,7 +859,7 @@ const Header = ({ hideCategories = false }) => {
                         ))}
                       </div>
                     </div>
-                  )}
+                  )} */}
                   <div
                     style={{
                       fontSize: "12px",
@@ -705,23 +870,107 @@ const Header = ({ hideCategories = false }) => {
                   >
                     Popular
                   </div>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                    {popularSearches.map((s, i) => (
-                      <span
-                        key={i}
-                        onClick={() => handleRecentSearchClick(s)}
+                  <div style={{ position: "relative", display: "flex", alignItems: "center", width: "100%" }}>
+                    {showLeftArrowM && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          scrollM("left");
+                        }}
                         style={{
-                          padding: "6px 12px",
-                          background: "#000",
-                          color: "#fff",
-                          borderRadius: "16px",
-                          fontSize: "13px",
+                          position: "absolute",
+                          left: "-5px",
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          background: "white",
+                          border: "1px solid #ddd",
+                          borderRadius: "50%",
+                          width: "24px",
+                          height: "24px",
+                          minWidth: "24px",
+                          minHeight: "24px",
+                          padding: 0,
+                          flexShrink: 0,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          boxShadow: "0 2px 5px rgba(0,0,0,0.15)",
                           cursor: "pointer",
+                          zIndex: 10,
+                          color: "#000"
                         }}
                       >
-                        {s}
-                      </span>
-                    ))}
+                        <FaChevronLeft size={10} />
+                      </button>
+                    )}
+
+                    <div
+                      ref={popularMobileScrollRef}
+                      className="hide-scrollbar"
+                      style={{
+                        display: "flex",
+                        flexWrap: "nowrap",
+                        gap: "8px",
+                        overflowX: "auto",
+                        scrollBehavior: "smooth",
+                        width: "100%",
+                        padding: "4px 0"
+                      }}
+                    >
+                      {popularSearches.map((s, i) => (
+                        <span
+                          key={i}
+                          onClick={() => handleRecentSearchClick(s)}
+                          style={{
+                            padding: "6px 14px",
+                            background: "#000",
+                            color: "#fff",
+                            borderRadius: "16px",
+                            fontSize: "13px",
+                            cursor: "pointer",
+                            whiteSpace: "nowrap",
+                            flexShrink: 0
+                          }}
+                        >
+                          {s}
+                        </span>
+                      ))}
+                    </div>
+
+                    {showRightArrowM && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          scrollM("right");
+                        }}
+                        style={{
+                          position: "absolute",
+                          right: "-5px",
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          background: "white",
+                          border: "1px solid #ddd",
+                          borderRadius: "50%",
+                          width: "24px",
+                          height: "24px",
+                          minWidth: "24px",
+                          minHeight: "24px",
+                          padding: 0,
+                          flexShrink: 0,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          boxShadow: "0 2px 5px rgba(0,0,0,0.15)",
+                          cursor: "pointer",
+                          zIndex: 10,
+                          color: "#000"
+                        }}
+                      >
+                        <FaChevronRight size={10} />
+                      </button>
+                    )}
                   </div>
                 </div>
               ) : searchResults.length > 0 ? (
@@ -862,6 +1111,7 @@ const Header = ({ hideCategories = false }) => {
           searchInputRef={searchInputRef}
           onSearchClick={() => setShowMobileSearch(true)}
         />
+        <TopAnnouncementBar isScrolled={isScrolled} isHomePage={isHomePage} />
       </>
     );
   }
@@ -872,7 +1122,7 @@ const Header = ({ hideCategories = false }) => {
       <header className="header d-block header-container ">
         <div className="d-flex justify-content-between margin-padding-header align-items-center">
           {/* Logo */}
-          <Link to="/" className="logo" onClick={closeMenu}>
+          <Link to="/" className="logo" onClick={handleLogoClick}>
             <img src={logo} className="ps-sm-0 ps-4 ms-sm-0" alt="JOYORY" />
           </Link>
 
@@ -888,7 +1138,10 @@ const Header = ({ hideCategories = false }) => {
                 type="text"
                 placeholder="Search products, brands, categories..."
                 value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
+                onChange={(e) => {
+                  setSearchText(e.target.value);
+                  setShowSearchResults(true);
+                }}
                 onFocus={() => setShowSearchResults(true)}
                 onClick={() => setShowSearchResults(true)}
                 style={{
@@ -897,6 +1150,8 @@ const Header = ({ hideCategories = false }) => {
                   background: "transparent",
                   margin: "0 8px",
                   fontSize: "16px",
+                  width: showSearchResults ? "700px" : "350px",
+                  transition: "width 0.4s ease-in-out",
                 }}
               />
               {searchText && (
@@ -934,7 +1189,7 @@ const Header = ({ hideCategories = false }) => {
               >
                 {!searchText.trim() ? (
                   <div style={{ padding: "15px" }}>
-                    {recentSearches.length > 0 && (
+                    {/* {recentSearches.length > 0 && (
                       <div style={{ marginBottom: "15px" }}>
                         <div
                           style={{
@@ -978,39 +1233,121 @@ const Header = ({ hideCategories = false }) => {
                           ))}
                         </div>
                       </div>
-                    )}
+                    )} */}
                     <div style={{ fontSize: "12px", fontWeight: "600", color: "#666", marginBottom: "8px" }}>
                       Popular
                     </div>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                      {popularSearches.map((s, i) => (
-                        <span
-                          key={i}
-                          onClick={() => handleRecentSearchClick(s)}
-
-                          onMouseEnter={(e) => {
-                            e.target.style.background = "#000";
-                            e.target.style.color = "#fff";
+                    <div style={{ position: "relative", display: "flex", alignItems: "center", width: "100%" }}>
+                      {showLeftArrowD && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            scrollD("left");
                           }}
-                          onMouseLeave={(e) => {
-                            e.target.style.background = "#fff";
-                            e.target.style.color = "#000";
-                          }}
-
                           style={{
-                            padding: "4px 12px",
-                            background: "#fff",
-                            color: "#000",
-                            borderRadius: "15px",
-                            fontSize: "12px",
+                            position: "absolute",
+                            left: "-10px",
+                            top: "50%",
+                            transform: "translateY(-50%)",
+                            background: "white",
+                            border: "1px solid #ddd",
+                            borderRadius: "50%",
+                            width: "28px",
+                            height: "28px",
+                            minWidth: "28px",
+                            minHeight: "28px",
+                            padding: 0,
+                            flexShrink: 0,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            boxShadow: "0 2px 5px rgba(0,0,0,0.15)",
                             cursor: "pointer",
-                            border: "1px solid #000",
-
+                            zIndex: 10,
+                            color: "#000"
                           }}
                         >
-                          {s}
-                        </span>
-                      ))}
+                          <FaChevronLeft size={12} />
+                        </button>
+                      )}
+
+                      <div
+                        ref={popularDesktopScrollRef}
+                        className="hide-scrollbar"
+                        style={{
+                          display: "flex",
+                          flexWrap: "nowrap",
+                          gap: "8px",
+                          overflowX: "auto",
+                          scrollBehavior: "smooth",
+                          width: "100%",
+                          padding: "4px 0"
+                        }}
+                      >
+                        {popularSearches.map((s, i) => (
+                          <span
+                            key={i}
+                            onClick={() => handleRecentSearchClick(s)}
+                            onMouseEnter={(e) => {
+                              e.target.style.background = "#000";
+                              e.target.style.color = "#fff";
+                            }}
+                            onMouseLeave={(e) => {
+                              e.target.style.background = "#fff";
+                              e.target.style.color = "#000";
+                            }}
+                            style={{
+                              padding: "10px 25px",
+                              background: "#fff",
+                              color: "#000",
+                              borderRadius: "3px",
+                              fontSize: "12px",
+                              cursor: "pointer",
+                              border: "1px solid #c1c1c1c1",
+                              transition: "0.5s",
+                              whiteSpace: "nowrap",
+                              flexShrink: 0
+                            }}
+                          >
+                            {s}
+                          </span>
+                        ))}
+                      </div>
+
+                      {showRightArrowD && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            scrollD("right");
+                          }}
+                          style={{
+                            position: "absolute",
+                            right: "-10px",
+                            top: "50%",
+                            transform: "translateY(-50%)",
+                            background: "white",
+                            border: "1px solid #ddd",
+                            borderRadius: "50%",
+                            width: "28px",
+                            height: "28px",
+                            minWidth: "28px",
+                            minHeight: "28px",
+                            padding: 0,
+                            flexShrink: 0,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            boxShadow: "0 2px 5px rgba(0,0,0,0.15)",
+                            cursor: "pointer",
+                            zIndex: 10,
+                            color: "#000"
+                          }}
+                        >
+                          <FaChevronRight size={12} />
+                        </button>
+                      )}
                     </div>
                   </div>
                 ) : searchResults.length > 0 ? (
@@ -1244,6 +1581,9 @@ const Header = ({ hideCategories = false }) => {
 
         {/* Desktop Categories */}
         {!hideCategories && <HeaderCategories />}
+
+        {/* Continuous Top Announcement Bar */}
+        <TopAnnouncementBar isScrolled={isScrolled} isHomePage={isHomePage} />
       </header>
     </>
   );

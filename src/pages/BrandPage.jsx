@@ -18,6 +18,7 @@ import Header from "../components/common/Header";
 import SEOMeta from "../components/common/SEOMeta";
 import Footer from "../components/common/Footer";
 import Loader from "../components/common/Loader";
+import PageNotFound from "./PageNotFound";
 import { CartContext } from "../Context/CartContext";
 import { UserContext } from "../context/UserContext.jsx";
 import BrandFilter from "../components/common/BrandFilter";
@@ -82,6 +83,7 @@ export default function BrandPage() {
 
   const [trendingCategories, setTrendingCategories] = useState([]);
   const [filterData, setFilterData] = useState(null);
+  const [pageNotFound, setPageNotFound] = useState(false);
 
   const [selectedVariants, setSelectedVariants] = useState({});
   const [addingToCart, setAddingToCart] = useState({});
@@ -205,6 +207,8 @@ export default function BrandPage() {
   const [tempSelectedVariants, setTempSelectedVariants] = useState({});
   // ===================== END OUT OF STOCK POPUP STATE =====================
 
+  const [visibleCount, setVisibleCount] = useState(9);
+
   const sortedProducts = useMemo(() => {
     if (!allProducts || !Array.isArray(allProducts)) return [];
     const getProductPrice = (prod) => {
@@ -238,6 +242,13 @@ export default function BrandPage() {
     }
     return sorted;
   }, [allProducts, filters.sort, selectedVariants, tempSelectedVariants]);
+
+  const displayedProducts = useMemo(() => {
+    if (filters.sort && filters.sort !== 'recent') {
+      return sortedProducts.slice(0, visibleCount);
+    }
+    return sortedProducts;
+  }, [sortedProducts, filters.sort, visibleCount]);
 
   const loaderRef = useRef(null);
   const lastBrandSlugRef = useRef(null);
@@ -387,7 +398,7 @@ export default function BrandPage() {
   };
 
   /* ── fetch products ─────────────────────────────────────────────────────── */
-  const buildQueryParams = (cursor = null) => {
+  const buildQueryParams = (cursor = null, limitOverride = null) => {
     const p = new URLSearchParams();
     if (brandSlug) p.append("brandIds", brandSlug);
 
@@ -409,82 +420,19 @@ export default function BrandPage() {
       p.append("discountMin", filters.discountMin);
     }
 
-    // Do not pass sort to backend API due to cursor pagination limitation (nextCursor is null when sorting)
-    // if (filters.sort) p.append("sort", filters.sort);
     if (cursor) p.append("cursor", cursor);
-    p.append("limit", "9");
+    p.append("limit", limitOverride ? String(limitOverride) : "9");
 
     const queryString = p.toString();
     console.log("BrandPage API Query →", `${PRODUCT_ALL_API}?${queryString}`);
     return queryString;
   };
 
-  // const fetchProducts = async (cursor = null, reset = false) => {
-  //   try {
-  //     if (reset) {
-  //       setLoading(true);
-  //       setAllProducts([]);           // cleared on full reload
-  //       setNextCursor(null);
-  //       setHasMore(true);
-  //     } else {
-  //       setLoadingMore(true);
-  //     }
-
-  //     const { data } = await axios.get(
-  //       `${PRODUCT_ALL_API}?${buildQueryParams(cursor)}`,
-  //       { withCredentials: true }
-  //     );
-
-  //     if (data.titleMessage) setPageTitle(data.titleMessage);
-  //     else if (data.brand?.name) setPageTitle(data.brand.name);
-  //     else if (data.category?.name) setPageTitle(data.category.name);
-
-  //     // Banner extraction
-  //     if (data.bannerImage && Array.isArray(data.bannerImage)) {
-  //       setBannerImages(data.bannerImage);
-  //     } else if (data.brand?.banner) {
-  //       setBannerImages([data.brand.banner]);
-  //     } else if (data.category?.bannerImage) {
-  //       setBannerImages([data.category.bannerImage]);
-  //     } else {
-  //       setBannerImages([]);
-  //     }
-
-  //     if (data.trendingCategories && Array.isArray(data.trendingCategories)) {
-  //       setTrendingCategories(data.trendingCategories);
-  //       if (activeCategorySlug && !activeCategoryName) {
-  //         const found = data.trendingCategories.find((c) => c.slug === activeCategorySlug);
-  //         if (found) setActiveCategoryName(found.name);
-  //       }
-  //     } else {
-  //       setTrendingCategories([]);
-  //     }
-
-  //     if (reset && data.filters) {
-  //       setFilterData(data.filters);
-  //     }
-
-  //     const prods = Array.isArray(data.products) ? data.products : [];
-  //     const pg = data.pagination || {};
-
-  //     if (reset) setAllProducts(prods);
-  //     else setAllProducts((prev) => [...prev, ...prods]);
-
-  //     setHasMore(pg.hasMore || false);
-  //     setNextCursor(pg.nextCursor || null);
-  //   } catch (e) {
-  //     console.error(e);
-  //     showToastMsg("Failed to fetch products", "error");
-  //   } finally {
-  //     setLoading(false);
-  //     setLoadingMore(false);
-  //   }
-  // };
-
   const fetchProducts = async (cursor = null, reset = false, clearProducts = false) => {
     try {
       if (reset) {
         setLoading(true);
+        setVisibleCount(9);
         if (clearProducts) {
           setAllProducts([]);
         }
@@ -494,10 +442,144 @@ export default function BrandPage() {
         setLoadingMore(true);
       }
 
+      const isCustomSort = filters.sort && filters.sort !== 'recent';
+
+      if (reset && isCustomSort) {
+        let allFetched = [];
+        let currentCursor = null;
+        let hasMorePages = true;
+        let lastData = null;
+
+        while (hasMorePages) {
+          const { data } = await axios.get(
+            `${PRODUCT_ALL_API}?${buildQueryParams(currentCursor, 50)}`,
+            { withCredentials: true }
+          );
+          lastData = data;
+
+          const prods = Array.isArray(data.products) ? data.products : [];
+          const pg = data.pagination || {};
+
+          allFetched = [...allFetched, ...prods];
+
+          if (pg.hasMore && pg.nextCursor) {
+            currentCursor = pg.nextCursor;
+          } else {
+            hasMorePages = false;
+          }
+        }
+
+        if (lastData) {
+          if (brandSlug) {
+            const normBrand = (brandSlug || "").toLowerCase().trim();
+            let brandValid = false;
+            if (lastData.brand && (
+              (lastData.brand.slug || "").toLowerCase().trim() === normBrand ||
+              (lastData.brand._id || "").toLowerCase().trim() === normBrand ||
+              (lastData.brand.name || "").toLowerCase().trim().replace(/\s+/g, "-") === normBrand
+            )) {
+              brandValid = true;
+            }
+            if (!brandValid) {
+              const brandsList = lastData.filters?.brands || lastData.brands || [];
+              brandValid = brandsList.some(b => {
+                if (!b) return false;
+                const bSlug = (b.slug || b._id || b.name || "").toLowerCase().trim().replace(/\s+/g, "-");
+                return bSlug === normBrand || b.slug === brandSlug || b._id === brandSlug;
+              });
+            }
+
+            if (!brandValid && (lastData.filters?.brands || lastData.brands || lastData.brand !== undefined)) {
+              setPageNotFound(true);
+              setLoading(false);
+              setLoadingMore(false);
+              return;
+            }
+          }
+          setPageNotFound(false);
+
+          if (lastData.titleMessage) setPageTitle(lastData.titleMessage);
+          else if (lastData.brand?.name) setPageTitle(lastData.brand.name);
+          else if (lastData.category?.name) setPageTitle(lastData.category.name);
+
+          let banners = [];
+          if (lastData.bannerImage) {
+            if (Array.isArray(lastData.bannerImage)) {
+              if (Array.isArray(lastData.bannerImage[0])) {
+                banners = lastData.bannerImage[0];
+              } else {
+                banners = lastData.bannerImage;
+              }
+            } else if (typeof lastData.bannerImage === "string") {
+              banners = [{ url: lastData.bannerImage }];
+            } else if (lastData.bannerImage.url) {
+              banners = [lastData.bannerImage];
+            }
+          } else if (lastData.brand?.banner) {
+            banners = [{ url: lastData.brand.banner }];
+          } else if (lastData.category?.bannerImage) {
+            banners = Array.isArray(lastData.category.bannerImage)
+              ? lastData.category.bannerImage
+              : [{ url: lastData.category.bannerImage }];
+          }
+          setBannerImages(banners);
+
+          if (lastData.trendingCategories && Array.isArray(lastData.trendingCategories)) {
+            setTrendingCategories(lastData.trendingCategories);
+          } else {
+            setTrendingCategories([]);
+          }
+
+          if (lastData.filters) setFilterData(lastData.filters);
+
+          if (lastData.titleMessage) {
+            const match = lastData.titleMessage.match(/\d+/);
+            if (match) setTotalCount(parseInt(match[0], 10));
+            else setTotalCount(allFetched.length);
+          } else {
+            setTotalCount(allFetched.length);
+          }
+        }
+
+        const uniqueFetched = Array.from(new Map(allFetched.map(p => [p._id, p])).values());
+        setAllProducts(uniqueFetched);
+        setHasMore(uniqueFetched.length > 9);
+        setNextCursor(null);
+        return;
+      }
+
       const { data } = await axios.get(
         `${PRODUCT_ALL_API}?${buildQueryParams(cursor)}`,
         { withCredentials: true },
       );
+
+      if (brandSlug) {
+        const normBrand = (brandSlug || "").toLowerCase().trim();
+        let brandValid = false;
+        if (data.brand && (
+          (data.brand.slug || "").toLowerCase().trim() === normBrand ||
+          (data.brand._id || "").toLowerCase().trim() === normBrand ||
+          (data.brand.name || "").toLowerCase().trim().replace(/\s+/g, "-") === normBrand
+        )) {
+          brandValid = true;
+        }
+        if (!brandValid) {
+          const brandsList = data.filters?.brands || data.brands || [];
+          brandValid = brandsList.some(b => {
+            if (!b) return false;
+            const bSlug = (b.slug || b._id || b.name || "").toLowerCase().trim().replace(/\s+/g, "-");
+            return bSlug === normBrand || b.slug === brandSlug || b._id === brandSlug;
+          });
+        }
+
+        if (!brandValid && (data.filters?.brands || data.brands || data.brand !== undefined)) {
+          setPageNotFound(true);
+          setLoading(false);
+          setLoadingMore(false);
+          return;
+        }
+      }
+      setPageNotFound(false);
 
       if (data.titleMessage) setPageTitle(data.titleMessage);
       else if (data.brand?.name) setPageTitle(data.brand.name);
@@ -638,11 +720,29 @@ export default function BrandPage() {
 
   /* ── infinite scroll ────────────────────────────────────────────────────── */
   const loadMore = useCallback(() => {
-    if (nextCursor && hasMore && !loadingMore) fetchProducts(nextCursor, false);
-  }, [nextCursor, hasMore, loadingMore]);
+    if (loadingMore) return;
+    const isCustomSort = filters.sort && filters.sort !== 'recent';
+    if (isCustomSort) {
+      if (visibleCount < sortedProducts.length) {
+        setLoadingMore(true);
+        setTimeout(() => {
+          setVisibleCount((prev) => {
+            const next = prev + 9;
+            if (next >= sortedProducts.length) setHasMore(false);
+            return next;
+          });
+          setLoadingMore(false);
+        }, 200);
+      }
+      return;
+    }
+    if (nextCursor && hasMore) fetchProducts(nextCursor, false);
+  }, [nextCursor, hasMore, loadingMore, filters.sort, visibleCount, sortedProducts.length]);
 
   useEffect(() => {
-    if (!hasMore || loadingMore) return;
+    const isCustomSort = filters.sort && filters.sort !== 'recent';
+    const canMore = isCustomSort ? (visibleCount < sortedProducts.length) : hasMore;
+    if (!canMore || loadingMore) return;
     const obs = new IntersectionObserver(
       ([e]) => e.isIntersecting && loadMore(),
       { root: null, rootMargin: "100px", threshold: 0.1 },
@@ -650,7 +750,7 @@ export default function BrandPage() {
     const el = loaderRef.current;
     if (el) obs.observe(el);
     return () => el && obs.unobserve(el);
-  }, [loadMore, hasMore, loadingMore]);
+  }, [loadMore, hasMore, loadingMore, filters.sort, visibleCount, sortedProducts.length]);
 
   /* ── cart & variant ─────────────────────────────────────────────────────── */
   const handleAddToCart = async (prod) => {
@@ -1194,6 +1294,10 @@ export default function BrandPage() {
     isSubCategoryView: !!activeCategorySlug,
   };
 
+  if (pageNotFound) {
+    return <PageNotFound />;
+  }
+
   /* ── render ─────────────────────────────────────────────────────────────── */
   return (
     <>
@@ -1727,8 +1831,8 @@ export default function BrandPage() {
                   </div>
                 </div>
               )}
-              {sortedProducts.length > 0 ? (
-                sortedProducts.map(renderProductCard)
+              {displayedProducts.length > 0 ? (
+                displayedProducts.map(renderProductCard)
               ) : loading ? (
                 <div className="col-12 text-center py-5">
                   <DotLottieReact

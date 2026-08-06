@@ -122,6 +122,8 @@ const DiscountProductsPage = () => {
   const [showSortOffcanvas, setShowSortOffcanvas] = useState(false);
   const [showDesktopSortDropdown, setShowDesktopSortDropdown] = useState(false);
 
+  const [visibleCount, setVisibleCount] = useState(9);
+
   const sortedDiscountProducts = useMemo(() => {
     if (!discountProducts || !Array.isArray(discountProducts)) return [];
     const getProductPrice = (prod) => {
@@ -155,6 +157,13 @@ const DiscountProductsPage = () => {
     }
     return sorted;
   }, [discountProducts, filters.sort, selectedVariants, tempSelectedVariants]);
+
+  const displayedDiscountProducts = useMemo(() => {
+    if (filters.sort && filters.sort !== 'recent') {
+      return sortedDiscountProducts.slice(0, visibleCount);
+    }
+    return sortedDiscountProducts;
+  }, [sortedDiscountProducts, filters.sort, visibleCount]);
 
   // Trending categories for pills (like ProductPage)
   const [trendingCategories, setTrendingCategories] = useState([]);
@@ -363,7 +372,7 @@ const DiscountProductsPage = () => {
   }, []);
 
   // Build query parameters - EXACTLY MATCHING ProductPage
-  const buildQueryParams = (cursor = null) => {
+  const buildQueryParams = (cursor = null, limitOverride = null) => {
     const params = new URLSearchParams();
 
     // Add discount code
@@ -392,13 +401,9 @@ const DiscountProductsPage = () => {
       params.append("discountMin", filters.discountMin);
     }
 
-    // Add sorting
-    // Do not pass sort to backend API due to cursor pagination limitation (nextCursor is null when sorting)
-    // if (filters.sort) params.append("sort", filters.sort);
-
     // Add cursor and limit
     if (cursor) params.append("cursor", cursor);
-    params.append("limit", "9");
+    params.append("limit", limitOverride ? String(limitOverride) : "9");
 
     return params.toString();
   };
@@ -408,6 +413,7 @@ const DiscountProductsPage = () => {
     try {
       if (reset) {
         setLoadingDiscountProducts(true);
+        setVisibleCount(9);
         if (clearProducts) {
           setDiscountProducts([]);
         }
@@ -420,6 +426,47 @@ const DiscountProductsPage = () => {
 
       const discountCode = coupon?.code;
       if (!discountCode) return;
+
+      const isCustomSort = filters.sort && filters.sort !== 'recent';
+
+      if (reset && isCustomSort) {
+        let allFetched = [];
+        let currentCursor = null;
+        let hasMorePages = true;
+        let lastData = null;
+
+        while (hasMorePages) {
+          const queryString = buildQueryParams(currentCursor, 50);
+          const response = await fetch(
+            `${PRODUCT_ALL_API}?${queryString}`,
+            { credentials: "include" }
+          );
+          if (!response.ok) throw new Error("Failed to fetch discount products");
+          const data = await response.json();
+          lastData = data;
+
+          const prods = data.products || [];
+          const pg = data.pagination || {};
+
+          allFetched = [...allFetched, ...prods];
+
+          if (pg.hasMore && pg.nextCursor) {
+            currentCursor = pg.nextCursor;
+          } else {
+            hasMorePages = false;
+          }
+        }
+
+        if (lastData && lastData.filters) {
+          setFilterData(lastData.filters);
+        }
+
+        const uniqueFetched = Array.from(new Map(allFetched.map(p => [p._id, p])).values());
+        setDiscountProducts(uniqueFetched);
+        setHasMore(uniqueFetched.length > 9);
+        setNextCursor(null);
+        return;
+      }
 
       const queryString = buildQueryParams(cursor);
       console.log("Discount Products API Query →", `${PRODUCT_ALL_API}?${queryString}`);
@@ -471,23 +518,37 @@ const DiscountProductsPage = () => {
 
   // ===================== INFINITE SCROLL OBSERVER ==========================
   const loadMore = useCallback(() => {
-    if (nextCursor && hasMore && !loadingMore) {
-      fetchDiscountProducts(nextCursor, false);
+    if (loadingMore) return;
+    const isCustomSort = filters.sort && filters.sort !== 'recent';
+    if (isCustomSort) {
+      if (visibleCount < sortedDiscountProducts.length) {
+        setLoadingMore(true);
+        setTimeout(() => {
+          setVisibleCount((prev) => {
+            const next = prev + 9;
+            if (next >= sortedDiscountProducts.length) setHasMore(false);
+            return next;
+          });
+          setLoadingMore(false);
+        }, 200);
+      }
+      return;
     }
-  }, [nextCursor, hasMore, loadingMore, coupon, filters]);
+    if (nextCursor && hasMore) fetchDiscountProducts(nextCursor, false);
+  }, [nextCursor, hasMore, loadingMore, coupon, filters.sort, visibleCount, sortedDiscountProducts.length]);
 
   useEffect(() => {
-    if (!hasMore || loadingMore) return;
+    const isCustomSort = filters.sort && filters.sort !== 'recent';
+    const canMore = isCustomSort ? (visibleCount < sortedDiscountProducts.length) : hasMore;
+    if (!canMore || loadingMore) return;
     const obs = new IntersectionObserver(
       ([e]) => e.isIntersecting && loadMore(),
       { root: null, rootMargin: "100px", threshold: 0.1 }
     );
     const el = loaderRef.current;
     if (el) obs.observe(el);
-    return () => {
-      if (el) obs.unobserve(el);
-    };
-  }, [loadMore, hasMore, loadingMore]);
+    return () => el && obs.unobserve(el);
+  }, [loadMore, hasMore, loadingMore, filters.sort, visibleCount, sortedDiscountProducts.length]);
 
   // ===================== PRODUCT PAGE FUNCTIONALITY =====================
   const handleVariantSelect = (productId, variant) => {
@@ -1402,8 +1463,8 @@ const DiscountProductsPage = () => {
 
 
             <div className="row g-4" style={{ opacity: loadingDiscountProducts ? 0.6 : 1, transition: "opacity 0.2s ease" }}>
-              {sortedDiscountProducts.length > 0 ? (
-                sortedDiscountProducts.map(renderProductCard)
+              {displayedDiscountProducts.length > 0 ? (
+                displayedDiscountProducts.map(renderProductCard)
               ) : (
                 <div className="col-12 text-center py-5">
                   <h4>No products found</h4>

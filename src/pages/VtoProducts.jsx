@@ -156,6 +156,8 @@ export default function VtoProducts() {
     const [showVariantOverlay, setShowVariantOverlay] = useState(null);
     const [selectedVariantType, setSelectedVariantType] = useState("all");
 
+    const [visibleCount, setVisibleCount] = useState(9);
+
     const sortedProducts = useMemo(() => {
         if (!allProducts || !Array.isArray(allProducts)) return [];
         const getProductPrice = (prod) => {
@@ -189,6 +191,13 @@ export default function VtoProducts() {
         }
         return sorted;
     }, [allProducts, filters.sort, selectedVariants, tempSelectedVariants]);
+
+    const displayedProducts = useMemo(() => {
+        if (filters.sort && filters.sort !== 'recent') {
+            return sortedProducts.slice(0, visibleCount);
+        }
+        return sortedProducts;
+    }, [sortedProducts, filters.sort, visibleCount]);
 
     const { user } = useContext(UserContext);
     const loaderRef = useRef(null);
@@ -244,7 +253,7 @@ export default function VtoProducts() {
     };
 
     /* ── fetch ──────────────────────────────────────────────────────────────── */
-    const buildQueryParams = (cursor = null) => {
+    const buildQueryParams = (cursor = null, limitOverride = null) => {
         const p = new URLSearchParams();
 
         // Enforce Virtual Try-On products
@@ -267,10 +276,8 @@ export default function VtoProducts() {
             p.append("discountMin", filters.discountMin);
         }
 
-        // Do not pass sort to backend API due to cursor pagination limitation (nextCursor is null when sorting)
-        // if (filters.sort) p.append("sort", filters.sort);
         if (cursor) p.append("cursor", cursor);
-        p.append("limit", "9");
+        p.append("limit", limitOverride ? String(limitOverride) : "9");
 
         return p.toString();
     };
@@ -279,10 +286,61 @@ export default function VtoProducts() {
         try {
             if (reset) {
                 setLoading(true);
+                setVisibleCount(9);
                 setNextCursor(null);
                 setHasMore(true);
             } else {
                 setLoadingMore(true);
+            }
+
+            const isCustomSort = filters.sort && filters.sort !== 'recent';
+
+            if (reset && isCustomSort) {
+                let allFetched = [];
+                let currentCursor = null;
+                let hasMorePages = true;
+                let lastData = null;
+
+                while (hasMorePages) {
+                    const { data } = await axiosInstance.get(
+                        `${PRODUCT_ALL_API}?${buildQueryParams(currentCursor, 50)}`
+                    );
+                    lastData = data;
+
+                    const prods = data.products || [];
+                    const pg = data.pagination || {};
+
+                    allFetched = [...allFetched, ...prods];
+
+                    if (pg.hasMore && pg.nextCursor) {
+                        currentCursor = pg.nextCursor;
+                    } else {
+                        hasMorePages = false;
+                    }
+                }
+
+                if (lastData) {
+                    setTotalCount(lastData.totalProducts || allFetched.length);
+                    const currentContext = `${location.pathname}-${searchParams.get("q") || searchParams.get("search") || ""}`;
+                    const isContextChanged = lastContextRef.current !== currentContext;
+                    if (isContextChanged) {
+                        if (lastData.filters) setFilterData(lastData.filters);
+                        lastContextRef.current = currentContext;
+                    }
+
+                    const def = {};
+                    allFetched.forEach((pr) => {
+                        const av = (pr.variants || []).find((v) => v.stock > 0) || pr.variants?.[0];
+                        if (av) def[pr._id] = av;
+                    });
+                    setSelectedVariants((prev) => ({ ...prev, ...def }));
+                }
+
+                const uniqueFetched = Array.from(new Map(allFetched.map(p => [p._id, p])).values());
+                setAllProducts(uniqueFetched);
+                setHasMore(uniqueFetched.length > 9);
+                setNextCursor(null);
+                return;
             }
 
             const { data } = await axiosInstance.get(
@@ -388,11 +446,29 @@ export default function VtoProducts() {
 
     /* ── infinite scroll ────────────────────────────────────────────────────── */
     const loadMore = useCallback(() => {
-        if (nextCursor && hasMore && !loadingMore) fetchProducts(nextCursor, false);
-    }, [nextCursor, hasMore, loadingMore]);
+        if (loadingMore) return;
+        const isCustomSort = filters.sort && filters.sort !== 'recent';
+        if (isCustomSort) {
+            if (visibleCount < sortedProducts.length) {
+                setLoadingMore(true);
+                setTimeout(() => {
+                    setVisibleCount((prev) => {
+                        const next = prev + 9;
+                        if (next >= sortedProducts.length) setHasMore(false);
+                        return next;
+                    });
+                    setLoadingMore(false);
+                }, 200);
+            }
+            return;
+        }
+        if (nextCursor && hasMore) fetchProducts(nextCursor, false);
+    }, [nextCursor, hasMore, loadingMore, filters.sort, visibleCount, sortedProducts.length]);
 
     useEffect(() => {
-        if (!hasMore || loadingMore) return;
+        const isCustomSort = filters.sort && filters.sort !== 'recent';
+        const canMore = isCustomSort ? (visibleCount < sortedProducts.length) : hasMore;
+        if (!canMore || loadingMore) return;
         const obs = new IntersectionObserver(
             ([e]) => e.isIntersecting && loadMore(),
             { root: null, rootMargin: "100px", threshold: 0.1 }
@@ -400,7 +476,7 @@ export default function VtoProducts() {
         const el = loaderRef.current;
         if (el) obs.observe(el);
         return () => el && obs.unobserve(el);
-    }, [loadMore, hasMore, loadingMore]);
+    }, [loadMore, hasMore, loadingMore, filters.sort, visibleCount, sortedProducts.length]);
 
     /* ── cart ───────────────────────────────────────────────────────────────── */
     const handleAddToCart = async (prod, forceVariant = null) => {
@@ -681,11 +757,11 @@ export default function VtoProducts() {
                                         })()}
                                     </div>
                                 </div>
-                  {prod.nextOrderDiscountMessage && (
-                    <div className="next-order-discount-tag" title={prod.nextOrderDiscountMessage} onClick={(e) => { e.stopPropagation(); window.showDiscountPopup && window.showDiscountPopup(prod.nextOrderDiscountMessage, e.currentTarget); }}>
-                      <span className="text-truncate">{prod.nextOrderDiscountMessage}</span>
-                    </div>
-                  )}
+                                {prod.nextOrderDiscountMessage && (
+                                    <div className="next-order-discount-tag" title={prod.nextOrderDiscountMessage} onClick={(e) => { e.stopPropagation(); window.showDiscountPopup && window.showDiscountPopup(prod.nextOrderDiscountMessage, e.currentTarget); }}>
+                                        <span className="text-truncate">{prod.nextOrderDiscountMessage}</span>
+                                    </div>
+                                )}
 
                                 {/* Cart Button */}
                                 <div className="cart-section">
@@ -920,8 +996,8 @@ export default function VtoProducts() {
             <SEOMeta type="vtoproducts" /> {/* Add this */}
             <Header />
 
-            <div className="padding-left-rightss ms-lg-0 ms-3 mx-3 mt-5">
-                <div className="row mt-5">
+            <div className="padding-left-rightss ms-lg-0 mt-0">
+                <div className="row mt-0">
                     {/* Sidebar Filter on Left for Desktop */}
                     <div className="d-none d-lg-block col-lg-3 mt-5">
                         <BrandFilter {...brandFilterProps} />
@@ -1022,7 +1098,7 @@ export default function VtoProducts() {
                     {/* Products Grid Column */}
                     <div className="col-12 col-lg-9 mt-lg-5">
                         <div className="mb-3 d-flex justify-content-between align-items-center">
-                            <span className="text-muted page-title-main-name d-lg-block d-none mt-5">
+                            <span className="text-muted page-title-main-name d-lg-block d-none mt-0">
                                 Showing {totalCount} products
                             </span>
                             <div className="d-flex align-items-center gap-3">
@@ -1096,8 +1172,8 @@ export default function VtoProducts() {
 
 
                         <div className="row g-4 position-relative">
-                            {sortedProducts.length > 0 ? (
-                                sortedProducts.map(renderProductCard)
+                            {displayedProducts.length > 0 ? (
+                                displayedProducts.map(renderProductCard)
                             ) : (
                                 <div className="col-12 text-center py-5">
                                     <h4>No products found</h4>

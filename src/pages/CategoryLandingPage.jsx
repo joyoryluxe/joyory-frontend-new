@@ -17,9 +17,14 @@ import { CartContext } from "../Context/CartContext";
 import { UserContext } from "../context/UserContext.jsx";
 import "../styles/CategoryLandingPage.css";
 import "../styles/BestSellers.css";
+import "../styles/SkinTypes.css";
 import Bag from "../assets/Bag.svg";
+import vtoMobileBanner from "../assets/vto_mobile_banner.png";
+import shadeFinderMobileBanner from "../assets/shade_finder_mobile_banner.png";
+import quizMobileBanner from "../assets/quiz_mobile_banner.png";
 import { ToastContainer, toast } from "react-toastify";
 import SEOMeta from "../components/common/SEOMeta"; // Add import at top
+import PageNotFound from "./PageNotFound";
 
 // Import Swiper and its styles
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -126,65 +131,7 @@ const SectionSlider = ({
     );
 };
 
-// ===================== 404 NOT FOUND PAGE COMPONENT =====================
-const NotFoundPage = ({ message, onGoHome }) => (
-    <>
-        <Header />
-        <div className="container py-5">
-            <div className="row justify-content-center">
-                <div className="col-md-8 col-lg-6 text-center">
-                    <div className="mb-4">
-                        <div
-                            className="d-inline-flex align-items-center justify-content-center rounded-circle bg-light"
-                            style={{ width: '120px', height: '120px' }}
-                        >
-                            <span style={{ fontSize: '60px' }}>🔍</span>
-                        </div>
-                    </div>
-
-                    <h1 className="display-4 fw-bold mb-3 page-title-main-name">
-                        404
-                    </h1>
-
-                    <h2 className="h4 mb-4 page-title-main-name text-muted">
-                        Page Not Found
-                    </h2>
-
-                    <p className="lead mb-4 page-title-main-name text-secondary">
-                        {message || "The page you're looking for doesn't exist or has been moved."}
-                    </p>
-
-                    <div className="mb-5">
-                        <p className="text-muted mb-4 page-title-main-name">
-                            Here are some helpful links instead:
-                        </p>
-
-                        <div className="d-flex flex-column flex-sm-row gap-3 justify-content-center">
-                            <button
-                                className="btn btn-dark px-4 py-2 page-title-main-name"
-                                onClick={onGoHome || (() => window.location.href = '/')}
-                            >
-                                <i className="bi bi-house me-2"></i>
-                                Go to Homepage
-                            </button>
-
-                            <button
-                                className="btn btn-outline-dark px-4 py-2 page-title-main-name"
-                                onClick={() => window.history.back()}
-                            >
-                                <i className="bi bi-arrow-left me-2"></i>
-                                Go Back
-                            </button>
-                        </div>
-                    </div>
-
-
-                </div>
-            </div>
-        </div>
-        <Footer />
-    </>
-);
+// ===================== 404 NOT FOUND PAGE COMPONENT (REPLACED WITH PageNotFound) =====================
 
 // ===================== OUT OF STOCK POPUP COMPONENT =====================
 const OutOfStockPopup = ({ isOpen, onClose, productName }) => {
@@ -1091,34 +1038,10 @@ export default function CategoryLandingPage() {
             </div>
         );
 
-    // ========== NEW: Show 404 page if error condition met ==========
-    if (show404) {
-        return (
-            <NotFoundPage
-                message={errorMessage}
-                onGoHome={() => navigate('/', { replace: true })}
-            />
-        );
+    // ========== Show PageNotFound component if category not found or error ==========
+    if (show404 || error || !data) {
+        return <PageNotFound />;
     }
-
-    // ========== FALLBACK: Show error in page with header/footer ==========
-    if (error || !data)
-        return (
-            <>
-                <Header />
-                <div className="container text-center py-5">
-                    <h3 className="text-danger">Error</h3>
-                    <p className="text-muted">{error || "Category not found"}</p>
-                    <button
-                        className="btn btn-dark mt-3"
-                        onClick={() => navigate('/', { replace: true })}
-                    >
-                        Go to Homepage
-                    </button>
-                </div>
-                <Footer />
-            </>
-        );
 
     const {
         category,
@@ -1180,7 +1103,7 @@ export default function CategoryLandingPage() {
                             return (
                                 <SwiperSlide key={index} className="">
                                     <div
-                                        className="position-relative w-100 h-100 mt-xl-4 mt-3 padding-left-rightss"
+                                        className="position-relative w-100 h-100 mt-xl-0 mt-0 padding-left-rightss"
                                         style={{ cursor: targetLink ? "pointer" : "default" }}
                                         onClick={() =>
                                             targetLink && handleLinkNavigation(targetLink)
@@ -1190,7 +1113,7 @@ export default function CategoryLandingPage() {
                                             src={imgUrl}
                                             // alt={`${category.name} banner ${index + 1}`}
                                             alt={`Shop Premium ${category.name} Products Online - Joyory`}
-                                            className="slide-media hero-slider-image-responsive mt-5 pt-0"
+                                            className="slide-media hero-slider-image-responsive mt-0 pt-0"
                                             style={{ height: '100%' }}
                                         />
                                     </div>
@@ -1261,14 +1184,28 @@ export default function CategoryLandingPage() {
                                     const bannerLink = banner.image?.[0]?.link || banner.link;
                                     return (
                                         <div key={banner._id} className="h-100 row mt-lg-4 mt-3">
-                                            <div className="col-md-6 h-100 w-100">
+                                            <div
+                                                className="col-md-6 h-100 w-100 cursor-pointer"
+                                                onClick={() => {
+                                                    if (bannerLink) {
+                                                        handleLinkNavigation(bannerLink);
+                                                    } else {
+                                                        navigate("/quiz");
+                                                    }
+                                                }}
+                                            >
                                                 {bannerImage && (
-                                                    <img
-                                                        src={bannerImage}
-                                                        alt={banner.title}
-                                                        className="img-fluid banner-image-quiz"
-                                                        style={{ height: "auto", objectFit: "cover" }}
-                                                    />
+                                                    <div className="quiz-banner-image-wrapper d-flex justify-content-center">
+                                                        <picture className="w-100 h-100">
+                                                            <source media="(max-width: 768px)" srcSet={quizMobileBanner} />
+                                                            <img
+                                                                src={bannerImage}
+                                                                alt={banner.title || "Beauty Quiz"}
+                                                                className="img-fluid banner-image-quiz w-100 quiz-banner-image"
+                                                                style={{ height: "auto", objectFit: "cover" }}
+                                                            />
+                                                        </picture>
+                                                    </div>
                                                 )}
                                             </div>
                                             {/* <div className="col-md-6 d-lg-flex align-items-center">
@@ -1400,11 +1337,16 @@ export default function CategoryLandingPage() {
                                             }}
                                         >
                                             {bannerImage && (
-                                                <img
-                                                    src={bannerImage}
-                                                    alt={banner.title}
-                                                    className="img-fluid"
-                                                />
+                                                <div className="shade-banner-image-wrapper d-flex justify-content-center">
+                                                    <picture className="w-100 h-100">
+                                                        <source media="(max-width: 768px)" srcSet={shadeFinderMobileBanner} />
+                                                        <img
+                                                            src={bannerImage}
+                                                            alt={banner.title || "Shade Finder"}
+                                                            className="img-fluid w-100 shade-banner-image"
+                                                        />
+                                                    </picture>
+                                                </div>
                                             )}
                                         </div>
                                     );
@@ -1415,7 +1357,7 @@ export default function CategoryLandingPage() {
 
                 {/* Finds For You (For You From Joyory) - Slider with custom breakpoints */}
                 {findsForYou?.map((section) => (
-                    <section key={section._id} className="mb-lg-5 mb-4 padding-left-right-sub-category">
+                    <section key={section._id} className="mb-lg-0 mb-3 padding-left-right-sub-category">
                         <div className="d-flex justify-content-between align-items-center mb-3">
                             <h3 className="mb-3 top-categories-title mb-0 p-1 ms-md-0 page-title-main-name fw-normal">
                                 {section.title}
@@ -1501,16 +1443,21 @@ export default function CategoryLandingPage() {
                                                 style={{ cursor: 'pointer' }}
                                             >
                                                 {bannerImage && (
-                                                    <img
-                                                        src={bannerImage}
-                                                        alt={banner.title}
-                                                        className="img-fluid w-100"
-                                                        style={{
-                                                            height: "auto",
-                                                            borderRadius: '12px',
-                                                            objectFit: 'cover'
-                                                        }}
-                                                    />
+                                                    <div className="vto-banner-image-wrapper d-flex justify-content-center">
+                                                        <picture className="w-100 h-100">
+                                                            <source media="(max-width: 768px)" srcSet={vtoMobileBanner} />
+                                                            <img
+                                                                src={bannerImage}
+                                                                alt={banner.title || "Virtual Try On"}
+                                                                className="img-fluid w-100 vto-banner-image"
+                                                                style={{
+                                                                    height: "auto",
+                                                                    borderRadius: '0px',
+                                                                    objectFit: 'cover'
+                                                                }}
+                                                            />
+                                                        </picture>
+                                                    </div>
                                                 )}
                                             </div>
                                         </SwiperSlide>
@@ -1674,74 +1621,69 @@ export default function CategoryLandingPage() {
                     </section>
                 )}
 
-                {/* Skin Types - Slider - FIXED NAVIGATION */}
+                {/* Skin Types - Slider - EXACTLY LIKE HOME PAGE */}
                 {skinTypes?.length > 0 && (
                     <section className="mb-5 padding-left-right-sub-category">
                         <div className="d-flex justify-content-between align-items-center mb-3">
                             <h3 className="top-categories-title p-1 mb-0 page-title-main-name fw-normal">
-                                {skinTypesTitle || "Shop by Skin Type"}
+                                {skinTypesTitle || "Shop By Skin Types"}
                             </h3>
                         </div>
 
-                        <SectionSlider
-                            slidesPerView={4}
-                            spaceBetween={15}
-                            breakpoints={{
-                                320: { slidesPerView: 2, spaceBetween: 10 },
-                                576: { slidesPerView: 3, spaceBetween: 10 },
-                                768: { slidesPerView: 3, spaceBetween: 15 },
-                                1024: { slidesPerView: 4, spaceBetween: 15 },
-                                1200: { slidesPerView: 4, spaceBetween: 15 },
-                                1400: { slidesPerView: 4, spaceBetween: 15 },
-                                1600: { slidesPerView: 4, spaceBetween: 15 },
-                                1920: { slidesPerView: 4, spaceBetween: 15 },
-                                2560: { slidesPerView: 4, spaceBetween: 15 },
-                                3840: { slidesPerView: 4, spaceBetween: 15 },
-                            }}
-                        >
-                            {skinTypes.map((st) => {
-                                if (!st || !st.slug) {
-                                    return null;
-                                }
-
-                                return (
-                                    <SwiperSlide key={st._id || st.slug}>
-                                        <div
-                                            className="text-center cursor-pointer ingredient-card"
-                                            onClick={() => {
-                                                if (!st.slug) return;
-                                                navigate(`/products?skinTypes=${encodeURIComponent(st.slug)}`);
-                                            }}
-                                            style={{
-                                                padding: "12px",
-                                                borderRadius: "12px",
-                                                transition: "all 0.3s ease",
-                                            }}
-                                        >
-                                            {st.image && (
-                                                <img
-                                                    src={st.image}
-                                                    alt={st.name}
-                                                    className="img-fluid rounded"
-                                                    style={{
-                                                        width: "100%",
-                                                        aspectRatio: "1 / 1",
-                                                        objectFit: "cover",
-                                                        borderRadius: "10px",
-                                                    }}
-                                                    onError={(e) => {
-                                                        e.target.src = "/placeholder.png";
-                                                    }}
-                                                />
-                                            )}
-                                            {/* <p className="mt-2 mb-0 small fw-medium page-title-main-name text-center">
-                        {st.name || "Unknown"}
-                      </p> */}
-                                        </div>
-                                    </SwiperSlide>
-                                );
-                            })}
-                        </SectionSlider>
+                        <div className="mobile-responsive-code mb-5 m-0">
+                            <Swiper
+                                modules={[Autoplay, Pagination, Navigation]}
+                                pagination={{ clickable: true }}
+                                navigation={true}
+                                autoplay={{ delay: 2500, disableOnInteraction: false }}
+                                speed={800}
+                                spaceBetween={15}
+                                breakpoints={{
+                                    300: { slidesPerView: 2, spaceBetween: 0 },
+                                    380: { slidesPerView: 2, spaceBetween: 0 },
+                                    576: { slidesPerView: 3, spaceBetween: 0 },
+                                    768: { slidesPerView: 3, spaceBetween: 0 },
+                                    992: { slidesPerView: 3, spaceBetween: 0 },
+                                    1024: { slidesPerView: 3, spaceBetween: 0 },
+                                    1200: { slidesPerView: 3, spaceBetween: 0 },
+                                    1400: { slidesPerView: 3, spaceBetween: 0 },
+                                }}
+                            >
+                                {skinTypes.map((st, index) => {
+                                    if (!st || (!st.slug && !st._id)) return null;
+                                    return (
+                                        <SwiperSlide key={st._id || st.slug || index}>
+                                            <div
+                                                className="p-2"
+                                                onClick={() => {
+                                                    if (!st.slug) return;
+                                                    navigate(`/products/skintype/${st.slug}`, {
+                                                        state: {
+                                                            activeSkinTypeSlug: st.slug,
+                                                            activeSkinTypeName: st.name,
+                                                            fromSkinTypes: true,
+                                                        }
+                                                    });
+                                                }}
+                                                style={{ cursor: "pointer" }}
+                                            >
+                                                <div className="skin-card">
+                                                    <img
+                                                        src={st.image || "https://via.placeholder.com/400x250"}
+                                                        alt={st.name}
+                                                        className="img-fluid"
+                                                        style={{ objectFit: "cover", width: "100%", height: "100%" }}
+                                                        onError={(e) => {
+                                                            e.target.src = "https://via.placeholder.com/400x250";
+                                                        }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </SwiperSlide>
+                                    );
+                                })}
+                            </Swiper>
+                        </div>
                     </section>
                 )}
 

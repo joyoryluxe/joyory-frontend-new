@@ -18,7 +18,7 @@
   position: relative;
   /* background: linear-gradient(135deg, #111111 0%, #1c1c1c 60%, #292117 100%); */
   color: #1c1a1a;
-  padding: 40px 20px 80px;
+  padding: 20px 20px 60px;
   text-align: center;
   overflow: hidden;
 }
@@ -178,7 +178,7 @@
 }
 
 .privacy-sidebar-title {
-font-family: 'Montserrat', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 1.25rem;
   font-weight: 700;
   margin-bottom: 20px;
@@ -384,7 +384,7 @@ font-family: 'Montserrat', sans-serif;
 }
 
 .privacy-no-results h3 {
- font-family: 'Montserrat', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 1.5rem;
   font-weight: 600;
   color: #111111;
@@ -548,7 +548,7 @@ font-family: 'Montserrat', sans-serif;
   }
 
   .privacy-header-banner {
-    padding: 60px 15px;
+    padding: 15px 15px;
   }
 
   .privacy-header-banner h1 {
@@ -636,7 +636,7 @@ font-family: 'Montserrat', sans-serif;
 }
 
 .privacy-grievance-title {
-font-family: 'Montserrat', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 1.15rem;
   font-weight: 700;
   color: #111111;

@@ -66,7 +66,7 @@ export default function Skintypes() {
       {error && <p className="text-center text-danger">{error}</p>}
 
       {!loading && !error && skinTypes.length > 0 ? (
-        <div className="mobile-responsive-code">
+        <div className="mobile-responsive-code mb-5">
           <Swiper
             modules={[Autoplay, Pagination, Navigation]}
             pagination={{ clickable: true }}
@@ -80,9 +80,9 @@ export default function Skintypes() {
               576: { slidesPerView: 3, spaceBetween: 0 },
               768: { slidesPerView: 3, spaceBetween: 0 },
               992: { slidesPerView: 3, spaceBetween: 0 },
-              1024: { slidesPerView: 4, spaceBetween: 0 },
-              1200: { slidesPerView: 5, spaceBetween: 0 },
-              1400: { slidesPerView: 5, spaceBetween: 0 },
+              1024: { slidesPerView: 3, spaceBetween: 0 },
+              1200: { slidesPerView: 3, spaceBetween: 0 },
+              1400: { slidesPerView: 3, spaceBetween: 0 },
             }}
           >
             {skinTypes.map((type, index) => (

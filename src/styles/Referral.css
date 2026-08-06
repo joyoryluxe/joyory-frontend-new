@@ -494,6 +494,7 @@
 
 @media (max-width: 991px) {
     .referral-hero {
+        margin-top: 10px;
         flex-direction: column;
         text-align: center;
         padding: 2rem;

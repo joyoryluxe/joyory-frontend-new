@@ -1,5 +1,5 @@
 .foundation-wrapper {
-    margin-top: 80px;
+    margin-top: 60px;
     padding-bottom: 50px !important;
     /* margin-bottom: 50px; */
 }
@@ -75,7 +75,7 @@
 
 @media (max-width: 768px) {
     .foundation-wrapper {
-        margin-top: 55px !important;
+        margin-top: 30px !important;
 
     }
 

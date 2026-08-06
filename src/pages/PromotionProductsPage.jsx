@@ -84,6 +84,8 @@ const PromotionProducts = () => {
   const [showVariantOverlay, setShowVariantOverlay] = useState(null);
   const [selectedVariantType, setSelectedVariantType] = useState("all");
 
+  const [visibleCount, setVisibleCount] = useState(9);
+
   const sortedProducts = useMemo(() => {
     if (!products || !Array.isArray(products)) return [];
     const getProductPrice = (prod) => {
@@ -117,6 +119,13 @@ const PromotionProducts = () => {
     }
     return sorted;
   }, [products, filters.sort, selectedVariants]);
+
+  const displayedProducts = useMemo(() => {
+    if (filters.sort && filters.sort !== 'recent') {
+      return sortedProducts.slice(0, visibleCount);
+    }
+    return sortedProducts;
+  }, [sortedProducts, filters.sort, visibleCount]);
 
   const loaderRef = useRef(null);
 
@@ -176,7 +185,7 @@ const PromotionProducts = () => {
   };
 
   /* ===================== FETCH PRODUCTS ===================== */
-  const buildQueryParams = (cursor = null) => {
+  const buildQueryParams = (cursor = null, limitOverride = null) => {
     const p = new URLSearchParams();
 
     // Promotion filter
@@ -196,11 +205,9 @@ const PromotionProducts = () => {
       if (filters.priceRange.max != null) p.append("maxPrice", filters.priceRange.max);
     }
     if (filters.discountRange) p.append("minDiscount", filters.discountRange.min);
-    // Do not pass sort to backend API due to cursor pagination limitation (nextCursor is null when sorting)
-    // if (filters.sort) p.append("sort", filters.sort);
 
     if (cursor) p.append("cursor", cursor);
-    p.append("limit", "9");
+    p.append("limit", limitOverride ? String(limitOverride) : "9");
 
     return p.toString();
   };
@@ -211,11 +218,58 @@ const PromotionProducts = () => {
     try {
       if (reset) {
         setLoading(true);
+        setVisibleCount(9);
         setProducts([]);
         setNextCursor(null);
         setHasMore(true);
       } else {
         setLoadingMore(true);
+      }
+
+      const isCustomSort = filters.sort && filters.sort !== 'recent';
+
+      if (reset && isCustomSort) {
+        let allFetched = [];
+        let currentCursor = null;
+        let hasMorePages = true;
+        let lastData = null;
+
+        while (hasMorePages) {
+          const query = buildQueryParams(currentCursor, 50);
+          const res = await axiosInstance.get(`${PRODUCT_ALL_API}?${query}`);
+          const data = res.data;
+          lastData = data;
+
+          const prods = data.products || [];
+          const pg = data.pagination || {};
+
+          allFetched = [...allFetched, ...prods];
+
+          if (pg.hasMore && pg.nextCursor) {
+            currentCursor = pg.nextCursor;
+          } else {
+            hasMorePages = false;
+          }
+        }
+
+        if (lastData) {
+          if (lastData.promoMeta) setPromotionMeta(lastData.promoMeta);
+          if (lastData.trendingCategories) setTrendingCategories(lastData.trendingCategories);
+          if (lastData.filters) setFilterData(lastData.filters);
+
+          const def = {};
+          allFetched.forEach((pr) => {
+            const av = (pr.variants || []).find((v) => v.stock > 0) || pr.variants?.[0];
+            if (av) def[pr._id] = av;
+          });
+          setSelectedVariants((prev) => ({ ...prev, ...def }));
+        }
+
+        const uniqueFetched = Array.from(new Map(allFetched.map(p => [p._id, p])).values());
+        setProducts(uniqueFetched);
+        setHasMore(uniqueFetched.length > 9);
+        setNextCursor(null);
+        return;
       }
 
       const query = buildQueryParams(cursor);
@@ -262,20 +316,36 @@ const PromotionProducts = () => {
   }, [slug, filters]);
 
   const loadMoreProducts = useCallback(() => {
-    if (nextCursor && hasMore && !loadingMore) {
-      fetchPromotionProducts(nextCursor, false);
+    if (loadingMore) return;
+    const isCustomSort = filters.sort && filters.sort !== 'recent';
+    if (isCustomSort) {
+      if (visibleCount < sortedProducts.length) {
+        setLoadingMore(true);
+        setTimeout(() => {
+          setVisibleCount((prev) => {
+            const next = prev + 9;
+            if (next >= sortedProducts.length) setHasMore(false);
+            return next;
+          });
+          setLoadingMore(false);
+        }, 200);
+      }
+      return;
     }
-  }, [nextCursor, hasMore, loadingMore]);
+    if (nextCursor && hasMore) fetchPromotionProducts(nextCursor, false);
+  }, [nextCursor, hasMore, loadingMore, filters.sort, visibleCount, sortedProducts.length]);
 
   useEffect(() => {
-    if (!loaderRef.current || !hasMore || loadingMore) return;
+    const isCustomSort = filters.sort && filters.sort !== 'recent';
+    const canMore = isCustomSort ? (visibleCount < sortedProducts.length) : hasMore;
+    if (!canMore || loadingMore) return;
     const observer = new IntersectionObserver(
       ([entry]) => entry.isIntersecting && loadMoreProducts(),
       { rootMargin: "100px", threshold: 0.1 }
     );
-    observer.observe(loaderRef.current);
+    if (loaderRef.current) observer.observe(loaderRef.current);
     return () => observer.disconnect();
-  }, [loadMoreProducts, hasMore, loadingMore]);
+  }, [loadMoreProducts, hasMore, loadingMore, filters.sort, visibleCount, sortedProducts.length]);
 
   /* ===================== HANDLERS ===================== */
   const handleVariantSelect = (pid, v) => setSelectedVariants((p) => ({ ...p, [pid]: v }));
@@ -422,11 +492,11 @@ const PromotionProducts = () => {
               );
             })()}
           </p>
-                  {prod.nextOrderDiscountMessage && (
-                    <div className="next-order-discount-tag" title={prod.nextOrderDiscountMessage} onClick={(e) => { e.stopPropagation(); window.showDiscountPopup && window.showDiscountPopup(prod.nextOrderDiscountMessage, e.currentTarget); }}>
-                      <span className="text-truncate">{prod.nextOrderDiscountMessage}</span>
-                    </div>
-                  )}
+          {prod.nextOrderDiscountMessage && (
+            <div className="next-order-discount-tag" title={prod.nextOrderDiscountMessage} onClick={(e) => { e.stopPropagation(); window.showDiscountPopup && window.showDiscountPopup(prod.nextOrderDiscountMessage, e.currentTarget); }}>
+              <span className="text-truncate">{prod.nextOrderDiscountMessage}</span>
+            </div>
+          )}
 
           <div className="mt-auto">
             <button
@@ -695,12 +765,12 @@ const PromotionProducts = () => {
                         <p className="mb-0 fs-6 fw-semibold page-title-main-name">Sort by</p>
                         <span className="text-muted small">
                           {
-                            filters.sort === 'priceHighToLow' ? 'Price: High to Low' : 
-                            filters.sort === 'priceLowToHigh' ? 'Price: Low to High' : 
-                            filters.sort === 'rating' ? 'Top Rated' :
-                            filters.sort === 'discountHighToLow' ? 'Discount: High to Low' :
-                            filters.sort === 'discountLowToHigh' ? 'Discount: Low to High' :
-                            'Newest First'
+                            filters.sort === 'priceHighToLow' ? 'Price: High to Low' :
+                              filters.sort === 'priceLowToHigh' ? 'Price: Low to High' :
+                                filters.sort === 'rating' ? 'Top Rated' :
+                                  filters.sort === 'discountHighToLow' ? 'Discount: High to Low' :
+                                    filters.sort === 'discountLowToHigh' ? 'Discount: Low to High' :
+                                      'Newest First'
                           }
                         </span>
                       </div>
@@ -778,22 +848,22 @@ const PromotionProducts = () => {
                   </button>
                 )} */}
                 {/* Desktop Sort Dropdown */}
-                <div className="d-none d-lg-flex align-items-center position-relative" style={{ gap: '6px'}}>
+                <div className="d-none d-lg-flex align-items-center position-relative" style={{ gap: '6px' }}>
                   <span className="text-muted page-title-main-name" style={{ fontSize: '14px' }}>Sort by:</span>
                   <div className="position-relative">
-                    <button 
+                    <button
                       type="button"
                       className="btn btn-link text-decoration-none p-0 page-title-main-name fw-semibold text-dark d-inline-flex align-items-center gap-1"
                       onClick={() => setShowDesktopSortDropdown(!showDesktopSortDropdown)}
                       style={{ border: 'none', background: 'none', boxShadow: 'none', fontSize: '14px' }}
                     >
                       {
-                        filters.sort === 'priceHighToLow' ? 'Price: High to Low' : 
-                        filters.sort === 'priceLowToHigh' ? 'Price: Low to High' : 
-                        filters.sort === 'rating' ? 'Top Rated' :
-                        filters.sort === 'discountHighToLow' ? 'Discount: High to Low' :
-                        filters.sort === 'discountLowToHigh' ? 'Discount: Low to High' :
-                        'Newest First'
+                        filters.sort === 'priceHighToLow' ? 'Price: High to Low' :
+                          filters.sort === 'priceLowToHigh' ? 'Price: Low to High' :
+                            filters.sort === 'rating' ? 'Top Rated' :
+                              filters.sort === 'discountHighToLow' ? 'Discount: High to Low' :
+                                filters.sort === 'discountLowToHigh' ? 'Discount: Low to High' :
+                                  'Newest First'
                       }
                       <FaChevronDown style={{ fontSize: '10px', transition: 'transform 0.2s', transform: showDesktopSortDropdown ? 'rotate(180deg)' : 'none' }} />
                     </button>
@@ -810,20 +880,20 @@ const PromotionProducts = () => {
                             { value: "discountLowToHigh", label: "Discount: Low to High" }
                           ].map(({ value, label }) => (
                             <li key={value}>
-                              <button 
+                              <button
                                 type="button"
                                 className={`dropdown-item page-title-main-name py-2 custom-sort-item ${filters.sort === value ? 'active' : ''}`}
                                 onClick={() => {
                                   setFilters(prev => ({ ...prev, sort: value }));
                                   setShowDesktopSortDropdown(false);
                                 }}
-                                style={{ 
-                                  fontSize: '13px', 
-                                  border: 'none', 
+                                style={{
+                                  fontSize: '13px',
+                                  border: 'none',
 
 
-                                  width: '100%', 
-                                  textAlign: 'left', 
+                                  width: '100%',
+                                  textAlign: 'left',
                                   cursor: 'pointer',
                                   padding: '8px 16px'
                                 }}
@@ -842,7 +912,7 @@ const PromotionProducts = () => {
 
 
             <div className="row g-4">
-              {sortedProducts.length > 0 ? sortedProducts.map(renderProductCard) : (
+              {displayedProducts.length > 0 ? displayedProducts.map(renderProductCard) : (
                 <div className="col-12 text-center py-5">
                   <h4>No products found</h4>
                   <p className="text-muted">Try adjusting your filters.</p>

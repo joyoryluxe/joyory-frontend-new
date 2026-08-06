@@ -977,11 +977,11 @@ export default function OffersPage() {
                         }}
                         navigation
                         speed={800}
-                        className="mt-lg-5 mt-2"
+                        className="mt-lg-0 mt-0"
                         style={{ height: "auto", width: "100%" }}
                     >
                         {banner.image.map((bannerItem, index) => (
-                            <SwiperSlide key={bannerItem._id || index} className="mt-5">
+                            <SwiperSlide key={bannerItem._id || index} className="mt-0">
                                 <div
                                     className="position-relative w-100 h-100 cursor-pointer offerces-banner-sections"
                                     style={{ cursor: bannerItem.link ? "pointer" : "default" }}

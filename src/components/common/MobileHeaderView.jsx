@@ -1,691 +1,6 @@
-// // src/components/Mobileheaderview.jsx
-// import React, { useState, useRef, useEffect } from "react";
-// import { FaAngleDown, FaTimes, FaArrowLeft, FaMicrophone, FaSearch, FaCommentDots, FaMagic, FaFlask, FaCamera, FaPalette, FaClipboardList } from "react-icons/fa";
-// import { Link, useNavigate, useLocation } from "react-router-dom";
-// import axiosInstance from "../../utils/axiosInstance.js";
-// import logo from "../../assets/logo.png";
-// import Cart from "../../assets/Cart.svg";
-// import users from "../../assets/user.svg";
-// import search from "../../assets/search.svg";
-// import menu from "../../assets/menu.svg";
-// import home from "../../assets/home.svg";
-// import HeaderSearchbar from "./HeaderSearchbar";
-
-// // Active icons
-// import homeActive from "../../assets/homeactive.svg";
-// import cartActive from "../../assets/Cartactive.svg";
-// import userActive from "../../assets/useractive.svg";
-
-// import wishlist from "../../assets/favourite.svg";      // or .png
-// import wishlistActive from "../../assets/favourite-active.svg";
-
-// import "../../styles/Header.css";
-// import "../../App.css";
-
-// // Static Menu Items
-// const STATIC_MENU_ITEMS = [
-//   // { label: "Brands", path: "/" },
-//   { label: "Offers", path: "/offerlanding" },
-//   { label: "AI Beauty Features", path: "/ai-beauty-lab", hasDropdown: true },
-//   { label: "About us", path: "/aboutus" }
-// ];
-
-// const Mobileheaderview = ({
-//   isMobile,
-//   isTablet,
-//   menuOpen,
-//   setMenuOpen,
-//   closeMenu,
-//   user,
-//   logoutUser,
-//   cartCount,
-//   categories: propCategories,
-//   searchText,
-//   setSearchText,
-//   handleSearchSubmit,
-//   startListening,
-//   listening,
-//   searchResults,
-//   recentSearches,
-//   popularSearches,
-//   handleResultClick,
-//   handleRecentSearchClick,
-//   clearRecentSearches,
-//   clearSearch,
-//   searchInputRef,
-//   wishlistCount,        // ← ADD THIS
-// }) => {
-//   const navigate = useNavigate();
-//   const location = useLocation();
-
-//   const [showMobileSearch, setShowMobileSearch] = useState(false);
-//   const [mobileCategoriesOpen, setMobileCategoriesOpen] = useState({});
-//   const [showLogoutModal, setShowLogoutModal] = useState(false);
-//   const [mobileAiLabOpen, setMobileAiLabOpen] = useState(true);
-//   const isWishlistActive = location.pathname === "/wishlist";
-
-
-
-//   // Fetch categories
-//   const [fetchedCategories, setFetchedCategories] = useState([]);
-//   const [loadingCategories, setLoadingCategories] = useState(true);
-
-//   useEffect(() => {
-//     const fetchCategories = async () => {
-//       try {
-//         const res = await axiosInstance.get("/api/user/categories/tree");
-//         setFetchedCategories(Array.isArray(res.data) ? res.data : []);
-//       } catch (err) {
-//         console.error("Category fetch failed in Mobileheaderview", err);
-//         setFetchedCategories([]);
-//       } finally {
-//         setLoadingCategories(false);
-//       }
-//     };
-//     fetchCategories();
-//   }, []);
-
-//   const mobileMenuRef = useRef(null);
-
-//   const handleCloseMenu = () => {
-//     setTimeout(() => {
-//       closeMenu();
-//     }, 200);
-//   };
-
-
-
-
-//   //   const [wishlistCount, setWishlistCount] = useState(0);
-
-//   // useEffect(() => {
-//   //   const getWishlistCount = () => {
-//   //     if (user && !user.guest) {
-//   //       // Fetch from API or use context
-//   //       // setWishlistCount(apiWishlistCount);
-//   //     } else {
-//   //       const guestWishlist = JSON.parse(localStorage.getItem("guestWishlist")) || [];
-//   //       setWishlistCount(guestWishlist.length);
-//   //     }
-//   //   };
-//   //   getWishlistCount();
-//   // }, [user]);
-
-//   // Close drawer when clicking outside
-//   useEffect(() => {
-//     const handleClickOutside = (event) => {
-//       if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target) && menuOpen) {
-//         setMenuOpen(false);
-//       }
-//     };
-//     document.addEventListener("mousedown", handleClickOutside);
-//     return () => document.removeEventListener("mousedown", handleClickOutside);
-//   }, [menuOpen, setMenuOpen]);
-
-//   // Toggle subcategory dropdown
-//   const toggleMobileCategory = (id) => {
-//     setMobileCategoriesOpen(prev => ({ ...prev, [id]: !prev[id] }));
-//   };
-
-//   // ==================== PROTECTED NAVIGATION ====================
-//   const handleProtectedNavigation = (path, label) => {
-//     if (!user || user.guest) {
-//       navigate("/login", {
-//         state: { from: path, message: `Please login to access ${label}` }
-//       });
-//       closeMenu();
-//       return;
-//     }
-//     navigate(path);
-//     closeMenu();
-//   };
-
-//   const confirmLogout = () => {
-//     logoutUser();
-//     setShowLogoutModal(false);
-//     closeMenu();
-//     navigate("/login");
-//   };
-
-//   const handleMobileSearchBack = () => {
-//     setShowMobileSearch(false);
-//     setSearchText("");
-//   };
-
-//   // ==================== RENDER SUBCATEGORIES ====================
-//   const renderMobileSubCategories = (subs, level = 1) => {
-//     if (!subs?.length) return null;
-//     return (
-//       <div className={`mobile-subcategory mobile-subcategory-level-${level}`}>
-//         {subs.map((sub) => (
-//           <div key={sub._id} className="mobile-subcategory-item ps-3 page-title-main-name">
-//             <div className="d-flex align-items-center justify-content-between">
-//               {/* Sub Category → Product Listing Page */}
-//               <Link
-//                 to={`/products/category/${sub.slug}`}
-//                 onClick={handleCloseMenu}
-//                 className="mobile-subcategory-link p-0"
-//               >
-//                 {sub.name}
-//               </Link>
-
-//               {sub.subCategories?.length > 0 && level === 1 && (
-//                 <FaAngleDown
-//                   className={`mobile-category-toggle ${mobileCategoriesOpen[sub._id] ? 'open' : ''}`}
-//                   onClick={(e) => {
-//                     e.preventDefault();
-//                     toggleMobileCategory(sub._id);
-//                   }}
-//                 />
-//               )}
-//             </div>
-//             {level === 1 && mobileCategoriesOpen[sub._id] && renderMobileSubCategories(sub.subCategories, level + 1)}
-//           </div>
-//         ))}
-//       </div>
-//     );
-//   };
-
-//   const categoriesToRender = fetchedCategories.length > 0 ? fetchedCategories : propCategories;
-
-//   // Footer Active States
-//   const isHomeActive = location.pathname === "/";
-//   const isCartActive = location.pathname === "/cartpage";
-//   const isProfileActive = location.pathname === "/useraccount";
-
-
-//   const getDiscount = (p) => {
-//     if (!p?.originalPrice || !p?.price) return 0;
-
-//     if (p.originalPrice > p.price) {
-//       return Math.round(((p.originalPrice - p.price) / p.originalPrice) * 100);
-//     }
-//     return 0;
-//   };
-
-//   return (
-//     <>
-//       {/* Mobile Search Overlay - unchanged */}
-//       {showMobileSearch && (
-//         <div className="mobile-search-overlay">
-//           <div className="mobile-search-header">
-//             <FaArrowLeft className="mobile-search-back" onClick={handleMobileSearchBack} />
-//             <form onSubmit={handleSearchSubmit} className="mobile-search-input-container">
-//               <FaSearch className="mobile-search-icon" />
-//               <input
-//                 className="w-100 border-0 bg-transparent page-title-main-name"
-//                 ref={searchInputRef}
-//                 type="text"
-//                 placeholder="Search products, brands..."
-//                 value={searchText}
-//                 onChange={(e) => setSearchText(e.target.value)}
-//                 autoFocus
-//               />
-//               {searchText && <FaTimes className="mobile-search-clear" onClick={clearSearch} />}
-//               <FaMicrophone className={`mobile-search-voice ${listening ? "listening" : ""}`} onClick={startListening} />
-//             </form>
-//             {/* <button className="mobile-search-go page-title-main-name" onClick={handleSearchSubmit} disabled={!searchText.trim()}>
-//               Go
-//             </button> */}
-//           </div>
-
-//           <div className="mobile-search-results page-title-main-name">
-//             {/* ... (search results code unchanged) ... */}
-//             {!searchText.trim() ? (
-//               <div className="mobile-search-suggestions">
-//                 {recentSearches.length > 0 && (
-//                   <div className="mobile-search-section">
-//                     <div className="mobile-search-section-header">
-//                       <span>Recent Searches</span>
-//                       <button onClick={clearRecentSearches} className="mobile-search-clear-btn page-title-main-name">Clear</button>
-//                     </div>
-//                     <div className="mobile-search-tags">
-//                       {recentSearches.map((s, i) => (
-//                         <div key={i} onClick={() => handleRecentSearchClick(s)} className="mobile-search-tag">
-//                           {s}
-//                         </div>
-//                       ))}
-//                     </div>
-//                   </div>
-//                 )}
-//                 {popularSearches.length > 0 && (
-//                   <div className="mobile-search-section">
-//                     <div className="mobile-search-section-header">
-//                       <span>Popular Searches</span>
-//                     </div>
-//                     <div className="mobile-search-tags">
-//                       {popularSearches.map((s, i) => (
-//                         <div key={i} onClick={() => handleRecentSearchClick(s)} className="mobile-search-tag popular">
-//                           {s}
-//                         </div>
-//                       ))}
-//                     </div>
-//                   </div>
-//                 )}
-//               </div>
-//             ) : searchResults.length > 0 ? (
-//               <div className="mobile-search-products">
-//                 {searchResults.map((item) => {
-//                   const discount = getDiscount(item);
-//                   return (
-//                     <div key={item._id} onClick={() => handleResultClick(item)} className="mobile-search-product">
-//                       <div className="mobile-search-product-image">
-//                         <img src={item.image} alt={item.name} loading="lazy" />
-//                         {discount > 0 && <div className="mobile-search-product-discount">-{discount}%</div>}
-//                       </div>
-//                       <div className="mobile-search-product-info">
-//                         <div className="mobile-search-product-brand">{item.brand}</div>
-//                         <div className="mobile-search-product-name">{item.name}</div>
-//                         <div className="mobile-search-product-price-row">
-//                           <span className="mobile-search-product-price">₹{item.price}</span>
-//                           {discount > 0 && <span className="mobile-search-product-original">₹{item.originalPrice}</span>}
-//                         </div>
-//                       </div>
-//                     </div>
-//                   );
-//                 })}
-//                 <div className="mobile-search-view-all" onClick={handleSearchSubmit}>
-//                   View all results for "{searchText}" →
-//                 </div>
-//               </div>
-//             ) : (
-//               <div className="mobile-search-empty">
-//                 <div>No products found for "{searchText}"</div>
-//                 <small>Try different keywords</small>
-//               </div>
-//             )}
-//           </div>
-//         </div>
-//       )}
-
-//       {/* Main Mobile Header */}
-//       <header className="header d-block">
-//         <div className="d-flex justify-content-between margin-padding-header align-items-center">
-//           <Link to="/" className="logo" onClick={handleCloseMenu}>
-//             <img src={logo} className="ps-sm-0 ps-4 ms-sm-0" alt="JOYORY Logo" />
-//           </Link>
-
-//           <div className="menu-toggle" onClick={() => setMenuOpen(true)}>
-//             <img src={menu} alt="Menu" />
-//           </div>
-
-//           {!showMobileSearch && (
-//             <div className="nav-icons user-dropdown gap-3 d-md-flex d-lg-none d-flex">
-//               <div className="mobile-search-icon-wrapper" onClick={() => setShowMobileSearch(true)}>
-//                 <img src={search} alt="Search" />
-//               </div>
-//               <Link to="/cartpage" className="mobile-cart-icon" onClick={handleCloseMenu}>
-//                 <img src={Cart} alt="Cart" />
-//                 {cartCount > 0 && <span className="cart-count page-title-main-name">{cartCount > 99 ? '99+' : cartCount}</span>}
-//               </Link>
-//             </div>
-//           )}
-//         </div>
-
-//         {/* Mobile Drawer Menu */}
-//         <nav className={`nav-links ${menuOpen ? "active" : ""}`} ref={mobileMenuRef}>
-//           <div className="mobile-menu-header">
-//             <div className="mobile-menu-logo">
-//               <img src={logo} alt="JOYORY Logo" />
-//             </div>
-//             <div className="menu-close" onClick={handleCloseMenu}>
-//               <FaTimes size={22} />
-//             </div>
-//           </div>
-
-//           <div className="nav-links-container w-100">
-//             {/* Home */}
-//             <div className="border-top-bottom">
-//               <Link to="/" onClick={handleCloseMenu} className="nav-link d-flex ms-3 page-title-main-name margin-top-home">
-//                 Home
-//               </Link>
-//             </div>
-
-//             {/* Main Categories → Category Landing Page */}
-//             <div className="border-top-bottom">
-//               {!loadingCategories && categoriesToRender.map((cat) => (
-//                 <div key={cat._id} className="mobile-category-item">
-//                   <div className="mobile-category-main">
-//                     {/* Main Category Click → Category Landing Page */}
-//                     <Link
-//                       to={`/category/${cat.slug}`}
-//                       onClick={handleCloseMenu}
-//                       className="mobile-category-name page-title-main-name p-0"
-//                     >
-//                       {cat.name}
-//                     </Link>
-
-//                     {cat.subCategories?.length > 0 && (
-//                       <FaAngleDown
-//                         className={`mobile-category-toggle ${mobileCategoriesOpen[cat._id] ? 'open' : ''}`}
-//                         onClick={(e) => {
-//                           e.preventDefault();
-//                           toggleMobileCategory(cat._id);
-//                         }}
-//                       />
-//                     )}
-//                   </div>
-
-//                   {/* Sub Categories → Product Listing Page */}
-//                   {mobileCategoriesOpen[cat._id] && renderMobileSubCategories(cat.subCategories)}
-//                 </div>
-//               ))}
-
-//               {loadingCategories && <div className="mobile-category-loading">Loading categories...</div>}
-//             </div>
-
-//             {/* Shade Finder */}
-//             {/* <div className="border-top-bottom mobile-category-header">
-//               <Link to="/FoundationShadeFinder" onClick={handleCloseMenu} className="mt-1 pb-1 page-title-main-name shadefinder-name-mobile-tabalte">
-//                 Shade Finder
-//               </Link>
-//             </div> */}
-
-//             {/* Static Menu Items with Protection */}
-//             <div className="border-top-bottom">
-//               {STATIC_MENU_ITEMS.map((item) => {
-//                 const isForYou = item.path === "/foryoulanding";
-
-//                 if (item.label === "AI Beauty Features") {
-//                   return (
-//                     <div key={item.label} className="mobile-category-item">
-//                       <div
-//                         className="mobile-category-main"
-//                         style={{ paddingLeft: "16px" }}
-//                       >
-//                         <Link
-//                           to="/ai-beauty-lab"
-//                           onClick={handleCloseMenu}
-//                           className="mobile-category-name page-title-main-name p-0"
-//                         >
-//                           {item.label}
-//                         </Link>
-//                         <FaAngleDown
-//                           className={`mobile-category-toggle ${mobileAiLabOpen ? 'open' : ''}`}
-//                           onClick={(e) => {
-//                             e.preventDefault();
-//                             e.stopPropagation();
-//                             setMobileAiLabOpen(!mobileAiLabOpen);
-//                           }}
-//                         />
-//                       </div>
-
-//                       {mobileAiLabOpen && (
-//                         <div className="mobile-subcategory" style={{ background: "#f8f9fa" }}>
-//                           <div className="mobile-subcategory-item ps-3 page-title-main-name">
-//                             <Link
-//                               to="/ai-beauty-lab#ai-beauty-concierge"
-//                               onClick={() => {
-//                                 handleCloseMenu();
-//                                 window.dispatchEvent(new CustomEvent("scroll-to-ai-tool", { detail: "ai-beauty-concierge" }));
-//                               }}
-//                               className="mobile-subcategory-link p-0 d-flex align-items-center gap-2"
-//                             >
-//                               <FaCommentDots size={16} style={{ color: "#000" }} /> AI Beauty Concierge
-//                             </Link>
-//                           </div>
-//                           <div className="mobile-subcategory-item ps-3 page-title-main-name">
-//                             <Link
-//                               to="/ai-beauty-lab#skincare-routine-builder"
-//                               onClick={() => {
-//                                 handleCloseMenu();
-//                                 window.dispatchEvent(new CustomEvent("scroll-to-ai-tool", { detail: "skincare-routine-builder" }));
-//                               }}
-//                               className="mobile-subcategory-link p-0 d-flex align-items-center gap-2"
-//                             >
-//                               <FaMagic size={16} style={{ color: "#000" }} /> Skincare Routine Builder
-//                             </Link>
-//                           </div>
-//                           <div className="mobile-subcategory-item ps-3 page-title-main-name">
-//                             <Link
-//                               to="/ai-beauty-lab#ingredient-compatibility"
-//                               onClick={() => {
-//                                 handleCloseMenu();
-//                                 window.dispatchEvent(new CustomEvent("scroll-to-ai-tool", { detail: "ingredient-compatibility" }));
-//                               }}
-//                               className="mobile-subcategory-link p-0 d-flex align-items-center gap-2"
-//                             >
-//                               <FaFlask size={16} style={{ color: "#000" }} /> Ingredient Compatibility
-//                             </Link>
-//                           </div>
-//                           <div className="mobile-subcategory-item ps-3 page-title-main-name">
-//                             <Link
-//                               to="/ai-beauty-lab#ai-virtual-try-on"
-//                               onClick={() => {
-//                                 handleCloseMenu();
-//                                 window.dispatchEvent(new CustomEvent("scroll-to-ai-tool", { detail: "ai-virtual-try-on" }));
-//                               }}
-//                               className="mobile-subcategory-link p-0 d-flex align-items-center gap-2"
-//                             >
-//                               <FaCamera size={16} style={{ color: "#000" }} /> AI Virtual Try-On
-//                             </Link>
-//                           </div>
-//                           <div className="mobile-subcategory-item ps-3 page-title-main-name">
-//                             <Link
-//                               to="/ai-beauty-lab#foundation-shade-finder"
-//                               onClick={() => {
-//                                 handleCloseMenu();
-//                                 window.dispatchEvent(new CustomEvent("scroll-to-ai-tool", { detail: "foundation-shade-finder" }));
-//                               }}
-//                               className="mobile-subcategory-link p-0 d-flex align-items-center gap-2"
-//                             >
-//                               <FaPalette size={16} style={{ color: "#000" }} /> Foundation Shade Finder
-//                             </Link>
-//                           </div>
-//                           <div className="mobile-subcategory-item ps-3 page-title-main-name">
-//                             <Link
-//                               to="/ai-beauty-lab#smart-beauty-quiz"
-//                               onClick={() => {
-//                                 handleCloseMenu();
-//                                 window.dispatchEvent(new CustomEvent("scroll-to-ai-tool", { detail: "smart-beauty-quiz" }));
-//                               }}
-//                               className="mobile-subcategory-link p-0 d-flex align-items-center gap-2"
-//                             >
-//                               <FaClipboardList size={16} style={{ color: "#000" }} /> Smart Beauty Quiz
-//                             </Link>
-//                           </div>
-//                         </div>
-//                       )}
-//                     </div>
-//                   );
-//                 }
-
-//                 return (
-//                   <div
-//                     key={item.label}
-//                     onClick={() => {
-//                       if (isForYou) {
-//                         if (!user || user.guest) {
-//                           navigate("/login", { state: { from: "/foryoulanding" } });
-//                         } else {
-//                           navigate(item.path);
-//                         }
-//                       } else if (item.path) {
-//                         navigate(item.path);
-//                       }
-//                       handleCloseMenu();
-//                     }}
-//                     className="nav-link d-flex ms-3 page-title-main-name mt-1 pb-1 cursor-pointer"
-//                   >
-//                     {item.label}
-//                   </div>
-//                 );
-//               })}
-//             </div>
-
-//             {/* User Links */}
-//             <div className="border-top-bottom page-title-main-name">
-//               <Link to="/useraccount" onClick={handleCloseMenu} className="nav-link mobile-profile-link ms-3 d-flex mt-1 pb-1">
-//                 My Account
-//               </Link>
-//             </div>
-//             <div className="border-top-bottom page-title-main-name">
-//               <Link to="/Myorders" onClick={handleCloseMenu} className="nav-link ms-3 d-flex mt-1 pb-1">
-//                 My Orders
-//               </Link>
-//             </div>
-
-//             <div>
-//               {user && !user.guest ? (
-//                 <div onClick={() => setShowLogoutModal(true)} className="nav-link logout-link ms-3 d-flex mt-1 pb-1 page-title-main-name cursor-pointer">
-//                   Logout
-//                 </div>
-//               ) : (
-//                 <Link to="/login" onClick={handleCloseMenu} className="nav-link ms-3 d-flex mt-1 pb-1 page-title-main-name">
-//                   Login
-//                 </Link>
-//               )}
-//             </div>
-//           </div>
-//         </nav>
-//       </header>
-
-//       {/* Mobile Footer Navigation */}
-//       {/* {(isMobile || isTablet) && (
-//         <div className="mobile-footer-navigation w-100">
-//           <Link to="/" onClick={closeMenu} className={`mobile-footer-nav-item ${isHomeActive ? 'active' : ''}`}>
-//             <img src={isHomeActive ? homeActive : home} alt="Home" />
-//             <div className={`mobile-footer-nav-label page-title-main-name ${isHomeActive ? 'active' : ''}`}>Home</div>
-//           </Link>
-
-//           <Link to="/cartpage" onClick={closeMenu} className={`mobile-footer-nav-item ${isCartActive ? 'active' : ''}`}>
-//             <img src={isCartActive ? cartActive : Cart} alt="Cart" />
-//             <div className={`mobile-footer-nav-label page-title-main-name ${isCartActive ? 'active' : ''}`}>Cart</div>
-//             {cartCount > 0 && <div className="mobile-footer-cart-count">{cartCount > 9 ? '9+' : cartCount}</div>}
-//           </Link>
-
-//           <Link to="/useraccount" onClick={closeMenu} className={`mobile-footer-nav-item ${isProfileActive ? 'active' : ''}`}>
-//             <img src={isProfileActive ? userActive : users} alt="Profile" />
-//             <div className={`mobile-footer-nav-label page-title-main-name ${isProfileActive ? 'active' : ''}`}>Profile</div>
-//           </Link>
-//         </div>
-//       )} */}
-
-
-
-//       {(isMobile || isTablet) && (
-//         <div className="mobile-footer-navigation w-100">
-//           <Link to="/" onClick={closeMenu} className={`mobile-footer-nav-item ${isHomeActive ? 'active' : ''}`}>
-//             <img src={isHomeActive ? homeActive : home} alt="Home" />
-//             <div className={`mobile-footer-nav-label page-title-main-name ${isHomeActive ? 'active' : ''}`}>Home</div>
-//           </Link>
-
-//           <Link to="/cartpage" onClick={closeMenu} className={`mobile-footer-nav-item ${isCartActive ? 'active' : ''}`}>
-//             <img src={isCartActive ? cartActive : Cart} alt="Cart" />
-//             <div className={`mobile-footer-nav-label page-title-main-name ${isCartActive ? 'active' : ''}`}>Cart</div>
-//             {cartCount > 0 && <div className="mobile-footer-cart-count">{cartCount > 9 ? '9+' : cartCount}</div>}
-//           </Link>
-
-
-//           <Link to="/wishlist" onClick={closeMenu} className={`mobile-footer-nav-item ${isWishlistActive ? 'active' : ''}`}>
-//             <img src={isWishlistActive ? wishlistActive : wishlist} alt="Wishlist" />
-//             <div className={`mobile-footer-nav-label page-title-main-name ${isWishlistActive ? 'active' : ''}`}>Wishlist</div>
-//             {wishlistCount > 0 && <div className="mobile-footer-cart-count">{wishlistCount > 9 ? '9+' : wishlistCount}</div>}
-//           </Link>
-
-
-//           <div
-//             onClick={() => {
-//               if (!user || user.guest) {
-//                 navigate("/login", { state: { from: "/useraccount" } });
-//               } else {
-//                 navigate("/useraccount");
-//               }
-//               closeMenu();
-//             }}
-//             className={`mobile-footer-nav-item ${isProfileActive ? 'active' : ''}`}
-//             style={{ cursor: 'pointer' }}
-//           >
-//             <img src={isProfileActive ? userActive : users} alt="Profile" />
-//             <div className={`mobile-footer-nav-label page-title-main-name ${isProfileActive ? 'active' : ''}`}>Profile</div>
-//           </div>
-//         </div>
-//       )}
-
-//       {/* Logout Confirmation Modal */}
-//       {showLogoutModal && (
-//         <div
-//           style={{
-//             position: "fixed",
-//             top: 0,
-//             left: 0,
-//             width: "100%",
-//             height: "100%",
-//             background: "rgba(0,0,0,0.5)",
-//             display: "flex",
-//             alignItems: "center",
-//             justifyContent: "center",
-//             zIndex: 9999,
-//           }}
-//         >
-//           <div
-//             style={{
-//               background: "#fff",
-//               padding: "25px",
-//               borderRadius: "10px",
-//               width: "320px",
-//               textAlign: "center",
-//               boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
-//             }}
-//           >
-//             <h3 style={{ marginBottom: "10px", fontSize: "18px" }}>
-//               Confirm Logout
-//             </h3>
-
-//             <p style={{ fontSize: "14px", color: "#666", marginBottom: "20px" }}>
-//               Are you sure you want to logout?
-//             </p>
-
-//             <div style={{ display: "flex", gap: "10px" }}>
-//               <button
-//                 onClick={() => setShowLogoutModal(false)}
-//                 style={{
-//                   flex: 1,
-//                   padding: "10px",
-//                   borderRadius: "6px",
-//                   border: "1px solid #ddd",
-//                   background: "#f5f5f5",
-//                   cursor: "pointer",
-//                 }}
-//               >
-//                 Cancel
-//               </button>
-
-//               <button
-//                 onClick={confirmLogout}
-//                 style={{
-//                   flex: 1,
-//                   padding: "10px",
-//                   borderRadius: "6px",
-//                   border: "none",
-//                   background: "#e63946",
-//                   color: "#fff",
-//                   fontWeight: "600",
-//                   cursor: "pointer",
-//                 }}
-//               >
-//                 Logout
-//               </button>
-//             </div>
-//           </div>
-//         </div>
-//       )}
-//     </>
-//   );
-// };
-
-// export default Mobileheaderview;
-
-
-
-
-
-
-
-
 // src/components/Mobileheaderview.jsx
 import React, { useState, useRef, useEffect } from "react";
-import { FaAngleDown, FaTimes, FaArrowLeft, FaMicrophone, FaSearch, FaCommentDots, FaMagic, FaFlask, FaCamera, FaPalette, FaClipboardList } from "react-icons/fa";
+import { FaAngleDown, FaTimes, FaArrowLeft, FaMicrophone, FaSearch, FaCommentDots, FaMagic, FaFlask, FaCamera, FaPalette, FaClipboardList, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import axiosInstance from "../../utils/axiosInstance.js";
 import logo from "../../assets/logo.png";
@@ -749,6 +64,72 @@ const Mobileheaderview = ({
   const [mobileAiLabOpen, setMobileAiLabOpen] = useState(true);
   const isWishlistActive = location.pathname === "/wishlist";
 
+  const [brands, setBrands] = useState([]);
+  const [mobileBrandsOpen, setMobileBrandsOpen] = useState(false);
+  const [visibleBrandsCount, setVisibleBrandsCount] = useState(5);
+
+  useEffect(() => {
+    const fetchBrands = async () => {
+      try {
+        const res = await axiosInstance.get("/api/user/brands");
+        setBrands(Array.isArray(res.data) ? res.data : []);
+      } catch (err) {
+        console.error("Error fetching brands in MobileHeaderView:", err);
+      }
+    };
+    fetchBrands();
+  }, []);
+
+  const handleLoadMoreBrands = (e) => {
+    e.stopPropagation();
+    setVisibleBrandsCount((prev) => Math.min(prev + 5, brands.length));
+  };
+
+  const handleShowLessBrands = (e) => {
+    e.stopPropagation();
+    setVisibleBrandsCount(5);
+  };
+
+  // Scrollable popular searches refs & state
+  const popularScrollRef = useRef(null);
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(true);
+
+  const checkScrollButtons = () => {
+    if (popularScrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = popularScrollRef.current;
+      setShowLeftArrow(scrollLeft > 2);
+      setShowRightArrow(scrollLeft + clientWidth < scrollWidth - 2);
+    }
+  };
+
+  useEffect(() => {
+    const el = popularScrollRef.current;
+    if (el) {
+      el.addEventListener("scroll", checkScrollButtons);
+      checkScrollButtons();
+      const t = setTimeout(checkScrollButtons, 150);
+      window.addEventListener("resize", checkScrollButtons);
+      return () => {
+        if (el) {
+          el.removeEventListener("scroll", checkScrollButtons);
+        }
+        window.removeEventListener("resize", checkScrollButtons);
+        clearTimeout(t);
+      };
+    }
+  }, [popularSearches, showMobileSearch]);
+
+  const scroll = (direction) => {
+    if (popularScrollRef.current) {
+      const scrollAmount = 120;
+      popularScrollRef.current.scrollBy({
+        left: direction === "left" ? -scrollAmount : scrollAmount,
+        behavior: "smooth"
+      });
+    }
+  };
+
 
 
   // Fetch categories
@@ -776,6 +157,42 @@ const Mobileheaderview = ({
     setTimeout(() => {
       closeMenu();
     }, 200);
+  };
+
+  const handleLogoClick = (e) => {
+    handleCloseMenu();
+    if (location.pathname === "/") {
+      e.preventDefault();
+      try {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        if (document.documentElement) {
+          document.documentElement.scrollTo({ top: 0, behavior: "smooth" });
+        }
+        if (document.body) {
+          document.body.scrollTo({ top: 0, behavior: "smooth" });
+        }
+      } catch (err) {
+        window.scrollTo(0, 0);
+      }
+    }
+  };
+
+  const handleFooterHomeClick = (e) => {
+    closeMenu();
+    if (location.pathname === "/") {
+      e.preventDefault();
+      try {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        if (document.documentElement) {
+          document.documentElement.scrollTo({ top: 0, behavior: "smooth" });
+        }
+        if (document.body) {
+          document.body.scrollTo({ top: 0, behavior: "smooth" });
+        }
+      } catch (err) {
+        window.scrollTo(0, 0);
+      }
+    }
   };
 
 
@@ -918,7 +335,7 @@ const Mobileheaderview = ({
             {/* ... (search results code unchanged) ... */}
             {!searchText.trim() ? (
               <div className="mobile-search-suggestions">
-                {recentSearches.length > 0 && (
+                {/* {recentSearches.length > 0 && (
                   <div className="mobile-search-section">
                     <div className="mobile-search-section-header">
                       <span>Recent Searches</span>
@@ -932,18 +349,108 @@ const Mobileheaderview = ({
                       ))}
                     </div>
                   </div>
-                )}
+                )} */}
                 {popularSearches.length > 0 && (
                   <div className="mobile-search-section">
                     <div className="mobile-search-section-header">
                       <span>Popular Searches</span>
                     </div>
-                    <div className="mobile-search-tags">
-                      {popularSearches.map((s, i) => (
-                        <div key={i} onClick={() => handleRecentSearchClick(s)} className="mobile-search-tag popular">
-                          {s}
-                        </div>
-                      ))}
+                    <div style={{ position: "relative", display: "flex", alignItems: "center", width: "100%" }}>
+                      {showLeftArrow && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            scroll("left");
+                          }}
+                          style={{
+                            position: "absolute",
+                            left: "-5px",
+                            top: "50%",
+                            transform: "translateY(-50%)",
+                            background: "white",
+                            border: "1px solid #ddd",
+                            borderRadius: "50%",
+                            width: "24px",
+                            height: "24px",
+                            minWidth: "24px",
+                            minHeight: "24px",
+                            padding: 0,
+                            flexShrink: 0,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            boxShadow: "0 2px 5px rgba(0,0,0,0.15)",
+                            cursor: "pointer",
+                            zIndex: 10,
+                            color: "#000"
+                          }}
+                        >
+                          <FaChevronLeft size={10} />
+                        </button>
+                      )}
+
+                      <div
+                        ref={popularScrollRef}
+                        className="hide-scrollbar"
+                        style={{
+                          display: "flex",
+                          flexWrap: "nowrap",
+                          gap: "8px",
+                          overflowX: "auto",
+                          scrollBehavior: "smooth",
+                          width: "100%",
+                          padding: "4px 0"
+                        }}
+                      >
+                        {popularSearches.map((s, i) => (
+                          <div
+                            key={i}
+                            onClick={() => handleRecentSearchClick(s)}
+                            className="mobile-search-tag popular"
+                            style={{
+                              whiteSpace: "nowrap",
+                              flexShrink: 0
+                            }}
+                          >
+                            {s}
+                          </div>
+                        ))}
+                      </div>
+
+                      {showRightArrow && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            scroll("right");
+                          }}
+                          style={{
+                            position: "absolute",
+                            right: "-5px",
+                            top: "50%",
+                            transform: "translateY(-50%)",
+                            background: "white",
+                            border: "1px solid #ddd",
+                            borderRadius: "50%",
+                            width: "24px",
+                            height: "24px",
+                            minWidth: "24px",
+                            minHeight: "24px",
+                            padding: 0,
+                            flexShrink: 0,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            boxShadow: "0 2px 5px rgba(0,0,0,0.15)",
+                            cursor: "pointer",
+                            zIndex: 10,
+                            color: "#000"
+                          }}
+                        >
+                          <FaChevronRight size={10} />
+                        </button>
+                      )}
                     </div>
                   </div>
                 )}
@@ -986,7 +493,7 @@ const Mobileheaderview = ({
       {/* Main Mobile Header */}
       <header className="header d-block">
         <div className="d-flex justify-content-between margin-padding-header align-items-center">
-          <Link to="/" className="logo" onClick={handleCloseMenu}>
+          <Link to="/" className="logo" onClick={handleLogoClick}>
             <img src={logo} className="ps-sm-0 ps-4 ms-sm-0" alt="JOYORY Logo" />
           </Link>
 
@@ -1021,9 +528,82 @@ const Mobileheaderview = ({
           <div className="nav-links-container w-100">
             {/* Home */}
             <div className="border-top-bottom">
-              <Link to="/" onClick={handleCloseMenu} className="nav-link d-flex ms-3 page-title-main-name margin-top-home">
-                Home
-              </Link>
+              <div className="mobile-category-item">
+                <div className="mobile-category-main">
+                  <Link
+                    to="/"
+                    onClick={handleCloseMenu}
+                    className="mobile-category-name page-title-main-name p-0 margin-top-home"
+                    style={{ fontSize: "15px", color: "#333", textDecoration: "none" }}
+                  >
+                    Home
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            {/* Brands Dropdown */}
+            <div className="border-top-bottom">
+              <div className="mobile-category-item">
+                <div className="mobile-category-main">
+                  <span
+                    className="mobile-category-name page-title-main-name p-0"
+                    style={{ fontSize: "15px", color: "#333", textDecoration: "none" }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setMobileBrandsOpen(!mobileBrandsOpen);
+                    }}
+                  >
+                    Brands
+                  </span>
+                  <FaAngleDown
+                    className={`mobile-category-toggle ${mobileBrandsOpen ? 'open' : ''}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setMobileBrandsOpen(!mobileBrandsOpen);
+                    }}
+                  />
+                </div>
+                {mobileBrandsOpen && (
+                  <div className="mobile-subcategory" style={{ background: "#f8f9fa" }}>
+                    {brands.slice(0, visibleBrandsCount).map((brand) => (
+                      <div key={brand._id || brand.slug} className="mobile-subcategory-item ps-3 page-title-main-name">
+                        <Link
+                          to={`/brand/${brand.slug}`}
+                          onClick={handleCloseMenu}
+                          className="mobile-subcategory-link p-0"
+                          style={{ fontSize: "14px", color: "#555", textDecoration: "none" }}
+                        >
+                          {brand.name}
+                        </Link>
+                      </div>
+                    ))}
+
+                    {/* Load More / Show Less buttons */}
+                    <div className="mobile-subcategory-item ps-3 py-2">
+                      {visibleBrandsCount < brands.length ? (
+                        <span
+                          onClick={handleLoadMoreBrands}
+                          className="text-dark fw-bold page-title-main-name"
+                          style={{ cursor: "pointer", fontSize: "13px" }}
+                        >
+                          + Load More
+                        </span>
+                      ) : (
+                        brands.length > 5 && (
+                          <span
+                            onClick={handleShowLessBrands}
+                            className="text-dark fw-bold page-title-main-name"
+                            style={{ cursor: "pointer", fontSize: "13px" }}
+                          >
+                            - Show Less
+                          </span>
+                        )
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Main Categories → Category Landing Page */}
@@ -1036,6 +616,7 @@ const Mobileheaderview = ({
                       to={cat.subCategories?.length > 0 ? `/category/${cat.slug}` : `/Products/category/${cat.slug}`}
                       onClick={handleCloseMenu}
                       className="mobile-category-name page-title-main-name p-0"
+                      style={{ fontSize: "15px", color: "#333", textDecoration: "none" }}
                     >
                       {cat.name}
                     </Link>
@@ -1082,6 +663,7 @@ const Mobileheaderview = ({
                           to="/ai-beauty-lab"
                           onClick={handleCloseMenu}
                           className="mobile-category-name page-title-main-name p-0"
+                          style={{ fontSize: "15px", color: "#333", textDecoration: "none" }}
                         >
                           {item.label}
                         </Link>
@@ -1105,6 +687,7 @@ const Mobileheaderview = ({
                                 window.dispatchEvent(new CustomEvent("scroll-to-ai-tool", { detail: "ai-beauty-concierge" }));
                               }}
                               className="mobile-subcategory-link p-0 d-flex align-items-center gap-2"
+                              style={{ fontSize: "14px", color: "#555", textDecoration: "none" }}
                             >
                               <FaCommentDots size={16} style={{ color: "#000" }} /> AI Beauty Concierge
                             </Link>
@@ -1117,6 +700,7 @@ const Mobileheaderview = ({
                                 window.dispatchEvent(new CustomEvent("scroll-to-ai-tool", { detail: "skincare-routine-builder" }));
                               }}
                               className="mobile-subcategory-link p-0 d-flex align-items-center gap-2"
+                              style={{ fontSize: "14px", color: "#555", textDecoration: "none" }}
                             >
                               <FaMagic size={16} style={{ color: "#000" }} /> Skincare Routine Builder
                             </Link>
@@ -1129,6 +713,7 @@ const Mobileheaderview = ({
                                 window.dispatchEvent(new CustomEvent("scroll-to-ai-tool", { detail: "ingredient-compatibility" }));
                               }}
                               className="mobile-subcategory-link p-0 d-flex align-items-center gap-2"
+                              style={{ fontSize: "14px", color: "#555", textDecoration: "none" }}
                             >
                               <FaFlask size={16} style={{ color: "#000" }} /> Ingredient Compatibility
                             </Link>
@@ -1141,6 +726,7 @@ const Mobileheaderview = ({
                                 window.dispatchEvent(new CustomEvent("scroll-to-ai-tool", { detail: "ai-virtual-try-on" }));
                               }}
                               className="mobile-subcategory-link p-0 d-flex align-items-center gap-2"
+                              style={{ fontSize: "14px", color: "#555", textDecoration: "none" }}
                             >
                               <FaCamera size={16} style={{ color: "#000" }} /> AI Virtual Try-On
                             </Link>
@@ -1153,6 +739,7 @@ const Mobileheaderview = ({
                                 window.dispatchEvent(new CustomEvent("scroll-to-ai-tool", { detail: "foundation-shade-finder" }));
                               }}
                               className="mobile-subcategory-link p-0 d-flex align-items-center gap-2"
+                              style={{ fontSize: "14px", color: "#555", textDecoration: "none" }}
                             >
                               <FaPalette size={16} style={{ color: "#000" }} /> Foundation Shade Finder
                             </Link>
@@ -1165,6 +752,7 @@ const Mobileheaderview = ({
                                 window.dispatchEvent(new CustomEvent("scroll-to-ai-tool", { detail: "smart-beauty-quiz" }));
                               }}
                               className="mobile-subcategory-link p-0 d-flex align-items-center gap-2"
+                              style={{ fontSize: "14px", color: "#555", textDecoration: "none" }}
                             >
                               <FaClipboardList size={16} style={{ color: "#000" }} /> Smart Beauty Quiz
                             </Link>
@@ -1176,50 +764,90 @@ const Mobileheaderview = ({
                 }
 
                 return (
-                  <div
-                    key={item.label}
-                    onClick={() => {
-                      if (isForYou) {
-                        if (!user || user.guest) {
-                          navigate("/login", { state: { from: "/foryoulanding" } });
-                        } else {
-                          navigate(item.path);
-                        }
-                      } else if (item.path) {
-                        navigate(item.path);
-                      }
-                      handleCloseMenu();
-                    }}
-                    className="nav-link d-flex ms-3 page-title-main-name mt-1 pb-1 cursor-pointer"
-                  >
-                    {item.label}
+                  <div key={item.label} className="mobile-category-item">
+                    <div className="mobile-category-main">
+                      <Link
+                        to={item.path}
+                        onClick={() => {
+                          if (isForYou) {
+                            if (!user || user.guest) {
+                              navigate("/login", { state: { from: "/foryoulanding" } });
+                            } else {
+                              navigate(item.path);
+                            }
+                          } else if (item.path) {
+                            navigate(item.path);
+                          }
+                          handleCloseMenu();
+                        }}
+                        className="mobile-category-name page-title-main-name p-0"
+                        style={{ fontSize: "15px", color: "#333", textDecoration: "none" }}
+                      >
+                        {item.label}
+                      </Link>
+                    </div>
                   </div>
                 );
               })}
             </div>
 
             {/* User Links */}
-            <div className="border-top-bottom page-title-main-name">
-              <Link to="/useraccount" onClick={handleCloseMenu} className="nav-link mobile-profile-link ms-3 d-flex mt-1 pb-1">
-                My Account
-              </Link>
-            </div>
-            <div className="border-top-bottom page-title-main-name">
-              <Link to="/Myorders" onClick={handleCloseMenu} className="nav-link ms-3 d-flex mt-1 pb-1">
-                My Orders
-              </Link>
+            <div className="border-top-bottom">
+              <div className="mobile-category-item">
+                <div className="mobile-category-main">
+                  <Link
+                    to="/useraccount"
+                    onClick={handleCloseMenu}
+                    className="mobile-category-name page-title-main-name p-0"
+                    style={{ fontSize: "15px", color: "#333", textDecoration: "none" }}
+                  >
+                    My Account
+                  </Link>
+                </div>
+              </div>
             </div>
 
-            <div>
-              {user && !user.guest ? (
-                <div onClick={() => setShowLogoutModal(true)} className="nav-link logout-link ms-3 d-flex mt-1 pb-1 page-title-main-name cursor-pointer">
-                  Logout
+            <div className="border-top-bottom">
+              <div className="mobile-category-item">
+                <div className="mobile-category-main">
+                  <Link
+                    to="/Myorders"
+                    onClick={handleCloseMenu}
+                    className="mobile-category-name page-title-main-name p-0"
+                    style={{ fontSize: "15px", color: "#333", textDecoration: "none" }}
+                  >
+                    My Orders
+                  </Link>
                 </div>
-              ) : (
-                <Link to="/login" onClick={handleCloseMenu} className="nav-link ms-3 d-flex mt-1 pb-1 page-title-main-name">
-                  Login
-                </Link>
-              )}
+              </div>
+            </div>
+
+            <div className="border-top-bottom">
+              <div className="mobile-category-item">
+                <div className="mobile-category-main">
+                  {user && !user.guest ? (
+                    <span
+                      onClick={() => {
+                        setShowLogoutModal(true);
+                        handleCloseMenu();
+                      }}
+                      className="mobile-category-name page-title-main-name p-0"
+                      style={{ fontSize: "15px", color: "#333", textDecoration: "none", cursor: "pointer" }}
+                    >
+                      Logout
+                    </span>
+                  ) : (
+                    <Link
+                      to="/login"
+                      onClick={handleCloseMenu}
+                      className="mobile-category-name page-title-main-name p-0"
+                      style={{ fontSize: "15px", color: "#333", textDecoration: "none" }}
+                    >
+                      Login
+                    </Link>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </nav>
@@ -1250,7 +878,7 @@ const Mobileheaderview = ({
 
       {(isMobile || isTablet) && (
         <div className="mobile-footer-navigation w-100">
-          <Link to="/" onClick={closeMenu} className={`mobile-footer-nav-item ${isHomeActive ? 'active' : ''}`}>
+          <Link to="/" onClick={handleFooterHomeClick} className={`mobile-footer-nav-item ${isHomeActive ? 'active' : ''}`}>
             <img src={isHomeActive ? homeActive : home} alt="Home" />
             <div className={`mobile-footer-nav-label page-title-main-name ${isHomeActive ? 'active' : ''}`}>Home</div>
           </Link>
