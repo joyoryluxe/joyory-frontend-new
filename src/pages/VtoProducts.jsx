@@ -681,11 +681,11 @@ export default function VtoProducts() {
                                         })()}
                                     </div>
                                 </div>
-                  {prod.nextOrderDiscountMessage && (
-                    <div className="next-order-discount-tag" title={prod.nextOrderDiscountMessage} onClick={(e) => { e.stopPropagation(); window.showDiscountPopup && window.showDiscountPopup(prod.nextOrderDiscountMessage, e.currentTarget); }}>
-                      <span className="text-truncate">{prod.nextOrderDiscountMessage}</span>
-                    </div>
-                  )}
+                                {prod.nextOrderDiscountMessage && (
+                                    <div className="next-order-discount-tag" title={prod.nextOrderDiscountMessage} onClick={(e) => { e.stopPropagation(); window.showDiscountPopup && window.showDiscountPopup(prod.nextOrderDiscountMessage, e.currentTarget); }}>
+                                        <span className="text-truncate">{prod.nextOrderDiscountMessage}</span>
+                                    </div>
+                                )}
 
                                 {/* Cart Button */}
                                 <div className="cart-section">
@@ -920,8 +920,8 @@ export default function VtoProducts() {
             <SEOMeta type="vtoproducts" /> {/* Add this */}
             <Header />
 
-            <div className="padding-left-rightss ms-lg-0 ms-3 mx-3 mt-5">
-                <div className="row mt-5">
+            <div className="padding-left-rightss ms-lg-0 mt-0">
+                <div className="row mt-0">
                     {/* Sidebar Filter on Left for Desktop */}
                     <div className="d-none d-lg-block col-lg-3 mt-5">
                         <BrandFilter {...brandFilterProps} />
@@ -1022,7 +1022,7 @@ export default function VtoProducts() {
                     {/* Products Grid Column */}
                     <div className="col-12 col-lg-9 mt-lg-5">
                         <div className="mb-3 d-flex justify-content-between align-items-center">
-                            <span className="text-muted page-title-main-name d-lg-block d-none mt-5">
+                            <span className="text-muted page-title-main-name d-lg-block d-none mt-0">
                                 Showing {totalCount} products
                             </span>
                             <div className="d-flex align-items-center gap-3">

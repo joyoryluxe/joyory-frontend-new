@@ -29,7 +29,7 @@
 }
 
 .terms-header-banner h1 {
- font-family: 'Montserrat', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 3rem;
   font-weight: 700;
   letter-spacing: 2px;
@@ -104,7 +104,8 @@
   background: transparent;
   outline: none;
   width: 100%;
-  min-width: 0; /* Prevent horizontal overflow in flex containers */
+  min-width: 0;
+  /* Prevent horizontal overflow in flex containers */
   font-size: 1rem;
   color: #2d2d2d;
   font-family: 'Montserrat', sans-serif !important;
@@ -146,7 +147,8 @@
 /* Left Sidebar - Sticky Navigation */
 .terms-sidebar {
   position: sticky;
-  top: 150px; /* Account for fixed Header and subheader spacers */
+  top: 150px;
+  /* Account for fixed Header and subheader spacers */
   max-height: calc(100vh - 180px);
   overflow-y: auto;
   background: rgba(255, 255, 255, 0.8);
@@ -170,7 +172,7 @@
 }
 
 .terms-sidebar-title {
- font-family: 'Montserrat', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 1.25rem;
   font-weight: 700;
   margin-bottom: 20px;
@@ -238,7 +240,8 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
   transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
   position: relative;
-  scroll-margin-top: 150px; /* Offset for sticky header scroll target */
+  scroll-margin-top: 150px;
+  /* Offset for sticky header scroll target */
 }
 
 .terms-section-card:hover {
@@ -283,7 +286,7 @@
 }
 
 .terms-section-header h2 {
- font-family: 'Montserrat', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 1.45rem;
   font-weight: 700;
   color: #111111;
@@ -375,7 +378,7 @@
 }
 
 .terms-no-results h3 {
- font-family: 'Montserrat', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 1.5rem;
   font-weight: 600;
   color: #111111;
@@ -438,7 +441,8 @@
 .terms-mobile-nav {
   display: none;
   position: sticky;
-  top: 130px; /* Clear mobile header */
+  top: 130px;
+  /* Clear mobile header */
   z-index: 90;
   margin-bottom: 25px;
 }
@@ -521,17 +525,20 @@
 
 @media (max-width: 992px) {
   .terms-main-layout {
-    grid-template-columns: minmax(0, 1fr); /* Stack sidebar and contents safely */
+    grid-template-columns: minmax(0, 1fr);
+    /* Stack sidebar and contents safely */
     padding: 0 20px;
     gap: 20px;
   }
 
   .terms-sidebar {
-    display: none; /* Hide desktop sidebar */
+    display: none;
+    /* Hide desktop sidebar */
   }
 
   .terms-mobile-nav {
-    display: block; /* Show mobile category select */
+    display: block;
+    /* Show mobile category select */
   }
 
   .terms-header-banner {
@@ -558,19 +565,23 @@
 
   .terms-search-section {
     margin-top: -20px;
-    padding: 0 10px; /* Reduce horizontal margin/padding on small viewports */
+    padding: 0 10px;
+    /* Reduce horizontal margin/padding on small viewports */
   }
 
   .terms-search-wrapper {
-    padding: 8px 12px; /* Optimize space inside search bar */
+    padding: 8px 12px;
+    /* Optimize space inside search bar */
   }
 
   .terms-main-layout {
-    padding: 0 10px; /* Ensure main cards have full screen width access on tiny viewports */
+    padding: 0 10px;
+    /* Ensure main cards have full screen width access on tiny viewports */
   }
 
   .terms-section-card {
-    padding: 20px 12px; /* Maximize text space on small screens */
+    padding: 20px 12px;
+    /* Maximize text space on small screens */
   }
 
   .terms-section-header h2 {

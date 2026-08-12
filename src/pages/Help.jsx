@@ -503,8 +503,8 @@ const Help = () => {
     <>
       <Header />
 
-      <div className="container-fluid ua-page page-title-main-name mt-lg-5 pt-lg-5 mt-md-0 pt-md-5">
-        <section className="Heading-Name mt-lg-5 mt-md-0 pt-md-0">
+      <div className="container-fluid ua-page page-title-main-name mt-0 pt-lg-5 mt-md-0 pt-md-5">
+        <section className="Heading-Name mt-0">
           <h3 className="ua-title ms-4">Help & FAQ</h3>
           <Sidebarcomon />
         </section>

@@ -5,6 +5,7 @@ import { Autoplay, Pagination, Navigation, EffectFade } from "swiper/modules";
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Loader from "../../common/Loader";
+import vtoMobileBanner from "../../../assets/vto_mobile_banner.png";
 import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
@@ -146,7 +147,7 @@ const Virtualtryonhome = () => {
   }
 
   return (
-    <div className="px-lg-5 px-0 container-lg-fluid">
+    <div className="px-lg-5 px-4 container-lg-fluid">
       <div className="position-relative banner-container">
         <Swiper
           modules={[Autoplay, Pagination, Navigation, EffectFade]}
@@ -185,17 +186,20 @@ const Virtualtryonhome = () => {
                   onClick={handleSlideClick}
                   style={{ cursor: 'pointer' }}
                 >
-                  <div className="banner-image-wrapper">
-                    <img
-                      src={banner.image}
-                      alt={banner.title || "Virtual Try On"}
-                      className="img-fluid w-100 margin-left-for-Virtualtryonhome"
-                      loading="lazy"
-                      onError={(e) => {
-                        e.currentTarget.src = "https://via.placeholder.com/1920x600/667eea/ffffff?text=Virtual+Try+On";
-                        e.currentTarget.onerror = null;
-                      }}
-                    />
+                  <div className="vto-banner-image-wrapper d-flex justify-content-center">
+                    <picture className="w-100 h-100">
+                      <source media="(max-width: 768px)" srcSet={vtoMobileBanner} />
+                      <img
+                        src={banner.image}
+                        alt={banner.title || "Virtual Try On"}
+                        className="img-fluid w-100 margin-left-for-Virtualtryonhome vto-banner-image"
+                        loading="lazy"
+                        onError={(e) => {
+                          e.currentTarget.src = "https://via.placeholder.com/1920x600/667eea/ffffff?text=Virtual+Try+On";
+                          e.currentTarget.onerror = null;
+                        }}
+                      />
+                    </picture>
                   </div>
 
                   {/* 🔥 NAVIGATION LOADING OVERLAY */}

@@ -1,6 +1,6 @@
 /* Premium Wallet Page Styling */
 * {
-   font-family: 'Montserrat', sans-serif;
+    font-family: 'Montserrat', sans-serif;
 }
 
 .wallet-page {
@@ -8,7 +8,7 @@
     min-height: 100vh;
     margin: 30px;
     background-color: #ffffff;
-    margin-top: 130px;
+    margin-top: 80px;
 }
 
 .main-sidebar h2 {
@@ -402,7 +402,7 @@
 @media (max-width: 991px) {
     .wallet-page {
         display: block;
-        margin: 90px 15px;
+        margin: 20px 15px;
     }
 
     .main-sidebar h2 {
@@ -459,119 +459,142 @@
 }
 
 @media (min-width: 1600px) {
+
     /* Wallet page layout adjustments */
     .wallet-page {
         margin: 130px auto 50px auto;
         max-width: 1500px;
     }
-    
+
     /* Sidebar adjustments */
     .ua-sidebar {
         width: 350px !important;
     }
+
     .ua-sidebar li {
         font-size: 18px !important;
         padding: 18px 16px !important;
         gap: 16px !important;
     }
+
     .ua-sidebar-icon-wrapper {
         width: 28px !important;
         height: 28px !important;
     }
-    
+
     /* Title adjustments */
     .wallet-title {
         font-size: 36px;
     }
+
     .wallet-subtitle {
         font-size: 16px;
     }
-    
+
     /* Digital Card adjustments */
     .joyory-digital-card {
         max-width: 500px;
         height: 280px;
         padding: 36px;
     }
+
     .card-brand {
         font-size: 16px;
     }
+
     .card-chip {
         width: 48px;
         height: 36px;
     }
+
     .card-balance-label {
         font-size: 13px;
     }
+
     .card-balance-val {
         font-size: 42px;
     }
+
     .card-holder {
         font-size: 13px;
     }
+
     .card-logo-img {
         height: 22px !important;
     }
-    
+
     /* Breakdown row adjustments */
     .balance-breakdown-row {
         max-width: 500px;
         gap: 20px;
     }
+
     .breakdown-card {
         padding: 20px;
         gap: 18px;
     }
+
     .breakdown-icon-wrap {
         width: 48px;
         height: 48px;
     }
+
     .breakdown-label {
         font-size: 13px;
     }
+
     .breakdown-value {
         font-size: 20px;
     }
-    
+
     /* Top Up panel adjustments */
     .topup-panel {
         padding: 40px;
     }
+
     .topup-title {
         font-size: 24px;
     }
+
     .topup-subtitle {
         font-size: 15px;
     }
+
     .custom-amount-input {
         height: 64px;
         font-size: 20px;
         padding-left: 50px;
     }
+
     .currency-symbol {
         font-size: 24px;
         left: 24px;
     }
+
     .quick-amount-options {
         gap: 12px;
     }
+
     .quick-amount-btn {
         height: 46px;
         font-size: 14.5px;
     }
+
     .add-money-cta-btn {
         height: 60px;
         font-size: 16.5px;
     }
-    
+
     /* Benefits section adjustments */
     .wallet-benefits-title {
         font-size: 24px;
         margin-top: 60px;
     }
+
     .wallet-benefits-grid {
         gap: 30px;
     }
+
     .benefit-card {
         padding: 36px 24px;
         min-height: 280px;
@@ -580,15 +603,18 @@
         justify-content: center;
         align-items: center;
     }
+
     .benefit-image-wrap {
         width: 90px;
         height: 90px;
         margin-bottom: 24px;
     }
+
     .benefit-card h4 {
         font-size: 18px;
         margin-bottom: 12px;
     }
+
     .benefit-card p {
         font-size: 14px;
         line-height: 1.6;

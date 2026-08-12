@@ -1569,8 +1569,9 @@ const RoutineBuilder = () => {
     <>
       <Header />
 
-      <div className="ua-page mt-lg-5 pt-lg-5 mt-md-0 pt-md-5">
-        <section className="Heading-Name mt-lg-5 pt-lg-3 mt-md-0 pt-md-0">
+   
+        <div className="ua-page mt-0 mt-lg-0 pt-lg-3  pt-md-5">
+        <section className="Heading-Name mt-lg-5 mt-0 pt-lg-3 mt-md-0 pt-md-0">
           <h3 className="ua-title ms-4 page-title-main-name" style={{ display: "inline-flex", alignItems: "center" }}>
             Routine Builder
             <button

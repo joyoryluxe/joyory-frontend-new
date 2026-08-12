@@ -464,8 +464,8 @@ const Useraccount = () => {
     <>
       <Header />
 
-      <div className="ua-page mt-lg-5 pt-lg-5 mt-md-0 pt-md-5">
-        <section className="Heading-Name mt-lg-5 pt-lg-3 mt-md-0 pt-md-0">
+      <div className="ua-page mt-lg-0 pt-lg-0 mt-md-0 pt-md-5">
+        <section className="Heading-Name mt-lg-5 pt-lg-3 mt-0 pt-md-0">
           <h3 className="ua-title ms-4 page-title-main-name d-lg-none">Personal Details</h3>
           <Sidebarcomon />
         </section>
