@@ -15,12 +15,12 @@
 }
 
 *{
-   font-family: 'Montserrat', sans-serif;
+   font-family: 'Montserrat';
 }
 
 .ic-container {
   /* margin: 8rem 3.75rem 0; */
-  margin: 4rem auto 5rem;
+  margin: 2rem auto 5rem;
   max-width: 999px;
   /* padding: 0 24px; */
 }
@@ -732,7 +732,6 @@
   border: 1px solid var(--joyory-border);
   box-shadow: 0 2px 4px rgba(0, 119, 182, 0.03);
   transition: all 0.2s ease-in-out;
-  cursor: pointer;
 }
 
 .ic-safe-badge:hover {
@@ -741,15 +740,6 @@
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(0, 119, 182, 0.08);
 }
-
-.ic-clickable-ingredient {
-  transition: color 0.2s ease;
-}
-
-.ic-clickable-ingredient:hover {
-  color: var(--joyory-blue) !important;
-}
-
 
 /* Severity Badges (Result Cards) */
 .ic-severity-badge {
@@ -935,7 +925,7 @@
 @media (max-width: 850px) {
 
   .ic-container {
-    margin: 0rem auto 3rem !important;
+    margin: 20px auto 3rem !important;
     padding: 0 16px;
   }
 
@@ -1022,7 +1012,7 @@
 
   .ic-tab-btn {
     flex: 1 1 0px;
-    border-radius: 10px;
+    border-radius: 24px;
     padding: 8px 4px;
     font-size: 8.5px;
     font-weight: 700;
@@ -1041,124 +1031,5 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
-  }
-}
-
-@media (min-width: 1600px) {
-  .ic-container {
-    max-width: 1600px;
-    width: 80%;
-  }
-
-  .ic-card {
-    padding: 50px;
-    border-radius: 26px;
-  }
-  
-  .ic-card h2 {
-    font-size: 40px;
-  }
-  
-  .ic-card p.text-muted,
-  .ic-card p {
-    font-size: 18px !important;
-  }
-
-  .ic-tabs-nav {
-    max-width: 1100px;
-    padding: 10px;
-    border-radius: 40px;
-  }
-
-  .ic-tab-btn {
-    font-size: 16px;
-    padding: 15px 30px;
-    border-radius: 30px;
-  }
-
-  .ic-card input.form-control,
-  .ic-card textarea.form-control {
-    font-size: 18px !important;
-    padding: 16px 20px;
-  }
-
-  .ic-preset-btn {
-    font-size: 16px;
-    padding: 12px 24px;
-  }
-
-  .ic-action-btn-primary {
-    font-size: 16px;
-    padding: 16px 36px;
-    border-radius: 14px;
-  }
-
-  .ic-action-btn-reset {
-    font-size: 16px;
-    padding: 16px 24px;
-    border-radius: 14px;
-  }
-
-  .ic-selected-badge {
-    font-size: 16px;
-    padding: 12px 24px;
-  }
-  
-  .ic-selected-list-box {
-    padding: 24px 30px;
-    min-height: 100px;
-  }
-  
-  .ic-card label {
-    font-size: 18px !important;
-  }
-
-  /* Drawer panel styling */
-  .ic-drawer-panel {
-    width: 600px !important; /* wider drawer on TV screen */
-  }
-
-  .ic-drawer-panel .p-4 {
-    padding: 2.5rem !important; /* more padding */
-  }
-
-  .ic-drawer-panel h4 {
-    font-size: 28px !important; /* larger name */
-  }
-
-  .ic-drawer-panel h5 {
-    font-size: 18px !important; /* larger section titles */
-    padding-bottom: 6px !important;
-  }
-
-  .ic-drawer-panel p,
-  .ic-drawer-panel ul,
-  .ic-drawer-panel li,
-  .ic-drawer-panel span.text-muted {
-    font-size: 16px !important; /* larger body text */
-  }
-
-  .ic-drawer-panel .badge {
-    font-size: 14px !important; /* larger badges */
-    padding: 6px 12px !important;
-  }
-
-  .ic-drawer-panel .bg-light {
-    padding: 15px !important; /* larger conflict box */
-    font-size: 15px !important;
-  }
-
-  .ic-drawer-panel .bg-light strong {
-    font-size: 16px !important;
-  }
-
-  .ic-drawer-panel .bg-light .badge {
-    font-size: 12px !important;
-  }
-
-  .ic-drawer-panel .btn {
-    font-size: 16px !important; /* larger buttons */
-    padding: 16px 0 !important;
-    border-radius: 12px !important;
   }
 }

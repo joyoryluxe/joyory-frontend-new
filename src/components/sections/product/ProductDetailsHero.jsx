@@ -9,7 +9,7 @@ import {
 import "../../../styles/ProductDetailsHero.css";
 import "../../../styles/ForYou.css";
 import { ingredientScan, getProductSafetyScore, getIngredientByName } from "../../../api/ingredientApi";
-import IngredientDetailsDrawer from "../../../pages/IngredientDetailsDrawer";
+import IngredientDetailsDrawer from "../../../pages/ai-beauty/IngredientDetailsDrawer";
 import axiosInstance from "../../../utils/axiosInstance";
 
 // --- Helper Functions ---

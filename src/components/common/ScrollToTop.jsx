@@ -2,9 +2,11 @@ import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 
 const ScrollToTop = () => {
-  const { pathname } = useLocation();
+  const location = useLocation();
 
   useEffect(() => {
+    if (location.hash) return; // Allow hash section scrolling handler to control scroll position
+
     const performScroll = () => {
       try {
         window.scrollTo(0, 0);
@@ -24,8 +26,7 @@ const ScrollToTop = () => {
     // 1. Scroll immediately on route change
     performScroll();
 
-    // 2. Scroll again after 50ms and 150ms to override browser scroll restoration 
-    // and wait for any async layouts / rendering to complete.
+    // 2. Scroll again after 50ms and 150ms to override browser scroll restoration
     const timer1 = setTimeout(performScroll, 50);
     const timer2 = setTimeout(performScroll, 150);
 
@@ -33,7 +34,7 @@ const ScrollToTop = () => {
       clearTimeout(timer1);
       clearTimeout(timer2);
     };
-  }, [pathname]);
+  }, [location.pathname, location.search]);
 
   return null;
 };

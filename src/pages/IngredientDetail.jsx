@@ -1,5 +1,5 @@
 // src/pages/IngredientDetail.jsx
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Header from "../components/common/Header";
 import Footer from "../components/common/Footer";
@@ -8,10 +8,13 @@ import {
   FaSun, FaMoon, FaCheckCircle, FaExclamationTriangle, FaHourglassHalf, FaExternalLinkAlt,
   FaStar, FaHeart, FaRegHeart, FaTimes, FaCheck
 } from "react-icons/fa";
-import { CartContext } from "../context/CartContext";
-import { UserContext } from "../context/UserContext";
+import { getWishlist, addToWishlist, removeFromWishlist } from "../api/wishlistApi";
+import { addToCart as apiAddToCart } from "../api/cartApi";
+import { getErrorMessage } from "../utils/errorHandler";
+import { CartContext } from "../context/CartContext.jsx";
+import { UserContext } from "../context/UserContext.jsx";
+import SectionError from "../components/common/SectionError";
 import { toast } from "react-toastify";
-import axios from "axios";
 import Bag from "../assets/Bag.svg";
 import "../styles/IngredientDetail.css";
 import "../styles/BestSellers.css";
@@ -69,13 +72,14 @@ export default function IngredientDetail() {
   const [totalProducts, setTotalProducts] = useState(0);
   const [loading, setLoading] = useState(true);
   const [prodLoading, setProdLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   // Pagination states matching BestSellers logic
   const [hasMoreProducts, setHasMoreProducts] = useState(true);
   const [nextProductsCursor, setNextProductsCursor] = useState(null);
 
   // Wishlist and Cart context/states
-  const { addToCart } = useContext(CartContext);
+  const { syncCartFromBackend } = useContext(CartContext);
   const { user } = useContext(UserContext);
 
   const [selectedVariants, setSelectedVariants] = useState({});
@@ -124,11 +128,8 @@ export default function IngredientDetail() {
   const fetchWishlistData = async () => {
     try {
       if (user && !user.guest) {
-        const response = await axios.get(
-          "https://beauty.joyory.com/api/user/wishlist",
-          { withCredentials: true }
-        );
-        if (response.data.success) {
+        const response = await getWishlist();
+        if (response.data?.success) {
           setWishlistData(response.data.wishlist || []);
         }
       } else {
@@ -177,20 +178,10 @@ export default function IngredientDetail() {
       const currentlyInWishlist = isInWishlist(productId, sku);
 
       if (currentlyInWishlist) {
-        await axios.delete(
-          `https://beauty.joyory.com/api/user/wishlist/${productId}`,
-          {
-            withCredentials: true,
-            data: { sku: sku }
-          }
-        );
+        await removeFromWishlist(productId, { sku });
         showToastMsg("Removed from wishlist!", "success");
       } else {
-        await axios.post(
-          `https://beauty.joyory.com/api/user/wishlist/${productId}`,
-          { sku: sku },
-          { withCredentials: true }
-        );
+        await addToWishlist(productId, { sku });
         showToastMsg("Added to wishlist!", "success");
       }
       await fetchWishlistData();
@@ -241,8 +232,8 @@ export default function IngredientDetail() {
         payload = { productId: prod._id, quantity: 1 };
       }
 
-      const { data } = await axios.post("https://beauty.joyory.com/api/user/cart/add", payload, { withCredentials: true });
-      if (!data.success) throw new Error(data.message || "Cart add failed");
+      const { data } = await apiAddToCart(payload);
+      if (!data?.success) throw new Error(data?.message || "Cart add failed");
 
       showToastMsg("Product added to cart!", "success");
       navigate("/cartpage");
@@ -256,38 +247,44 @@ export default function IngredientDetail() {
     }
   };
 
-  useEffect(() => {
-    const fetchAllData = async () => {
-      setLoading(true);
-      try {
-        // Load details
-        const detailRes = await getIngredientByName(name);
-        if (detailRes.data && detailRes.data.success) {
-          setIngredient(detailRes.data.ingredient);
-        }
-
-        // Load catalog products containing this ingredient
-        setProdLoading(true);
-        const prodRes = await getProductsByIngredient(name, null, 8);
-        if (prodRes.data && prodRes.data.products) {
-          setProducts(prodRes.data.products || []);
-          const total = prodRes.data.pagination?.total || prodRes.data.products.length || 0;
-          setTotalProducts(total);
-          setHasMoreProducts(prodRes.data.pagination?.hasMore || false);
-          setNextProductsCursor(prodRes.data.pagination?.nextCursor || null);
-        }
-      } catch (err) {
-        console.error("Error fetching ingredient data:", err);
-        navigate("/404");
-      } finally {
-        setLoading(false);
-        setProdLoading(false);
+  const fetchAllData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Load details
+      const detailRes = await getIngredientByName(name);
+      if (detailRes.data && detailRes.data.success) {
+        setIngredient(detailRes.data.ingredient);
       }
-    };
+
+      // Load catalog products containing this ingredient
+      setProdLoading(true);
+      const prodRes = await getProductsByIngredient(name, null, 8);
+      if (prodRes.data && prodRes.data.products) {
+        setProducts(prodRes.data.products || []);
+        const total = prodRes.data.pagination?.total || prodRes.data.products.length || 0;
+        setTotalProducts(total);
+        setHasMoreProducts(prodRes.data.pagination?.hasMore || false);
+        setNextProductsCursor(prodRes.data.pagination?.nextCursor || null);
+      }
+    } catch (err) {
+      console.error("Error fetching ingredient data:", err);
+      if (err.response?.status === 404) {
+        navigate("/404");
+      } else {
+        setError(err);
+      }
+    } finally {
+      setLoading(false);
+      setProdLoading(false);
+    }
+  }, [name, navigate]);
+
+  useEffect(() => {
     if (name) {
       fetchAllData();
     }
-  }, [name, navigate]);
+  }, [name, fetchAllData]);
 
   useEffect(() => {
     fetchWishlistData();
@@ -787,6 +784,23 @@ export default function IngredientDetail() {
       </div>
     );
   };
+
+  if (error && !ingredient) {
+    return (
+      <>
+        <Header />
+        <div className="container my-5 py-5">
+          <SectionError
+            error={error}
+            message="Failed to load ingredient details."
+            variant="full"
+            onRetry={fetchAllData}
+          />
+        </div>
+        <Footer />
+      </>
+    );
+  }
 
   if (loading || !ingredient) {
     return (

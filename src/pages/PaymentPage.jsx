@@ -1,6 +1,8 @@
 // src/pages/PaymentPage.jsx
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { createRazorpayOrder, verifyRazorpayPayment } from "../api/paymentApi";
+import { getErrorMessage } from "../utils/errorHandler";
 
 const RAZORPAY_KEY_ID = "rzp_test_RHpYsCY6tqQ3TW";
 
@@ -39,31 +41,12 @@ const PaymentPage = () => {
           return;
         }
 
-        // ✅ Call backend to create Razorpay order
-        const res = await fetch(
-          "https://beauty.joyory.com/api/payment/razorpay/order",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify({ orderId: razorpayData.orderId }),
-          }
-        );
+        // Call backend to create Razorpay order
+        const res = await createRazorpayOrder({ orderId: razorpayData.orderId });
+        const data = res.data;
 
-        // Check if response is JSON
-        let data;
-        const contentType = res.headers.get("content-type");
-        if (contentType && contentType.includes("application/json")) {
-          data = await res.json();
-        } else {
-          const text = await res.text();
-          console.error("⚠ Backend did not return JSON:", text);
-          alert("❌ Failed to create Razorpay order. Backend error.");
-          return navigate("/cartpage");
-        }
-
-        if (!res.ok || !data.success) {
-          alert("❌ Failed to create Razorpay order: " + (data.message || ""));
+        if (!data?.success) {
+          alert("❌ Failed to create Razorpay order: " + (data?.message || ""));
           return navigate("/cartpage");
         }
 
@@ -102,31 +85,13 @@ const PaymentPage = () => {
             };
 
             try {
-              const verifyRes = await fetch(
-                "https://beauty.joyory.com/api/payment/razorpay/verify",
-                {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  credentials: "include",
-                  body: JSON.stringify(payload),
-                }
-              );
+              const verifyRes = await verifyRazorpayPayment(payload);
+              const verifyData = verifyRes.data;
 
-              let verifyData;
-              const contentType = verifyRes.headers.get("content-type");
-              if (contentType && contentType.includes("application/json")) {
-                verifyData = await verifyRes.json();
-              } else {
-                const text = await verifyRes.text();
-                console.error("⚠ Backend did not return JSON:", text);
-                alert("⚠ Payment verification failed. Backend error.");
-                return navigate("/cartpage");
-              }
-
-              if (!verifyRes.ok || !verifyData.success) {
+              if (!verifyData?.success) {
                 alert(
                   "⚠ Payment verified but backend rejected: " +
-                    (verifyData.message || "Verification failed")
+                    (verifyData?.message || "Verification failed")
                 );
                 return navigate("/cartpage");
               }
@@ -137,7 +102,7 @@ const PaymentPage = () => {
               });
             } catch (err) {
               console.error("🔥 Error saving payment info:", err);
-              alert("Payment succeeded but saving info failed.");
+              alert(getErrorMessage(err, "Payment succeeded but saving info failed."));
               navigate("/cartpage");
             }
           },
@@ -160,7 +125,7 @@ const PaymentPage = () => {
         rzp.open();
       } catch (error) {
         console.error("🔥 Error loading Razorpay:", error);
-        alert("❌ Could not initialize Razorpay.");
+        alert(getErrorMessage(error, "Could not initialize Razorpay."));
       } finally {
         setLoading(false);
       }

@@ -2,9 +2,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "../styles/AddressSelection.css";
-import Header from "../components/common/Header";
+import Header from "../components/Header";
 import { Spinner, Modal } from "react-bootstrap";
-import { FaPhoneAlt, FaEnvelope } from "react-icons/fa";
 
 const PROFILE_API = "https://beauty.joyory.com/api/user/profile";
 const CART_API = "https://beauty.joyory.com/api/user/cart/summary";
@@ -34,9 +33,6 @@ const AddressSelection = () => {
     bagDiscount: 0,
     autoDiscount: 0,
     couponDiscount: 0,
-    pointsDiscount: 0,
-    pointsUsed: 0,
-    referralPointsUsed: 0,
     shipping: 0,
     taxableAmount: 0,
     gstRate: "0%",
@@ -63,9 +59,6 @@ const AddressSelection = () => {
         bagDiscount: location.state.priceDetails.bagDiscount || 0,
         autoDiscount: location.state.priceDetails.autoDiscount || 0,
         couponDiscount: location.state.priceDetails.couponDiscount || 0,
-        pointsDiscount: location.state.priceDetails.pointsDiscount || 0,
-        pointsUsed: location.state.priceDetails.pointsUsed || 0,
-        referralPointsUsed: location.state.priceDetails.referralPointsUsed || 0,
         shipping: location.state.priceDetails.shipping || 0,
         taxableAmount: location.state.priceDetails.taxableAmount || 0,
         gstRate: location.state.priceDetails.gstRate || "0%",
@@ -129,26 +122,7 @@ const AddressSelection = () => {
   const loadCart = async () => {
     try {
       setProcessingMessage("Loading cart data...");
-      const queryParams = new URLSearchParams();
-      
-      const wantPoints = localStorage.getItem("useRewardPoints") === "true";
-      if (wantPoints) {
-        const savedAmount = localStorage.getItem("rewardPointsAmount");
-        const pointsToUse = savedAmount ? Number(savedAmount) : 99999999;
-        queryParams.append("pointsToUse", String(pointsToUse));
-      } else {
-        queryParams.append("pointsToUse", "0");
-      }
-
-      const savedCoupon = localStorage.getItem("appliedCoupon");
-      if (savedCoupon) {
-        queryParams.append("discount", savedCoupon);
-      }
-
-      const queryString = queryParams.toString();
-      const url = queryString ? `${CART_API}?${queryString}` : CART_API;
-
-      const res = await fetch(url, { credentials: "include" });
+      const res = await fetch(CART_API, { credentials: "include" });
       if (!res.ok) throw new Error("Failed to fetch cart");
       const data = await res.json();
 
@@ -160,9 +134,6 @@ const AddressSelection = () => {
         bagDiscount: priceDetailsData.bagDiscount || 0,
         autoDiscount: priceDetailsData.autoDiscount || 0,
         couponDiscount: priceDetailsData.couponDiscount || 0,
-        pointsDiscount: data.wallet?.pointsDiscount || 0,
-        pointsUsed: data.wallet?.pointsUsed || 0,
-        referralPointsUsed: data.wallet?.pointsUsed || 0,
         shipping: priceDetailsData.shippingCharge || 0,
         taxableAmount: priceDetailsData.taxableAmount || 0,
         gstRate: priceDetailsData.gstRate || "0%",
@@ -306,7 +277,7 @@ const AddressSelection = () => {
 
       const payload = {
         discountCode: priceDetails?.appliedCoupon?.code || null,
-        pointsToUse: priceDetails?.pointsUsed || priceDetails?.referralPointsUsed || 0,
+        pointsToUse: priceDetails?.referralPointsUsed || 0,
         giftCardCode: priceDetails?.giftCard?.code || null,
         giftCardPin: priceDetails?.giftCard?.pin || null,
         giftCardAmount: priceDetails?.giftCard?.amount || 0,
@@ -381,9 +352,6 @@ const AddressSelection = () => {
               payable: priceDetails?.payable || 0,
               bagDiscount: priceDetails?.bagDiscount || 0,
               couponDiscount: priceDetails?.couponDiscount || 0,
-              pointsDiscount: priceDetails?.pointsDiscount || 0,
-              pointsUsed: priceDetails?.pointsUsed || 0,
-              referralPointsUsed: priceDetails?.referralPointsUsed || 0,
               shipping: priceDetails?.shipping || 0,
               totalSavings: priceDetails?.totalSavings || 0,
               savingsMessage: priceDetails?.savingsMessage || "",
@@ -412,142 +380,19 @@ const AddressSelection = () => {
     return parseFloat(amount).toFixed(2);
   };
 
-  const getStepStatus = (stepIndex) => {
-    const isError = processingMessage.startsWith("Error");
-
-    if (isError) {
-      if (processingMessage.includes("Preparing")) return stepIndex === 1 ? "error" : (stepIndex > 1 ? "pending" : "completed");
-      if (processingMessage.includes("Validating") || processingMessage.includes("payment")) return stepIndex === 2 ? "error" : (stepIndex === 1 ? "completed" : "pending");
-      if (processingMessage.includes("Creating") || processingMessage.includes("order")) return stepIndex === 3 ? "error" : (stepIndex < 3 ? "completed" : "pending");
-      return "error";
-    }
-
-    if (processingMessage === "Preparing your order...") {
-      if (stepIndex === 1) return "active";
-      if (stepIndex > 1) return "pending";
-    }
-    if (processingMessage === "Validating payment details...") {
-      if (stepIndex < 2) return "completed";
-      if (stepIndex === 2) return "active";
-      if (stepIndex > 2) return "pending";
-    }
-    if (processingMessage === "Creating your order...") {
-      if (stepIndex < 3) return "completed";
-      if (stepIndex === 3) return "active";
-      if (stepIndex > 3) return "pending";
-    }
-    if (processingMessage === "Order created successfully!") {
-      return "completed";
-    }
-
-    if (stepIndex === 1) return "active";
-    return "pending";
-  };
-
-  const ProcessingOverlay = () => {
-    const steps = [
-      { id: 1, title: "Verifying order info", desc: "Syncing bag items and pricing details" },
-      { id: 2, title: "Securing gateway", desc: "Establishing secure transaction handshake" },
-      { id: 3, title: "Finalizing order", desc: "Registering order details with inventory" },
-    ];
-
-    const isSuccess = processingMessage === "Order created successfully!";
-    const isError = processingMessage.startsWith("Error");
-
-    return (
-      <Modal
-        show={showProcessingModal}
-        backdrop="static"
-        keyboard={false}
-        centered
-        dialogClassName="checkout-processing-modal"
-      >
-        <Modal.Body className="p-4 p-md-5">
-          <div className="text-center mb-4">
-            <div className="checkout-badge-icon mb-3">
-              {isSuccess ? (
-                <svg className="success-checkmark-svg" viewBox="0 0 52 52">
-                  <circle className="success-checkmark-circle" cx="26" cy="26" r="25" fill="none" />
-                  <path className="success-checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
-                </svg>
-              ) : isError ? (
-                <div className="error-alert-icon">⚠️</div>
-              ) : (
-                <div className="secure-lock-container">
-                  <svg className="secure-lock-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                  </svg>
-                </div>
-              )}
-            </div>
-            <h4 className="checkout-modal-title">
-              {isSuccess ? "Order Confirmed!" : isError ? "Checkout Failed" : "Secure Checkout"}
-            </h4>
-            <p className="checkout-modal-subtitle text-muted">
-              {isSuccess
-                ? "Your order has been created successfully."
-                : isError
-                  ? "Please review details and try again."
-                  : "We are finalizing your payment process securely."}
-            </p>
-          </div>
-
-          {!isError && (
-            <div className="checkout-steps-list">
-              {steps.map((step, idx) => {
-                const status = getStepStatus(step.id);
-                return (
-                  <div key={step.id} className={`checkout-step-item status-${status}`}>
-                    <div className="checkout-step-indicator">
-                      {status === "completed" ? (
-                        <div className="indicator-icon completed">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="20 6 9 17 4 12"></polyline>
-                          </svg>
-                        </div>
-                      ) : status === "active" ? (
-                        <div className="indicator-icon active">
-                          <span className="pulse-dot"></span>
-                        </div>
-                      ) : (
-                        <div className="indicator-icon pending">
-                          <span className="pending-dot"></span>
-                        </div>
-                      )}
-                      {idx < steps.length - 1 && (
-                        <div className={`indicator-line status-${status === "completed" ? "completed" : "pending"}`} />
-                      )}
-                    </div>
-                    <div className="checkout-step-content">
-                      <div className="checkout-step-title">{step.title}</div>
-                      <div className="checkout-step-desc">{step.desc}</div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {isError && (
-            <div className="checkout-error-box py-3 px-4 mb-3 text-center">
-              <p className="error-message-text mb-0">{processingMessage}</p>
-            </div>
-          )}
-
-          <div className="checkout-modal-footer text-center mt-4 pt-3 border-top">
-            <span className="text-muted small d-inline-flex align-items-center gap-2">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-              </svg>
-              PCI-DSS Compliant • 256-bit SSL Encryption
-            </span>
-          </div>
-        </Modal.Body>
-      </Modal>
-    );
-  };
+  const ProcessingOverlay = () => (
+    <Modal show={showProcessingModal} backdrop="static" keyboard={false} centered>
+      <Modal.Body className="text-center py-5">
+        <Spinner animation="border" role="status" variant="primary" style={{ width: '3rem', height: '3rem' }}>
+          <span className="visually-hidden">Processing...</span>
+        </Spinner>
+        <div className="mt-3">
+          <h5 className="mb-2">{processingMessage || "Processing your order..."}</h5>
+          <p className="text-muted mb-0">Please wait while we prepare your payment</p>
+        </div>
+      </Modal.Body>
+    </Modal>
+  );
 
   return (
     <>
@@ -677,15 +522,9 @@ const AddressSelection = () => {
                   <p className="address-info">
                     {addr.addressLine1}, {addr.city}, {addr.state} - {addr.pincode}
                   </p>
-                  <div className="address-contact" style={{ display: "flex", alignItems: "center", gap: "15px", flexWrap: "wrap" }}>
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
-                      <FaPhoneAlt style={{ color: "#6b7280" }} /> {addr.phone || "-"}
-                    </span>
-                    {addr.email && (
-                      <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
-                        <FaEnvelope style={{ color: "#6b7280" }} /> {addr.email}
-                      </span>
-                    )}
+                  <div className="address-contact">
+                    <span>📱 {addr.phone || "-"}</span>
+                    {addr.email && <span style={{ marginLeft: "15px" }}>✉️ {addr.email}</span>}
                   </div>
                 </div>
                 <div style={{ display: "flex", gap: "5px", flexShrink: 0 }}>
@@ -743,13 +582,6 @@ const AddressSelection = () => {
               </div>
             )}
 
-            {priceDetails.pointsDiscount > 0 && (
-              <div className="price-row">
-                <span>Points Discount:</span>
-                <span className="discount-amount">-₹{formatCurrency(priceDetails.pointsDiscount)}</span>
-              </div>
-            )}
-
             <div className="price-row taxable-amount-row">
               <span>Taxable Amount:</span>
               <span>₹{formatCurrency(priceDetails.taxableAmount)}</span>
@@ -760,11 +592,11 @@ const AddressSelection = () => {
               <span>+₹{formatCurrency(priceDetails.gstAmount)}</span>
             </div>
 
-            {/* {priceDetails.gstMessage && (
+            {priceDetails.gstMessage && (
               <div className="gst-message">
                 <span className="gst-note">💡 Note:</span> {priceDetails.gstMessage}
               </div>
-            )} */}
+            )}
 
             <hr className="section-divider" />
 

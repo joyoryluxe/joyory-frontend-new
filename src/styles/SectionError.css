@@ -1,0 +1,320 @@
+/* src/styles/SectionError.css
+   Modern, elegant Joyory brand styling for the <SectionError> component.
+*/
+
+/* ── Container ── */
+.sectionError {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+  animation: sectionErrorFadeIn 0.35s ease-out;
+}
+
+@keyframes sectionErrorFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Card (Section & Full variants) ── */
+.sectionError--section {
+  padding: 1.5rem 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.sectionError__card {
+  width: 100%;
+  max-width: 440px;
+  background: #ffffff;
+  border: 1px solid #f0e6e6;
+  border-radius: 16px;
+  padding: 2rem 1.75rem;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(60, 122, 162, 0.06), 0 1px 4px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+.sectionError__card:hover {
+  box-shadow: 0 8px 28px rgba(60, 122, 162, 0.1), 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+/* ── Logo ── */
+.sectionError__logoWrap {
+  margin-bottom: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  background: #fafcfe;
+  border-radius: 12px;
+  border: 1px solid #eef4f8;
+}
+
+.sectionError__logo {
+  height: 38px;
+  width: auto;
+  max-width: 120px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.04));
+}
+
+/* ── Typography ── */
+.sectionError__title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin: 0 0 0.5rem 0;
+  letter-spacing: -0.01em;
+}
+
+.sectionError__msg {
+  font-size: 0.92rem;
+  color: #6b7c96;
+  line-height: 1.55;
+  margin: 0 0 1.25rem 0;
+  max-width: 380px;
+  word-break: break-word;
+}
+
+/* ── Retry Button ── */
+.sectionError__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.6rem;
+  border: none;
+  border-radius: 50px;
+  background: linear-gradient(135deg, #3c7aa2 0%, #2a5a7b 100%);
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(60, 122, 162, 0.28);
+  transition: all 0.22s ease-in-out;
+  user-select: none;
+}
+
+.sectionError__btn:hover {
+  background: linear-gradient(135deg, #2f6588 0%, #1e4560 100%);
+  box-shadow: 0 6px 18px rgba(60, 122, 162, 0.38);
+  transform: translateY(-2px);
+}
+
+.sectionError__btn:hover .sectionError__btnIcon {
+  transform: rotate(180deg);
+}
+
+.sectionError__btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(60, 122, 162, 0.2);
+}
+
+.sectionError__btnIcon {
+  font-size: 0.85rem;
+  transition: transform 0.4s ease;
+}
+
+.sectionError__spin {
+  animation: sectionErrorRotate 0.8s linear infinite !important;
+}
+
+@keyframes sectionErrorRotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.sectionError__btn:disabled,
+.sectionError__retryLink:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* ── Inline Variant ── */
+.sectionError--inline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.65rem 1rem;
+  background: #ffffff;
+  border: 1px solid #e9edf3;
+  border-left: 4px solid #3c7aa2;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  margin: 0.75rem 0;
+}
+
+.sectionError__inlineHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.sectionError__inlineLogo {
+  height: 22px;
+  width: auto;
+  max-width: 70px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.sectionError__inlineIcon {
+  color: #e67e22;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.sectionError__inlineMsg {
+  font-size: 0.88rem;
+  color: #4a5568;
+  font-weight: 500;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+}
+
+.sectionError__retryLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: #f0f7fb;
+  border: 1px solid #d3e5f2;
+  color: #3c7aa2;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.3rem 0.75rem;
+  border-radius: 20px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.18s ease;
+}
+
+.sectionError__retryLink:hover {
+  background: #3c7aa2;
+  color: #ffffff;
+  border-color: #3c7aa2;
+}
+
+.sectionError__retryLink:hover .sectionError__retryIconSmall {
+  transform: rotate(180deg);
+}
+
+.sectionError__retryIconSmall {
+  font-size: 0.72rem;
+  transition: transform 0.35s ease;
+}
+
+/* ── Full-Page Variant ── */
+.sectionError--full {
+  min-height: 65vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+}
+
+.sectionError__card--full {
+  max-width: 520px;
+  padding: 3rem 2.25rem;
+  border-radius: 20px;
+}
+
+.sectionError__iconBadge {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #fdf0ed;
+  color: #e74c3c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  margin-bottom: 1.2rem;
+}
+
+.sectionError__card--full .sectionError__title {
+  font-size: 1.45rem;
+  margin-bottom: 0.65rem;
+}
+
+.sectionError__card--full .sectionError__msg {
+  font-size: 0.98rem;
+  margin-bottom: 1.75rem;
+}
+
+.sectionError__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.sectionError__homeLink {
+  font-size: 0.9rem;
+  color: #3c7aa2;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.18s ease;
+}
+
+.sectionError__homeLink:hover {
+  color: #204b68;
+  text-decoration: underline;
+}
+
+/* ── Responsive ── */
+@media (max-width: 576px) {
+  .sectionError__card {
+    padding: 1.5rem 1.25rem;
+    border-radius: 14px;
+  }
+
+  .sectionError__logo {
+    height: 32px;
+  }
+
+  .sectionError__title {
+    font-size: 1.05rem;
+  }
+
+  .sectionError__msg {
+    font-size: 0.86rem;
+  }
+
+  .sectionError__btn {
+    padding: 0.55rem 1.35rem;
+    font-size: 0.85rem;
+  }
+
+  .sectionError--inline {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .sectionError__retryLink {
+    align-self: flex-end;
+  }
+}
