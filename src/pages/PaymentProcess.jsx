@@ -1,6 +1,14 @@
-// PaymentProcess.jsx  –  GST added, Bootstrap-5 only, zero breaking changes
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import {
+  getPaymentMethods,
+  setPaymentMethod,
+  processCOD,
+  confirmCOD,
+  createRazorpayOrder,
+  verifyRazorpayPayment,
+  processWalletPayment,
+  processGiftCardPayment,
+} from "../api/paymentApi";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Modal } from "react-bootstrap";
 import Header from "../components/common/Header";
@@ -12,21 +20,6 @@ import cash from "../assets/cash.svg";
 import reminder from "../assets/reminder.svg";
 import giftcard from "../assets/gift-card.svg";
 
-
-const PAYMENT_METHODS_API =
-  "https://beauty.joyory.com/api/payment/methods";
-const RAZORPAY_ORDER_API =
-  "https://beauty.joyory.com/api/payment/razorpay/order";
-const VERIFY_PAYMENT_API =
-  "https://beauty.joyory.com/api/payment/razorpay/verify";
-const COD_API = "https://beauty.joyory.com/api/payment/cod";
-const COD_CONFIRM_API =
-  "https://beauty.joyory.com/api/payment/cod/confirm";
-const SET_PAYMENT_METHOD_API =
-  "https://beauty.joyory.com/api/payment/set-payment-method";
-const WALLET_API = "https://beauty.joyory.com/api/payment/wallet";
-const GIFTCARD_API =
-  "https://beauty.joyory.com/api/payment/giftcard";
 const RAZORPAY_KEY_ID = "rzp_live_V7ncMRhIoJhW2N";
 
 const PaymentProcess = () => {
@@ -89,9 +82,7 @@ const PaymentProcess = () => {
   useEffect(() => {
     const fetchMethods = async () => {
       try {
-        const res = await axios.get(PAYMENT_METHODS_API, {
-          withCredentials: true,
-        });
+        const res = await getPaymentMethods();
         const backendMethods = res.data.methods || [];
         const hasCOD = backendMethods.some((m) => m.key === "cod");
         setMethods(
@@ -119,14 +110,9 @@ const PaymentProcess = () => {
     setActiveTab(methodKey);
     if (!orderId) return;
     try {
-      await fetch(SET_PAYMENT_METHOD_API, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          orderId,
-          paymentMethod: methodKey.toUpperCase(),
-        }),
+      await setPaymentMethod({
+        orderId,
+        paymentMethod: methodKey.toUpperCase(),
       });
     } catch (err) {
       console.error("Error updating payment method:", err);
@@ -151,23 +137,13 @@ const PaymentProcess = () => {
         shippingAddress: cleanAddress,
       };
 
-      const codRes = await fetch(COD_API, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(payload),
-      });
-      const codData = await codRes.json();
-      if (!codRes.ok || !codData.success) throw new Error("COD failed.");
+      const codRes = await processCOD(payload);
+      const codData = codRes.data;
+      if (!codData?.success) throw new Error("COD failed.");
 
-      const confirmRes = await fetch(COD_CONFIRM_API, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(payload),
-      });
-      const confirmData = await confirmRes.json();
-      if (!confirmRes.ok || !confirmData.success)
+      const confirmRes = await confirmCOD(payload);
+      const confirmData = confirmRes.data;
+      if (!confirmData?.success)
         throw new Error("COD confirmation failed.");
 
       navigate(`/ordersuccess/${orderId}`, {
@@ -203,26 +179,16 @@ const PaymentProcess = () => {
   const handleRazorpayPayment = async () => {
     try {
       setIsProcessing(true);
-      await fetch(SET_PAYMENT_METHOD_API, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ orderId, paymentMethod: "ONLINE" }),
-      });
+      await setPaymentMethod({ orderId, paymentMethod: "ONLINE" });
 
       const loaded = await loadRazorpayScript();
       if (!loaded || !window.Razorpay)
         return showAlert("Razorpay SDK failed to load.", "SDK Error", "error");
 
-      const orderRes = await fetch(RAZORPAY_ORDER_API, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ orderId }),
-      });
-      const orderData = await orderRes.json();
-      if (!orderRes.ok || !orderData.success || !orderData.razorpayOrderId)
-        return showAlert(orderData.message || "Failed to create Razorpay order.", "Order Error", "error");
+      const orderRes = await createRazorpayOrder({ orderId });
+      const orderData = orderRes.data;
+      if (!orderData?.success || !orderData?.razorpayOrderId)
+        return showAlert(orderData?.message || "Failed to create Razorpay order.", "Order Error", "error");
 
       const finalAmountToPay = Math.round(
         (priceDetails.payable || orderData.amount) * 100
@@ -259,14 +225,9 @@ const PaymentProcess = () => {
             })),
           };
 
-          const verifyRes = await fetch(VERIFY_PAYMENT_API, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify(payload),
-          });
-          const verifyData = await verifyRes.json();
-          if (!verifyRes.ok || !verifyData.success)
+          const verifyRes = await verifyRazorpayPayment(payload);
+          const verifyData = verifyRes.data;
+          if (!verifyData?.success)
             return showAlert("Payment verification failed.", "Payment Verification", "error");
 
           navigate(`/ordersuccess/${orderId}`, {
@@ -338,17 +299,11 @@ const PaymentProcess = () => {
         },
       };
 
-      const res = await fetch(WALLET_API, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(payload),
-      });
+      const res = await processWalletPayment(payload);
+      const data = res.data;
 
-      const data = await res.json();
-
-      if (!res.ok || !data.success)
-        throw new Error(data.message || "Wallet payment failed.");
+      if (!data?.success)
+        throw new Error(data?.message || "Wallet payment failed.");
 
       // navigate("/ordersuccess", {
       navigate(`/ordersuccess/${orderId}`, {
@@ -405,17 +360,11 @@ const PaymentProcess = () => {
         },
       };
 
-      const res = await fetch(GIFTCARD_API, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(payload),
-      });
+      const res = await processGiftCardPayment(payload);
+      const data = res.data;
 
-      const data = await res.json();
-
-      if (!res.ok || !data.success)
-        throw new Error(data.message || "Gift Card payment failed.");
+      if (!data?.success)
+        throw new Error(data?.message || "Gift Card payment failed.");
 
       navigate(`/ordersuccess/${orderId}`, {
         replace: true,

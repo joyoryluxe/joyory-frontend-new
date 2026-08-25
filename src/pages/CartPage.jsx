@@ -16,13 +16,12 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import applyGif from "../assets/Apply.gif";
-import axios from "axios";
+import { getWishlist, addToWishlist, removeFromWishlist } from "../api/wishlistApi";
+import { addToCart, moveToWishlist, getCartSummary, updateCart, removeFromCart, initiateOrder } from "../api/cartApi";
+import { getCartRecommendations } from "../api/recommendationApi";
 import { UserContext } from "../context/UserContext.jsx";
 import bagIcon from "../assets/bag.svg";
 
-const API_BASE = "https://beauty.joyory.com/api/user/cart";
-const INITIATE_ORDER_API = `${API_BASE}/order/initiate`;
-const RECOMMENDATIONS_API = "https://beauty.joyory.com/api/user/recommendations/cart";
 const WISHLIST_CACHE_KEY = "guestWishlist";
 
 // ─── Variant helpers (same as Foryou.jsx) ────────────────────────────────────
@@ -101,7 +100,7 @@ const RecoProductCard = ({ product, navigate, user, onAddToCartSuccess }) => {
   const fetchWishlistData = useCallback(async () => {
     try {
       if (user && !user.guest) {
-        const res = await axios.get('https://beauty.joyory.com/api/user/wishlist', { withCredentials: true });
+        const res = await getWishlist();
         if (res.data.success) setWishlistData(res.data.wishlist || []);
       } else {
         const local = JSON.parse(localStorage.getItem(WISHLIST_CACHE_KEY)) || [];
@@ -200,9 +199,7 @@ const RecoProductCard = ({ product, navigate, user, onAddToCartSuccess }) => {
         localStorage.setItem("cartVariantCache", JSON.stringify(cache));
       }
 
-      const res = await axios.post(`${API_BASE}/add`, payload, {
-        withCredentials: true,
-      });
+      const res = await addToCart(payload);
       if (!res.data.success) throw new Error(res.data.message || 'Failed');
       toast.success('Product added to cart!');
       if (onAddToCartSuccess) {
@@ -233,10 +230,10 @@ const RecoProductCard = ({ product, navigate, user, onAddToCartSuccess }) => {
     try {
       const inWl = isInWishlist(productId, sku);
       if (inWl) {
-        await axios.delete(`https://beauty.joyory.com/api/user/wishlist/${productId}`, { withCredentials: true, data: { sku } });
+        await removeFromWishlist(productId, { sku });
         toast.success('Removed from wishlist!');
       } else {
-        await axios.post(`https://beauty.joyory.com/api/user/wishlist/${productId}`, { sku }, { withCredentials: true });
+        await addToWishlist(productId, { sku });
         toast.success('Added to wishlist!');
       }
       await fetchWishlistData();
@@ -1017,18 +1014,7 @@ const CartPage = () => {
 
       if (user && !user.guest) {
         // Logged-in user: Call backend API
-        const res = await fetch(`https://beauty.joyory.com/api/user/cart/${productId}/move-to-wishlist`, {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ sku: variantSku }),
-        });
-
-        if (!res.ok) {
-          throw new Error("Failed to move item to wishlist");
-        }
+        await moveToWishlist(productId, { sku: variantSku });
       } else {
         // Guest user: Save pending action and redirect to login
         localStorage.setItem("pendingCartAction", JSON.stringify({
@@ -1096,25 +1082,25 @@ const CartPage = () => {
       // Always append pointsToUse to sync backend state with frontend state
       queryParams.append("pointsToUse", finalPoints);
 
-      const queryString = queryParams.toString();
-      const url = queryString ? `${API_BASE}/summary?${queryString}` : `${API_BASE}/summary?t=${Date.now()}`;
-      const res = await fetch(url, { cache: "no-store", credentials: "include" });
-
-      if (res.status === 400) {
-        if (currentCallId !== cartCallRef.current) return;
-        setCartData({ cart: [], freebies: [], bagMrp: 0, bagDiscount: 0, autoDiscount: 0, couponDiscount: 0, shipping: 0, taxableAmount: 0, gstRate: "0%", gstAmount: 0, gstMessage: "", payable: 0, appliedCoupon: null, applicableCoupons: [], inapplicableCoupons: [], promotions: [], totalSavings: 0, savingsMessage: "", grandTotal: 0, shippingMessage: "" });
-        setStockError("");
-        if (!silent) setLoading(false);
-        return;
-      }
-      if (!res.ok) {
-        if (res.status === 401) {
+      const params = Object.fromEntries(queryParams.entries());
+      let res;
+      try {
+        res = await getCartSummary(params);
+      } catch (err) {
+        if (err.response?.status === 400) {
+          if (currentCallId !== cartCallRef.current) return;
+          setCartData({ cart: [], freebies: [], bagMrp: 0, bagDiscount: 0, autoDiscount: 0, couponDiscount: 0, shipping: 0, taxableAmount: 0, gstRate: "0%", gstAmount: 0, gstMessage: "", payable: 0, appliedCoupon: null, applicableCoupons: [], inapplicableCoupons: [], promotions: [], totalSavings: 0, savingsMessage: "", grandTotal: 0, shippingMessage: "" });
+          setStockError("");
+          if (!silent) setLoading(false);
+          return;
+        }
+        if (err.response?.status === 401) {
           console.warn("Unauthorized: fetchCart returned 401");
         }
         throw new Error("Failed to fetch cart");
       }
 
-      const data = await res.json();
+      const data = res.data;
       if (currentCallId !== cartCallRef.current) return;
       const normalizedCart = (data.cart || []).map((item) => {
         const variant = item.variant || {};
@@ -1258,10 +1244,8 @@ const CartPage = () => {
   const fetchRecommendations = async () => {
     try {
       setRecoLoading(true);
-      const url = `${RECOMMENDATIONS_API}?t=${Date.now()}`;
-      const res = await fetch(url, { cache: "no-store", credentials: "include" });
-      if (!res.ok) return;
-      const data = await res.json();
+      const res = await getCartRecommendations();
+      const data = res.data;
       if (data.success && Array.isArray(data.sections)) {
         setRecommendations(data.sections);
       }
@@ -1282,12 +1266,12 @@ const CartPage = () => {
     if (!item) return;
     try {
       const appliedCoupon = cartData?.appliedCoupon?.code || null;
-      const res = await fetch(`${API_BASE}/update`, {
-        method: "PUT", credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId: item.productId, variantSku: item.selectedVariant?.sku || null, quantity: newQty, discount: appliedCoupon }),
+      await updateCart({
+        productId: item.productId,
+        variantSku: item.selectedVariant?.sku || null,
+        quantity: newQty,
+        discount: appliedCoupon,
       });
-      if (!res.ok) throw new Error("Failed to update quantity");
       sessionStorage.setItem("cartPendingToast", JSON.stringify({ message: "Cart updated successfully!", type: "success" }));
       window.location.reload();
     } catch (err) {
@@ -1303,12 +1287,7 @@ const CartPage = () => {
     setShowPointsConfetti(false);
     setCouponMessage("");
     try {
-      const appliedCoupon = cartData?.appliedCoupon?.code || null;
-      const url = variantSku
-        ? `${API_BASE}/remove/${productId}?variantSku=${encodeURIComponent(variantSku)}`
-        : `${API_BASE}/remove/${productId}`;
-      const res = await fetch(url, { method: "DELETE", credentials: "include" });
-      if (!res.ok) throw new Error("Server failed to remove item");
+      await removeFromCart(productId, variantSku ? { variantSku } : {});
       sessionStorage.setItem("cartPendingToast", JSON.stringify({ message: "Item removed from cart.", type: "success" }));
       window.location.reload();
     } catch (err) {
@@ -1471,22 +1450,17 @@ const CartPage = () => {
         gstRate: cartData?.gstRate || "0%",
       };
 
-      const res = await fetch(INITIATE_ORDER_API, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-
-      if (!res.ok) {
-        if (res.status === 401) {
+      let orderData;
+      try {
+        const res = await initiateOrder(body);
+        orderData = res.data;
+      } catch (err) {
+        if (err.response?.status === 401) {
           setTimeout(() => navigate("/login"), 1200);
           return;
         }
-        throw new Error("Failed to initiate order");
+        throw new Error(err.response?.data?.message || "Failed to initiate order");
       }
-
-      const orderData = await res.json();
 
       // 🧠 Add delay BEFORE redirect (smooth UX)
       setTimeout(() => {
@@ -1571,20 +1545,12 @@ const CartPage = () => {
           localStorage.removeItem("pendingCartAction");
 
           if (type === "move-to-wishlist") {
-            const res = await fetch(`https://beauty.joyory.com/api/user/cart/${productId}/move-to-wishlist`, {
-              method: "POST",
-              credentials: "include",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({ sku }),
-            });
-
-            if (res.ok) {
+            try {
+              await moveToWishlist(productId, { sku });
               sessionStorage.setItem("cartPendingToast", JSON.stringify({ message: "Product moved to wishlist successfully!", type: "success" }));
               window.location.reload();
-            } else {
-              console.error("Failed to move item to wishlist");
+            } catch (err) {
+              console.error("Failed to move item to wishlist", err);
             }
           }
         } catch (e) {

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Card, Button, Row, Col } from "react-bootstrap";
-import api from "../api/axios"; // axios instance
+import { getGiftCardDetails } from "../api/giftCardApi";
 import "../styles/Giftcardinnersection.css";
 import Header from "../components/common/Header";
 import Footer from "../components/common/Footer";
@@ -15,7 +15,7 @@ const Giftcardinnersection = () => {
   useEffect(() => {
     const fetchGiftcard = async () => {
       try {
-        const { data } = await api.get(`/user/giftcards/details/${id}`);
+        const { data } = await getGiftCardDetails(id);
         setGiftcard(data.giftCard);
       } catch (error) {
         console.error("Error fetching giftcard:", error);

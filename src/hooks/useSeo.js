@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-
-const API_BASE = "https://beauty.joyory.com/api/seo";
+import { getSeoMeta } from "../api/seoBlogApi";
 
 export const useSeo = (type, slug = "", page = 1) => {
   const [seo, setSeo] = useState(null);
@@ -10,17 +9,16 @@ export const useSeo = (type, slug = "", page = 1) => {
 
     const fetchSeo = async () => {
       try {
-        let url = `${API_BASE}?type=${type}`;
+        const params = { type };
+        if (slug) params.slug = slug;
+        if (page > 1) params.page = page;
 
-        if (slug) url += `&slug=${slug}`;
-        if (page > 1) url += `&page=${page}`;
-
-        const res = await fetch(url, { signal: controller.signal });
-        const data = await res.json();
-
-        setSeo(data);
+        const res = await getSeoMeta(params, { signal: controller.signal });
+        setSeo(res.data);
       } catch (err) {
-        console.error("SEO Fetch Error:", err);
+        if (err.name !== "CanceledError" && err.name !== "AbortError") {
+          console.error("SEO Fetch Error:", err);
+        }
       }
     };
 

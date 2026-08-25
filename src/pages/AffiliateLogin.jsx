@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import loginImg from "../assets/login-image.png";
 import Logo from "../assets/Logo.png";
 import "../styles/AffiliateLogin.css";
+import { affiliateLogin } from "../api/affiliateApi";
 
 const Affiliatelogin = () => {
   const navigate = useNavigate();
@@ -24,28 +25,20 @@ const Affiliatelogin = () => {
     });
   };
 
-  const API_LOGIN_URL = "https://beauty.joyory.com/api/affiliate/login";
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setApiError("");
     setLoading(true);
 
     try {
-      const response = await fetch(API_LOGIN_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-        }),
+      const response = await affiliateLogin({
+        email: formData.email,
+        password: formData.password,
       });
 
-      const data = await response.json();
+      const data = response.data;
 
-      if (response.ok && data.success) {
+      if (data.success) {
         localStorage.setItem("joyoryAffiliateToken", data.token);
         localStorage.setItem("joyoryAffiliateUser", JSON.stringify(data.user));
 
@@ -55,7 +48,7 @@ const Affiliatelogin = () => {
       }
     } catch (error) {
       console.error("Login error:", error);
-      setApiError("Network error. Try again later.");
+      setApiError(error.response?.data?.message || "Network error. Try again later.");
     }
 
     setLoading(false);

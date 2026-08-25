@@ -1,7 +1,9 @@
 // CategoryLandingPage.jsx
 import React, { useState, useEffect, useContext, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
+import { getCategoryLanding } from "../api/categoryApi";
+import { getWishlist, addToWishlist, removeFromWishlist } from "../api/wishlistApi";
+import { addToCart } from "../api/cartApi";
 import {
     FaHeart,
     FaRegHeart,
@@ -13,7 +15,7 @@ import {
 } from "react-icons/fa";
 import Header from "../components/common/Header";
 import Footer from "../components/common/Footer";
-import { CartContext } from "../Context/CartContext";
+import { CartContext } from "../context/CartContext";
 import { UserContext } from "../context/UserContext.jsx";
 import "../styles/CategoryLandingPage.css";
 import "../styles/BestSellers.css";
@@ -25,6 +27,8 @@ import quizMobileBanner from "../assets/quiz_mobile_banner.png";
 import { ToastContainer, toast } from "react-toastify";
 import SEOMeta from "../components/common/SEOMeta"; // Add import at top
 import PageNotFound from "./PageNotFound";
+import SectionError from "../components/common/SectionError";
+import { getErrorMessage } from "../utils/errorHandler";
 
 // Import Swiper and its styles
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -35,9 +39,6 @@ import "swiper/css/navigation";
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import Certificate from "../components/sections/home/Certificate.jsx";
 
-const API_BASE = "https://beauty.joyory.com/api/user";
-const CART_API_BASE = `${API_BASE}/cart`;
-const WISHLIST_API_BASE = `${API_BASE}/wishlist`;
 
 /* ---------- helpers ---------- */
 const getSku = (v) => v?.sku || v?.variantSku || `sku-${v?._id || "default"}`;
@@ -327,82 +328,47 @@ export default function CategoryLandingPage() {
     };
 
     /* ========== FETCH LANDING DATA ========== */
-    useEffect(() => {
-        const fetchLandingData = async () => {
-            try {
-                setLoading(true);
-                setShow404(false); // Reset 404 state
-                setError(null);
-
-                const { data } = await axios.get(
-                    `${API_BASE}/categories/category/${effectiveSlug}/landing`,
-                );
-                setData(data);
-            } catch (err) {
-                console.error("Failed to load category landing:", err);
-
-                const status = err.response?.status;
-                const responseMessage = err.response?.data?.message;
-                const isLandingPage = err.response?.data?.isLandingPage;
-
-                // ========== ENHANCED ERROR HANDLING ==========
-
-                // Check if it's a 400 error with isLandingPage: false (sub-category blocked)
-                // if (status === 400 && isLandingPage === false) {
-                //     setErrorMessage(
-                //         responseMessage ||
-                //         "This page is only available for top-level parent categories. Sub-categories are not accessible directly."
-                //     );
-                //     setShow404(true);
-                // }
-                if (status === 400 && isLandingPage === false) {
-                    navigate(`/Products/category/${effectiveSlug}`, { replace: true });
-                    return;
-                }
-                // Check if it's a 404 error (category not found)
-                else if (status === 404) {
-                    setErrorMessage(
-                        responseMessage ||
-                        "The category you're looking for doesn't exist or has been removed."
-                    );
-                    setShow404(true);
-                }
-                // Check if it's a 500 error (server error)
-                else if (status === 500) {
-                    setErrorMessage(
-                        "We're experiencing technical difficulties. Please try again later."
-                    );
-                    setShow404(true);
-                }
-                // Network error (no response)
-                else if (err.code === 'ERR_NETWORK' || !err.response) {
-                    setErrorMessage(
-                        "Unable to connect to the server. Please check your internet connection and try again."
-                    );
-                    setShow404(true);
-                }
-                // Any other error
-                else {
-                    setError(responseMessage || "Failed to load page");
-                    setErrorMessage(
-                        responseMessage ||
-                        "An unexpected error occurred. Please try again or contact support."
-                    );
-                    setShow404(true);
-                }
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        if (effectiveSlug) {
-            fetchLandingData();
-        } else {
-            // If no slug provided, show 404
+    const fetchLandingData = async () => {
+        if (!effectiveSlug) {
             setErrorMessage("No category specified. Please select a valid category.");
             setShow404(true);
             setLoading(false);
+            return;
         }
+
+        try {
+            setLoading(true);
+            setShow404(false); // Reset 404 state
+            setError(null);
+
+            const { data } = await getCategoryLanding(effectiveSlug);
+            setData(data);
+        } catch (err) {
+            console.error("Failed to load category landing:", err);
+
+            const status = err.response?.status;
+            const responseMessage = err.response?.data?.message;
+            const isLandingPage = err.response?.data?.isLandingPage;
+
+            if (status === 400 && isLandingPage === false) {
+                navigate(`/Products/category/${effectiveSlug}`, { replace: true });
+                return;
+            } else if (status === 404) {
+                setErrorMessage(
+                    responseMessage ||
+                    "The category you're looking for doesn't exist or has been removed."
+                );
+                setShow404(true);
+            } else {
+                setError(getErrorMessage(err, "Failed to load category page"));
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchLandingData();
     }, [slug, effectiveSlug]);
 
     /* ========== WISHLIST LOGIC ========== */
@@ -416,9 +382,7 @@ export default function CategoryLandingPage() {
     const fetchWishlistData = async () => {
         try {
             if (user && !user.guest) {
-                const { data } = await axios.get(WISHLIST_API_BASE, {
-                    withCredentials: true,
-                });
+                const { data } = await getWishlist();
                 if (data.success) setWishlistData(data.wishlist || []);
             } else {
                 const local = JSON.parse(localStorage.getItem("guestWishlist") || "[]");
@@ -450,17 +414,10 @@ export default function CategoryLandingPage() {
         try {
             const inWl = isInWishlist(pid, sku);
             if (inWl) {
-                await axios.delete(`${WISHLIST_API_BASE}/${pid}`, {
-                    withCredentials: true,
-                    data: { sku },
-                });
+                await removeFromWishlist(pid, { sku });
                 showToastMsg("Removed from wishlist!", "success");
             } else {
-                await axios.post(
-                    `${WISHLIST_API_BASE}/${pid}`,
-                    { sku },
-                    { withCredentials: true },
-                );
+                await addToWishlist(pid, { sku });
                 showToastMsg("Added to wishlist!", "success");
             }
             await fetchWishlistData();
@@ -508,9 +465,7 @@ export default function CategoryLandingPage() {
                 payload = { productId: prod._id, quantity: 1 };
             }
 
-            const { data } = await axios.post(`${CART_API_BASE}/add`, payload, {
-                withCredentials: true,
-            });
+            const { data } = await addToCart(payload);
             if (!data.success) throw new Error(data.message || "Cart add failed");
 
             showToastMsg("Product added to cart!", "success");
@@ -1038,9 +993,21 @@ export default function CategoryLandingPage() {
             </div>
         );
 
-    // ========== Show PageNotFound component if category not found or error ==========
-    if (show404 || error || !data) {
+    // ========== Show PageNotFound component if category not found ==========
+    if (show404) {
         return <PageNotFound />;
+    }
+
+    if (error || !data) {
+        return (
+            <>
+                <Header />
+                <div className="container py-5 my-5">
+                    <SectionError message={error || "Category data unavailable"} onRetry={fetchLandingData} />
+                </div>
+                <Footer />
+            </>
+        );
     }
 
     const {

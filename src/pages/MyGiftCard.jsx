@@ -1,12 +1,10 @@
 // src/components/GiftCards.jsx
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { listGiftCards } from "../api/giftCardApi";
 import "../styles/GiftCards.css";
 import Footer from "../components/common/Footer";
 import Header from "../components/common/Header";
-
-const API_BASE = "https://beauty.joyory.com/api/user/giftcards";
 
 export default function MyGiftCard() {
   const [giftCards, setGiftCards] = useState([]);
@@ -18,8 +16,7 @@ export default function MyGiftCard() {
 
   // Fetch gift cards
   useEffect(() => {
-    axios
-      .get(`${API_BASE}/list`, { withCredentials: true })
+    listGiftCards()
       .then((res) => {
         if (res.data?.success) {
           const cards = res.data.giftCards || [];

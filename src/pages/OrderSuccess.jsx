@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { Modal, Button, Form, Alert, Spinner, Badge, Dropdown } from "react-bootstrap";
+import { getProfile } from "../api/userApi";
+import { cancelOrder, getPaymentSuccess, getOrderById } from "../api/orderApi";
 import "../styles/OrderSuccess.css";
 
 /* -------------------- Success Popup -------------------- */
@@ -72,13 +74,10 @@ const CancelOrderPopup = ({ show, handleClose, order }) => {
 
   const checkAuthentication = async () => {
     try {
-      const response = await fetch("https://beauty.joyory.com/api/user/profile", {
-        method: "GET",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-      });
-      setIsAuthenticated(response.ok);
-      return response.ok;
+      const response = await getProfile();
+      const ok = Boolean(response?.data?.success);
+      setIsAuthenticated(ok);
+      return ok;
     } catch {
       setIsAuthenticated(false);
       return false;
@@ -118,17 +117,10 @@ const CancelOrderPopup = ({ show, handleClose, order }) => {
     setMessage(null);
 
     try {
-      const endpoint = `https://beauty.joyory.com/api/user/cart/cancel/${orderIdToCancel}`;
-      const res = await fetch(endpoint, {
-        method: "PUT",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reason: finalReason }),
-      });
+      const res = await cancelOrder(orderIdToCancel, { reason: finalReason });
+      const data = res.data;
 
-      const data = await res.json();
-
-      if (res.ok && data.success) {
+      if (data?.success) {
         const updatedOrder = {
           ...order,
           orderStatus: "Cancelled",
@@ -274,13 +266,8 @@ const OrderSuccess = () => {
 
   const checkAuthAndRedirect = async () => {
     try {
-      const response = await fetch("https://beauty.joyory.com/api/user/profile", {
-        method: "GET",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-      });
-
-      if (!response.ok) {
+      const response = await getProfile();
+      if (!response?.data?.success) {
         setIsAuthenticated(false);
         sessionStorage.setItem("redirectAfterLogin", window.location.pathname);
         navigate("/login");
@@ -307,28 +294,14 @@ const OrderSuccess = () => {
       const orderIdToFetch = id || orderId;
       if (!orderIdToFetch) throw new Error("No order ID provided");
 
-      const endpoints = [
-        `https://beauty.joyory.com/api/payment/success/${orderIdToFetch}`,
-        `https://beauty.joyory.com/api/order/${orderIdToFetch}`,
-        `https://beauty.joyory.com/api/user/orders/${orderIdToFetch}`,
-      ];
-
       let response = null;
-      for (const endpoint of endpoints) {
-        response = await fetch(endpoint, {
-          method: "GET",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-        });
-        if (response.ok) break;
+      try {
+        response = await getPaymentSuccess(orderIdToFetch);
+      } catch {
+        response = await getOrderById(orderIdToFetch);
       }
 
-      if (!response || !response.ok) throw new Error("Failed to load order");
-
-      const data = await response.json();
+      const data = response.data;
 
       if (data && data.success === false) {
         throw new Error(data.message || "Failed to load order");

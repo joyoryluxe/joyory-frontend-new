@@ -2,7 +2,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import { FaAngleDown, FaTimes, FaArrowLeft, FaMicrophone, FaSearch, FaCommentDots, FaMagic, FaFlask, FaCamera, FaPalette, FaClipboardList, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import axiosInstance from "../../utils/axiosInstance.js";
+import { getCategoryTree } from "../../api/categoryApi";
+import { getBrands } from "../../api/brandApi";
 import logo from "../../assets/logo.png";
 import Cart from "../../assets/Cart.svg";
 import users from "../../assets/user.svg";
@@ -71,7 +72,7 @@ const Mobileheaderview = ({
   useEffect(() => {
     const fetchBrands = async () => {
       try {
-        const res = await axiosInstance.get("/api/user/brands");
+        const res = await getBrands();
         setBrands(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
         console.error("Error fetching brands in MobileHeaderView:", err);
@@ -139,7 +140,7 @@ const Mobileheaderview = ({
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const res = await axiosInstance.get("/api/user/categories/tree");
+        const res = await getCategoryTree();
         setFetchedCategories(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
         console.error("Category fetch failed in Mobileheaderview", err);

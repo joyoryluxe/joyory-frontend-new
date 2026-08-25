@@ -10,7 +10,10 @@ import { UserContext } from "../context/UserContext.jsx";
 import BrandFilter from "../components/common/BrandFilter";
 import "../styles/ProductPage.css";
 import "../styles/BestSellers.css";
-import axios from "axios";
+import { getAllProducts } from "../api/productApi";
+import { getCategoryTree } from "../api/categoryApi";
+import { getWishlist, addToWishlist, removeFromWishlist } from "../api/wishlistApi";
+import { addToCart } from "../api/cartApi";
 import { toast } from "react-toastify";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination, Navigation } from "swiper/modules";
@@ -20,6 +23,8 @@ import "swiper/css/navigation";
 import updownarrow from "../assets/updownarrow.svg";
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import Loader from "../components/common/Loader";
+import SectionError from "../components/common/SectionError";
+import { getErrorMessage } from "../utils/errorHandler";
 import PageNotFound from "./PageNotFound";
 import filtering from "../assets/filtering.svg";
 import Bag from "../assets/Bag.svg";
@@ -143,8 +148,6 @@ const OutOfStockPopup = ({ isOpen, onClose, productName }) => {
     );
 };
 
-const CART_API_BASE = "https://beauty.joyory.com/api/user/cart";
-const PRODUCT_ALL_API = "https://beauty.joyory.com/api/user/products/all";
 
 /* ─── helpers ───────────────────────────────────────────────────────────── */
 const getSku = (v) => v?.sku || v?.variantSku || `sku-${v?._id || "default"}`;
@@ -179,7 +182,7 @@ const fetchCategoryTree = async () => {
         return globalCategoryTreeCache;
     }
     try {
-        const { data } = await axios.get("https://beauty.joyory.com/api/user/categories/tree");
+        const { data } = await getCategoryTree();
         globalCategoryTreeCache = Array.isArray(data) ? data : (data?.categories || []);
         return globalCategoryTreeCache;
     } catch (err) {
@@ -322,6 +325,7 @@ export default function ProductPage() {
     const [loadingMore, setLoadingMore] = useState(false);
     const [hasMore, setHasMore] = useState(true);
     const [nextCursor, setNextCursor] = useState(null);
+    const [fetchError, setFetchError] = useState(null);
 
     const [wishlistLoading, setWishlistLoading] = useState({});
     const [wishlistData, setWishlistData] = useState([]);
@@ -402,7 +406,7 @@ export default function ProductPage() {
     const fetchWishlistData = async () => {
         try {
             if (user && !user.guest) {
-                const { data } = await axios.get("https://beauty.joyory.com/api/user/wishlist", { withCredentials: true });
+                const { data } = await getWishlist();
                 if (data.success) setWishlistData(data.wishlist || []);
             } else {
                 const local = JSON.parse(localStorage.getItem("guestWishlist") || "[]");
@@ -431,10 +435,10 @@ export default function ProductPage() {
             const inWl = isInWishlist(pid, sku);
             if (user && !user.guest) {
                 if (inWl) {
-                    await axios.delete(`https://beauty.joyory.com/api/user/wishlist/${pid}`, { withCredentials: true, data: { sku } });
+                    await removeFromWishlist(pid, { sku });
                     showToastMsg("Removed from wishlist!", "success");
                 } else {
-                    await axios.post(`https://beauty.joyory.com/api/user/wishlist/${pid}`, { sku }, { withCredentials: true });
+                    await addToWishlist(pid, { sku });
                     showToastMsg("Added to wishlist!", "success");
                 }
                 await fetchWishlistData();
@@ -513,7 +517,6 @@ export default function ProductPage() {
         p.append("limit", "9");
 
         const queryString = p.toString();
-        console.log("API Query →", `${PRODUCT_ALL_API}?${queryString}`);
         return queryString;
     };
 
@@ -528,10 +531,7 @@ export default function ProductPage() {
                 setLoadingMore(true);
             }
 
-            const { data } = await axios.get(
-                `${PRODUCT_ALL_API}?${buildQueryParams(cursor)}`,
-                { withCredentials: true }
-            );
+            const { data } = await getAllProducts(buildQueryParams(cursor));
 
             // Validation: Check if requested URL slug / filter is valid
             const path = location.pathname.toLowerCase();
@@ -877,7 +877,7 @@ export default function ProductPage() {
                 if (prod.stock <= 0) { showToastMsg("Product is out of stock.", "error"); return; }
                 payload = { productId: prod._id, quantity: 1 };
             }
-            const { data } = await axios.post(`${CART_API_BASE}/add`, payload, { withCredentials: true });
+            const { data } = await addToCart(payload);
             if (!data.success) throw new Error(data.message || "Cart add failed");
             showToastMsg("Product added to cart!", "success");
             navigate("/cartpage");
@@ -1779,20 +1779,29 @@ export default function ProductPage() {
                             )}
                             {sortedProducts.length > 0
                                 ? sortedProducts.map(renderProductCard)
-                                : loading
+                                : fetchError && !loading
                                     ? (
-                                        // NEW Loading state when no products yet
-                                        <div className="col-12 text-center py-5">
-                                            <DotLottieReact className='foryoulanding-css'
-                                                src="https://lottie.host/73673e65-df58-41a5-87e7-b837c5d00fe8/dJVGVbJuYJ.lottie"
-                                                loop
-                                                autoplay
-                                                style={{ width: '200px', height: '200px', margin: '0 auto' }}
+                                        <div className="col-12">
+                                            <SectionError
+                                                message={fetchError}
+                                                onRetry={() => fetchProducts(null, true)}
                                             />
-                                            <p className="text-muted">Loading products...</p>
                                         </div>
                                     )
-                                    : <div className="col-12 text-center py-5"><h4>No products found</h4><p className="text-muted">Try adjusting your filters.</p></div>
+                                    : loading
+                                        ? (
+                                            // NEW Loading state when no products yet
+                                            <div className="col-12 text-center py-5">
+                                                <DotLottieReact className='foryoulanding-css'
+                                                    src="https://lottie.host/73673e65-df58-41a5-87e7-b837c5d00fe8/dJVGVbJuYJ.lottie"
+                                                    loop
+                                                    autoplay
+                                                    style={{ width: '200px', height: '200px', margin: '0 auto' }}
+                                                />
+                                                <p className="text-muted">Loading products...</p>
+                                            </div>
+                                        )
+                                        : <div className="col-12 text-center py-5"><h4>No products found</h4><p className="text-muted">Try adjusting your filters.</p></div>
                             }
                         </div>
 

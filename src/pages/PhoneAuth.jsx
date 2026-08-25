@@ -635,7 +635,7 @@ import { useNavigate, useSearchParams, Link, useLocation } from "react-router-do
 import { toast } from "react-toastify";
 import { motion, AnimatePresence } from "framer-motion";
 import { UserContext } from "../context/UserContext";
-import axiosInstance from "../utils/axiosInstance.js";
+import { phoneOtpSend, phoneOtpVerify, phoneCompleteProfile } from "../api/authApi";
 import Logo from "../assets/logo.png";
 import "../styles/PhoneAuth.css";
 
@@ -722,7 +722,7 @@ const PhoneAuth = () => {
 
     try {
       setLoading(true);
-      const res = await axiosInstance.post("/api/user/otp/send", { phone });
+      const res = await phoneOtpSend({ phone });
       if (res.data?.success) {
         toast.success(res.data.message || "OTP sent successfully via WhatsApp.");
         setStep("otp");
@@ -748,7 +748,7 @@ const PhoneAuth = () => {
     if (resendTimer > 0) return;
     try {
       setLoading(true);
-      const res = await axiosInstance.post("/api/user/otp/send", { phone });
+      const res = await phoneOtpSend({ phone });
       if (res.data?.success) {
         toast.success("A new OTP has been sent.");
         setResendTimer(30);
@@ -804,7 +804,7 @@ const PhoneAuth = () => {
 
     try {
       setLoading(true);
-      const res = await axiosInstance.post("/api/user/otp/verify", { phone, otp });
+      const res = await phoneOtpVerify({ phone, otp });
       const data = res.data;
 
       if (data.status === "new_user") {
@@ -897,7 +897,7 @@ const PhoneAuth = () => {
         promo: (code && !isUserReferral) ? code : undefined
       };
 
-      const res = await axiosInstance.post("/api/user/otp/complete-profile", payload);
+      const res = await phoneCompleteProfile(payload);
       const data = res.data;
 
       if (data.success) {

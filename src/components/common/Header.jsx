@@ -9,7 +9,8 @@ import favourite from "../../assets/favourite.svg";
 import users from "../../assets/user.svg";
 import mic from "../../assets/mic.svg";
 import search from "../../assets/search.svg";
-import axiosInstance from "../../utils/axiosInstance.js";
+import { getCategoryTree } from "../../api/categoryApi";
+import { getAllProducts } from "../../api/productApi";
 import { UserContext } from "../../context/UserContext";
 import { CartContext } from "../../context/CartContext";
 import { WishlistContext } from "../../context/WishlistContext";
@@ -412,7 +413,7 @@ const Header = ({ hideCategories = false }) => {
     const fetchData = async () => {
       try {
         setIsSearchLoading(true);
-        const catRes = await axiosInstance.get("/api/user/categories/tree");
+        const catRes = await getCategoryTree();
         setCategories(Array.isArray(catRes.data) ? catRes.data : catRes.data.categories || []);
 
         let allFetchedProducts = [];
@@ -420,10 +421,7 @@ const Header = ({ hideCategories = false }) => {
         let hasMore = true;
 
         while (hasMore) {
-          const res = await axiosInstance.get("/api/user/products/all", {
-            params: { cursor: currentCursor, limit: 500 },
-            withCredentials: true
-          });
+          const res = await getAllProducts({ cursor: currentCursor, limit: 500 });
 
           let products = [];
           let pagination = {};

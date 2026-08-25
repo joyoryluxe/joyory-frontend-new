@@ -9,7 +9,8 @@ import Header from "../components/common/Header";
 import Footer from "../components/common/Footer";
 import RecommendationSlider from "../components/common/RecommendationSlider";
 import "react-toastify/dist/ReactToastify.css";
-import axiosInstance from "../utils/axiosInstance.js";
+import { getProductById } from "../api/productApi";
+import { getProductReviews, addReview, voteHelpful } from "../api/reviewApi";
 import "../styles/ProductDetail.css";
 
 // Import separated components
@@ -99,13 +100,8 @@ const ProductDetail = () => {
 
     const fetchProduct = async () => {
       try {
-        let url = `/api/user/products/${slug}`;
         const variantParam = getVariantFromQuery();
-        if (variantParam) {
-          url += `?variant=${variantParam}`;
-        }
-
-        const res = await axiosInstance.get(url);
+        const res = await getProductById(slug, variantParam ? { variant: variantParam } : {});
         const data = res.data;
         if (location.state?.supportsVTO !== undefined) {
           data.supportsVTO = location.state.supportsVTO;
@@ -278,12 +274,9 @@ const ProductDetail = () => {
     if (!product?._id) return;
     try {
       // Fetch all reviews; filtering by shade, rating, and photos is done on the frontend to ensure 100% reliability
-      const query = `?sort=${filters.sort === "Most Helpful" ? "helpful" : "recent"
-        }`;
-
-      const res = await axiosInstance.get(
-        `/api/reviews/product/${product._id}${query}`
-      );
+      const res = await getProductReviews(product._id, {
+        sort: filters.sort === "Most Helpful" ? "helpful" : "recent"
+      });
       setReviews(res.data.reviews || []);
 
       if (res.data.summary) {
@@ -339,9 +332,7 @@ const ProductDetail = () => {
       formData.append("comment", newReview.comment);
       reviewImages.forEach((file) => formData.append("images", file));
 
-      const res = await axiosInstance.post(`/api/reviews/add`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const res = await addReview(formData);
 
       if (res.data.review) {
         toast.success("✅ Review submitted!");
@@ -362,9 +353,7 @@ const ProductDetail = () => {
 
   const handleHelpfulVote = async (reviewId) => {
     try {
-      const res = await axiosInstance.post(
-        `/api/reviews/${reviewId}/vote-helpful`
-      );
+      const res = await voteHelpful(reviewId);
 
       setReviews((prev) =>
         prev.map((r) =>

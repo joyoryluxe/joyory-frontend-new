@@ -9,6 +9,7 @@ import Footer from "../components/common/Footer";
 import Header from "../components/common/Header";
 import Vector from "../assets/Vector.png";
 import "../styles/Foundation.css"; 
+import { getFormulations, getRecommendations } from "../api/shadeFinderApi";
 
 
 export default function FoundationPage() {
@@ -35,10 +36,12 @@ export default function FoundationPage() {
       }
       setLoading(true);
       try {
-        const res = await fetch(
-          `https://beauty.joyory.com/api/shadefinder/formulations?familyKey=${family.key}&toneKey=${shade.key}&undertoneKey=${undertoneKey}`
-        );
-        const data = await res.json();
+        const res = await getFormulations({
+          familyKey: family.key,
+          toneKey: shade.key,
+          undertoneKey,
+        });
+        const data = res.data;
         if (data.success && Array.isArray(data.formulations)) {
           setFormulations(data.formulations);
         } else {
@@ -66,10 +69,13 @@ export default function FoundationPage() {
     if (!selected?._id) return;
     setLoadingNext(true);
     try {
-      const res = await fetch(
-        `https://beauty.joyory.com/api/user/shadefinder/recommendations?familyKey=${family.key}&toneKey=${shade.key}&undertoneKey=${undertoneKey}&formulation=${selected._id}`
-      );
-      const data = await res.json();
+      const res = await getRecommendations({
+        familyKey: family.key,
+        toneKey: shade.key,
+        undertoneKey,
+        formulation: selected._id,
+      });
+      const data = res.data;
 
       const recommendations = Array.isArray(data.products) ? data.products : [];
       const suggestions = Array.isArray(data.suggestions)

@@ -1,11 +1,8 @@
-// src/components/GiftCards.jsx
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import { getGiftCardTemplates, createGiftCardOrder, verifyGiftCardPayment } from "../api/giftCardApi";
 import "../styles/GiftCards.css";
 import Footer from "../components/common/Footer";
 import Header from "../components/common/Header";
-
-const API_BASE = "https://beauty.joyory.com/api/user/giftcards";
 
 export default function GiftCards() {
     const [templates, setTemplates] = useState([]);
@@ -29,8 +26,7 @@ export default function GiftCards() {
 
     // ✅ Fetch templates
     useEffect(() => {
-        axios
-            .get(`${API_BASE}/templates`)
+        getGiftCardTemplates()
             .then((res) => {
                 const data = res.data || [];
                 setTemplates(data);
@@ -93,19 +89,15 @@ export default function GiftCards() {
 
         setLoading(true);
         try {
-            const createResp = await axios.post(
-                `${API_BASE}/create-order`,
-                {
-                    templateId: selected._id,
-                    amount,
-                    recipient: {
-                        name: form.recipientName,
-                        email: form.recipientEmail,
-                    },
-                    message: form.message,
+            const createResp = await createGiftCardOrder({
+                templateId: selected._id,
+                amount,
+                recipient: {
+                    name: form.recipientName,
+                    email: form.recipientEmail,
                 },
-                { withCredentials: true }
-            );
+                message: form.message,
+            });
 
             const order = createResp.data?.order;
             if (!order) throw new Error("Failed to create Razorpay order");
@@ -130,11 +122,7 @@ export default function GiftCards() {
                 handler: async function (response) {
                     console.log("✅ Razorpay response:", response);
                     try {
-                        await axios.post(
-                            `${API_BASE}/verify-payment`,
-                            response,
-                            { withCredentials: true }
-                        );
+                        await verifyGiftCardPayment(response);
 
                         alert("✅ Gift card issued & email sent to recipient!");
                         setSelected(null);

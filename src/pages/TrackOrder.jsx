@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Loader from "../components/common/Loader";
+import { getOrderTracking } from "../api/orderApi";
 import "../styles/TrackOrder.css";
 
 const TrackOrder = () => {
@@ -21,19 +22,8 @@ const TrackOrder = () => {
 
     const fetchTracking = async () => {
       try {
-        const apiUrl = `https://beauty.joyory.com/api/user/cart/tracking/${orderId}`;
-
-        const res = await fetch(apiUrl, {
-          method: "GET",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-
-        if (!res.ok) throw new Error(`Server responded with ${res.status}`);
-
-        const data = await res.json();
+        const res = await getOrderTracking(orderId);
+        const data = res.data;
         setTrackingData(data);
       } catch (err) {
         console.error("Error fetching tracking data:", err);

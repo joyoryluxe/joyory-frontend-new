@@ -3,7 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import "../../styles/Footer.css";
 import logo from "../../assets/logo.png";
 import mastercard from "../../assets/footer.png";
-import axiosInstance from "../../utils/axiosInstance.js";
+import { getCategoryTree } from "../../api/categoryApi";
+import { getBrands } from "../../api/brandApi";
 import instagram from "../../assets/instagram.svg";
 import facebook from "../../assets/facebook.svg";
 import linkedin from "../../assets/linkedin.svg";
@@ -37,7 +38,7 @@ const Footer = () => {
   useEffect(() => {
     const fetchFooterCategories = async () => {
       try {
-        const res = await axiosInstance.get("/api/user/categories/tree");
+        const res = await getCategoryTree();
         // Access categories from data (handling both array and object responses)
         const catData = Array.isArray(res.data) ? res.data : res.data.categories || [];
         // Slice to show top 5-6 categories to keep footer layout clean
@@ -49,7 +50,7 @@ const Footer = () => {
 
     const fetchFooterBrands = async () => {
       try {
-        const res = await axiosInstance.get("/api/user/brands");
+        const res = await getBrands();
         setBrands(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
         console.error("Footer Brands fetch error:", err);

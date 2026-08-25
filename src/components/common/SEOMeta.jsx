@@ -180,7 +180,7 @@
 
 
 import { useEffect } from "react";
-import axiosInstance from "../../utils/axiosInstance";
+import { getSeoMetadata } from "../../api/seoBlogApi";
 
 // Fallback metadata for robustness
 const FALLBACKS = {
@@ -418,9 +418,7 @@ const SEOMeta = ({ type = "home", slug = "", page = "" }) => {
 
     const fetchSEO = async () => {
       try {
-        const response = await axiosInstance.get("/api/seo", {
-          params: { type, slug, page }
-        });
+        const response = await getSeoMetadata({ type, slug, page });
         if (isMounted && response.data) {
           applyMetadata(response.data);
         }

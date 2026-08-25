@@ -336,7 +336,7 @@ import React, { useState, useEffect, useContext } from "react";
 import "../styles/Login.css";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import "bootstrap-icons/font/bootstrap-icons.css";
-import axiosInstance from "../utils/axiosInstance.js";
+import { login, googleLogin } from "../api/authApi";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { UserContext } from "../context/UserContext";
@@ -389,11 +389,7 @@ const Login = () => {
   const handleGoogleResponse = async (response) => {
     try {
       const googleToken = response.credential;
-      const res = await axiosInstance.post(
-        "/api/user/google-login",
-        { token: googleToken },
-        { withCredentials: true }
-      );
+      const res = await googleLogin({ token: googleToken });
 
       if (res.data?.user) {
         const redirectTo = location.state?.from || "/";
@@ -472,14 +468,10 @@ const Login = () => {
     try {
       setLoading(true);
 
-      const res = await axiosInstance.post(
-        "/api/user/login",
-        {
-          email: email.trim().toLowerCase(),
-          password,
-        },
-        { withCredentials: true }
-      );
+      const res = await login({
+        email: email.trim().toLowerCase(),
+        password,
+      });
 
       // ✅ If login successful
       if (res.status === 200 && res.data?.user) {

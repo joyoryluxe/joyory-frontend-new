@@ -3,7 +3,11 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { FaSearch, FaRegSadTear, FaSpinner, FaSync, FaTimes, FaHeart, FaRegHeart, FaChevronDown, FaCheck } from "react-icons/fa";
 import Header from "../components/common/Header";
 import Footer from "../components/common/Footer";
-import axiosInstance from "../utils/axiosInstance.js";
+import { getAllProducts } from "../api/productApi";
+import { getWishlist, addToWishlist, removeFromWishlist } from "../api/wishlistApi";
+import { getCategoryTree } from "../api/categoryApi";
+import { getBrands } from "../api/brandApi";
+import { addToCart } from "../api/cartApi";
 import { CartContext } from "../context/CartContext";
 import { UserContext } from "../context/UserContext.jsx";
 import { ToastContainer, toast } from "react-toastify";
@@ -136,9 +140,7 @@ const OutOfStockPopup = ({ isOpen, onClose, productName }) => {
   );
 };
 
-const CART_API_BASE = "/api/user/cart";
 const WISHLIST_CACHE_KEY = "guestWishlist";
-const PRODUCT_ALL_API = "https://beauty.joyory.com/api/user/products/all";
 
 // ==================== HELPER FUNCTIONS ====================
 const sanitizeSearchQuery = (query) => {
@@ -600,9 +602,7 @@ const SearchPage = () => {
 
         while (hasMorePages) {
           const queryString = buildQueryParams(pageCursor);
-          const response = await axiosInstance.get(`${PRODUCT_ALL_API}?${queryString}`, {
-            withCredentials: true
-          });
+          const response = await getAllProducts(queryString);
 
           let pageProducts = [];
           let pagePag = {};
@@ -640,9 +640,7 @@ const SearchPage = () => {
         products = Array.from(productMap.values());
       } else {
         const queryString = buildQueryParams(currentCursor);
-        const response = await axiosInstance.get(`${PRODUCT_ALL_API}?${queryString}`, {
-          withCredentials: true
-        });
+        const response = await getAllProducts(queryString);
 
         if (response.data && Array.isArray(response.data.products)) {
           products = response.data.products;
@@ -768,9 +766,7 @@ const SearchPage = () => {
   const fetchWishlistData = useCallback(async () => {
     try {
       if (user && !user.guest) {
-        const response = await axiosInstance.get("/api/user/wishlist", {
-          withCredentials: true // Ensure cookies are sent
-        });
+        const response = await getWishlist();
         if (response.data.success) {
           setWishlistData(response.data.wishlist || []);
         }
@@ -835,16 +831,10 @@ const SearchPage = () => {
       const currentlyInWishlist = isInWishlist(productId, sku);
 
       if (currentlyInWishlist) {
-        await axiosInstance.delete(`/api/user/wishlist/${productId}`, {
-          data: { sku: sku },
-          withCredentials: true // 🔥 FIXED: Added credentials
-        });
+        await removeFromWishlist(productId, { sku: sku });
         showToastMsg("Removed from wishlist!", "success");
       } else {
-        await axiosInstance.post(`/api/user/wishlist/${productId}`,
-          { sku: sku },
-          { withCredentials: true } // 🔥 FIXED: Added credentials
-        );
+        await addToWishlist(productId, { sku: sku });
         showToastMsg("Added to wishlist!", "success");
       }
       // Update local state immediately
@@ -902,11 +892,11 @@ const SearchPage = () => {
     const fetchMetadata = async () => {
       try {
         const [catRes, brandRes] = await Promise.all([
-          axiosInstance.get("/api/user/categories/tree").catch(err => {
+          getCategoryTree().catch(err => {
             console.error("Error fetching categories tree:", err);
             return { data: [] };
           }),
-          axiosInstance.get("/api/user/brands").catch(err => {
+          getBrands().catch(err => {
             console.error("Error fetching brands list:", err);
             return { data: [] };
           })
@@ -1093,7 +1083,7 @@ const SearchPage = () => {
         localStorage.setItem("cartVariantCache", JSON.stringify(cache));
       }
 
-      const response = await axiosInstance.post(`${CART_API_BASE}/add`, payload);
+      const response = await addToCart(payload);
       if (!response.data.success) {
         throw new Error(response.data.message || "Failed to add to cart");
       }

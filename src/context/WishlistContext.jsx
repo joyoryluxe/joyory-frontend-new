@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useContext } from "react";
-import axiosInstance from "../utils/axiosInstance.js";
+import { getWishlist, addToWishlist, removeFromWishlist as apiRemoveFromWishlist } from "../api/wishlistApi";
 import { UserContext } from "./UserContext";
 import { toast } from "react-toastify";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -81,18 +81,14 @@ export const WishlistProvider = ({ children }) => {
           try {
             const { productId, sku } = JSON.parse(pendingActionStr);
             localStorage.removeItem("pendingWishlistAction");
-            await axiosInstance.post(
-              `/api/user/wishlist/${productId}`,
-              { sku },
-              { withCredentials: true }
-            );
+            await addToWishlist(productId, { sku });
             toast.success("Product added to your wishlist!");
           } catch (e) {
             console.error("Error executing pending wishlist action:", e);
           }
         }
 
-        const response = await axiosInstance.get(`/api/user/wishlist?_t=${Date.now()}`, { withCredentials: true });
+        const response = await getWishlist({ params: { _t: Date.now() } });
         if (response.data?.success) {
           const items = response.data.wishlist || [];
           
@@ -198,16 +194,10 @@ export const WishlistProvider = ({ children }) => {
     try {
       if (user && !user.guest) {
         if (currentlyInWishlist) {
-          await axiosInstance.delete(`/api/user/wishlist/${cleanProductId}`, {
-            data: { sku }
-          });
+          await apiRemoveFromWishlist(cleanProductId, { sku });
           toast.success("Removed from wishlist!");
         } else {
-          await axiosInstance.post(
-            `/api/user/wishlist/${cleanProductId}`,
-            { sku },
-            { withCredentials: true }
-          );
+          await addToWishlist(cleanProductId, { sku });
           toast.success("Added to wishlist!");
         }
         await syncWishlist(true);
@@ -286,9 +276,7 @@ export const WishlistProvider = ({ children }) => {
 
     try {
       if (user && !user.guest) {
-        await axiosInstance.delete(`/api/user/wishlist/${targetProductId}`, {
-          data: { sku }
-        });
+        await apiRemoveFromWishlist(targetProductId, { sku });
         await syncWishlist(true);
         if (!silent) toast.success("Removed from wishlist");
       } else {

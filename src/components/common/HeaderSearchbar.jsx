@@ -2,7 +2,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { FaSearch, FaMicrophone, FaTimes, FaArrowLeft, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import axiosInstance from "../../utils/axiosInstance.js";
+import { getCategoryTree } from "../../api/categoryApi";
+import { getAllProducts } from "../../api/productApi";
 import search from "../../assets/search.svg";
 
 
@@ -266,7 +267,7 @@ const HeaderSearchBar = ({ isMobile, isTablet, showMobileSearch, setShowMobileSe
     const fetchData = async () => {
       try {
         setIsSearchLoading(true);
-        const catRes = await axiosInstance.get("/api/user/categories/tree");
+        const catRes = await getCategoryTree();
         setCategories(Array.isArray(catRes.data) ? catRes.data : catRes.data.categories || []);
 
         let allFetchedProducts = [];
@@ -274,10 +275,7 @@ const HeaderSearchBar = ({ isMobile, isTablet, showMobileSearch, setShowMobileSe
         let hasMore = true;
 
         while (hasMore) {
-          const res = await axiosInstance.get("/api/user/products/all", {
-            params: { cursor: currentCursor, limit: 500 },
-            withCredentials: true
-          });
+          const res = await getAllProducts({ cursor: currentCursor, limit: 500 });
 
           let products = [];
           let pagination = {};

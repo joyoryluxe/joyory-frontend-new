@@ -1,5 +1,6 @@
-// src/components/TopCategories.jsx
 import React, { useEffect, useState } from "react";
+import { getTopCategories } from "../../../api/productApi";
+import { getCategoryTree } from "../../../api/categoryApi";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination, Navigation } from "swiper/modules"; // Added Navigation
 import { useNavigate, useLocation } from "react-router-dom";
@@ -8,13 +9,16 @@ import "swiper/css/pagination";
 import "swiper/css/navigation"; // Import navigation CSS
 import "../../../styles/Home.css";
 import "../../../App.css";
+import SectionError from "../../common/SectionError";
+import { getErrorMessage } from "../../../utils/errorHandler";
 
 const TopCategories = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
-
   const location = useLocation();
+
   // Conditional SEO meta tag configuration to prevent Google sitelinks indexing
   useEffect(() => {
     if (location.pathname === "/topcategories") {
@@ -40,48 +44,45 @@ const TopCategories = () => {
     }
   }, [location.pathname]);
 
-
   // Fetch categories and category tree from API, then merge them
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const [resTop, resTree] = await Promise.all([
-          fetch("https://beauty.joyory.com/api/user/products/top-categories"),
-          fetch("https://beauty.joyory.com/api/user/categories/tree")
-        ]);
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const [resTop, resTree] = await Promise.all([
+        getTopCategories(),
+        getCategoryTree()
+      ]);
 
-        if (!resTop.ok) {
-          throw new Error(`Failed to fetch top categories: ${resTop.status}`);
-        }
+      const topData = resTop.data;
+      const topList = Array.isArray(topData) ? topData : topData.categories || [];
 
-        const topData = await resTop.json();
-        const topList = Array.isArray(topData) ? topData : topData.categories || [];
-
-        let treeList = [];
-        if (resTree.ok) {
-          const treeData = await resTree.json();
-          treeList = Array.isArray(treeData) ? treeData : [];
-        }
-
-        // Map top categories to include subCategories from the tree (case-insensitive)
-        const populatedList = topList.map(cat => {
-          const matchedNode = treeList.find(node => node.slug?.toLowerCase() === cat.slug?.toLowerCase());
-          return {
-            ...cat,
-            subCategories: matchedNode ? matchedNode.subCategories : []
-          };
-        });
-
-        setCategories(populatedList);
-      } catch (err) {
-        console.error("Error loading categories in TopCategories:", err);
-        setCategories([]);
-      } finally {
-        setLoading(false);
+      let treeList = [];
+      if (resTree.data) {
+        const treeData = resTree.data;
+        treeList = Array.isArray(treeData) ? treeData : [];
       }
-    };
 
+      // Map top categories to include subCategories from the tree (case-insensitive)
+      const populatedList = topList.map(cat => {
+        const matchedNode = treeList.find(node => node.slug?.toLowerCase() === cat.slug?.toLowerCase());
+        return {
+          ...cat,
+          subCategories: matchedNode ? matchedNode.subCategories : []
+        };
+      });
+
+      setCategories(populatedList);
+    } catch (err) {
+      console.error("Error loading categories in TopCategories:", err);
+      setError(getErrorMessage(err, "Failed to load categories."));
+      setCategories([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchData();
   }, []);
 
@@ -92,6 +93,8 @@ const TopCategories = () => {
 
       {loading ? (
         <p className="text-center text-muted page-title-main-name">Loading categories...</p>
+      ) : error ? (
+        <SectionError message={error} onRetry={fetchData} />
       ) : categories.length === 0 ? (
         <p className="text-center text-muted page-title-main-name">No categories found.</p>
       ) : categories.length < 3 ? (
@@ -119,10 +122,8 @@ const TopCategories = () => {
                         e.currentTarget.src = `https://picsum.photos/400/200?random=${i}`;
                       }}
                     />
-                    <div className="top-cat-body text-center">
-                      <h5 className="top-cat-title mb-0 mt-3 font-weightss top-category-name-font text-start">
-                        {cat.name || "Unnamed"}
-                      </h5>
+                    <div className="p-2 text-center text-dark fw-medium fs-6">
+                      {cat.name}
                     </div>
                   </div>
                 </div>
@@ -131,23 +132,20 @@ const TopCategories = () => {
           </div>
         </div>
       ) : (
-        <div className="mobile-responsive-code" >
+        <div className="mobile-responsive-code px-lg-5">
           <Swiper
-            modules={[Autoplay, Pagination, Navigation]} // Added Navigation
+            modules={[Autoplay, Pagination, Navigation]}
+            navigation={true}
             pagination={{ clickable: true }}
-            navigation={true} // Enable arrows
-            autoplay={{ delay: 800, disableOnInteraction: false }}
-            speed={800}
-
+            spaceBetween={0}
             breakpoints={{
-              300: { slidesPerView: Math.min(categories.length, 2) },
-              380: { slidesPerView: Math.min(categories.length, 2) },
-              576: { slidesPerView: Math.min(categories.length, 3) },
-              768: { slidesPerView: Math.min(categories.length, 3) },
-              992: { slidesPerView: Math.min(categories.length, 4) },
-              1024: { slidesPerView: Math.min(categories.length, 4) },
-              1200: { slidesPerView: Math.min(categories.length, 4) },
-              1400: { slidesPerView: Math.min(categories.length, 4) },
+              300: { slidesPerView: 2, spaceBetween: 0 },
+              380: { slidesPerView: 2, spaceBetween: 0 },
+              576: { slidesPerView: 3, spaceBetween: 0 },
+              768: { slidesPerView: 3, spaceBetween: 0 },
+              992: { slidesPerView: 4, spaceBetween: 0 },
+              1200: { slidesPerView: 5, spaceBetween: 0 },
+              1400: { slidesPerView: 6, spaceBetween: 0 },
             }}
           >
             {categories.map((cat, i) => (
@@ -172,17 +170,14 @@ const TopCategories = () => {
                         e.currentTarget.src = `https://picsum.photos/400/200?random=${i}`;
                       }}
                     />
-                    <div className="top-cat-body text-center">
-                      <h5 className="top-cat-title mb-0 mt-3 font-weightss top-category-name-font text-start">
-                        {cat.name || "Unnamed"}
-                      </h5>
+                    <div className="p-2 text-center text-dark fw-medium fs-6">
+                      {cat.name}
                     </div>
                   </div>
                 </div>
               </SwiperSlide>
             ))}
           </Swiper>
-
         </div>
       )}
     </div>
@@ -190,5 +185,3 @@ const TopCategories = () => {
 };
 
 export default TopCategories;
-
-

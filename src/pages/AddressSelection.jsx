@@ -1,13 +1,11 @@
-// src/pages/AddressSelection.jsx
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "../styles/AddressSelection.css";
 import Header from "../components/common/Header";
 import { Spinner, Modal } from "react-bootstrap";
 import { FaPhoneAlt, FaEnvelope } from "react-icons/fa";
-
-const PROFILE_API = "https://beauty.joyory.com/api/user/profile";
-const CART_API = "https://beauty.joyory.com/api/user/cart/summary";
+import { getProfile, addAddress, updateAddress, deleteAddress } from "../api/userApi";
+import { getCartSummary, initiateOrder } from "../api/cartApi";
 
 const AddressSelection = () => {
   const navigate = useNavigate();
@@ -89,9 +87,8 @@ const AddressSelection = () => {
   const loadProfileAndAddresses = async () => {
     try {
       setProcessingMessage("Loading profile...");
-      const res = await fetch(PROFILE_API, { credentials: "include" });
-      if (!res.ok) throw new Error("Failed to fetch profile");
-      const data = await res.json();
+      const res = await getProfile();
+      const data = res.data;
 
       const prof = data.profile || {};
       setProfile(prof);
@@ -145,12 +142,8 @@ const AddressSelection = () => {
         queryParams.append("discount", savedCoupon);
       }
 
-      const queryString = queryParams.toString();
-      const url = queryString ? `${CART_API}?${queryString}` : CART_API;
-
-      const res = await fetch(url, { credentials: "include" });
-      if (!res.ok) throw new Error("Failed to fetch cart");
-      const data = await res.json();
+      const res = await getCartSummary(Object.fromEntries(queryParams));
+      const data = res.data;
 
       setCartData(data.cart || data.items || []);
 
@@ -209,31 +202,13 @@ const AddressSelection = () => {
     try {
       let res;
       if (editingAddressId) {
-        res = await fetch(`${PROFILE_API}/address/${editingAddressId}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify(newAddress),
-        });
+        res = await updateAddress(editingAddressId, newAddress);
       } else {
-        res = await fetch(`${PROFILE_API}/address`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify(newAddress),
-        });
+        res = await addAddress(newAddress);
       }
 
-      const data = await res.json();
+      const data = res.data;
       console.log("📥 Response:", data);
-
-      if (!res.ok) {
-        if (data.message) {
-          alert(data.message);
-          return;
-        }
-        throw new Error("Failed to save address");
-      }
 
       await loadProfileAndAddresses();
 
@@ -251,7 +226,7 @@ const AddressSelection = () => {
 
     } catch (err) {
       console.error("❌ Error saving address:", err);
-      alert(err.message || "Failed to save address");
+      alert(err.response?.data?.message || err.message || "Failed to save address");
     }
   };
 
@@ -272,18 +247,14 @@ const AddressSelection = () => {
   const deleteAddressHandler = async (id) => {
     if (!window.confirm("Are you sure you want to delete this address?")) return;
     try {
-      const res = await fetch(`${PROFILE_API}/address/${id}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error("Failed to delete address");
-      const data = await res.json();
+      const res = await deleteAddress(id);
+      const data = res.data;
       console.log("📥 DELETE Response:", data);
       await loadProfileAndAddresses();
       if (selectedAddressId === id) setSelectedAddressId(null);
     } catch (err) {
       console.error(err.message);
-      alert("Failed to delete address");
+      alert(err.response?.data?.message || err.message || "Failed to delete address");
     }
   };
 
@@ -323,26 +294,8 @@ const AddressSelection = () => {
 
       setProcessingMessage("Creating your order...");
 
-      const initiateRes = await fetch(
-        "https://beauty.joyory.com/api/user/cart/order/initiate",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify(payload),
-        }
-      );
-
-      const contentType = initiateRes.headers.get("content-type");
-      let initiateData;
-
-      if (contentType && contentType.includes("application/json")) {
-        initiateData = await initiateRes.json();
-      } else {
-        const text = await initiateRes.text();
-        console.error("❌ Non-JSON response:", text.substring(0, 200));
-        throw new Error(`Server error: Received ${contentType || 'HTML'} instead of JSON`);
-      }
+      const initiateRes = await initiateOrder(payload);
+      const initiateData = initiateRes.data;
 
       console.log("🧾 initiateData from backend:", initiateData);
 

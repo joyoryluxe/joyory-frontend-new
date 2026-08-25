@@ -5,7 +5,9 @@ import Header from "../components/common/Header";
 import Footer from "../components/common/Footer";
 import { UserContext } from "../context/UserContext.jsx";
 import BrandFilter from "../components/common/BrandFilter";
-import axiosInstance from "../utils/axiosInstance.js";
+import { getWishlist, addToWishlist, removeFromWishlist } from "../api/wishlistApi";
+import { addToCart } from "../api/cartApi";
+import { getAllProducts } from "../api/productApi";
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import Loader from "../components/common/Loader";
 import updownarrow from "../assets/updownarrow.svg";
@@ -16,8 +18,6 @@ import "../styles/ProductPage.css";
 import "../styles/BestSellers.css";
 import "../styles/ForYou.css";
 import SEOMeta from "../components/common/SEOMeta"; // Add import at top
-const CART_API_BASE = "/api/user/cart";
-const PRODUCT_ALL_API = "/api/user/products/all";
 
 /* ─── helpers ───────────────────────────────────────────────────────────── */
 const getSku = (v) => v?.sku || v?.variantSku || `sku-${v?._id || "default"}`;
@@ -202,7 +202,7 @@ export default function VtoProducts() {
     const fetchWishlistData = async () => {
         try {
             if (user && !user.guest) {
-                const { data } = await axiosInstance.get("/api/user/wishlist");
+                const { data } = await getWishlist();
                 if (data.success) setWishlistData(data.wishlist || []);
             } else {
                 const local = JSON.parse(localStorage.getItem("guestWishlist") || "[]");
@@ -229,10 +229,10 @@ export default function VtoProducts() {
         try {
             const inWl = isInWishlist(pid, sku);
             if (inWl) {
-                await axiosInstance.delete(`/api/user/wishlist/${pid}`, { data: { sku } });
+                await removeFromWishlist(pid, { sku });
                 toast.success("Removed from wishlist!");
             } else {
-                await axiosInstance.post(`/api/user/wishlist/${pid}`, { sku });
+                await addToWishlist(pid, { sku });
                 toast.success("Added to wishlist!");
             }
             await fetchWishlistData();
@@ -285,9 +285,7 @@ export default function VtoProducts() {
                 setLoadingMore(true);
             }
 
-            const { data } = await axiosInstance.get(
-                `${PRODUCT_ALL_API}?${buildQueryParams(cursor)}`
-            );
+            const { data } = await getAllProducts(buildQueryParams(cursor));
 
             const newProducts = data.products || [];
             const pg = data.pagination || {};
@@ -420,7 +418,7 @@ export default function VtoProducts() {
                 if (prod.stock <= 0) { toast.warning("Product is out of stock."); return; }
                 payload = { productId: prod._id, quantity: 1 };
             }
-            const { data } = await axiosInstance.post(`${CART_API_BASE}/add`, payload);
+            const { data } = await addToCart(payload);
             if (!data.success) throw new Error(data.message || "Cart add failed");
             toast.success("Product added to cart!");
             navigate("/cartpage");

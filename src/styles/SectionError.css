@@ -1,0 +1,75 @@
+/* src/styles/SectionError.css */
+
+.section-error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1.5rem;
+  margin: 1.5rem auto;
+  max-width: 600px;
+  background-color: #fff;
+  border: 1px solid #f0e6e6;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.section-error-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  background-color: #fff4f2;
+  border-radius: 50%;
+  margin-bottom: 1rem;
+}
+
+.section-error-icon {
+  font-size: 1.75rem;
+  color: #e53e3e;
+}
+
+.section-error-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 0.5rem;
+}
+
+.section-error-message {
+  font-size: 0.95rem;
+  color: #718096;
+  margin-bottom: 1.25rem;
+  line-height: 1.5;
+  max-width: 460px;
+}
+
+.section-error-retry-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.4rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #ffffff;
+  background-color: #1a202c;
+  border: 1px solid #1a202c;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.section-error-retry-btn:hover {
+  background-color: #2d3748;
+  border-color: #2d3748;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.section-error-retry-btn:active {
+  transform: translateY(0);
+}

@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
+import { trackConsent } from "../api/trackingApi";
+import { getProfile } from "../api/userApi";
 
 const CONSENT_KEY = "joyory_cookie_consent";
 const SESSION_KEY = "joyory_session_id";
@@ -36,21 +38,13 @@ const getStoredConsent = () => {
     }
 };
 
-const API_BASE = "https://beauty.joyory.com/api/tracking";
-const USER_PROFILE_API = "https://beauty.joyory.com/api/user/profile";
-
 // Fetch user ID from backend using HttpOnly cookie credentials
 const fetchAndStoreUserId = async () => {
     try {
-        const res = await fetch(USER_PROFILE_API, {
-            credentials: "include", // sends HttpOnly cookie automatically
-        });
-        if (res.ok) {
-            const data = await res.json();
-            if (data?.profile?._id) {
-                localStorage.setItem("joyory_user_id", data.profile._id);
-                return data.profile._id;
-            }
+        const res = await getProfile();
+        if (res.data?.profile?._id) {
+            localStorage.setItem("joyory_user_id", res.data.profile._id);
+            return res.data.profile._id;
         }
     } catch (e) {
         // Silently fail — user is not logged in
@@ -97,12 +91,7 @@ export const useCookieConsent = () => {
 
         // Save to backend (fire and forget)
         try {
-            await fetch(`${API_BASE}/consent`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                credentials: "include", // ✅ Send login cookies
-                body: JSON.stringify({ sessionId: sid, consentGiven: true, userId }),
-            });
+            await trackConsent({ sessionId: sid, consentGiven: true, userId });
         } catch { /* silent fail */ }
     }, []);
 
@@ -116,12 +105,7 @@ export const useCookieConsent = () => {
 
         // Save to backend (fire and forget)
         try {
-            await fetch(`${API_BASE}/consent`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                credentials: "include", // ✅ Send login cookies
-                body: JSON.stringify({ sessionId: sid, consentGiven: false }),
-            });
+            await trackConsent({ sessionId: sid, consentGiven: false });
         } catch { /* silent fail */ }
     }, []);
 

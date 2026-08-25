@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import { sendOtp, resetPassword } from "../api/authApi";
 import { useNavigate } from "react-router-dom";
 import "../styles/ForgotPassword.css"; // your styles
 import "../styles/Login.css"; // your styles
@@ -31,10 +31,7 @@ const ForgotPassword = () => {
 
     try {
       setLoading(true);
-      const res = await axios.post(
-        "https://beauty.joyory.com/api/security/send-otp",
-        { email }
-      );
+      const res = await sendOtp({ email });
       setMessage(res.data.message || "OTP sent successfully");
       setStep(2);
     } catch (err) {
@@ -82,10 +79,7 @@ const ForgotPassword = () => {
 
     try {
       setLoading(true);
-      const res = await axios.post(
-        "https://beauty.joyory.com/api/security/reset-password",
-        { email, otp, newPassword: password, confirmPassword: password }
-      );
+      const res = await resetPassword({ email, otp, newPassword: password, confirmPassword: password });
 
       setMessage(res.data.message || "Password reset successfully ✅");
 

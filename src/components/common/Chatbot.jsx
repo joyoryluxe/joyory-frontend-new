@@ -9,7 +9,6 @@ import "../../styles/Chatbot.css";
 import { CartContext } from "../../context/CartContext";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import axios from "axios";
 import { Modal, Button, Form, Alert, Spinner, Card, Badge } from "react-bootstrap";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import {
@@ -18,19 +17,16 @@ import {
   FaCamera, FaTrash, FaUndo, FaChevronDown, FaArrowLeft,
   FaThLarge, FaShoppingBag,
 } from "react-icons/fa";
+import { login } from "../../api/authApi";
+import { addToCart, getShipment, getInvoice } from "../../api/cartApi";
+import { requestReturn } from "../../api/returnsApi";
+import { getProfile } from "../../api/userApi";
+import { getAllProducts } from "../../api/productApi";
+import { cancelPayment } from "../../api/paymentApi";
 
 /* ─── CONFIG ─────────────────────────────────────────────────────────────── */
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY || "YOUR_GEMINI_API_KEY");
 const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-
-const PRODUCT_ALL_API  = "https://beauty.joyory.com/api/user/products/all";
-const CART_API_BASE    = "https://beauty.joyory.com/api/user/cart";
-const SHIPMENT_API     = "https://beauty.joyory.com/api/user/cart/shipment";
-const LOGIN_API        = "https://beauty.joyory.com/api/user/login";
-const PROFILE_API      = "https://beauty.joyory.com/api/user/profile";
-const CANCEL_ORDER_API = "https://beauty.joyory.com/api/payment/cancel";
-const INVOICE_BASE_URL = "https://beauty.joyory.com/api/user/cart/invoice";
-const RETURN_API       = "https://beauty.joyory.com/api/returns/request";
 
 /* ─── HELPERS ────────────────────────────────────────────────────────────── */
 const getSku = (v) => v?.sku || v?.variantSku || `sku-${v?._id || "default"}`;
@@ -138,7 +134,7 @@ const InvoiceDownloadPopup = ({ show, handleClose, shipmentData }) => {
     if (!invoiceId) { alert("Invoice not available yet."); return; }
     setDownloading(true);
     try {
-      const response = await axios.get(`${INVOICE_BASE_URL}/${invoiceId}`, { withCredentials: true, responseType: "blob" });
+      const response = await getInvoice(invoiceId);
       let fileName = "Invoice.pdf";
       const cd = response.headers["content-disposition"];
       if (cd) { const m = cd.match(/filename="(.+)"/); if (m?.[1]) fileName = m[1]; }
@@ -193,16 +189,20 @@ const CancelOrderPopup = ({ show, handleClose, orderId, paymentMethod, onCancelS
     if (!reason) { setMessage({ type: "danger", text: "Please select a reason." }); return; }
     setLoading(true); setMessage(null);
     try {
-      const res = await fetch(CANCEL_ORDER_API, {
-        method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include",
-        body: JSON.stringify({ orderId, reason: reason === "Other" ? otherDetails : reason, method: paymentMethod?.toLowerCase() || "wallet" }),
+      const res = await cancelPayment({
+        orderId,
+        reason: reason === "Other" ? otherDetails : reason,
+        method: paymentMethod?.toLowerCase() || "wallet"
       });
-      const data = await res.json();
-      if (res.ok && data.success) {
+      const data = res.data;
+      if (res.status === 200 && data.success) {
         setMessage({ type: "success", text: data.message || "Cancelled!" });
         setTimeout(() => { handleClose(); onCancelSuccess?.(data); }, 800);
       } else setMessage({ type: "danger", text: data?.message || "Failed to cancel." });
-    } catch { setMessage({ type: "danger", text: "Network error." }); }
+    } catch (err) {
+      const errMsg = err.response?.data?.message || "Failed to cancel order.";
+      setMessage({ type: "danger", text: errMsg });
+    }
     finally { setLoading(false); }
   };
   return (
@@ -267,7 +267,7 @@ const ReturnModal = ({ show, handleClose, shipmentData }) => {
     returnForm.images.forEach((f) => body.append(`images_${productId}`, f));
     setReturning(true);
     try {
-      const res = await axios.post(`${RETURN_API}/${shipmentData.shipmentId}`, body, { withCredentials: true, headers: { "Content-Type": "multipart/form-data" } });
+      const res = await requestReturn(shipmentData.shipmentId, body);
       if (res.data?.success) { toast.success(res.data.message || "Request submitted!"); handleClose(); }
       else toast.error(res.data?.message || "Request failed");
     } catch (e) { toast.error(e.response?.data?.message || "Something went wrong"); }
@@ -755,7 +755,7 @@ const Chatbot = ({ onAddToCart }) => {
   useEffect(() => { if (open) checkAuthentication(); }, [open]);
 
   const checkAuthentication = async () => {
-    try { await axios.get(PROFILE_API, { withCredentials: true }); setIsLoggedIn(true); }
+    try { await getProfile(); setIsLoggedIn(true); }
     catch { setIsLoggedIn(false); }
   };
 
@@ -782,7 +782,7 @@ const Chatbot = ({ onAddToCart }) => {
   const fetchCategories = useCallback(async () => {
     setCategoriesLoading(true);
     try {
-      const { data } = await axios.get(`${PRODUCT_ALL_API}?limit=1`, { withCredentials: true });
+      const { data } = await getAllProducts({ limit: 1 });
       if (data.trendingCategories?.length) setTrendingCategories(data.trendingCategories);
     } catch (e) {
       console.error("fetchCategories error:", e);
@@ -804,7 +804,7 @@ const Chatbot = ({ onAddToCart }) => {
       if (cursor) params.append("cursor", cursor);
       params.append("limit", "12");
 
-      const { data } = await axios.get(`${PRODUCT_ALL_API}?${params.toString()}`, { withCredentials: true });
+      const { data } = await getAllProducts(params.toString());
 
       /* save categories if not yet loaded */
       if (data.trendingCategories?.length && trendingCategories.length === 0) {
@@ -895,7 +895,7 @@ const Chatbot = ({ onAddToCart }) => {
         if ((prod.stock ?? 0) <= 0) { toast.error("Product is out of stock."); return; }
         payload = { productId: prod._id, quantity: 1 };
       }
-      const { data } = await axios.post(`${CART_API_BASE}/add`, payload, { withCredentials: true });
+      const { data } = await addToCart(payload);
       if (!data.success) throw new Error(data.message || "Cart add failed");
       toast.success("Added to cart! 🛒");
       onAddToCart?.();
@@ -954,7 +954,7 @@ const Chatbot = ({ onAddToCart }) => {
   const fetchShipmentData = async (id) => {
     try {
       setLoading(true);
-      const response = await axios.get(`${SHIPMENT_API}/${id}`, { withCredentials: true });
+      const response = await getShipment(id);
       if (response.data?.success) return { success: true, data: response.data };
       throw new Error("Failed");
     } catch (error) {
@@ -985,7 +985,7 @@ const Chatbot = ({ onAddToCart }) => {
     setMessages((prev) => [...prev, { from: "user", text: "********" }]);
     try {
       setLoading(true);
-      const res = await axios.post(LOGIN_API, { email: email.trim().toLowerCase(), password }, { withCredentials: true });
+      const res = await login({ email: email.trim().toLowerCase(), password });
       if (res.status === 200 && res.data?.user) {
         setIsLoggedIn(true);
         setMessages((prev) => [...prev, { from: "bot", text: `✅ Welcome back, ${res.data.user.name || "User"}!` }]);

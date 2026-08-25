@@ -2,7 +2,8 @@ import React, { useState, useEffect, useContext, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { CartContext } from "../context/CartContext";
 import { UserContext } from "../context/UserContext.jsx";
-import axiosInstance from "../utils/axiosInstance.js";
+import { getWishlist, addToWishlist, removeFromWishlist } from "../api/wishlistApi";
+import { addToCart } from "../api/cartApi";
 import Footer from "../components/common/Footer";
 import Header from "../components/common/Header";
 import { FaStar, FaHeart, FaRegHeart, FaChevronDown, FaTimes, FaCheck } from "react-icons/fa";
@@ -112,7 +113,7 @@ export default function Recommendations() {
   const fetchWishlistData = async () => {
     try {
       if (user && !user.guest) {
-        const response = await axiosInstance.get("/api/user/wishlist");
+        const response = await getWishlist();
         if (response.data.success) {
           setWishlistData(response.data.wishlist || []);
         }
@@ -162,12 +163,12 @@ export default function Recommendations() {
       const currentlyInWishlist = isInWishlist(productId, sku);
 
       if (currentlyInWishlist) {
-        await axiosInstance.delete(`/api/user/wishlist/${productId}`, {
-          data: { sku: sku }
+        await removeFromWishlist(productId, {
+          sku: sku
         });
         showToastMsg("Removed from wishlist!", "success");
       } else {
-        await axiosInstance.post(`/api/user/wishlist/${productId}`, { sku: sku });
+        await addToWishlist(productId, { sku: sku });
         showToastMsg("Added to wishlist!", "success");
       }
       await fetchWishlistData();
@@ -238,7 +239,7 @@ export default function Recommendations() {
         payload = { productId: prod._id, quantity: 1 };
       }
 
-      const response = await axiosInstance.post("/api/user/cart/add", payload);
+      const response = await addToCart(payload);
       if (!response.data.success) throw new Error(response.data.message || "Cart add failed");
 
       showToastMsg("Product added to cart!", "success");

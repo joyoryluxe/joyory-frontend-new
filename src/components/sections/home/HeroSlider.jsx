@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { getMedia } from "../../../api/mediaApi";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination, Navigation } from "swiper/modules";
 
@@ -11,8 +11,6 @@ import "swiper/css/navigation";
 import Loader from "../../common/Loader";
 import "../../../styles/HeroSlider.css";
 
-const API_URL = "https://beauty.joyory.com/api/media";
-
 export default function HeroSlider() {
   const swiperRef = useRef(null);
   const [slides, setSlides] = useState([]);
@@ -22,7 +20,7 @@ export default function HeroSlider() {
   useEffect(() => {
     const fetchMedia = async () => {
       try {
-        const res = await axios.get(API_URL);
+        const res = await getMedia();
         if (res.data?.success && Array.isArray(res.data.data)) {
           setSlides(res.data.data);
         } else if (res.data?.items) {

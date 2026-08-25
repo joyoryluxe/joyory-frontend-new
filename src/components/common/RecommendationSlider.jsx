@@ -6,7 +6,8 @@ import { Autoplay, Pagination, Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
-import axios from "axios";
+import { getWishlist, addToWishlist, removeFromWishlist } from "../../api/wishlistApi";
+import { addToCart } from "../../api/cartApi";
 import { CartContext } from "../../context/CartContext";
 import { UserContext } from "../../context/UserContext.jsx";
 import { ToastContainer, toast } from "react-toastify";
@@ -18,10 +19,11 @@ import bagIcon from "../../assets/bag.svg";
 
 // 🆕 Import DotLottie loader (same package as ProductPage)
 import Loader from "./Loader";
+import SectionError from "./SectionError";
+import { getErrorMessage } from "../../utils/errorHandler";
 
 // Wishlist cache key
 const WISHLIST_CACHE_KEY = "guestWishlist";
-const CART_API_BASE = "https://beauty.joyory.com/api/user/cart";
 
 // Helper functions
 const getSku = (v) => v?.sku || v?.variantSku || `sku-${v?._id || 'default'}`;
@@ -56,7 +58,7 @@ const groupVariantsByType = (variants) => {
   return grouped;
 };
 
-const RecommendationSlider = ({ title, products: initialProducts }) => {
+const RecommendationSlider = ({ title, products: initialProducts, onRetry: customRetry }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -174,10 +176,7 @@ const RecommendationSlider = ({ title, products: initialProducts }) => {
   const fetchWishlistData = async () => {
     try {
       if (user && !user.guest) {
-        const response = await axios.get(
-          "https://beauty.joyory.com/api/user/wishlist",
-          { withCredentials: true }
-        );
+        const response = await getWishlist();
         if (response.data.success) {
           setWishlistData(response.data.wishlist || []);
         }
@@ -227,20 +226,10 @@ const RecommendationSlider = ({ title, products: initialProducts }) => {
       const currentlyInWishlist = isInWishlist(productId, sku);
 
       if (currentlyInWishlist) {
-        await axios.delete(
-          `https://beauty.joyory.com/api/user/wishlist/${productId}`,
-          {
-            withCredentials: true,
-            data: { sku: sku }
-          }
-        );
+        await removeFromWishlist(productId, { sku });
         showToastMsg("Removed from wishlist!", "success");
       } else {
-        await axios.post(
-          `https://beauty.joyory.com/api/user/wishlist/${productId}`,
-          { sku: sku },
-          { withCredentials: true }
-        );
+        await addToWishlist(productId, { sku });
         showToastMsg("Added to wishlist!", "success");
       }
 
@@ -417,11 +406,7 @@ const RecommendationSlider = ({ title, products: initialProducts }) => {
         localStorage.setItem("cartVariantCache", JSON.stringify(cache));
       }
 
-      const response = await axios.post(
-        `${CART_API_BASE}/add`,
-        payload,
-        { withCredentials: true }
-      );
+      const response = await addToCart(payload);
 
       if (!response.data.success) {
         throw new Error(response.data.message || "Failed to add to cart");
@@ -743,9 +728,7 @@ const RecommendationSlider = ({ title, products: initialProducts }) => {
       )}
 
       {error && (
-        <div className="alert alert-danger text-center" role="alert">
-          {error}
-        </div>
+        <SectionError message={error} onRetry={customRetry} />
       )}
 
       {memoizedProducts.length > 0 ? (

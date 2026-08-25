@@ -10,7 +10,7 @@ import "../../../styles/ProductDetailsHero.css";
 import "../../../styles/ForYou.css";
 import { ingredientScan, getProductSafetyScore, getIngredientByName } from "../../../api/ingredientApi";
 import IngredientDetailsDrawer from "../../../pages/IngredientDetailsDrawer";
-import axiosInstance from "../../../utils/axiosInstance";
+import { getVtoEnabled } from "../../../api/vtoApi";
 
 // --- Helper Functions ---
 const getSku = (v) => v?.sku || v?.variantSku || `sku-${v?._id || 'default'}`;
@@ -188,7 +188,7 @@ const ProductDetailsHero = ({
 
   useEffect(() => {
     if (!product?._id) return;
-    axiosInstance.get("/api/vto/enabled")
+    getVtoEnabled()
       .then((res) => {
         const productsList = res.data.products || res.data || [];
         const isVtoEnabled = productsList.some((p) => p._id === product._id);

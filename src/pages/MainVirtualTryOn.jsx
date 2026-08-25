@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useContext } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import Webcam from 'react-webcam';
-import axios from 'axios';
 import {
   FaCamera, FaImage, FaDownload, FaChevronLeft, FaChevronRight,
   FaTimes, FaSpinner, FaHistory, FaCheckCircle, FaArrowLeft,
@@ -13,7 +12,10 @@ import '../styles/MainVirtualTryOn.css';
 
 import Header from '../components/common/Header';
 import { UserContext } from '../context/UserContext.jsx';
-import axiosInstance from '../utils/axiosInstance.js';
+import { getWishlist, addToWishlist, removeFromWishlist } from '../api/wishlistApi';
+import { addToCart } from '../api/cartApi';
+import { getVtoWorkflow } from '../api/vtoApi';
+import { getProductById } from '../api/productApi';
 import { toast } from 'react-toastify';
 import vtoHero from "../assets/Virtual-tryon-new.png";
 import vtoFirst from '../assets/vto_new.png';
@@ -332,7 +334,7 @@ const MainVirtualTryon = () => {
   const fetchWishlistData = useCallback(async () => {
     try {
       if (user && !user.guest) {
-        const { data } = await axiosInstance.get("/api/user/wishlist");
+        const { data } = await getWishlist();
         if (data.success) setWishlistData(data.wishlist || []);
       } else {
         const local = JSON.parse(localStorage.getItem("guestWishlist") || "[]");
@@ -368,10 +370,10 @@ const MainVirtualTryon = () => {
     try {
       const inWl = isInWishlist(pid, sku);
       if (inWl) {
-        await axiosInstance.delete(`/api/user/wishlist/${pid}`, { data: { sku } });
+        await removeFromWishlist(pid, { sku });
         toast.success("Removed from wishlist!");
       } else {
-        await axiosInstance.post(`/api/user/wishlist/${pid}`, { sku });
+        await addToWishlist(pid, { sku });
         toast.success("Added to wishlist!");
       }
       await fetchWishlistData();
@@ -396,7 +398,7 @@ const MainVirtualTryon = () => {
         variants: [{ variantSku: sku, quantity: 1 }]
       };
 
-      const { data } = await axiosInstance.post("/api/user/cart/add", payload);
+      const { data } = await addToCart(payload);
       if (!data.success) throw new Error(data.message || "Cart add failed");
 
       toast.success("Product added to cart!");
@@ -444,7 +446,7 @@ const MainVirtualTryon = () => {
     const fetchTypes = async () => {
       setLoadingTypes(true);
       try {
-        const res = await axios.get('https://beauty.joyory.com/api/vto/workflow');
+        const res = await getVtoWorkflow();
         setVtoTypes(res.data.types || []);
       } catch (err) {
         console.error("Error fetching types", err);
@@ -479,12 +481,12 @@ const MainVirtualTryon = () => {
 
           if (isObjectId) {
             // Fetch shades and info for this specific product by ID
-            const res = await axios.get(`https://beauty.joyory.com/api/vto/workflow?productId=${targetProductIdentifier}`);
+            const res = await getVtoWorkflow({ productId: targetProductIdentifier });
             product = res.data.product;
             shadesList = product?.shades || [];
           } else {
             // Fetch product details by slug
-            const res = await axiosInstance.get(`/api/user/products/${targetProductIdentifier}`);
+            const res = await getProductById(targetProductIdentifier);
             product = res.data;
             if (product) {
               // Map variants list to VTO shades format
@@ -538,7 +540,7 @@ const MainVirtualTryon = () => {
 
             // Also fetch the product list for this category to keep sidebar working
             setLoadingProducts(true);
-            const pRes = await axios.get(`https://beauty.joyory.com/api/vto/workflow?type=${normalizedType}`);
+            const pRes = await getVtoWorkflow({ type: normalizedType });
             setProducts(pRes.data.products || []);
           }
         } catch (err) {
@@ -559,7 +561,7 @@ const MainVirtualTryon = () => {
     const fetchLandingImages = async () => {
       setLoadingLandingImages(true);
       try {
-        const res = await axios.get('https://beauty.joyory.com/api/vto/workflow?section=landing');
+        const res = await getVtoWorkflow({ section: 'landing' });
         const data = res.data;
         setLandingImages({
           heroBanner: data.heroBanner || data.landing?.heroBanner || null,
@@ -726,7 +728,7 @@ const MainVirtualTryon = () => {
     setSidePanel('products');
     setLoadingProducts(true);
     try {
-      const res = await axios.get(`https://beauty.joyory.com/api/vto/workflow?type=${type}`);
+      const res = await getVtoWorkflow({ type });
       setProducts(res.data.products || []);
     } catch (err) {
       console.error("Error fetching products", err);
@@ -740,7 +742,7 @@ const MainVirtualTryon = () => {
     setSidePanel('shades');
     setLoadingShades(true);
     try {
-      const res = await axios.get(`https://beauty.joyory.com/api/vto/workflow?productId=${product._id}`);
+      const res = await getVtoWorkflow({ productId: product._id });
       setShades(res.data.product?.shades || []);
     } catch (err) {
       console.error("Error fetching shades", err);

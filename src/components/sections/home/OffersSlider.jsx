@@ -1,8 +1,8 @@
-// src/components/OffersSlider.jsx
 import React, { useState, useEffect } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination, Navigation } from "swiper/modules";
 import { useNavigate } from "react-router-dom";
+import { getActivePromotions } from "../../../api/promotionApi";
 import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
@@ -39,11 +39,8 @@ const OffersSlider = () => {
   useEffect(() => {
     const fetchPromotions = async () => {
       try {
-        const res = await fetch(
-          "https://beauty.joyory.com/api/user/promotions/active?section=banner"
-        );
-        if (!res.ok) throw new Error("Failed to fetch promotions");
-        const data = await res.json();
+        const res = await getActivePromotions({ section: "banner" });
+        const data = res.data;
         if (Array.isArray(data)) {
           // Filter promotions that have at least one valid image
           const validPromotions = data.filter(

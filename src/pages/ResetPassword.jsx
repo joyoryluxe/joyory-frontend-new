@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import { resetPassword } from "../api/authApi";
 import { useNavigate } from "react-router-dom";
 import "../styles/ResetPassword.css"; // custom styles
 
@@ -29,10 +29,7 @@ const ResetPassword = () => {
 
     try {
       setLoading(true);
-      const res = await axios.post(
-        "https://beauty.joyory.com/api/security/reset-password",
-        { email, otp, newPassword: password, confirmPassword: confirm }
-      );
+      const res = await resetPassword({ email, otp, newPassword: password, confirmPassword: confirm });
       setMessage(res.data.message || "Password reset successful");
       setTimeout(() => navigate("/login"), 2000);
     } catch (err) {

@@ -1,9 +1,8 @@
-// src/components/BannerSlider.jsx
 import React, { useState, useEffect, useCallback } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination, Navigation, EffectFade } from "swiper/modules";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { getCategoryLanding } from "../../../api/categoryApi";
 import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
@@ -31,10 +30,7 @@ const BannerSlider = () => {
       setLoading(true);
       console.log('🔥 Fetching Shade Finder Banners...');
 
-      const { data } = await axios.get(
-        'https://beauty.joyory.com/api/user/categories/category/makeup/landing',
-        { withCredentials: true }
-      );
+      const { data } = await getCategoryLanding("makeup");
 
       console.log('✅ API Response:', data);
 

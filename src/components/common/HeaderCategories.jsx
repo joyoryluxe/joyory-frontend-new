@@ -398,7 +398,8 @@
 
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import axiosInstance from "../../utils/axiosInstance.js";
+import { getCategoryTree } from "../../api/categoryApi";
+import { getBrands } from "../../api/brandApi";
 import "../../styles/HeaderCategories.css";
 import { FaCommentDots, FaMagic, FaFlask, FaCamera, FaPalette, FaClipboardList } from "react-icons/fa";
 
@@ -434,7 +435,7 @@ const HeaderCategories = () => {
 
   const fetchCategories = async () => {
     try {
-      const res = await axiosInstance.get("/api/user/categories/tree");
+      const res = await getCategoryTree();
       setCategories(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error("Category fetch failed", err);
@@ -444,7 +445,7 @@ const HeaderCategories = () => {
 
   const fetchBrands = async () => {
     try {
-      const res = await axiosInstance.get("/api/user/brands");
+      const res = await getBrands();
       setBrands(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error("Brands fetch failed", err);

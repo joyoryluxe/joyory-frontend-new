@@ -14,7 +14,10 @@ import '../styles/ForYou.css';
 import Header from '../components/common/Header';
 import Footer from '../components/common/Footer';
 import FoyoulandingImg from '../assets/Foyoulanding.jpg';
-import axios from 'axios';
+import { getWishlist, addToWishlist, removeFromWishlist } from '../api/wishlistApi';
+import { addToCart } from '../api/cartApi';
+import { getPersonalSummary } from '../api/recommendationApi';
+import { getForYouIntro, getSkincareQuestions, submitSkincareQuiz, getSkincareProfile } from '../api/forYouApi';
 import { CartContext } from '../context/CartContext';
 import { UserContext } from '../context/UserContext.jsx';
 import { ToastContainer, toast } from 'react-toastify';
@@ -36,7 +39,6 @@ import fyCollage7 from '../assets/Foryou/foryou7.png';
    SHARED CONSTANTS & HELPERS
 ───────────────────────────────────────────── */
 const WISHLIST_CACHE_KEY = 'guestWishlist';
-const CART_API_BASE = 'https://beauty.joyory.com/api/user/cart';
 
 const getSku = (v) => v?.sku || v?.variantSku || `sku-${v?._id || 'default'}`;
 
@@ -107,7 +109,7 @@ function ProductCard({ product, navigate, location }) {
     const fetchWishlistData = useCallback(async () => {
         try {
             if (user && !user.guest) {
-                const res = await axios.get('https://beauty.joyory.com/api/user/wishlist', { withCredentials: true });
+                const res = await getWishlist();
                 if (res.data.success) setWishlistData(res.data.wishlist || []);
             } else {
                 const local = JSON.parse(localStorage.getItem(WISHLIST_CACHE_KEY)) || [];
@@ -168,6 +170,8 @@ function ProductCard({ product, navigate, location }) {
         return typeof brand === 'string' ? brand : 'Unknown Brand';
     };
 
+    const isSelectedInWishlist = isInWishlist(productId, sku);
+
     const getProductSlug = () =>
         product?.slugs?.[0] || product?.product?.slugs?.[0] ||
         product?.slug || product?.product?.slug ||
@@ -184,19 +188,22 @@ function ProductCard({ product, navigate, location }) {
         setTempSelectedVariant(null);
     };
 
-    const handleAddToCart = async (forceVariant = null) => {
+    const handleAddToCart = async (e) => {
+        e.stopPropagation();
+        if (isOutOfStock) return;
         setAddingToCart(true);
+
         try {
             let payload;
             if (hasVariants) {
-                const sel = forceVariant || selectedVariant || (allVariants.find((v) => v.stock > 0) || allVariants[0]);
+                const sel = selectedVariant || (allVariants.find((v) => v.stock > 0) || allVariants[0]);
                 if (!sel || (sel.stock ?? 0) <= 0) { showToast('Please select an in-stock variant.'); return; }
                 payload = { productId: productId, variants: [{ variantSku: getSku(sel), quantity: 1 }] };
             } else {
-                if (outOfStock) { showToast('Product is out of stock.'); return; }
+                if (isOutOfStock) { showToast('Product is out of stock.'); return; }
                 payload = { productId: productId, quantity: 1 };
             }
-            const res = await axios.post(`${CART_API_BASE}/add`, payload, { withCredentials: true });
+            const res = await addToCart(payload);
             if (!res.data.success) throw new Error(res.data.message || 'Failed');
             showToast('Product added to cart!', 'success');
             navigate('/cartpage');
@@ -214,10 +221,10 @@ function ProductCard({ product, navigate, location }) {
             const inWl = isInWishlist(productId, sku);
             if (user && !user.guest) {
                 if (inWl) {
-                    await axios.delete(`https://beauty.joyory.com/api/user/wishlist/${productId}`, { withCredentials: true, data: { sku } });
+                    await removeFromWishlist(productId, { sku });
                     showToast('Removed from wishlist!', 'success');
                 } else {
-                    await axios.post(`https://beauty.joyory.com/api/user/wishlist/${productId}`, { sku }, { withCredentials: true });
+                    await addToWishlist(productId, { sku });
                     showToast('Added to wishlist!', 'success');
                 }
                 await fetchWishlistData();
@@ -938,12 +945,8 @@ function RecommendationsPage({ onBack, onBannerClick }) {
 
         (async () => {
             try {
-                const res = await fetch('https://beauty.joyory.com/api/user/recommendations/personal-summary', {
-                    method: 'GET',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include'
-                });
-                const json = await res.json();
+                const res = await getPersonalSummary();
+                const json = res.data;
                 if (json.success) setData(json);
             } catch (err) {
                 console.error('Error fetching recommendations:', err);
@@ -1554,17 +1557,8 @@ export default function Foryoulanding() {
             }
 
             try {
-                const res = await fetch(
-                    'https://beauty.joyory.com/api/user/for-you/skincare/profile',
-                    {
-                        credentials: 'include',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                    }
-                );
-
-                const json = await res.json();
+                const res = await getSkincareProfile();
+                const json = res.data;
 
                 // Check if data is empty
                 const isDataEmpty =
@@ -1619,8 +1613,8 @@ export default function Foryoulanding() {
     useEffect(() => {
         (async () => {
             try {
-                const res = await fetch('https://beauty.joyory.com/api/user/for-you/intro');
-                const json = await res.json();
+                const res = await getForYouIntro();
+                const json = res.data;
                 if (json.success && Array.isArray(json.data)) setIntroData(json.data.sort((a, b) => a.displayOrder - b.displayOrder));
             } catch (e) { console.error(e); }
             finally { setIntroLoading(false); }
@@ -1637,8 +1631,8 @@ export default function Foryoulanding() {
     const fetchQuizData = async () => {
         setLoading(true); setError(null);
         try {
-            const res = await fetch('https://beauty.joyory.com/api/user/for-you/skincare/questions');
-            const json = await res.json();
+            const res = await getSkincareQuestions();
+            const json = res.data;
             if (json.success && Array.isArray(json.data)) {
                 const sorted = json.data.sort((a, b) => a.displayOrder - b.displayOrder);
                 setQuizData(sorted); setCurrentQuestionIndex(0);
@@ -1660,7 +1654,7 @@ export default function Foryoulanding() {
         }).filter((a) => a.value);
 
         if (!isFinalStep) {
-            fetch('https://beauty.joyory.com/api/user/for-you/skincare/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ answers: answersPayload }) }).catch(console.error);
+            submitSkincareQuiz({ answers: answersPayload }).catch(console.error);
             const next = currentQuestionIndex + 1; setCurrentQuestionIndex(next);
             const q = quizData[next];
             if (q && !selectedAnswers[q._id] && q.options?.length > 0) {
@@ -1672,12 +1666,12 @@ export default function Foryoulanding() {
 
         setShowQuizContent(false); setShowProfile(true); setProfileLoading(true);
         try {
-            const sr = await fetch('https://beauty.joyory.com/api/user/for-you/skincare/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ answers: answersPayload }) });
-            const submitResult = await sr.json();
+            const sr = await submitSkincareQuiz({ answers: answersPayload });
+            const submitResult = sr.data;
             if (!submitResult.success) throw new Error('Submit failed');
 
-            const pr = await fetch('https://beauty.joyory.com/api/user/for-you/skincare/profile', { credentials: 'include' });
-            const pj = await pr.json();
+            const pr = await getSkincareProfile();
+            const pj = pr.data;
             if (pj.success && pj.data) {
                 setProfileData(pj.data);
                 setHasCompletedQuiz(true);
@@ -1735,8 +1729,8 @@ export default function Foryoulanding() {
         if (!profileData) {
             setProfileLoading(true);
             try {
-                const res = await fetch('https://beauty.joyory.com/api/user/for-you/skincare/profile', { credentials: 'include' });
-                const json = await res.json();
+                const res = await getSkincareProfile();
+                const json = res.data;
                 if (json.success && json.data) {
                     setProfileData(json.data);
                     setHasCompletedQuiz(true);

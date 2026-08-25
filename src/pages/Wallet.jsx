@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { getWallet, createWalletOrder, verifyWalletPayment } from "../api/walletApi";
+import { logout } from "../api/authApi";
 import "../styles/Wallet.css";
 import Sidebarcomon from "../components/common/SidebarCommon";
 import Header from "../components/common/Header";
@@ -8,20 +9,20 @@ import Footer from "../components/common/Footer";
 import wallets from "../assets/wallet.svg";
 import refunds from "../assets/refunds.png";
 import Payment from "../assets/Payment.png";
-import Disount from "../assets/Disount.png";
 import logo from "../assets/logo.png";
 import { FaWallet, FaStar } from "react-icons/fa";
+import SectionError from "../components/common/SectionError";
+import { getErrorMessage } from "../utils/errorHandler";
 
 const WalletPage = () => {
   const [wallet, setWallet] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState("wallet");
 
   // ✅ New: state for selected amount
   const [selectedAmount, setSelectedAmount] = useState(null);
-
-  const API_BASE = "https://beauty.joyory.com/api/user/wallet";
 
   useEffect(() => {
     const script = document.createElement("script");
@@ -31,14 +32,15 @@ const WalletPage = () => {
   }, []);
 
   const fetchWallet = async () => {
+    setLoading(true);
+    setError(null);
     try {
-      const res = await axios.get(API_BASE, {
-        withCredentials: true, // ✅ sends cookies to backend
-      });
+      const res = await getWallet();
       setWallet(res.data);
-      setLoading(false);
     } catch (err) {
       console.error("Error fetching wallet:", err);
+      setError(getErrorMessage(err, "Failed to load wallet."));
+    } finally {
       setLoading(false);
     }
   };
@@ -55,13 +57,7 @@ const WalletPage = () => {
     }
 
     try {
-      const orderRes = await axios.post(
-        `${API_BASE}/create-order`,
-        { amount: selectedAmount },
-        {
-          withCredentials: true, // ✅ send cookie for auth
-        }
-      );
+      const orderRes = await createWalletOrder({ amount: selectedAmount });
 
       const { order } = orderRes.data;
 
@@ -74,16 +70,12 @@ const WalletPage = () => {
         order_id: order.id,
         handler: async function (response) {
           try {
-            await axios.post(
-              `${API_BASE}/verify-payment`,
-              {
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-                amount: selectedAmount, // ✅ use selected amount
-              },
-              { withCredentials: true } // ✅ send cookie here too
-            );
+            await verifyWalletPayment({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              amount: selectedAmount, // ✅ use selected amount
+            });
             alert(`Wallet top-up of ₹${selectedAmount} successful 🎉`);
             setSelectedAmount(null); // reset selection
             fetchWallet();
@@ -111,21 +103,27 @@ const WalletPage = () => {
     }
   };
 
-  const handleLogout = () => {
-    axios
-      .post(
-        "https://beauty.joyory.com/api/user/logout",
-        {},
-        { withCredentials: true }
-      )
-      .then(() => {
-        navigate("/login");
-      })
-      .catch((err) => {
-        console.error("Logout failed:", err);
-        navigate("/login");
-      });
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (err) {
+      console.error("Logout failed:", err);
+    } finally {
+      navigate("/login");
+    }
   };
+
+  if (error && !loading) {
+    return (
+      <>
+        <Header />
+        <div className="container py-5 my-5 text-center">
+          <SectionError message={error} onRetry={fetchWallet} />
+        </div>
+        <Footer />
+      </>
+    );
+  }
 
   if (loading) return <p className="page-title-main-name text-center">Loading Wallet...</p>;
 

@@ -17,15 +17,13 @@ import "../styles/BestSellers.css";
 import "../App.css";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import axios from "axios";
+import { getWishlist, addToWishlist, removeFromWishlist } from "../api/wishlistApi";
+import { addToCart } from "../api/cartApi";
+import { getBlogLanding } from "../api/seoBlogApi";
 import bagIcon from "../assets/bag.svg";
 import { FaHeart, FaRegHeart, FaChevronDown } from "react-icons/fa";
 import { UserContext } from "../context/UserContext";
 import SEOMeta from "../components/common/SEOMeta"; // Add import at top
-
-
-const API_BASE = 'https://beauty.joyory.com/api';
-const CART_API_BASE = 'https://beauty.joyory.com/api/user/cart';
 
 // Default placeholder image
 const DEFAULT_IMAGE = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==';
@@ -125,10 +123,7 @@ const Blog = () => {
   const fetchWishlistData = async () => {
     try {
       if (user && !user.guest) {
-        const response = await axios.get(
-          "https://beauty.joyory.com/api/user/wishlist",
-          { withCredentials: true }
-        );
+        const response = await getWishlist();
         if (response.data.success) {
           setWishlistData(response.data.wishlist || []);
         }
@@ -178,20 +173,10 @@ const Blog = () => {
       const currentlyInWishlist = isInWishlist(productId, sku);
 
       if (currentlyInWishlist) {
-        await axios.delete(
-          `https://beauty.joyory.com/api/user/wishlist/${productId}`,
-          {
-            withCredentials: true,
-            data: { sku: sku }
-          }
-        );
+        await removeFromWishlist(productId, { sku: sku });
         showToastMsg("Removed from wishlist!", "success");
       } else {
-        await axios.post(
-          `https://beauty.joyory.com/api/user/wishlist/${productId}`,
-          { sku: sku },
-          { withCredentials: true }
-        );
+        await addToWishlist(productId, { sku: sku });
         showToastMsg("Added to wishlist!", "success");
       }
       await fetchWishlistData();
@@ -497,11 +482,7 @@ const Blog = () => {
         localStorage.setItem("cartVariantCache", JSON.stringify(cache));
       }
 
-      const response = await axios.post(
-        `${CART_API_BASE}/add`,
-        payload,
-        { withCredentials: true }
-      );
+      const response = await addToCart(payload);
 
       if (!response.data.success) {
         throw new Error(response.data.message || "Failed to add to cart");
@@ -534,15 +515,12 @@ const Blog = () => {
   // ===================== BLOG DATA FETCHING (Unchanged) =====================
   const fetchLandingData = async (category = 'all', nextCursor = null) => {
     try {
-      const url = new URL(`${API_BASE}/blogs/landing`);
-      url.searchParams.append('limit', '6');
-      if (category !== 'all') url.searchParams.append('category', category);
-      if (nextCursor) url.searchParams.append('cursor', nextCursor);
+      const params = { limit: 6 };
+      if (category !== 'all') params.category = category;
+      if (nextCursor) params.cursor = nextCursor;
 
-      const res = await fetch(url);
-      if (!res.ok) throw new Error('Failed to fetch blog data');
-      const json = await res.json();
-      return json;
+      const res = await getBlogLanding(params);
+      return res.data;
     } catch (err) {
       throw err;
     }

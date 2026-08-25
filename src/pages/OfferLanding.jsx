@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useContext, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { getOffersPage } from "../api/promotionApi";
+import { getWishlist, addToWishlist, removeFromWishlist } from "../api/wishlistApi";
+import { addToCart } from "../api/cartApi";
 import {
     FaHeart,
     FaRegHeart,
@@ -12,7 +14,7 @@ import {
 } from "react-icons/fa";
 import Header from "../components/common/Header";
 import Footer from "../components/common/Footer";
-import { CartContext } from "../Context/CartContext";
+import { CartContext } from "../context/CartContext";
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { UserContext } from "../context/UserContext.jsx";
 import Bag from "../assets/Bag.svg";
@@ -27,10 +29,6 @@ import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
 import Certificate from "../components/sections/home/Certificate.jsx";
-
-const API_BASE = "https://beauty.joyory.com/api/user";
-const CART_API_BASE = `${API_BASE}/cart`;
-const WISHLIST_API_BASE = `${API_BASE}/wishlist`;
 
 /* ---------- helpers ---------- */
 const formatPrice = (price) => "₹" + parseFloat(price || 0).toLocaleString("en-IN");
@@ -315,7 +313,7 @@ export default function OffersPage() {
         const fetchOffersData = async () => {
             try {
                 setLoading(true);
-                const { data } = await axios.get(`${API_BASE}/promotions/offers-page`);
+                const { data } = await getOffersPage();
                 setData(data);
             } catch (err) {
                 console.error("Failed to load offers page:", err);
@@ -334,7 +332,7 @@ export default function OffersPage() {
     const fetchWishlistData = async () => {
         try {
             if (user && !user.guest) {
-                const { data } = await axios.get(WISHLIST_API_BASE, { withCredentials: true });
+                const { data } = await getWishlist();
                 if (data.success) setWishlistData(data.wishlist || []);
             } else {
                 const local = JSON.parse(localStorage.getItem("guestWishlist") || "[]");
@@ -365,10 +363,10 @@ export default function OffersPage() {
         try {
             const inWl = isInWishlist(pid, sku);
             if (inWl) {
-                await axios.delete(`${WISHLIST_API_BASE}/${pid}`, { withCredentials: true, data: { sku } });
+                await removeFromWishlist(pid, { sku });
                 showToastMsg("Removed from wishlist!", "success");
             } else {
-                await axios.post(`${WISHLIST_API_BASE}/${pid}`, { sku }, { withCredentials: true });
+                await addToWishlist(pid, { sku });
                 showToastMsg("Added to wishlist!", "success");
             }
             await fetchWishlistData();
@@ -414,7 +412,7 @@ export default function OffersPage() {
                 payload = { productId: prod._id, quantity: 1 };
             }
 
-            const { data } = await axios.post(`${CART_API_BASE}/add`, payload, { withCredentials: true });
+            const { data } = await addToCart(payload);
             if (!data.success) throw new Error(data.message || "Cart add failed");
 
             showToastMsg("Product added to cart!", "success");

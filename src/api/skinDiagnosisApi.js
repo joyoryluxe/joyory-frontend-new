@@ -1,5 +1,6 @@
 // src/api/skinDiagnosisApi.js
-import api from "./axios";
+import axiosInstance from "../utils/axiosInstance";
+import { endpoints } from "../utils/endpoints";
 
 /**
  * POST /api/user/skin-diagnosis/analyze
@@ -8,7 +9,7 @@ import api from "./axios";
  * Response includes: analysis (with skinMetrics), recommendedProducts (with stepLabel, timeOfDay, allergenAlert)
  */
 export const analyzeSkin = (formData) => {
-  return api.post("/user/skin-diagnosis/analyze", formData, {
+  return axiosInstance.post(endpoints.skinDiagnosis.analyze, formData, {
     headers: {
       "Content-Type": "multipart/form-data",
     },
@@ -22,15 +23,18 @@ export const analyzeSkin = (formData) => {
  * Send: { diagnosisId }
  */
 export const exportDiagnosisToRoutine = (diagnosisId) => {
-  return api.post("/user/skin-diagnosis/export-routine", { diagnosisId });
+  return axiosInstance.post(endpoints.skinDiagnosis.exportRoutine, { diagnosisId });
 };
+
+// Alias matching prompt specification
+export const exportRoutine = exportDiagnosisToRoutine;
 
 /**
  * GET /api/user/skin-diagnosis/history
  * Requires authenticated user. Returns past 10 diagnoses.
  */
 export const getDiagnosisHistory = () => {
-  return api.get("/user/skin-diagnosis/history");
+  return axiosInstance.get(endpoints.skinDiagnosis.history);
 };
 
 /**
@@ -38,5 +42,8 @@ export const getDiagnosisHistory = () => {
  * Returns single diagnosis by ID.
  */
 export const getSingleDiagnosis = (id) => {
-  return api.get(`/user/skin-diagnosis/${id}`);
+  return axiosInstance.get(endpoints.skinDiagnosis.byId(id));
 };
+
+// Alias matching prompt specification
+export const getDiagnosisById = getSingleDiagnosis;

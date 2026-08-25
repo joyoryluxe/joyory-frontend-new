@@ -1,6 +1,14 @@
-import axios from "axios";
+// src/api/razorpayOrderApi.js
+import axiosInstance from "../utils/axiosInstance";
+import { endpoints } from "../utils/endpoints";
 
-export const createRazorpayOrder = async (orderId, paymentMethodKey, cartItems, shippingAddress, upiId = null) => {
+export const createRazorpayOrder = async (
+  orderId,
+  paymentMethodKey,
+  cartItems,
+  shippingAddress,
+  upiId = null
+) => {
   try {
     const payload = {
       orderId,
@@ -10,15 +18,12 @@ export const createRazorpayOrder = async (orderId, paymentMethodKey, cartItems, 
       upiId,
     };
 
-    const res = await axios.post(
-      "https://beauty.joyory.com/api/payment/razorpay/order",
-      payload,
-      { withCredentials: true }
-    );
-
+    const res = await axiosInstance.post(endpoints.payment.razorpayOrder, payload);
     return res.data; // { success: true, amount, razorpayOrderId, ... }
   } catch (err) {
     console.error("❌ Razorpay order creation error:", err);
     return { success: false, error: err };
   }
 };
+
+export default createRazorpayOrder;

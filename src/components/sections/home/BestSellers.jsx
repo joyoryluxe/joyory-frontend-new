@@ -8,16 +8,17 @@ import "swiper/css/navigation";
 import "../../../styles/BestSellers.css";
 import "../../../App.css";
 import Loader from "../../common/Loader";
+import SectionError from "../../common/SectionError";
+import { getErrorMessage } from "../../../utils/errorHandler";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import axios from "axios";
+import { getTopSellers } from "../../../api/productApi";
+import { addToCart } from "../../../api/cartApi";
+import { getWishlist, addToWishlist, removeFromWishlist } from "../../../api/wishlistApi";
 import bagIcon from "../../../assets/bag.svg";
 import tick from "../../../assets/tick.svg";
 import { FaHeart, FaRegHeart, FaChevronDown, FaTimes, FaCheck } from "react-icons/fa";
 import { UserContext } from "../../../context/UserContext";
-
-const API_LIST = "https://beauty.joyory.com/api/user/products/top-sellers";
-const CART_API_BASE = "https://beauty.joyory.com/api/user/cart";
 
 // Helper functions
 const getSku = (v) => v?.sku || v?.variantSku || `sku-${v?._id || 'default'}`;
@@ -142,10 +143,7 @@ const BestSellers = () => {
     const fetchWishlistData = async () => {
         try {
             if (user && !user.guest) {
-                const response = await axios.get(
-                    "https://beauty.joyory.com/api/user/wishlist",
-                    { withCredentials: true }
-                );
+                const response = await getWishlist();
                 if (response.data.success) {
                     setWishlistData(response.data.wishlist || []);
                 }
@@ -194,20 +192,10 @@ const BestSellers = () => {
 
             if (user && !user.guest) {
                 if (currentlyInWishlist) {
-                    await axios.delete(
-                        `https://beauty.joyory.com/api/user/wishlist/${productId}`,
-                        {
-                            withCredentials: true,
-                            data: { sku: sku }
-                        }
-                    );
+                    await removeFromWishlist(productId, { sku });
                     showToastMsg("Removed from wishlist!", "success");
                 } else {
-                    await axios.post(
-                        `https://beauty.joyory.com/api/user/wishlist/${productId}`,
-                        { sku: sku },
-                        { withCredentials: true }
-                    );
+                    await addToWishlist(productId, { sku });
                     showToastMsg("Added to wishlist!", "success");
                 }
 
@@ -562,11 +550,7 @@ const BestSellers = () => {
                 localStorage.setItem("cartVariantCache", JSON.stringify(cache));
             }
 
-            const response = await axios.post(
-                `${CART_API_BASE}/add`,
-                payload,
-                { withCredentials: true }
-            );
+            const response = await addToCart(payload);
 
             if (!response.data.success) {
                 throw new Error(response.data.message || "Failed to add to cart");
@@ -602,7 +586,7 @@ const BestSellers = () => {
         setError(null);
 
         try {
-            const res = await axios.get(API_LIST, { withCredentials: true });
+            const res = await getTopSellers();
             const json = res.data;
 
             let data = [];
@@ -630,7 +614,7 @@ const BestSellers = () => {
             setProducts(data);
         } catch (err) {
             console.error("❌ Error fetching best sellers:", err);
-            setError("Couldn't load best sellers. Please try again later.");
+            setError(getErrorMessage(err, "Couldn't load best sellers. Please try again later."));
             setProducts([]);
         } finally {
             setLoading(false);
@@ -762,12 +746,7 @@ const BestSellers = () => {
             )}
 
             {error && (
-                <div className="alert alert-danger text-center" role="alert">
-                    {error}
-                    <button className="btn btn-sm btn-outline-danger ms-3" onClick={fetchProducts}>
-                        Retry
-                    </button>
-                </div>
+                <SectionError message={error} onRetry={fetchProducts} />
             )}
 
             {products.length > 0 ? (

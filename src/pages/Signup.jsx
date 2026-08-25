@@ -4,6 +4,7 @@ import "../styles/Signup.css";
 import "../styles/Login.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import Logo from "../assets/logos.webp";
+import { signup } from "../api/authApi";
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -23,29 +24,24 @@ const Signup = () => {
   const [passwordType, setPasswordType] = useState("password");
 
   const togglePassword = () => {
-    setPasswordType((prev) => (prev === "password" ? "text" : "password"));
+    setPasswordType(passwordType === "password" ? "text" : "password");
   };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // ✅ TOGGLE LOGIC (MAIN FIX)
-  const handleOptionChange = (value) => {
-    if (selectedOption === value) {
-      // same clicked again → unselect
-      setSelectedOption("");
-    } else {
-      // select new one
-      setSelectedOption(value);
-    }
+  const handleOptionChange = (option) => {
+    setSelectedOption(option);
+    if (option === "referral") setFormData({ ...formData, promo: "" });
+    if (option === "promo") setFormData({ ...formData, referralCode: "" });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     setErrorMsg("");
     setSuccessMsg("");
-    setLoading(true);
 
     try {
       const payload = {
@@ -62,19 +58,10 @@ const Signup = () => {
             : undefined,
       };
 
-      const res = await fetch(
-        "https://beauty.joyory.com/api/user/signup",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify(payload),
-        }
-      );
+      const res = await signup(payload);
+      const data = res.data;
 
-      const data = await res.json();
-
-      if (res.ok) {
+      if (data.success || res.status === 200 || res.status === 201) {
         setSuccessMsg("Signup successful! OTP sent to your email.");
         setTimeout(
           () => navigate("/otp", { state: { email: formData.email } }),
@@ -84,7 +71,7 @@ const Signup = () => {
         setErrorMsg(data.message || "Signup failed. Please try again.");
       }
     } catch (err) {
-      setErrorMsg("Something went wrong. Please check your connection.");
+      setErrorMsg(err.response?.data?.message || "Something went wrong. Please check your connection.");
     } finally {
       setLoading(false);
     }

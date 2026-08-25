@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import { getActivePromotions } from "../../../api/promotionApi";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination, Navigation } from "swiper/modules";
 import { useNavigate } from "react-router-dom";
@@ -8,6 +8,8 @@ import "swiper/css/pagination";
 import "swiper/css/navigation";
 import "../../../styles/ProductPromotion.css";
 import "../../../App.css";
+import SectionError from "../../common/SectionError";
+import { getErrorMessage } from "../../../utils/errorHandler";
 
 // ✅ Same hook as in OffersSlider for consistent responsive behavior
 function useWindowSize() {
@@ -28,22 +30,23 @@ const ProductPromotion = () => {
   const [width] = useWindowSize();
 
   // Fetch active promotions
+  const fetchPromotions = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res = await getActivePromotions({ section: "product" });
+      const promotions =
+        res.data?.promotions || (Array.isArray(res.data) ? res.data : []);
+      setSlides(promotions);
+    } catch (err) {
+      console.error("Failed to fetch promotions:", err.response || err);
+      setError(getErrorMessage(err, "Failed to fetch promotions"));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchPromotions = async () => {
-      try {
-        const res = await axios.get(
-          "https://beauty.joyory.com/api/user/promotions/active?section=product"
-        );
-        const promotions =
-          res.data?.promotions || (Array.isArray(res.data) ? res.data : []);
-        setSlides(promotions);
-      } catch (err) {
-        console.error("Failed to fetch promotions:", err.response || err);
-        setError(err.message || "Failed to fetch promotions");
-      } finally {
-        setIsLoading(false);
-      }
-    };
     fetchPromotions();
   }, []);
 
@@ -52,7 +55,7 @@ const ProductPromotion = () => {
   // - Show error state
   // - Completely hide the entire section (return null) if no promotions
   if (isLoading) return <div className="loading-state page-title-main-name">Loading product promotions...</div>;
-  if (error) return <div className="error-state">Error: {error}</div>;
+  if (error) return <SectionError message={error} onRetry={fetchPromotions} />;
   if (slides.length === 0) return null;
 
   // ✅ Dynamic slides & space (exact match with OffersSlider breakpoints)
@@ -73,19 +76,6 @@ const ProductPromotion = () => {
 
   // ✅ Only enable loop & autoplay when there are more items than visible (same as OffersSlider)
   const shouldScroll = slides.length > currentSlidesToShow;
-
-  // Click promotion → navigate using slug (preferred) or ID
-  // const handlePromotionClick = (promotion) => {
-  //   const param = promotion.slug || promotion._id;
-  //   const title = promotion.campaignName || promotion.title || "Promotion Products";
-
-  //   navigate(`/productpage/${param}`, {
-  //     state: {
-  //       pageTitle: title,
-  //     },
-  //   });
-  // };
-
 
   const handlePromotionClick = (promotion) => {
     const { scope, targetSlug, slug, _id } = promotion;
@@ -139,37 +129,32 @@ const ProductPromotion = () => {
                 style={{ cursor: "pointer" }}
                 onClick={() => handlePromotionClick(slide)}
               >
-                <img
-                  src={
-                    slide.image ||
-                    slide.images?.[0] ||
-                    slide.img ||
-                    "https://via.placeholder.com/400x300?text=No+Image"
-                  }
-                  alt={slide.campaignName || `Promotion ${index + 1}`}
-                  loading="lazy"
-                  className="img-fluid"
-                  style={{ objectFit: "cover", height: "100%" }}
-                />
-
-                {/* 🔥 CAPTION OVERLAY */}
-                <div className="promotion-caption">
-                  <h6 className="promotion-title">
-                    {slide.campaignName?.toUpperCase() || ""}
-                  </h6>
-
-                  {slide.description && (
-                    <p className="promotion-subtitle text-start">
-                      {slide.description}
-                    </p>
-                  )}
-
-                  {slide.discountValue && (
-                    <span className="promotion-badge">
-                      {slide.discountValue}
-                      {slide.discountUnit === "percent" ? "% OFF" : " OFF"}
-                    </span>
-                  )}
+                <div className="product-promotion-card">
+                  <img
+                    src={slide.bannerImage || slide.image || slide.desktopBanner || "https://placehold.co/600x400/f5f5f5/333333?text=Special+Promotion"}
+                    alt={slide.campaignName || slide.title || "Promotion"}
+                    className="product-promotion-img responsive-imagesss"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = "https://placehold.co/600x400/f5f5f5/333333?text=Special+Promotion";
+                    }}
+                  />
+                  <div className="product-promotion-overlay">
+                    <div className="product-promotion-content">
+                      <span className="product-promotion-badge">
+                        {slide.badgeText || "Special Offer"}
+                      </span>
+                      <h3 className="product-promotion-title">
+                        {slide.campaignName || slide.title || "Limited Time Deal"}
+                      </h3>
+                      <p className="product-promotion-desc">
+                        {slide.description || "Discover exclusive beauty products at unbeatable prices"}
+                      </p>
+                      <button className="product-promotion-btn">
+                        {slide.buttonText || "Shop Now"}
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </SwiperSlide>

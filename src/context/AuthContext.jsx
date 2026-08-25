@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect } from "react";
-import axiosInstance from "../utils/axiosInstance.js";
+import { getProfile } from "../api/userApi";
 
 export const AuthContext = createContext();
 
@@ -12,9 +12,7 @@ const AuthProvider = ({ children }) => {
 
     const fetchProfile = async () => {
       try {
-        const res = await axiosInstance.get("/api/user/profile", {
-          withCredentials: true,
-        });
+        const res = await getProfile();
         if (isMounted) setUser(res.data?.profile || null);
       } catch (err) {
         if (isMounted) setUser(null);

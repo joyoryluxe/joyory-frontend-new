@@ -8,7 +8,9 @@ import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
 import { FaHeart, FaRegHeart, FaChevronDown } from "react-icons/fa";
-import axios from "axios";
+import { getWishlist, addToWishlist, removeFromWishlist } from "../api/wishlistApi";
+import { addToCart } from "../api/cartApi";
+import { getBlogBySlug } from "../api/seoBlogApi";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { UserContext } from "../context/UserContext";
@@ -19,8 +21,6 @@ import SEOMeta from "../components/common/SEOMeta";
 import "../styles/ForYou.css";
 import Footer from '../components/common/Footer';
 
-const API_BASE = 'https://beauty.joyory.com/api';
-const CART_API_BASE = 'https://beauty.joyory.com/api/user/cart';
 const WISHLIST_CACHE_KEY = "guestWishlist";
 
 // ===================== HELPER FUNCTIONS =====================
@@ -169,7 +169,7 @@ const BlogDetail = () => {
   const fetchWishlistData = async () => {
     try {
       if (user && !user.guest) {
-        const response = await axios.get("https://beauty.joyory.com/api/user/wishlist", { withCredentials: true });
+        const response = await getWishlist();
         if (response.data.success) setWishlistData(response.data.wishlist || []);
       } else {
         const localWishlist = JSON.parse(localStorage.getItem(WISHLIST_CACHE_KEY)) || [];
@@ -199,10 +199,10 @@ const BlogDetail = () => {
       const currentlyInWishlist = isInWishlist(productId, sku);
       if (user && !user.guest) {
         if (currentlyInWishlist) {
-          await axios.delete(`https://beauty.joyory.com/api/user/wishlist/${productId}`, { withCredentials: true, data: { sku } });
+          await removeFromWishlist(productId, { sku });
           toast.success("Removed from wishlist!");
         } else {
-          await axios.post(`https://beauty.joyory.com/api/user/wishlist/${productId}`, { sku }, { withCredentials: true });
+          await addToWishlist(productId, { sku });
           toast.success("Added to wishlist!");
         }
         await fetchWishlistData();
@@ -246,7 +246,7 @@ const BlogDetail = () => {
     setAddingToCart(prev => ({ ...prev, [prod._id]: true }));
     try {
       const payload = { productId: prod._id, quantity: 1 };
-      const response = await axios.post(`${CART_API_BASE}/add`, payload, { withCredentials: true });
+      const response = await addToCart(payload);
       if (response.data.success) {
         toast.success("Product added to cart!");
         navigate("/cartpage");
@@ -269,12 +269,10 @@ const BlogDetail = () => {
   useEffect(() => {
     const fetchBlog = async () => {
       try {
-        const res = await fetch(`${API_BASE}/blogs/slug/${slug}`);
-        if (!res.ok) throw new Error('Blog not found');
-        const data = await res.json();
-        setBlog(data);
+        const res = await getBlogBySlug(slug);
+        setBlog(res.data);
       } catch (err) {
-        setError(err.message);
+        setError(err.response?.data?.message || err.message || 'Blog not found');
       } finally {
         setLoading(false);
       }

@@ -1,8 +1,7 @@
-// src/pages/BrandsSlider.jsx
 import React, { useEffect, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination } from "swiper/modules"; // Added Navigation
-import axios from "axios";
+import { getBrands } from "../../../api/brandApi";
 import { useNavigate } from "react-router-dom";
 import "swiper/css";
 import "swiper/css/pagination";
@@ -21,9 +20,7 @@ const BrandsSlider = () => {
   useEffect(() => {
     const fetchBrands = async () => {
       try {
-        const response = await axios.get(
-          "https://beauty.joyory.com/api/user/brands"
-        );
+        const response = await getBrands();
         setBrands(response.data || []);
       } catch (error) {
         console.error("Error fetching brands:", error);

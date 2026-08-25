@@ -4,6 +4,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import Footer from "../components/common/Footer";
 import Header from "../components/common/Header";
 import "../styles/ShadeFindShadeTone.css"; // We will create this file below
+import { getUndertones, getFamilies } from "../api/shadeFinderApi";
 
 export default function UndertoneSlider() {
   const [undertones, setUndertones] = useState([]);
@@ -18,10 +19,8 @@ export default function UndertoneSlider() {
     const fetchUndertones = async () => {
       if (!toneKey) return;
       try {
-        const res = await fetch(
-          `https://beauty.joyory.com/api/user/shadefinder/undertones?toneKey=${toneKey}`
-        );
-        const data = await res.json();
+        const res = await getUndertones({ toneKey });
+        const data = res.data;
         if (data.success && Array.isArray(data.undertones)) {
           setUndertones(data.undertones);
         }
@@ -35,10 +34,8 @@ export default function UndertoneSlider() {
   const handleNext = async () => {
     if (!selectedUndertone) return;
     try {
-      const res = await fetch(
-        `https://beauty.joyory.com/api/user/shadefinder/families?toneKey=${toneKey}&undertoneKey=${selectedUndertone}`
-      );
-      const data = await res.json();
+      const res = await getFamilies({ toneKey, undertoneKey: selectedUndertone });
+      const data = res.data;
       navigate("/shadetone", {
         state: {
           shade,

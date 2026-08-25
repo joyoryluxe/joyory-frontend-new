@@ -3,19 +3,19 @@ import { useNavigate, useLocation, Link } from "react-router-dom";
 import Header from "../components/common/Header";
 import Footer from "../components/common/Footer";
 import { FaArrowLeft, FaStar, FaHeart, FaRegHeart, FaChevronDown, FaTimes, FaCheck } from "react-icons/fa";
-import { CartContext } from "../Context/Cartcontext";
+import { CartContext } from "../context/CartContext";
 import { UserContext } from "../context/UserContext.jsx";
 import BrandFilter from "../components/common/BrandFilter";
-import axios from "axios";
+import { getWishlist, addToWishlist, removeFromWishlist } from "../api/wishlistApi";
+import { addToCart, getDiscountProducts } from "../api/cartApi";
 import { toast } from "react-toastify";
 import updownarrow from "../assets/updownarrow.svg";
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import Loader from "../components/common/Loader";
+import SectionError from "../components/common/SectionError";
+import { getErrorMessage } from "../utils/errorHandler";
 import filtering from "../assets/filtering.svg";
 import Bag from "../assets/Bag.svg";
-
-const API_BASE = "https://beauty.joyory.com/api/user/cart";
-const PRODUCT_ALL_API = "https://beauty.joyory.com/api/user/products/all";
 
 // Helper functions from ProductPage
 const getSku = (v) => v?.sku || v?.variantSku || `sku-${v?._id || 'default'}`;
@@ -199,10 +199,7 @@ const DiscountProductsPage = () => {
   const fetchWishlistData = async () => {
     try {
       if (user && !user.guest) {
-        const response = await axios.get(
-          "https://beauty.joyory.com/api/user/wishlist",
-          { withCredentials: true }
-        );
+        const response = await getWishlist();
         if (response.data.success) {
           setWishlistData(response.data.wishlist || []);
         }
@@ -252,20 +249,10 @@ const DiscountProductsPage = () => {
       const currentlyInWishlist = isInWishlist(productId, sku);
 
       if (currentlyInWishlist) {
-        await axios.delete(
-          `https://beauty.joyory.com/api/user/wishlist/${productId}`,
-          {
-            withCredentials: true,
-            data: { sku: sku }
-          }
-        );
+        await removeFromWishlist(productId, { sku });
         showToastMsg("Removed from wishlist!", "success");
       } else {
-        await axios.post(
-          `https://beauty.joyory.com/api/user/wishlist/${productId}`,
-          { sku: sku },
-          { withCredentials: true }
-        );
+        await addToWishlist(productId, { sku });
         showToastMsg("Added to wishlist!", "success");
       }
 
@@ -408,6 +395,7 @@ const DiscountProductsPage = () => {
     try {
       if (reset) {
         setLoadingDiscountProducts(true);
+        setError(null);
         if (clearProducts) {
           setDiscountProducts([]);
         }
@@ -416,25 +404,28 @@ const DiscountProductsPage = () => {
       } else {
         setLoadingMore(true);
       }
-      setError(null);
 
-      const discountCode = coupon?.code;
-      if (!discountCode) return;
+      // Check if this is a buy X get Y offer with target categories/brands
+      let res;
 
-      const queryString = buildQueryParams(cursor);
-      console.log("Discount Products API Query →", `${PRODUCT_ALL_API}?${queryString}`);
-
-      const response = await fetch(
-        `${PRODUCT_ALL_API}?${queryString}`,
-        { credentials: "include" }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch discount products");
+      // Handle category scope
+      if (coupon?.scope === "category" && coupon?.targetSlug) {
+        res = await getDiscountProducts(coupon._id, buildQueryParams(cursor));
+      }
+      // Handle brand scope
+      else if (coupon?.scope === "brand" && coupon?.targetSlug) {
+        res = await getDiscountProducts(coupon._id, buildQueryParams(cursor));
+      }
+      // Default: regular discount endpoint
+      else {
+        res = await getDiscountProducts(couponId, buildQueryParams(cursor));
       }
 
-      const data = await response.json();
-      console.log("Discount Products API Response:", data);
+      const data = res.data;
+
+      if (!data.success) {
+        throw new Error(data.message || "Failed to fetch discount products");
+      }
 
       const prods = data.products || [];
       const pg = data.pagination || {};
@@ -462,7 +453,7 @@ const DiscountProductsPage = () => {
 
     } catch (error) {
       console.error("Error fetching discount products:", error);
-      setError(error.message);
+      setError(getErrorMessage(error, "Failed to load discount products"));
     } finally {
       setLoadingDiscountProducts(false);
       setLoadingMore(false);
@@ -552,7 +543,7 @@ const DiscountProductsPage = () => {
         payload = { productId: prod._id, quantity: 1 };
       }
 
-      const { data } = await axios.post(`${API_BASE}/add`, payload, { withCredentials: true });
+      const { data } = await addToCart(payload);
       if (!data.success) throw new Error(data.message || "Cart add failed");
 
       showToastMsg("Product added to cart!", "success");
@@ -1404,6 +1395,13 @@ const DiscountProductsPage = () => {
             <div className="row g-4" style={{ opacity: loadingDiscountProducts ? 0.6 : 1, transition: "opacity 0.2s ease" }}>
               {sortedDiscountProducts.length > 0 ? (
                 sortedDiscountProducts.map(renderProductCard)
+              ) : error && !loadingDiscountProducts ? (
+                <div className="col-12">
+                  <SectionError
+                    message={error}
+                    onRetry={() => fetchDiscountProducts(null, true, true)}
+                  />
+                </div>
               ) : (
                 <div className="col-12 text-center py-5">
                   <h4>No products found</h4>

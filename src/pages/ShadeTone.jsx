@@ -5,6 +5,7 @@ import "../styles/ShadeTone.css";
 import Footer from "../components/common/Footer";
 import Header from "../components/common/Header";
 import Loader from "../components/common/Loader";
+import { getFamilies, getFormulations } from "../api/shadeFinderApi";
 const getImagesArray = (sampleImages) => {
   if (!sampleImages) return [];
   if (Array.isArray(sampleImages)) {
@@ -46,10 +47,11 @@ export default function Shadetone() {
       if (!selectedShade) return;
       setLoadingFamilies(true);
       try {
-        const res = await fetch(
-          `https://beauty.joyory.com/api/user/shadefinder/families?toneKey=${selectedShade.key}&undertoneKey=${undertoneKey}`
-        );
-        const data = await res.json();
+        const res = await getFamilies({
+          toneKey: selectedShade.key,
+          undertoneKey,
+        });
+        const data = res.data;
         const fetchedFamilies = data.families || [];
         setFamilies(fetchedFamilies);
 
@@ -103,10 +105,12 @@ export default function Shadetone() {
 
     setLoadingNext(true);
     try {
-      const res = await fetch(
-        `https://beauty.joyory.com/api/user/shadefinder/formulations?familyKey=${selectedFamily.key}&toneKey=${selectedShade.key}&undertoneKey=${undertoneKey}`
-      );
-      const data = await res.json();
+      const res = await getFormulations({
+        familyKey: selectedFamily.key,
+        toneKey: selectedShade.key,
+        undertoneKey,
+      });
+      const data = res.data;
       navigate("/foundation", {
         state: {
           shade: selectedShade,

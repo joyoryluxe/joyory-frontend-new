@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { logout as apiLogout } from "../../api/authApi";
 import "../../styles/SidebarCommon.css";
 import user from "../../assets/user.svg";
 import Order from "../../assets/Order.svg";
@@ -39,15 +40,7 @@ const Sidebarcomon = () => {
   const handleLogout = async () => {
     try {
       // 1️⃣ Backend logout (clear HTTP-only cookie session)
-      const res = await fetch(
-        "https://beauty.joyory.com/api/user/logout",
-        { method: "POST", credentials: "include" }
-      );
-
-      if (!res.ok) {
-        const errorText = await res.text();
-        throw new Error(`Logout failed: ${res.status} ${errorText}`);
-      }
+      await apiLogout();
 
       // 2️⃣ Clear all localStorage and sessionStorage
       localStorage.clear();

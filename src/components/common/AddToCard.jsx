@@ -1,7 +1,7 @@
 import React, { useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import axiosInstance from "../../utils/axiosInstance.js";
-import { CartContext } from "../../Context/CartContext";
+import { getProfile } from "../../api/userApi";
+import { CartContext } from "../../context/CartContext";
 import bagIcon from "../../assets/bag.svg";
 
 const Addtocard = ({ prod, selectedShade, showToastMsg, user }) => {
@@ -20,7 +20,7 @@ const Addtocard = ({ prod, selectedShade, showToastMsg, user }) => {
       let isGuest = true;
       try {
         // Check if user is actually logged in by making a simple API call
-        await axiosInstance.get("/api/user/profile");
+        await getProfile();
         isGuest = false;
         console.log("👤 Logged-in user detected via API");
       } catch (error) {

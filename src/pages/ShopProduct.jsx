@@ -4,11 +4,13 @@ import { useParams, useNavigate, useLocation, useSearchParams } from "react-rout
 import { FaStar, FaHeart, FaRegHeart, FaChevronDown, FaTimes, FaTag } from "react-icons/fa";
 import Header from "../components/common/Header";
 import Footer from "../components/common/Footer";
-import { CartContext } from "../Context/CartContext";
+import { CartContext } from "../context/CartContext";
 import { UserContext } from "../context/UserContext.jsx";
 import BrandFilter from "../components/common/BrandFilter";
 import "../styles/ProductPage.css";
-import axios from "axios";
+import { getAllProducts } from "../api/productApi";
+import { getWishlist, addToWishlist, removeFromWishlist } from "../api/wishlistApi";
+import { addToCart } from "../api/cartApi";
 import { toast } from "react-toastify";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination, Navigation } from "swiper/modules";
@@ -20,9 +22,9 @@ import filtering from "../assets/filtering.svg";
 import Bag from "../assets/Bag.svg";
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import Loader from "../components/common/Loader";
+import SectionError from "../components/common/SectionError";
+import { getErrorMessage } from "../utils/errorHandler";
 
-const CART_API_BASE = "https://beauty.joyory.com/api/user/cart";
-const PRODUCT_ALL_API = "https://beauty.joyory.com/api/user/products/all";
 
 /* ─── helpers ───────────────────────────────────────────────────────────── */
 const getSku = (v) => v?.sku || v?.variantSku || `sku-${v?._id || "default"}`;
@@ -190,6 +192,7 @@ export default function ProductPage() {
     const [loadingMore, setLoadingMore] = useState(false);
     const [hasMore, setHasMore] = useState(true);
     const [nextCursor, setNextCursor] = useState(null);
+    const [fetchError, setFetchError] = useState(null);
 
     const [wishlistLoading, setWishlistLoading] = useState({});
     const [wishlistData, setWishlistData] = useState([]);
@@ -360,10 +363,7 @@ export default function ProductPage() {
     const fetchWishlistData = async () => {
         try {
             if (user && !user.guest) {
-                const response = await axios.get(
-                    "https://beauty.joyory.com/api/user/wishlist",
-                    { withCredentials: true }
-                );
+                const response = await getWishlist();
                 if (response.data.success) {
                     setWishlistData(response.data.wishlist || []);
                 }
@@ -415,17 +415,10 @@ export default function ProductPage() {
             const inWl = isInWishlist(productId, sku);
 
             if (inWl) {
-                await axios.delete(
-                    `https://beauty.joyory.com/api/user/wishlist/${productId}`,
-                    { withCredentials: true, data: { sku } }
-                );
+                await removeFromWishlist(productId, { sku });
                 showToastMsg("Removed from wishlist!", "success");
             } else {
-                await axios.post(
-                    `https://beauty.joyory.com/api/user/wishlist/${productId}`,
-                    { sku },
-                    { withCredentials: true }
-                );
+                await addToWishlist(productId, { sku });
                 showToastMsg("Added to wishlist!", "success");
             }
             await fetchWishlistData();
@@ -508,7 +501,6 @@ export default function ProductPage() {
         p.append("limit", "9");
 
         const queryString = p.toString();
-        console.log("API Query ->", `${PRODUCT_ALL_API}?${queryString}`);
         return queryString;
     };
 
@@ -522,10 +514,7 @@ export default function ProductPage() {
                 setLoadingMore(true);
             }
 
-            const { data } = await axios.get(
-                `${PRODUCT_ALL_API}?${buildQueryParams(cursor)}`,
-                { withCredentials: true }
-            );
+            const { data } = await getAllProducts(buildQueryParams(cursor));
 
             const currentContext = `${location.pathname}-${effectiveSlug}-${searchParams.get("q") || searchParams.get("search") || ""}`;
             const isContextChanged = lastContextRef.current !== currentContext;
@@ -615,6 +604,7 @@ export default function ProductPage() {
             setNextCursor(pg.nextCursor || null);
         } catch (e) {
             console.error(e);
+            setFetchError(getErrorMessage(e, "Failed to fetch products"));
             showToastMsg("Failed to fetch products", "error");
         } finally {
             setLoading(false);
@@ -840,7 +830,7 @@ export default function ProductPage() {
                 localStorage.setItem("cartVariantCache", JSON.stringify(cache));
             }
 
-            const { data } = await axios.post(`${CART_API_BASE}/add`, payload, { withCredentials: true });
+            const { data } = await addToCart(payload);
             if (!data.success) throw new Error(data.message || "Cart add failed");
             showToastMsg("Product added to cart!", "success");
             navigate("/cartpage");
@@ -1568,12 +1558,19 @@ export default function ProductPage() {
 
                             {sortedProducts.length > 0
                                 ? sortedProducts.map(renderProductCard)
-                                : !loading
-                                    ? <div className="col-12 text-center py-5">
-                                        <h4>No products found</h4>
-                                        <p className="text-muted">Try adjusting your filters.</p>
+                                : fetchError && !loading
+                                    ? <div className="col-12">
+                                        <SectionError
+                                            message={fetchError}
+                                            onRetry={() => fetchProducts(null, true)}
+                                        />
                                     </div>
-                                    : null
+                                    : !loading
+                                        ? <div className="col-12 text-center py-5">
+                                            <h4>No products found</h4>
+                                            <p className="text-muted">Try adjusting your filters.</p>
+                                        </div>
+                                        : null
                             }
                         </div>
 

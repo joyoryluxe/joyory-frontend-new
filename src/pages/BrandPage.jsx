@@ -18,8 +18,10 @@ import Header from "../components/common/Header";
 import SEOMeta from "../components/common/SEOMeta";
 import Footer from "../components/common/Footer";
 import Loader from "../components/common/Loader";
+import SectionError from "../components/common/SectionError";
+import { getErrorMessage } from "../utils/errorHandler";
 import PageNotFound from "./PageNotFound";
-import { CartContext } from "../Context/CartContext";
+import { CartContext } from "../context/CartContext";
 import { UserContext } from "../context/UserContext.jsx";
 import BrandFilter from "../components/common/BrandFilter";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
@@ -29,13 +31,12 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination, Navigation } from "swiper/modules";
 import { ToastContainer, toast } from "react-toastify";
 
-import axios from "axios";
+import { getAllProducts } from "../api/productApi";
+import { getWishlist, addToWishlist, removeFromWishlist } from "../api/wishlistApi";
+import { addToCart } from "../api/cartApi";
 import updownarrow from "../assets/updownarrow.svg";
 import filtering from "../assets/filtering.svg";
 import Bag from "../assets/Bag.svg";
-
-const CART_API_BASE = "https://beauty.joyory.com/api/user/cart";
-const PRODUCT_ALL_API = "https://beauty.joyory.com/api/user/products/all";
 
 /* ─── helpers ───────────────────────────────────────────────────────────── */
 const getSku = (v) => v?.sku || v?.variantSku || `sku-${v?._id || "default"}`;
@@ -91,6 +92,7 @@ export default function BrandPage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [nextCursor, setNextCursor] = useState(null);
+  const [fetchError, setFetchError] = useState(null);
 
   const [wishlistLoading, setWishlistLoading] = useState({});
   const [wishlistData, setWishlistData] = useState([]);
@@ -307,10 +309,7 @@ export default function BrandPage() {
   const fetchWishlistData = async () => {
     try {
       if (user && !user.guest) {
-        const { data } = await axios.get(
-          "https://beauty.joyory.com/api/user/wishlist",
-          { withCredentials: true },
-        );
+        const { data } = await getWishlist();
         if (data.success) setWishlistData(data.wishlist || []);
       } else {
         const local = JSON.parse(localStorage.getItem("guestWishlist") || "[]");
@@ -344,17 +343,10 @@ export default function BrandPage() {
       const inWl = isInWishlist(pid, sku);
       if (user && !user.guest) {
         if (inWl) {
-          await axios.delete(
-            `https://beauty.joyory.com/api/user/wishlist/${pid}`,
-            { withCredentials: true, data: { sku } },
-          );
+          await removeFromWishlist(pid, { sku });
           showToastMsg("Removed from wishlist!", "success");
         } else {
-          await axios.post(
-            `https://beauty.joyory.com/api/user/wishlist/${pid}`,
-            { sku },
-            { withCredentials: true },
-          );
+          await addToWishlist(pid, { sku });
           showToastMsg("Added to wishlist!", "success");
         }
         await fetchWishlistData();
@@ -487,6 +479,7 @@ export default function BrandPage() {
     try {
       if (reset) {
         setLoading(true);
+        setFetchError(null);
         if (clearProducts) {
           setAllProducts([]);
         }
@@ -496,10 +489,7 @@ export default function BrandPage() {
         setLoadingMore(true);
       }
 
-      const { data } = await axios.get(
-        `${PRODUCT_ALL_API}?${buildQueryParams(cursor)}`,
-        { withCredentials: true },
-      );
+      const { data } = await getAllProducts(buildQueryParams(cursor));
 
       if (brandSlug) {
         const normBrand = (brandSlug || "").toLowerCase().trim();
@@ -599,6 +589,7 @@ export default function BrandPage() {
       setNextCursor(pg.nextCursor || null);
     } catch (e) {
       console.error("Fetch products error:", e);
+      setFetchError(getErrorMessage(e, "Failed to fetch products"));
       showToastMsg("Failed to fetch products", "error");
     } finally {
       setLoading(false);
@@ -706,9 +697,7 @@ export default function BrandPage() {
         }
         payload = { productId: prod._id, quantity: 1 };
       }
-      const { data } = await axios.post(`${CART_API_BASE}/add`, payload, {
-        withCredentials: true,
-      });
+      const { data } = await addToCart(payload);
       if (!data.success) throw new Error(data.message || "Cart add failed");
       showToastMsg("Product added to cart!", "success");
       navigate("/cartpage");
@@ -1763,6 +1752,13 @@ export default function BrandPage() {
               )}
               {sortedProducts.length > 0 ? (
                 sortedProducts.map(renderProductCard)
+              ) : fetchError && !loading ? (
+                <div className="col-12">
+                  <SectionError
+                    message={fetchError}
+                    onRetry={() => fetchProducts(null, true, true)}
+                  />
+                </div>
               ) : loading ? (
                 <div className="col-12 text-center py-5">
                   <DotLottieReact

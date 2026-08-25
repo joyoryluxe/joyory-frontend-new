@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination, Navigation, EffectFade } from "swiper/modules";
-import axios from 'axios';
+import { getCategoryLanding } from '../../../api/categoryApi';
+import { getVtoEnabled } from '../../../api/vtoApi';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Loader from "../../common/Loader";
 import vtoMobileBanner from "../../../assets/vto_mobile_banner.png";
@@ -10,8 +11,6 @@ import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
 import "swiper/css/effect-fade";
-
-const API = "https://beauty.joyory.com/api/user/categories/category/makeup/landing";
 
 const Virtualtryonhome = () => {
   const navigate = useNavigate();
@@ -36,7 +35,7 @@ const Virtualtryonhome = () => {
       setLoading(true);
       console.log('🔥 Fetching Virtual Try On Banners...');
 
-      const { data } = await axios.get(API, { withCredentials: true });
+      const { data } = await getCategoryLanding("makeup");
 
       console.log('✅ API Response:', data);
 
@@ -114,7 +113,7 @@ const Virtualtryonhome = () => {
       console.log('🔥 Calling VTO API...');
 
       // Call VTO API
-      await axios.get('https://beauty.joyory.com/api/vto/enabled');
+      await getVtoEnabled();
       console.log('✅ VTO API Called Successfully');
 
       // Navigate to virtual try on page

@@ -1,9 +1,9 @@
 import { useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
+import { trackPageView, trackDuration, getDurationBeaconUrl } from "../api/trackingApi";
+import { getProfile } from "../api/userApi";
 
 const SESSION_KEY = "joyory_session_id";
-const API_BASE = "https://beauty.joyory.com/api/tracking";
-const USER_PROFILE_API = "https://beauty.joyory.com/api/user/profile";
 
 // ─── Get session ID from localStorage ────────────────────────────────────────
 const getSessionId = () => localStorage.getItem(SESSION_KEY) || "";
@@ -11,15 +11,10 @@ const getSessionId = () => localStorage.getItem(SESSION_KEY) || "";
 // Fetch user ID from backend using HttpOnly cookie credentials
 const fetchAndStoreUserId = async () => {
     try {
-        const res = await fetch(USER_PROFILE_API, {
-            credentials: "include", // sends HttpOnly cookie automatically
-        });
-        if (res.ok) {
-            const data = await res.json();
-            if (data?.profile?._id) {
-                localStorage.setItem("joyory_user_id", data.profile._id);
-                return data.profile._id;
-            }
+        const res = await getProfile();
+        if (res.data?.profile?._id) {
+            localStorage.setItem("joyory_user_id", res.data.profile._id);
+            return res.data.profile._id;
         }
     } catch (e) {
         // Silently fail — user is not logged in
@@ -46,11 +41,6 @@ export const usePageTracker = (hasConsent) => {
         const sessionId = getSessionId();
         if (!sessionId) return;
 
-        // ── Check Login Status ───────────────────────────────────────────────
-        // NOTE: We do NOT check document.cookie because the auth token is HttpOnly
-        // (set by backend) and JavaScript cannot read HttpOnly cookies.
-        // Instead, we let fetchAndStoreUserId() determine login state via API call.
-
         const runTracker = async () => {
             let userId = localStorage.getItem("joyory_user_id");
             if (!userId) {
@@ -67,15 +57,10 @@ export const usePageTracker = (hasConsent) => {
                 const duration = Math.round((now - entryTimeRef.current) / 1000); // in seconds
                 if (duration > 0) {
                     // Fire and forget — don't block navigation
-                    fetch(`${API_BASE}/duration`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        credentials: "include", // ✅ Send login cookies
-                        body: JSON.stringify({
-                            sessionId,
-                            page: prevPageRef.current,
-                            duration,
-                        }),
+                    trackDuration({
+                        sessionId,
+                        page: prevPageRef.current,
+                        duration,
                     }).catch(() => {}); // Silent fail
                 }
             }
@@ -85,17 +70,12 @@ export const usePageTracker = (hasConsent) => {
             const pageTitle = document.title || "";
             const referrer = prevPageRef.current || document.referrer || "";
 
-            fetch(`${API_BASE}/pageview`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                credentials: "include", // ✅ Send login cookies
-                body: JSON.stringify({
-                    sessionId,
-                    userId, // ✅ Explicitly pass the resolved userId
-                    page: currentPage,
-                    pageTitle,
-                    referrer,
-                }),
+            trackPageView({
+                sessionId,
+                userId, // ✅ Explicitly pass the resolved userId
+                page: currentPage,
+                pageTitle,
+                referrer,
             }).catch(() => {}); // Silent fail
 
             // ── Step 3: Update refs for next navigation ───────────────────────────
@@ -125,16 +105,17 @@ export const usePageTracker = (hasConsent) => {
                 duration,
             });
 
+            const durationUrl = getDurationBeaconUrl();
+
             if (navigator.sendBeacon) {
                 const blob = new Blob([payload], { type: "application/json" });
-                navigator.sendBeacon(`${API_BASE}/duration`, blob);
+                navigator.sendBeacon(durationUrl, blob);
             } else {
                 // Fallback for older browsers
-                fetch(`${API_BASE}/duration`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: payload,
-                    keepalive: true,
+                trackDuration({
+                    sessionId,
+                    page: prevPageRef.current,
+                    duration,
                 }).catch(() => {});
             }
         };

@@ -11,10 +11,12 @@ import {
 import { CartContext } from "../context/CartContext";
 import { UserContext } from "../context/UserContext";
 import { toast } from "react-toastify";
-import axios from "axios";
+import { getWishlist, addToWishlist, removeFromWishlist } from "../api/wishlistApi";
+import { addToCart } from "../api/cartApi";
 import Bag from "../assets/Bag.svg";
 import "../styles/IngredientDetail.css";
-import "../styles/BestSellers.css";
+import SectionError from "../components/common/SectionError";
+import { getErrorMessage } from "../utils/errorHandler";
 
 // Lottie loader
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
@@ -69,6 +71,7 @@ export default function IngredientDetail() {
   const [totalProducts, setTotalProducts] = useState(0);
   const [loading, setLoading] = useState(true);
   const [prodLoading, setProdLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   // Pagination states matching BestSellers logic
   const [hasMoreProducts, setHasMoreProducts] = useState(true);
@@ -124,10 +127,7 @@ export default function IngredientDetail() {
   const fetchWishlistData = async () => {
     try {
       if (user && !user.guest) {
-        const response = await axios.get(
-          "https://beauty.joyory.com/api/user/wishlist",
-          { withCredentials: true }
-        );
+        const response = await getWishlist();
         if (response.data.success) {
           setWishlistData(response.data.wishlist || []);
         }
@@ -177,20 +177,10 @@ export default function IngredientDetail() {
       const currentlyInWishlist = isInWishlist(productId, sku);
 
       if (currentlyInWishlist) {
-        await axios.delete(
-          `https://beauty.joyory.com/api/user/wishlist/${productId}`,
-          {
-            withCredentials: true,
-            data: { sku: sku }
-          }
-        );
+        await removeFromWishlist(productId, { sku });
         showToastMsg("Removed from wishlist!", "success");
       } else {
-        await axios.post(
-          `https://beauty.joyory.com/api/user/wishlist/${productId}`,
-          { sku: sku },
-          { withCredentials: true }
-        );
+        await addToWishlist(productId, { sku });
         showToastMsg("Added to wishlist!", "success");
       }
       await fetchWishlistData();
@@ -241,7 +231,7 @@ export default function IngredientDetail() {
         payload = { productId: prod._id, quantity: 1 };
       }
 
-      const { data } = await axios.post("https://beauty.joyory.com/api/user/cart/add", payload, { withCredentials: true });
+      const { data } = await addToCart(payload);
       if (!data.success) throw new Error(data.message || "Cart add failed");
 
       showToastMsg("Product added to cart!", "success");
@@ -256,34 +246,40 @@ export default function IngredientDetail() {
     }
   };
 
-  useEffect(() => {
-    const fetchAllData = async () => {
-      setLoading(true);
-      try {
-        // Load details
-        const detailRes = await getIngredientByName(name);
-        if (detailRes.data && detailRes.data.success) {
-          setIngredient(detailRes.data.ingredient);
-        }
-
-        // Load catalog products containing this ingredient
-        setProdLoading(true);
-        const prodRes = await getProductsByIngredient(name, null, 8);
-        if (prodRes.data && prodRes.data.products) {
-          setProducts(prodRes.data.products || []);
-          const total = prodRes.data.pagination?.total || prodRes.data.products.length || 0;
-          setTotalProducts(total);
-          setHasMoreProducts(prodRes.data.pagination?.hasMore || false);
-          setNextProductsCursor(prodRes.data.pagination?.nextCursor || null);
-        }
-      } catch (err) {
-        console.error("Error fetching ingredient data:", err);
-        navigate("/404");
-      } finally {
-        setLoading(false);
-        setProdLoading(false);
+  const fetchAllData = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Load details
+      const detailRes = await getIngredientByName(name);
+      if (detailRes.data && detailRes.data.success) {
+        setIngredient(detailRes.data.ingredient);
       }
-    };
+
+      // Load catalog products containing this ingredient
+      setProdLoading(true);
+      const prodRes = await getProductsByIngredient(name, null, 8);
+      if (prodRes.data && prodRes.data.products) {
+        setProducts(prodRes.data.products || []);
+        const total = prodRes.data.pagination?.total || prodRes.data.products.length || 0;
+        setTotalProducts(total);
+        setHasMoreProducts(prodRes.data.pagination?.hasMore || false);
+        setNextProductsCursor(prodRes.data.pagination?.nextCursor || null);
+      }
+    } catch (err) {
+      console.error("Error fetching ingredient data:", err);
+      if (err.response?.status === 404) {
+        navigate("/404");
+      } else {
+        setError(getErrorMessage(err, "Failed to load ingredient data."));
+      }
+    } finally {
+      setLoading(false);
+      setProdLoading(false);
+    }
+  };
+
+  useEffect(() => {
     if (name) {
       fetchAllData();
     }
@@ -787,6 +783,18 @@ export default function IngredientDetail() {
       </div>
     );
   };
+
+  if (error && !loading) {
+    return (
+      <>
+        <Header />
+        <div className="container py-5 my-5">
+          <SectionError message={error} onRetry={fetchAllData} />
+        </div>
+        <Footer />
+      </>
+    );
+  }
 
   if (loading || !ingredient) {
     return (

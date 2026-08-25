@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import { sendOtp as apiSendOtp, verifyOtp as apiVerifyOtp } from "../api/authApi";
 import { useNavigate, useLocation } from "react-router-dom";
 import "../styles/otp.css";
 
@@ -62,11 +62,7 @@ const Otp = () => {
       setLoading(true);
       setMessage("");
 
-      const response = await axios.post(
-        "https://beauty.joyory.com/api/security/send-otp",
-        { email: targetEmail, type: "user" },
-        { withCredentials: true }
-      );
+      const response = await apiSendOtp({ email: targetEmail, type: "user" });
 
       setMessage(response.data.message || "OTP sent successfully ✅");
       setOtpSent(true);
@@ -92,11 +88,7 @@ const Otp = () => {
       setLoading(true);
       setMessage("");
 
-      const response = await axios.post(
-        "https://beauty.joyory.com/api/security/verify-otp",
-        { email, otp: enteredOtp },
-        { withCredentials: true }
-      );
+      const response = await apiVerifyOtp({ email, otp: enteredOtp });
 
       if (response.status === 200) {
         setMessage("OTP verified successfully ✅");

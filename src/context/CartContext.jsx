@@ -533,7 +533,7 @@
 
 
 import React, { createContext, useState, useEffect, useContext } from "react";
-import axios from "axios";
+import { getCartSummary, addToCart as apiAddToCart } from "../api/cartApi";
 import { UserContext } from "./UserContext";
 
 export const CartContext = createContext();
@@ -611,40 +611,35 @@ const CartProvider = ({ children }) => {
       const savedCoupon = localStorage.getItem("appliedCoupon") || "";
       queryParams.append("discount", savedCoupon);
 
-      const queryString = queryParams.toString();
-      const url = queryString
-        ? `https://beauty.joyory.com/api/user/cart/summary?${queryString}`
-        : `https://beauty.joyory.com/api/user/cart/summary?t=${Date.now()}`;
+      try {
+        const res = await getCartSummary(Object.fromEntries(queryParams));
+        const data = res.data;
 
-      const res = await fetch(url, { cache: "no-store", credentials: "include" });
-      if (res.status === 400 || res.status === 401) {
-        // Fallback to localStorage guest cart
-        const guestCart = getGuestCart();
-        setCartItems(guestCart);
-        updateCartCount(guestCart);
+        const normalized = (data?.cart || []).map((item) => ({
+          cartItemId: item._id,
+          productId: item.product,
+          name: item.name || "Unnamed Product",
+          quantity: item.quantity || 1,
+          image: item.variant?.image || "/placeholder.png",
+          price: item.variant?.discountedPrice || item.variant?.originalPrice || 0,
+          brand: item.brand || "",
+          selectedVariant: item.variant || {},
+        }));
+
+        setCartItems(normalized);
+        updateCartCount(normalized);
         return;
+      } catch (reqErr) {
+        const status = reqErr?.response?.status;
+        if (status === 400 || status === 401) {
+          // Fallback to localStorage guest cart
+          const guestCart = getGuestCart();
+          setCartItems(guestCart);
+          updateCartCount(guestCart);
+          return;
+        }
+        throw reqErr;
       }
-      if (!res.ok) {
-        const guestCart = getGuestCart();
-        setCartItems(guestCart);
-        updateCartCount(guestCart);
-        return;
-      }
-      const data = await res.json();
-
-      const normalized = (data.cart || []).map((item) => ({
-        cartItemId: item._id,
-        productId: item.product,
-        name: item.name || "Unnamed Product",
-        quantity: item.quantity || 1,
-        image: item.variant?.image || "/placeholder.png",
-        price: item.variant?.discountedPrice || item.variant?.originalPrice || 0,
-        brand: item.brand || "",
-        selectedVariant: item.variant || {},
-      }));
-
-      setCartItems(normalized);
-      updateCartCount(normalized);
     } catch (err) {
       console.error("Failed to sync cart", err);
       const guestCart = getGuestCart();
@@ -671,11 +666,7 @@ const CartProvider = ({ children }) => {
       let backendErrorStatus = null;
 
       try {
-        const res = await axios.post(
-          "https://beauty.joyory.com/api/user/cart/add",
-          payload,
-          { withCredentials: true }
-        );
+        const res = await apiAddToCart(payload);
         if (res.data && res.data.success) {
           backendSuccess = true;
           // Refresh state from backend

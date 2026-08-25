@@ -1,6 +1,6 @@
-// src/pages/PaymentPage.jsx
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { createRazorpayOrder, verifyRazorpayPayment } from "../api/paymentApi";
 
 const RAZORPAY_KEY_ID = "rzp_test_RHpYsCY6tqQ3TW";
 
@@ -40,29 +40,17 @@ const PaymentPage = () => {
         }
 
         // ✅ Call backend to create Razorpay order
-        const res = await fetch(
-          "https://beauty.joyory.com/api/payment/razorpay/order",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify({ orderId: razorpayData.orderId }),
-          }
-        );
-
-        // Check if response is JSON
         let data;
-        const contentType = res.headers.get("content-type");
-        if (contentType && contentType.includes("application/json")) {
-          data = await res.json();
-        } else {
-          const text = await res.text();
-          console.error("⚠ Backend did not return JSON:", text);
-          alert("❌ Failed to create Razorpay order. Backend error.");
+        try {
+          const res = await createRazorpayOrder({ orderId: razorpayData.orderId });
+          data = res.data;
+        } catch (err) {
+          console.error("⚠ Backend error:", err);
+          alert("❌ Failed to create Razorpay order: " + (err.response?.data?.message || err.message));
           return navigate("/cartpage");
         }
 
-        if (!res.ok || !data.success) {
+        if (!data.success) {
           alert("❌ Failed to create Razorpay order: " + (data.message || ""));
           return navigate("/cartpage");
         }
@@ -102,28 +90,17 @@ const PaymentPage = () => {
             };
 
             try {
-              const verifyRes = await fetch(
-                "https://beauty.joyory.com/api/payment/razorpay/verify",
-                {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  credentials: "include",
-                  body: JSON.stringify(payload),
-                }
-              );
-
               let verifyData;
-              const contentType = verifyRes.headers.get("content-type");
-              if (contentType && contentType.includes("application/json")) {
-                verifyData = await verifyRes.json();
-              } else {
-                const text = await verifyRes.text();
-                console.error("⚠ Backend did not return JSON:", text);
-                alert("⚠ Payment verification failed. Backend error.");
+              try {
+                const verifyRes = await verifyRazorpayPayment(payload);
+                verifyData = verifyRes.data;
+              } catch (err) {
+                console.error("⚠ Backend verification error:", err);
+                alert("⚠ Payment verification failed: " + (err.response?.data?.message || err.message));
                 return navigate("/cartpage");
               }
 
-              if (!verifyRes.ok || !verifyData.success) {
+              if (!verifyData.success) {
                 alert(
                   "⚠ Payment verified but backend rejected: " +
                     (verifyData.message || "Verification failed")

@@ -1,42 +1,39 @@
-// src/pages/Allsaleproduct.jsx
 import React, { useEffect, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination } from "swiper/modules";
 import { useNavigate } from "react-router-dom";
+import { getActivePromotions } from "../api/promotionApi";
 import "swiper/css";
 import "swiper/css/pagination";
 import "../styles/AllSaleProduct.css";
 import gradient from "../assets/gradient.png"; // ✅ Import your image
+import SectionError from "../components/common/SectionError";
+import { getErrorMessage } from "../utils/errorHandler";
 
 const Allsaleproduct = () => {
   const [offers, setOffers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
+  const fetchOffers = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await getActivePromotions({ section: "offers" });
+      const data = response.data;
+      const list = Array.isArray(data) ? data : data.promotions || [];
+      setOffers(list);
+    } catch (err) {
+      console.error("Error fetching offers:", err);
+      setError(getErrorMessage(err, "Failed to load special offers."));
+      setOffers([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchOffers = async () => {
-      try {
-        const response = await fetch(
-          "https://beauty.joyory.com/api/user/promotions/active?section=offers"
-        );
-
-        const text = await response.text();
-
-        if (!response.ok) {
-          throw new Error(`Failed to fetch offers: ${response.status}`);
-        }
-
-        const data = JSON.parse(text);
-        const list = Array.isArray(data) ? data : data.promotions || [];
-        setOffers(list);
-      } catch (err) {
-        console.error("Error fetching offers:", err);
-        setOffers([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchOffers();
   }, []);
 
@@ -50,6 +47,8 @@ const Allsaleproduct = () => {
 
       {loading ? (
         <p className="text-center text-muted">Loading offers...</p>
+      ) : error ? (
+        <SectionError message={error} onRetry={fetchOffers} />
       ) : offers.length === 0 ? (
         <p className="text-center text-muted">No offers found.</p>
       ) : (
@@ -73,21 +72,30 @@ const Allsaleproduct = () => {
               <div
                 className="category-card"
                 style={{
-                  backgroundImage: `url(${gradient})`, // ✅ Image instead of gradient
+                  backgroundImage: `url(${gradient})`,
                   backgroundSize: "cover",
                   backgroundPosition: "center",
+                  backgroundRepeat: "no-repeat",
                   cursor: "pointer",
                 }}
-                onClick={() => handleOfferClick(offer._id)}
+                onClick={() => handleOfferClick(offer.slug || offer._id)}
               >
-                <span className="category-title">
-                  {offer.title || offer.name || "Untitled Offer"}
-                </span>
+                <img
+                  src={offer.bannerImage || offer.image || gradient}
+                  alt={offer.title || "Offer"}
+                  className="category-img"
+                  onError={(e) => {
+                    e.currentTarget.src = gradient;
+                  }}
+                />
+                <div className="p-2 text-center text-dark fw-medium fs-6">
+                  {offer.title || offer.campaignName || "Special Offer"}
+                </div>
               </div>
             </SwiperSlide>
           ))}
         </Swiper>
-        </div>
+      </div>
       )}
     </div>
   );

@@ -4,7 +4,9 @@ import "../styles/MyOrders.css";
 import Header from "../components/common/Header";
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import Footer from "../components/common/Footer";
-import axios from "axios";
+import SectionError from "../components/common/SectionError";
+import { getErrorMessage } from "../utils/errorHandler";
+import { getMyOrders } from "../api/orderApi";
 
 import {
   FaCheckCircle,
@@ -14,8 +16,6 @@ import {
   FaClock,
   FaChevronRight
 } from "react-icons/fa";
-
-const ORDERS_API = "https://beauty.joyory.com/api/user/cart/orders";
 
 // Format date as DD-MM-YYYY
 const formatDate = (dateStr) => {
@@ -40,7 +40,7 @@ const Myorders = () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await axios.get(ORDERS_API, { withCredentials: true });
+      const res = await getMyOrders();
       if (res.data?.success && res.data?.orders) {
         setOrders(res.data.orders);
       } else {
@@ -51,7 +51,7 @@ const Myorders = () => {
       if (err.response && err.response.status === 401) {
         navigate("/login");
       } else {
-        setError(err.response?.data?.message || "Failed to load orders");
+        setError(getErrorMessage(err, "Failed to load orders"));
       }
     } finally {
       setLoading(false);
@@ -181,9 +181,8 @@ const Myorders = () => {
   if (error) return (
     <>
       <Header />
-      <div className="container mt-4 text-center py-5">
-        <div className="alert alert-danger">{error}</div>
-        <button className="btn btn-primary" onClick={fetchOrders}>Retry</button>
+      <div className="container mt-4 text-center py-5 my-5">
+        <SectionError message={error} onRetry={fetchOrders} />
       </div>
       <Footer />
     </>

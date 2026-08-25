@@ -3,14 +3,13 @@ import { useNavigate } from "react-router-dom";
 import Header from "../components/common/Header";
 import Footer from "../components/common/Footer";
 import Loader from "../components/common/Loader";
-import axios from "axios";
+import SectionError from "../components/common/SectionError";
+import { getErrorMessage } from "../utils/errorHandler";
+import { getMyReturns } from "../api/returnsApi";
 import {
   FaArrowLeft, FaBoxOpen, FaExchangeAlt, FaUndo, FaTruck,
   FaCheckCircle, FaTimesCircle, FaClock, FaEye
 } from "react-icons/fa";
-
-// API Endpoint
-const RETURNS_API = "https://beauty.joyory.com/api/returns/my";
 
 /* --- Helper Functions --- */
 const formatDate = (dateStr) => {
@@ -55,7 +54,7 @@ const ReturnReplace = () => {
   const fetchReturns = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(RETURNS_API, { withCredentials: true });
+      const res = await getMyReturns();
       if (res.data?.success) {
         // Your backend returns { success: true, data: flattenedArray }
         setRequestList(res.data.data || []);
@@ -65,7 +64,7 @@ const ReturnReplace = () => {
     } catch (err) {
       console.error(err);
       if (err.response?.status === 401) navigate("/login");
-      else setError("Something went wrong while fetching data.");
+      else setError(getErrorMessage(err, "Something went wrong while fetching data."));
     } finally {
       setLoading(false);
     }
@@ -106,7 +105,7 @@ const ReturnReplace = () => {
           <h4 className="mb-0 fw-bold page-title-main-name">My Returns & Replacements</h4>
         </div>
 
-        {error && <div className="alert alert-danger">{error}</div>}
+        {error && <SectionError message={error} onRetry={fetchReturns} />}
 
         {requestList.length === 0 && !error ? (
           <div className="text-center py-5 border rounded bg-light page-title-main-name">

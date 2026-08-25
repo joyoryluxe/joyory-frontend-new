@@ -8,6 +8,7 @@ import Header from "../components/common/Header";
 import Footer from "../components/common/Footer";
 import Loader from "../components/common/Loader";
 import "../styles/ShadeFinder.css";
+import { getTones, getUndertones } from "../api/shadeFinderApi";
 
 export default function SkinToneSelector() {
   const [tones, setTones] = useState([]);
@@ -21,15 +22,8 @@ export default function SkinToneSelector() {
   useEffect(() => {
     const fetchTones = async () => {
       try {
-        const res = await fetch(
-          "https://beauty.joyory.com/api/user/shadefinder/tones"
-        );
-
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
-        }
-
-        const data = await res.json();
+        const res = await getTones();
+        const data = res.data;
 
         if (data.success && Array.isArray(data.tones)) {
           // Clean up the data - trim spaces from URLs
@@ -95,10 +89,8 @@ export default function SkinToneSelector() {
     if (!selectedShade) return;
 
     try {
-      const res = await fetch(
-        `https://beauty.joyory.com/api/user/shadefinder/undertones?toneKey=${selectedShade.key}`
-      );
-      const data = await res.json();
+      const res = await getUndertones({ toneKey: selectedShade.key });
+      const data = res.data;
 
       navigate("/shadefinderundertone", {
         state: {

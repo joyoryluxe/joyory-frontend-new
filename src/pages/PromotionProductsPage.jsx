@@ -1,22 +1,23 @@
-import React, { useEffect, useState, useContext, useRef, useCallback } from "react";
+import React, { useEffect, useState, useContext, useRef, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { FaStar, FaHeart, FaRegHeart, FaChevronDown } from "react-icons/fa";
 import Header from "../components/common/Header";
 import Footer from "../components/common/Footer";
-import { CartContext } from "../Context/CartContext";
+import { CartContext } from "../context/CartContext";
 import { UserContext } from "../context/UserContext.jsx";
 import BrandFilter from "../components/common/BrandFilter";
-import axiosInstance from "../utils/axiosInstance.js";
+import { getAllProducts } from "../api/productApi";
+import { getWishlist, addToWishlist, removeFromWishlist } from "../api/wishlistApi";
+import { addToCart } from "../api/cartApi";
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import Loader from "../components/common/Loader";
+import SectionError from "../components/common/SectionError";
+import { getErrorMessage } from "../utils/errorHandler";
 import updownarrow from "../assets/updownarrow.svg";
 import filtering from "../assets/filtering.svg";
 import Bag from "../assets/Bag.svg";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
-const PRODUCT_ALL_API = "https://beauty.joyory.com/api/user/products/all";
-const CART_API_BASE = "https://beauty.joyory.com/api/user/cart";
 
 const getSku = (v) => v?.sku || v?.variantSku || `sku-${v?._id || "default"}`;
 
@@ -129,7 +130,7 @@ const PromotionProducts = () => {
   const fetchWishlistData = async () => {
     try {
       if (user && !user.guest) {
-        const { data } = await axiosInstance.get("/api/user/wishlist");
+        const { data } = await getWishlist();
         if (data.success) setWishlistData(data.wishlist || []);
       } else {
         const local = JSON.parse(localStorage.getItem("guestWishlist") || "[]");
@@ -161,10 +162,10 @@ const PromotionProducts = () => {
     try {
       const inWl = isInWishlist(pid, sku);
       if (inWl) {
-        await axiosInstance.delete(`/api/user/wishlist/${pid}`, { data: { sku } });
+        await removeFromWishlist(pid, { sku });
         toast.success("Removed from wishlist!");
       } else {
-        await axiosInstance.post(`/api/user/wishlist/${pid}`, { sku });
+        await addToWishlist(pid, { sku });
         toast.success("Added to wishlist!");
       }
       await fetchWishlistData();
@@ -211,6 +212,7 @@ const PromotionProducts = () => {
     try {
       if (reset) {
         setLoading(true);
+        setFetchError(null);
         setProducts([]);
         setNextCursor(null);
         setHasMore(true);
@@ -219,9 +221,7 @@ const PromotionProducts = () => {
       }
 
       const query = buildQueryParams(cursor);
-      const url = `${PRODUCT_ALL_API}?${query}`;
-
-      const res = await axiosInstance.get(url);
+      const res = await getAllProducts(query);
       const data = res.data;
 
       // Promotion metadata
@@ -250,6 +250,7 @@ const PromotionProducts = () => {
 
     } catch (err) {
       console.error(err);
+      setFetchError(getErrorMessage(err, "Failed to load products"));
       toast.error(err.response?.data?.message || "Failed to load products");
     } finally {
       setLoading(false);
@@ -314,7 +315,7 @@ const PromotionProducts = () => {
         payload = { productId: prod._id, quantity: 1 };
       }
 
-      const { data } = await axiosInstance.post(`${CART_API_BASE}/add`, payload);
+      const { data } = await addToCart(payload);
       if (!data.success) throw new Error(data.message || "Cart add failed");
 
       toast.success("Product added to cart!");
@@ -842,7 +843,16 @@ const PromotionProducts = () => {
 
 
             <div className="row g-4">
-              {sortedProducts.length > 0 ? sortedProducts.map(renderProductCard) : (
+              {sortedProducts.length > 0 ? (
+                sortedProducts.map(renderProductCard)
+              ) : fetchError && !loading ? (
+                <div className="col-12">
+                  <SectionError
+                    message={fetchError}
+                    onRetry={() => fetchPromotionProducts(null, true)}
+                  />
+                </div>
+              ) : (
                 <div className="col-12 text-center py-5">
                   <h4>No products found</h4>
                   <p className="text-muted">Try adjusting your filters.</p>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import { sendOtp, verifyOtp } from "../api/authApi";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -25,11 +25,7 @@ const VerifyOTP = () => {
     if (!email.trim()) return toast.error("Please enter your email");
     try {
       setLoading(true);
-      await axios.post(
-        "https://beauty.joyory.com/api/security/send-otp",
-        { email },
-        { headers: { "Content-Type": "application/json" } }
-      );
+      await sendOtp({ email });
       setOtpSent(true);
       toast.success("OTP sent successfully!");
     } catch (err) {
@@ -45,11 +41,7 @@ const VerifyOTP = () => {
 
     try {
       setLoading(true);
-      await axios.post(
-        "https://beauty.joyory.com/api/security/verify-otp",
-        { email, otp },
-        { headers: { "Content-Type": "application/json" } }
-      );
+      await verifyOtp({ email, otp });
       toast.success("Email verified successfully!");
       setTimeout(() => navigate("/login"), 1500);
     } catch (err) {

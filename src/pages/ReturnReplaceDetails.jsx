@@ -3,16 +3,15 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import Header from "../components/common/Header";
 import Footer from "../components/common/Footer";
 import Loader from "../components/common/Loader";
-import axios from "axios";
+import SectionError from "../components/common/SectionError";
+import { getErrorMessage } from "../utils/errorHandler";
+import { getReturnDetails } from "../api/returnsApi";
 import {
   FaArrowLeft, FaExchangeAlt, FaUndo, FaMapMarkerAlt,
   FaDollarSign, FaInfoCircle, FaImage, FaUser, FaPhone,
   FaEnvelope, FaHome, FaRoad, FaFlag,
   FaRupeeSign
 } from "react-icons/fa";
-
-/* ---------- config ---------- */
-const API_BASE = "https://beauty.joyory.com/api/returns/details";
 
 /* ---------- helpers ---------- */
 const formatDate = (d) =>
@@ -61,7 +60,7 @@ const ReturnReplaceDetails = () => {
   const fetchDetails = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${API_BASE}/${shipmentId}/${returnId}`, { withCredentials: true });
+      const res = await getReturnDetails(shipmentId, returnId);
       if (res.data?.success) {
         setDetails(res.data.data); // Matches JSON: { shipmentId, returnId, return: {...} }
       } else {
@@ -70,7 +69,7 @@ const ReturnReplaceDetails = () => {
     } catch (err) {
       console.error(err);
       if (err.response?.status === 401) navigate("/login");
-      else setError(err.response?.data?.message || "Something went wrong");
+      else setError(getErrorMessage(err, "Something went wrong while fetching details."));
     } finally {
       setLoading(false);
     }
@@ -108,9 +107,8 @@ const ReturnReplaceDetails = () => {
     return (
       <>
         <Header />
-        <div className="container py-5 text-center" style={{ minHeight: "60vh" }}>
-          <div className="alert alert-danger">{error}</div>
-          <button className="btn btn-primary page-title-main-name" onClick={() => navigate(-1)}>Go Back</button>
+        <div className="container py-5 text-center my-5" style={{ minHeight: "60vh" }}>
+          <SectionError message={error} onRetry={fetchDetails} />
         </div>
         <Footer />
       </>

@@ -1,5 +1,5 @@
-// src/components/VideoSlider.jsx
 import React, { useEffect, useState } from "react";
+import { getVideos } from "../../../api/videoApi";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination, Navigation } from "swiper/modules"; // Include Navigation
 import "swiper/css";
@@ -14,10 +14,8 @@ const VideoSlider = () => {
   useEffect(() => {
     const fetchVideos = async () => {
       try {
-        const response = await fetch(
-          "https://beauty.joyory.com/api/user/videos"
-        );
-        const data = await response.json();
+        const response = await getVideos();
+        const data = response.data;
         // console.log("API Response:", data); // Removed
 
         if (Array.isArray(data.items)) {

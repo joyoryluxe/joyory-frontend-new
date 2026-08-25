@@ -1,6 +1,14 @@
-import axios from "axios";
+// src/api/razorpayVerifyApi.js
+import axiosInstance from "../utils/axiosInstance";
+import { endpoints } from "../utils/endpoints";
 
-export const verifyRazorpayPayment = async (orderId, paymentResponse, cartItems, shippingAddress, upiId = null) => {
+export const verifyRazorpayPayment = async (
+  orderId,
+  paymentResponse,
+  cartItems,
+  shippingAddress,
+  upiId = null
+) => {
   try {
     const payload = {
       orderId,
@@ -12,15 +20,12 @@ export const verifyRazorpayPayment = async (orderId, paymentResponse, cartItems,
       upiId,
     };
 
-    const res = await axios.post(
-      "https://beauty.joyory.com/api/payment/razorpay/verify",
-      payload,
-      { withCredentials: true }
-    );
-
+    const res = await axiosInstance.post(endpoints.payment.razorpayVerify, payload);
     return res.data; // { success: true/false, message, ... }
   } catch (err) {
     console.error("❌ Razorpay verification error:", err);
     return { success: false, error: err };
   }
 };
+
+export default verifyRazorpayPayment;

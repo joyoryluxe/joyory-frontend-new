@@ -10,7 +10,7 @@ import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Bag from "../assets/Bag.svg";
-import axiosInstance from "../utils/axiosInstance.js";
+import { moveToCart as apiMoveToCart } from "../api/wishlistApi";
 import "../styles/BestSellers.css";
 
 const Wishlist = () => {
@@ -68,10 +68,7 @@ const Wishlist = () => {
   const moveToCart = async (item) => {
     try {
       if (user && !user.guest) {
-        const response = await axiosInstance.post(
-          `/api/user/wishlist/${item.productId}/move-to-cart`,
-          { sku: item.sku }
-        );
+        const response = await apiMoveToCart(item.productId, { sku: item.sku });
 
         if (!response.data?.success) throw new Error("Failed to move to cart");
       } else {

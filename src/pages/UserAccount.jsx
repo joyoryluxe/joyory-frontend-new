@@ -6,11 +6,20 @@ import Sidebarcomon from "../components/common/SidebarCommon";
 import Footer from "../components/common/Footer";
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import Header from "../components/common/Header";
-import { FaTimes } from "react-icons/fa";
 import AddressSections from "./AddressSections";
 import { getUserAllergens, saveUserAllergens } from "../api/ingredientApi";
-
-const API_BASE = "https://beauty.joyory.com/api/user/profile";
+import SectionError from "../components/common/SectionError";
+import { getErrorMessage } from "../utils/errorHandler";
+import {
+  getProfile,
+  updateProfile,
+  uploadAvatar,
+  deleteAvatar,
+  addAddress,
+  updateAddress,
+  deleteAddress,
+  deleteAccount,
+} from "../api/userApi";
 
 const toInputDate = (value) => {
   if (!value) return "";
@@ -55,6 +64,7 @@ const Useraccount = () => {
 
   const [addresses, setAddresses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [imageLoading, setImageLoading] = useState(false);
 
@@ -99,20 +109,20 @@ const Useraccount = () => {
     });
   };
 
-  const addCustomAllergen = () => {
+  const handleAddCustomAllergen = (e) => {
+    e.preventDefault();
     if (!customAllergen.trim()) return;
-    const val = customAllergen.trim();
-    if (!allergens.map(a => a.toLowerCase()).includes(val.toLowerCase())) {
-      setAllergens(prev => [...prev, val]);
+    if (!allergens.some(a => a.toLowerCase() === customAllergen.trim().toLowerCase())) {
+      setAllergens(prev => [...prev, customAllergen.trim()]);
     }
     setCustomAllergen("");
   };
 
-  const addCustomSensitive = () => {
+  const handleAddCustomSensitive = (e) => {
+    e.preventDefault();
     if (!customSensitive.trim()) return;
-    const val = customSensitive.trim();
-    if (!sensitiveIngredients.map(a => a.toLowerCase()).includes(val.toLowerCase())) {
-      setSensitiveIngredients(prev => [...prev, val]);
+    if (!sensitiveIngredients.some(s => s.toLowerCase() === customSensitive.trim().toLowerCase())) {
+      setSensitiveIngredients(prev => [...prev, customSensitive.trim()]);
     }
     setCustomSensitive("");
   };
@@ -126,7 +136,7 @@ const Useraccount = () => {
         notes: allergenNotes
       });
       if (res.data.success) {
-        alert("Allergen preferences saved successfully! ✅");
+        alert("Allergen profile saved successfully! ✅");
       }
     } catch (err) {
       console.error("Error saving allergens:", err);
@@ -137,51 +147,56 @@ const Useraccount = () => {
   };
 
   // Fetch Profile
-  useEffect(() => {
-    const fetchProfile = async () => {
+  const fetchProfile = async () => {
+    setLoading(true);
+    setFetchError(null);
+    try {
+      let res;
       try {
-        const res = await fetch(API_BASE, { credentials: "include" });
-
-        if (res.status === 401 || res.status === 403) {
+        res = await getProfile();
+      } catch (err) {
+        if (err.response?.status === 401 || err.response?.status === 403) {
           navigate("/login");
           return;
         }
+        throw err;
+      }
 
-        if (!res.ok) throw new Error("Failed to fetch profile");
+      const data = res.data;
 
-        const data = await res.json();
+      const profileData = {
+        fullName: data.profile.fullName || "",
+        email: data.profile.email || "",
+        phone: data.profile.phone || "",
+        gender: data.profile.gender || "",
+        dob: toInputDate(data.profile.dob),
+        profileImage: data.profile.profileImage || "",
+      };
 
-        const profileData = {
-          fullName: data.profile.fullName || "",
-          email: data.profile.email || "",
-          phone: data.profile.phone || "",
-          gender: data.profile.gender || "",
-          dob: toInputDate(data.profile.dob),
-          profileImage: data.profile.profileImage || "",
-        };
+      setProfile(profileData);
+      setAddresses(data.addresses || []);
+      setFormData({ ...profileData });
 
-        setProfile(profileData);
-        setAddresses(data.addresses || []);
-        setFormData({ ...profileData });
-
-        // Fetch User Allergens
-        try {
-          const allergenRes = await getUserAllergens();
-          if (allergenRes.data.success) {
-            setAllergens(allergenRes.data.allergens || []);
-            setSensitiveIngredients(allergenRes.data.sensitiveIngredients || []);
-            setAllergenNotes(allergenRes.data.notes || "");
-          }
-        } catch (err) {
-          console.error("Error fetching allergens during profile load:", err);
+      // Fetch User Allergens
+      try {
+        const allergenRes = await getUserAllergens();
+        if (allergenRes.data.success) {
+          setAllergens(allergenRes.data.allergens || []);
+          setSensitiveIngredients(allergenRes.data.sensitiveIngredients || []);
+          setAllergenNotes(allergenRes.data.notes || "");
         }
       } catch (err) {
-        console.error("Error fetching profile:", err);
-      } finally {
-        setLoading(false);
+        console.error("Error fetching allergens during profile load:", err);
       }
-    };
+    } catch (err) {
+      console.error("Error fetching profile:", err);
+      setFetchError(getErrorMessage(err, "Failed to load profile."));
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchProfile();
   }, [navigate]);
 
@@ -224,14 +239,8 @@ const Useraccount = () => {
     formDataImg.append("image", file);
 
     try {
-      const resImg = await fetch(`${API_BASE}/avatar`, {
-        method: "POST",
-        credentials: "include",
-        body: formDataImg,
-      });
-
-      if (!resImg.ok) throw new Error(await readError(resImg));
-      const imgData = await resImg.json();
+      const resImg = await uploadAvatar(formDataImg);
+      const imgData = resImg.data;
 
       const newImageUrl = imgData?.profileImage || imgData?.image || "";
       
@@ -247,7 +256,7 @@ const Useraccount = () => {
       alert("Avatar updated successfully ✅");
     } catch (err) {
       console.error("Avatar upload error:", err);
-      alert("Failed to upload avatar: " + err.message);
+      alert("Failed to upload avatar: " + (err.response?.data?.message || err.message));
     } finally {
       setImageLoading(false);
       // Clear the file input
@@ -265,12 +274,7 @@ const Useraccount = () => {
     setImageLoading(true);
 
     try {
-      const res = await fetch(`${API_BASE}/avatar`, {
-        method: "DELETE",
-        credentials: "include",
-      });
-
-      if (!res.ok) throw new Error(await readError(res));
+      await deleteAvatar();
 
       setProfile((prev) => ({
         ...prev,
@@ -284,7 +288,7 @@ const Useraccount = () => {
       alert("Profile picture removed successfully ✅");
     } catch (err) {
       console.error("Remove avatar error:", err);
-      alert("Failed to remove profile picture: " + err.message);
+      alert("Failed to remove profile picture: " + (err.response?.data?.message || err.message));
     } finally {
       setImageLoading(false);
       if (fileInputRef.current) {
@@ -308,16 +312,8 @@ const Useraccount = () => {
           : undefined,
       };
 
-      const res = await fetch(API_BASE, {
-        method: "PATCH",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) throw new Error(await readError(res));
-
-      const updated = await res.json();
+      const res = await updateProfile(payload);
+      const updated = res.data;
       const updatedProfile = updated.profile || updated;
 
       const updatedData = {
@@ -335,7 +331,7 @@ const Useraccount = () => {
       alert("Profile updated successfully ✅");
     } catch (err) {
       console.error("Save error:", err);
-      alert(err.message || "Failed to update profile");
+      alert(err.response?.data?.message || err.message || "Failed to update profile");
     }
   };
 
@@ -358,24 +354,13 @@ const Useraccount = () => {
     try {
       let res, data;
       if (!addr._id) {
-        res = await fetch(`${API_BASE}/address`, {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(addr),
-        });
+        res = await addAddress(addr);
       } else {
         const { _id, ...payload } = addr;
-        res = await fetch(`${API_BASE}/address/${_id}`, {
-          method: "PATCH",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
+        res = await updateAddress(_id, payload);
       }
 
-      if (!res.ok) throw new Error(await readError(res));
-      data = await res.json();
+      data = res.data;
 
       const updatedAddrs = [...addresses];
       updatedAddrs[index] = data;
@@ -383,7 +368,7 @@ const Useraccount = () => {
       alert("Address saved successfully ✅");
     } catch (err) {
       console.error("Address save error:", err);
-      alert("Failed to save address: " + err.message);
+      alert("Failed to save address: " + (err.response?.data?.message || err.message));
     }
   };
 
@@ -391,17 +376,13 @@ const Useraccount = () => {
     const addr = addresses[index];
     try {
       if (addr._id) {
-        const res = await fetch(`${API_BASE}/address/${addr._id}`, {
-          method: "DELETE",
-          credentials: "include",
-        });
-        if (!res.ok) throw new Error(await readError(res));
+        await deleteAddress(addr._id);
       }
       setAddresses((prev) => prev.filter((_, i) => i !== index));
       alert("Address deleted successfully ✅");
     } catch (err) {
       console.error("Delete address error:", err);
-      alert("Failed to delete address: " + err.message);
+      alert("Failed to delete address: " + (err.response?.data?.message || err.message));
     }
   };
 
@@ -410,16 +391,7 @@ const Useraccount = () => {
     if (!confirmDelete) return;
 
     try {
-      const res = await fetch("https://beauty.joyory.com/api/user/delete-account", {
-        method: "DELETE",
-        credentials: "include",
-      });
-
-      if (!res.ok) {
-        const errorText = await res.text();
-        throw new Error(`Delete account failed: ${res.status} ${errorText}`);
-      }
-
+      await deleteAccount();
       alert("Account deleted successfully ✅");
       navigate("/login");
     } catch (err) {
@@ -427,6 +399,18 @@ const Useraccount = () => {
       alert("Failed to delete account. Please try again.");
     }
   };
+
+  if (fetchError && !loading) {
+    return (
+      <>
+        <Header />
+        <div className="container py-5 my-5 text-center">
+          <SectionError message={fetchError} onRetry={fetchProfile} />
+        </div>
+        <Footer />
+      </>
+    );
+  }
 
   if (loading)
     return (

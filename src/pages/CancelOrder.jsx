@@ -6,11 +6,15 @@ import Loader from "../components/common/Loader";
 import { createPortal } from "react-dom";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { UserContext } from "../context/UserContext.jsx";
-import { CartContext } from "../Context/Cartcontext";
+import { CartContext } from "../context/CartContext";
 import { FaTimes, FaHeart, FaRegHeart, FaCheck } from "react-icons/fa";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import axios from "axios";
+import { getWishlist, addToWishlist, removeFromWishlist } from "../api/wishlistApi";
+import { addToCart } from "../api/cartApi";
+import { getCartRecommendations } from "../api/recommendationApi";
+import { getOrderById } from "../api/orderApi";
+import { getRefundMethods, setRefundMethod } from "../api/paymentApi";
 import bagIcon from "../assets/bag.svg";
 
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -19,8 +23,6 @@ import "../styles/CancelOrder.css";
 import "../styles/CartPage.css";
 import "../styles/ForYou.css";
 
-const API_BASE = "https://beauty.joyory.com/api/user/cart";
-const RECOMMENDATIONS_API = "https://beauty.joyory.com/api/user/recommendations/cart";
 const WISHLIST_CACHE_KEY = "guestWishlist";
 
 // ─── Variant helpers ────────────────────────────────────
@@ -97,7 +99,7 @@ const RecoProductCard = ({ product, navigate, user, onAddToCartSuccess }) => {
   const fetchWishlistData = useCallback(async () => {
     try {
       if (user && !user.guest) {
-        const res = await axios.get('https://beauty.joyory.com/api/user/wishlist', { withCredentials: true });
+        const res = await getWishlist();
         if (res.data.success) setWishlistData(res.data.wishlist || []);
       } else {
         const local = JSON.parse(localStorage.getItem(WISHLIST_CACHE_KEY)) || [];
@@ -179,26 +181,25 @@ const RecoProductCard = ({ product, navigate, user, onAddToCartSuccess }) => {
         const sel = forceVariant || selectedVariant || (allVariants.find((v) => v.stock > 0) || allVariants[0]);
         if (!sel || (sel.stock ?? 0) <= 0) { toast.error('Please select an in-stock variant.'); return; }
         payload = { productId: productId, variants: [{ variantSku: getSku(sel), quantity: 1 }] };
-      } else {
-        if (outOfStock) { toast.error('Product is out of stock.'); return; }
-        payload = { productId: productId, quantity: 1 };
-      }
-
-      // Cache selected variant
-      const chosen = forceVariant || selectedVariant || (allVariants.find((v) => v.stock > 0) || allVariants[0]);
-      if (hasVariants && chosen) {
+        const chosen = {
+          variantSku: sel.sku || sel.variantSku,
+          shadeName: sel.shadeName,
+          size: sel.size,
+          price: sel.price,
+          displayPrice: sel.displayPrice || sel.discountedPrice || sel.price,
+          images: sel.images,
+        };
         const cache = JSON.parse(localStorage.getItem("cartVariantCache") || "{}");
         cache[productId] = chosen;
         localStorage.setItem("cartVariantCache", JSON.stringify(cache));
       } else {
+        payload = { productId: productId, quantity: 1 };
         const cache = JSON.parse(localStorage.getItem("cartVariantCache") || "{}");
         delete cache[productId];
         localStorage.setItem("cartVariantCache", JSON.stringify(cache));
       }
 
-      const res = await axios.post(`${API_BASE}/add`, payload, {
-        withCredentials: true,
-      });
+      const res = await addToCart(payload);
       if (!res.data.success) throw new Error(res.data.message || 'Failed');
       if (onAddToCartSuccess) {
         onAddToCartSuccess();
@@ -207,7 +208,6 @@ const RecoProductCard = ({ product, navigate, user, onAddToCartSuccess }) => {
       }
     } catch (err) {
       toast.error(err.response?.data?.message || err.message || 'Failed to add product');
-      if (err.response?.status === 401) navigate('/login', { state: { from: location?.pathname } });
     } finally {
       setAddingToCart(false);
     }
@@ -221,10 +221,10 @@ const RecoProductCard = ({ product, navigate, user, onAddToCartSuccess }) => {
       const inWl = isInWishlist(productId, sku);
       if (user && !user.guest) {
         if (inWl) {
-          await axios.delete(`https://beauty.joyory.com/api/user/wishlist/${productId}`, { withCredentials: true, data: { sku } });
+          await removeFromWishlist(productId, { sku });
           toast.success('Removed from wishlist!');
         } else {
-          await axios.post(`https://beauty.joyory.com/api/user/wishlist/${productId}`, { sku }, { withCredentials: true });
+          await addToWishlist(productId, { sku });
           toast.success('Added to wishlist!');
         }
         await fetchWishlistData();
@@ -891,9 +891,8 @@ const CancelOrder = () => {
   const fetchRecommendations = async () => {
     try {
       setRecoLoading(true);
-      const res = await fetch(RECOMMENDATIONS_API, { credentials: "include" });
-      if (!res.ok) return;
-      const data = await res.json();
+      const res = await getCartRecommendations();
+      const data = res.data;
       if (data.success && Array.isArray(data.sections)) {
         setRecommendations(data.sections);
       }
@@ -957,23 +956,11 @@ const CancelOrder = () => {
           }
 
           // Fetch from API
-          const response = await fetch(
-            `https://beauty.joyory.com/api/user/orders/${orderId}`,
-            {
-              method: "GET",
-              credentials: "include",
-              headers: {
-                "Content-Type": "application/json",
-              },
-            }
-          );
-
-          if (response.ok) {
-            const data = await response.json();
-            if (data.success && data.order) {
-              setOrder(data.order);
-              sessionStorage.setItem(`cancelledOrder_${orderId}`, JSON.stringify(data.order));
-            }
+          const response = await getOrderById(orderId);
+          const data = response.data;
+          if (data.success && data.order) {
+            setOrder(data.order);
+            sessionStorage.setItem(`cancelledOrder_${orderId}`, JSON.stringify(data.order));
           }
         } catch (err) {
           console.error("Error fetching order details:", err);
@@ -997,24 +984,18 @@ const CancelOrder = () => {
         }
 
         // Otherwise fetch from API
-        const res = await fetch("https://beauty.joyory.com/api/payment/refund-methods", {
-          method: "GET",
-          credentials: "include",
-        });
+        const res = await getRefundMethods();
+        const data = res.data;
+        console.log("🟩 Refund Methods Response:", data);
 
-        if (res.ok) {
-          const data = await res.json();
-          console.log("🟩 Refund Methods Response:", data);
-
-          if (data?.success && Array.isArray(data.methods)) {
-            setRefundOptions(data.methods);
-          } else {
-            // Fallback to default options
-            setRefundOptions([
-              { key: "razorpay", label: "Original Payment Method" },
-              { key: "wallet", label: "Joyory Wallet" },
-            ]);
-          }
+        if (data?.success && Array.isArray(data.methods)) {
+          setRefundOptions(data.methods);
+        } else {
+          // Fallback to default options
+          setRefundOptions([
+            { key: "razorpay", label: "Original Payment Method" },
+            { key: "wallet", label: "Joyory Wallet" },
+          ]);
         }
       } catch (err) {
         console.error("❌ Error fetching refund methods:", err);
@@ -1052,17 +1033,11 @@ const CancelOrder = () => {
         method: selectedMethod,
       });
 
-      const res = await fetch("https://beauty.joyory.com/api/payment/refund-method", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          orderId: orderIdToUse,
-          method: selectedMethod,
-        }),
-        credentials: "include",
+      const res = await setRefundMethod({
+        orderId: orderIdToUse,
+        method: selectedMethod,
       });
-
-      const data = await res.json();
+      const data = res.data;
       console.log("🟩 Refund Response:", data);
 
       if (data.success) {

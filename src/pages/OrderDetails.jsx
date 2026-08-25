@@ -3,18 +3,16 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import Header from "../components/common/Header";
 import Footer from "../components/common/Footer";
 import Loader from "../components/common/Loader";
+import SectionError from "../components/common/SectionError";
+import { getErrorMessage } from "../utils/errorHandler";
 import "../styles/OrderDetails.css";
 import {
   FaCheckCircle, FaBox, FaTruck, FaTimesCircle, FaClock,
   FaArrowLeft, FaShippingFast, FaInfoCircle, FaBan, FaExclamationTriangle,
   FaCamera, FaTrash, FaUndo, FaExchangeAlt, FaDownload, FaExternalLinkAlt
 } from "react-icons/fa";
-import axios from "axios";
-
-/* ---------- constants ---------- */
-const SHIPMENT_API = "https://beauty.joyory.com/api/user/cart/shipment";
-const RETURN_API = "https://beauty.joyory.com/api/returns/request";
-const INVOICE_BASE_URL = "https://beauty.joyory.com/api/user/cart/invoice";
+import { getShipmentDetails, getInvoice } from "../api/orderApi";
+import { requestReturn } from "../api/returnsApi";
 
 /* ---------- backend rule map ---------- */
 const RETURN_REASON_RULES = {
@@ -87,14 +85,14 @@ const OrderDetails = () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await axios.get(`${SHIPMENT_API}/${shipmentId}`, { withCredentials: true });
+      const res = await getShipmentDetails(shipmentId);
       if (res.data?.success) {
         setShipmentData(res.data);
       } else setError("Failed to fetch shipment details");
     } catch (err) {
       console.error(err);
       if (err.response?.status === 401) navigate("/login");
-      else setError(err.response?.data?.message || "Something went wrong");
+      else setError(getErrorMessage(err, "Failed to load shipment details"));
     } finally {
       setLoading(false);
     }
@@ -116,8 +114,7 @@ const OrderDetails = () => {
     setDownloadingInvoice(true);
 
     try {
-      const response = await axios.get(`${INVOICE_BASE_URL}/${invoiceId}`, {
-        withCredentials: true,
+      const response = await getInvoice(invoiceId, {
         responseType: "blob",
       });
 
@@ -181,12 +178,7 @@ const OrderDetails = () => {
     if (!orderId) return alert("Order ID missing");
     if (!waybill) return alert("Waybill not assigned yet");
     setCancelling(true);
-    try {
-      const res = await axios.put(
-        `${SHIPMENT_API}/cancel/${shipmentId}`,
-        { orderId, reason: cancelReason.trim() },
-        { withCredentials: true }
-      );
+      const res = await cancelOrderShipment(shipmentId, { orderId, reason: cancelReason.trim() });
       if (res.data?.success) {
         alert(res.data.message || "Cancelled");
         setShowCancelModal(false);
@@ -296,8 +288,7 @@ const OrderDetails = () => {
 
     setReturning(true);
     try {
-      const res = await axios.post(`${RETURN_API}/${shipmentId}`, body, {
-        withCredentials: true,
+      const res = await requestReturn(shipmentId, body, {
         headers: { "Content-Type": "multipart/form-data" }
       });
       if (res.data?.success) {
@@ -451,9 +442,8 @@ const OrderDetails = () => {
   if (error || !shipmentData) return (
     <>
       <Header />
-      <div className="container mt-4 text-center py-5">
-        <div className="alert alert-danger">{error || "No data available"}</div>
-        <button className="btn btn-primary" onClick={() => navigate(-1)}>Go Back</button>
+      <div className="container mt-4 text-center py-5 my-5">
+        <SectionError message={error || "Shipment data not available"} onRetry={fetchShipmentDetails} />
       </div>
       <Footer />
     </>

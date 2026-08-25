@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import signupImg from "../assets/Signup-page.png";
 import Logo from "../assets/Logo.png";
-import axios from "axios";
+import { affiliateSignup } from "../api/affiliateApi";
 import { useNavigate } from "react-router-dom";
 
 const AffiliateSignup = () => {
@@ -28,10 +28,7 @@ const AffiliateSignup = () => {
     setMessage({ type: "", text: "" });
 
     try {
-      const response = await axios.post(
-        "https://beauty.joyory.com/api/affiliate/signup",
-        formData
-      );
+      const response = await affiliateSignup(formData);
 
       setMessage({ type: "success", text: "Signup Successful!" });
 

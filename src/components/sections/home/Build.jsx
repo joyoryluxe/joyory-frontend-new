@@ -1,11 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { getCategoryLanding } from "../../../api/categoryApi";
 import Loader from "../../common/Loader";
 import quizMobileBanner from "../../../assets/quiz_mobile_banner.png";
 import "../../../styles/Build.css";
-
-const FEATURE_BANNER_API = "https://beauty.joyory.com/api/user/categories/category/skin/landing";
 
 const FeatureBanners = () => {
   const navigate = useNavigate();
@@ -19,7 +17,7 @@ const FeatureBanners = () => {
       setLoading(true);
       setError(null);
       
-      const { data } = await axios.get(FEATURE_BANNER_API, { withCredentials: true });
+      const { data } = await getCategoryLanding("skin");
       
       console.log("Feature Banners API Response:", data);
 

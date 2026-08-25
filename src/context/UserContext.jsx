@@ -1,6 +1,5 @@
-//=============================================================Finall-Code(One)End===================================================
 import React, { createContext, useState, useEffect } from "react";
-import axiosInstance from "../utils/axiosInstance.js";
+import { logout } from "../api/authApi";
 
 export const UserContext = createContext();
 
@@ -25,7 +24,7 @@ export const UserProvider = ({ children }) => {
 
   const logoutUser = async () => {
     try {
-      await axiosInstance.post("/api/user/logout");
+      await logout();
     } catch {}
     document.cookie.split(";").forEach(
       (c) =>

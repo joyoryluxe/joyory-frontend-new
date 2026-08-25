@@ -26,7 +26,32 @@ import {
   FaSave,
   FaLightbulb
 } from "react-icons/fa";
-import axiosInstance from "../utils/axiosInstance.js";
+import {
+  getMyRoutines,
+  createRoutine,
+  getRoutineById,
+  updateRoutine,
+  deleteRoutine,
+  getPublicRoutine,
+  shareRoutine,
+  getActiveReminders,
+  getTemplates,
+  aiBuild,
+  checkConflicts,
+  validateOrder,
+  getAudit,
+  getCoach,
+  getRoutineLogs,
+  logRoutine,
+  getCalendar,
+  uploadProgressPhoto,
+  getAlternatives,
+  cloneRoutine,
+  getSuggest,
+  addRoutineToCart
+} from "../api/routineApi";
+import { getAllProducts } from "../api/productApi";
+import { addToCart } from "../api/cartApi";
 import { UserContext } from "../context/UserContext";
 import Header from "../components/common/Header";
 import Footer from "../components/common/Footer";
@@ -169,7 +194,7 @@ const RoutineBuilder = () => {
     if (!user || user.guest) return;
     try {
       setLoading(true);
-      const res = await axiosInstance.get("/api/user/routines/my");
+      const res = await getMyRoutines();
       if (res.data && res.data.routines) {
         setRoutines(res.data.routines);
       }
@@ -191,10 +216,7 @@ const RoutineBuilder = () => {
       let hasMore = true;
 
       // Fetch up to 500 products for local indexing
-      const res = await axiosInstance.get("/api/user/products/all", {
-        params: { cursor: currentCursor, limit: 250 },
-        withCredentials: true
-      });
+      const res = await getAllProducts({ cursor: currentCursor, limit: 250 });
 
       let products = [];
       if (res.data && Array.isArray(res.data.products)) {
@@ -225,7 +247,7 @@ const RoutineBuilder = () => {
   const fetchPublicRoutine = async () => {
     try {
       setLoading(true);
-      const res = await axiosInstance.get(`/api/user/routines/public/${shareToken}`);
+      const res = await getPublicRoutine(shareToken);
       if (res.data && res.data.routine) {
         setPublicRoutine(res.data.routine);
       }
@@ -241,7 +263,7 @@ const RoutineBuilder = () => {
   const fetchActiveReminders = async () => {
     if (!user || user.guest) return;
     try {
-      const res = await axiosInstance.get("/api/user/routines/reminders/active");
+      const res = await getActiveReminders();
       if (res.data && res.data.success) {
         setActiveReminders(res.data.reminders || []);
       }
@@ -254,7 +276,7 @@ const RoutineBuilder = () => {
   const fetchRoutineTemplates = async () => {
     try {
       setTemplatesLoading(true);
-      const res = await axiosInstance.get("/api/user/routines/templates");
+      const res = await getTemplates();
       if (res.data && res.data.success) {
         setTemplates(res.data.templates || []);
       }
@@ -275,7 +297,7 @@ const RoutineBuilder = () => {
 
     try {
       setAiDetectLoading(true);
-      const res = await axiosInstance.post("/api/user/routines/ai-build", { query: aiPromptQuery });
+      const res = await aiBuild({ query: aiPromptQuery });
       if (res.data && res.data.success) {
         const data = res.data;
         const newSteps = [];
@@ -401,7 +423,7 @@ const RoutineBuilder = () => {
 
     try {
       setConflictChecking(true);
-      const res = await axiosInstance.post("/api/user/routines/check-conflicts", { productIds });
+      const res = await checkConflicts({ productIds });
       if (res.data && res.data.success) {
         setConflicts(res.data.conflicts || []);
         setConflictRecommendations(res.data.recommendations || []);
@@ -427,7 +449,7 @@ const RoutineBuilder = () => {
     if (tabName === "audit") {
       try {
         setAuditLoading(true);
-        const res = await axiosInstance.get(`/api/user/routines/${activeTrackerRoutine._id}/audit`);
+        const res = await getAudit(activeTrackerRoutine._id);
         if (res.data && res.data.success) {
           setAuditData(res.data.audit);
         }
@@ -440,7 +462,7 @@ const RoutineBuilder = () => {
     } else if (tabName === "coach") {
       try {
         setCoachLoading(true);
-        const res = await axiosInstance.get(`/api/user/routines/${activeTrackerRoutine._id}/coach`);
+        const res = await getCoach(activeTrackerRoutine._id);
         if (res.data && res.data.success) {
           setCoachAdvice(res.data.coachMessage);
           setCoachTips(res.data.tips || []);
@@ -463,7 +485,7 @@ const RoutineBuilder = () => {
       setShowAlternativesModal(true);
       setAlternativesProduct(steps[stepIdx]);
 
-      const res = await axiosInstance.get(`/api/user/routines/products/${productId}/alternatives`);
+      const res = await getAlternatives(productId);
       if (res.data && res.data.success) {
         setAlternativesData(res.data);
       }
@@ -514,7 +536,7 @@ const RoutineBuilder = () => {
 
     try {
       setLoading(true);
-      const res = await axiosInstance.post(`/api/user/routines/clone/${shareToken}`);
+      const res = await cloneRoutine(shareToken);
       if (res.data && res.data.success) {
         toast.success(res.data.message || "Routine cloned to your profile! ✨");
         navigate("/routines");
@@ -700,7 +722,7 @@ const RoutineBuilder = () => {
   const handleGetAISuggestion = async () => {
     try {
       setLoading(true);
-      const res = await axiosInstance.get("/api/user/routines/suggest");
+      const res = await getSuggest();
       if (res.data && res.data.success) {
         const suggested = res.data;
         // Map suggested steps to form steps
@@ -772,7 +794,7 @@ const RoutineBuilder = () => {
         return;
       }
 
-      const res = await axiosInstance.post(`/api/user/routines/${id}/add-to-cart`);
+      const res = await addRoutineToCart(id);
       if (res.data && res.data.success) {
         toast.success(res.data.message || "Routine products added to cart!");
       }
@@ -785,7 +807,7 @@ const RoutineBuilder = () => {
   // --- Share Routine ---
   const handleShareRoutine = async (id) => {
     try {
-      const res = await axiosInstance.post(`/api/user/routines/${id}/share`);
+      const res = await shareRoutine(id);
       if (res.data && res.data.shareToken) {
         const shareUrl = `${window.location.origin}/routines/${res.data.shareToken}`;
         await navigator.clipboard.writeText(shareUrl);
@@ -845,7 +867,7 @@ const RoutineBuilder = () => {
     if (!confirmDelete) return;
 
     try {
-      const res = await axiosInstance.delete(`/api/user/routines/${id}`);
+      const res = await deleteRoutine(id);
       if (res.data && res.data.success) {
         toast.success("Routine deleted.");
         fetchMyRoutines();
@@ -860,7 +882,7 @@ const RoutineBuilder = () => {
   const handleOpenTracker = async (routine, prefillType = null) => {
     try {
       setLoading(true);
-      const res = await axiosInstance.get(`/api/user/routines/${routine._id}`);
+      const res = await getRoutineById(routine._id);
       if (res.data && res.data.success) {
         setActiveTrackerRoutine(res.data.routine);
       } else {
@@ -881,7 +903,7 @@ const RoutineBuilder = () => {
   const fetchRoutineLogs = async (id, prefillType = null) => {
     try {
       setLoading(true);
-      const res = await axiosInstance.get(`/api/user/routines/${id}/logs`);
+      const res = await getRoutineLogs(id);
       if (res.data && res.data.success) {
         setTrackerLogs(res.data.logs || []);
         setTrackerStats(res.data.stats || {
@@ -921,7 +943,7 @@ const RoutineBuilder = () => {
       }
 
       // Fetch compliance calendar grid from API
-      const calRes = await axiosInstance.get(`/api/user/routines/${id}/calendar`);
+      const calRes = await getCalendar(id);
       if (calRes.data && calRes.data.success) {
         setCalendarGrid(calRes.data.calendar || []);
       }
@@ -970,9 +992,7 @@ const RoutineBuilder = () => {
       const formData = new FormData();
       formData.append("photo", file);
 
-      const res = await axiosInstance.post("/api/user/routines/upload-progress-photo", formData, {
-        headers: { "Content-Type": "multipart/form-data" }
-      });
+      const res = await uploadProgressPhoto(formData);
 
       if (res.data && res.data.success) {
         const url = res.data.url;
@@ -984,7 +1004,7 @@ const RoutineBuilder = () => {
           }
           return [...filtered, url];
         });
-        toast.success("Progress photo uploaded successfully! 📸");
+        toast.success("Progress photo uploaded successfully! 📸✨");
       }
     } catch (err) {
       console.error("Photo upload error:", err);
@@ -997,31 +1017,24 @@ const RoutineBuilder = () => {
   const startCamera = async () => {
     try {
       setShowCameraModal(true);
-      setTimeout(async () => {
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: "user" },
-            audio: false
-          });
-          setCameraStream(stream);
-          if (videoRef.current) {
-            videoRef.current.srcObject = stream;
-          }
-        } catch (err) {
-          console.error("Camera access error:", err);
-          toast.error("Could not access your device's camera. Please verify permissions.");
-          setShowCameraModal(false);
-        }
-      }, 300);
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "user" }
+      });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
     } catch (err) {
-      console.error("Camera init error:", err);
+      console.error("Camera access error:", err);
+      toast.error("Could not access camera. Please allow webcam permissions.");
+      setShowCameraModal(false);
     }
   };
 
   const stopCamera = () => {
-    if (cameraStream) {
-      cameraStream.getTracks().forEach(track => track.stop());
-      setCameraStream(null);
+    if (videoRef.current && videoRef.current.srcObject) {
+      const tracks = videoRef.current.srcObject.getTracks();
+      tracks.forEach(track => track.stop());
+      videoRef.current.srcObject = null;
     }
     setShowCameraModal(false);
   };
@@ -1055,9 +1068,7 @@ const RoutineBuilder = () => {
           const formData = new FormData();
           formData.append("photo", file);
 
-          const res = await axiosInstance.post("/api/user/routines/upload-progress-photo", formData, {
-            headers: { "Content-Type": "multipart/form-data" }
-          });
+          const res = await uploadProgressPhoto(formData);
 
           if (res.data && res.data.success) {
             const url = res.data.url;
@@ -1110,7 +1121,7 @@ const RoutineBuilder = () => {
         }));
       }
 
-      const res = await axiosInstance.post(`/api/user/routines/${activeTrackerRoutine._id}/log`, payload);
+      const res = await logRoutine(activeTrackerRoutine._id, payload);
       if (res.data && res.data.success) {
         toast.success(res.data.message || "Daily progress check-in logged! 🌸");
         if (res.data.stats?.badges) {
@@ -1224,7 +1235,7 @@ const RoutineBuilder = () => {
 
     try {
       setValidatingOrder(true);
-      const res = await axiosInstance.post("/api/user/routines/validate-order", { steps: cleanSteps });
+      const res = await validateOrder({ steps: cleanSteps });
       if (res.data && res.data.success) {
         const { orderWarnings, correctedOrder } = res.data;
         if (orderWarnings && orderWarnings.length > 0) {
@@ -1325,12 +1336,12 @@ const RoutineBuilder = () => {
     try {
       setLoading(true);
       if (editingRoutineId) {
-        const res = await axiosInstance.put(`/api/user/routines/${editingRoutineId}`, payload);
+        const res = await updateRoutine(editingRoutineId, payload);
         if (res.data && res.data.success) {
           toast.success("Routine updated successfully ✨");
         }
       } else {
-        const res = await axiosInstance.post("/api/user/routines/create", payload);
+        const res = await createRoutine(payload);
         if (res.data && res.data.success) {
           toast.success("Routine created successfully ✨");
         }
@@ -3017,7 +3028,7 @@ const RoutineBuilder = () => {
                                             try {
                                               const matchedProd = allProducts.find(p => String(p._id) === String(step.product));
                                               if (matchedProd) {
-                                                const res = await axiosInstance.post("/api/user/cart/add", {
+                                                const res = await addToCart({
                                                   productId: step.product,
                                                   quantity: 1,
                                                   variants: step.selectedSku ? [{ variantSku: step.selectedSku, quantity: 1 }] : []

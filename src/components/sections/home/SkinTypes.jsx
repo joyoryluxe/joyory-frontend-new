@@ -1,13 +1,14 @@
-// src/components/Skintypes.jsx
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import axios from "axios";
+import { getSkinTypes } from "../../../api/productApi";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination, Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
 import "../../../styles/SkinTypes.css";
+import SectionError from "../../common/SectionError";
+import { getErrorMessage } from "../../../utils/errorHandler";
 
 export default function Skintypes() {
   const [skinTypes, setSkinTypes] = useState([]);
@@ -17,29 +18,29 @@ export default function Skintypes() {
   const location = useLocation();
 
   // Fetch skin types from the API
+  const fetchSkinTypes = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await getSkinTypes();
+
+      const data =
+        response.data?.skinTypes ||
+        response.data?.data ||
+        response.data?.items ||
+        response.data ||
+        [];
+
+      setSkinTypes(data);
+    } catch (err) {
+      console.error("API error:", err);
+      setError(getErrorMessage(err, "Failed to load skin types."));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchSkinTypes = async () => {
-      try {
-        const response = await axios.get(
-          "https://beauty.joyory.com/api/user/products/skin-types"
-        );
-
-        const data =
-          response.data?.skinTypes ||
-          response.data?.data ||
-          response.data?.items ||
-          response.data ||
-          [];
-
-        setSkinTypes(data);
-        setLoading(false);
-      } catch (err) {
-        console.error("API error:", err);
-        setError("Failed to load skin types.");
-        setLoading(false);
-      }
-    };
-
     fetchSkinTypes();
   }, []);
 
@@ -53,17 +54,19 @@ export default function Skintypes() {
         activeSkinTypeName: type.name,
         fromSkinTypes: true,
         // Preserve any existing location state
-        ...location.state
-      }
+        ...location.state,
+      },
     });
   };
 
   return (
     <div className="container-fluid mt-lg-5">
-      <h2 className="mb-3 text-left ms-lg-0 ps-lg-5 mt-3 mb-2 mb-lg-4 mt-lg-5 skintype-heading spacing fw-normal">Shop By Skin Types</h2>
+      <h2 className="mb-3 text-left ms-lg-0 ps-lg-5 mt-3 mb-2 mb-lg-4 mt-lg-5 skintype-heading spacing fw-normal">
+        Shop By Skin Types
+      </h2>
 
       {loading && <p className="text-center">Loading skin types...</p>}
-      {error && <p className="text-center text-danger">{error}</p>}
+      {error && <SectionError message={error} onRetry={fetchSkinTypes} />}
 
       {!loading && !error && skinTypes.length > 0 ? (
         <div className="mobile-responsive-code mb-5">
@@ -106,30 +109,8 @@ export default function Skintypes() {
           </Swiper>
         </div>
       ) : (
-        !loading && <p className="text-center">No skin types found.</p>
+        !loading && !error && <p className="text-center">No skin types found.</p>
       )}
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
