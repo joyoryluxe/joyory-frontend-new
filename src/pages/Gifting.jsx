@@ -120,7 +120,6 @@ export default function GiftCards() {
                 description: `Gift Card - ${selected.title}`,
                 order_id: order.id,
                 handler: async function (response) {
-                    console.log("✅ Razorpay response:", response);
                     try {
                         await verifyGiftCardPayment(response);
 

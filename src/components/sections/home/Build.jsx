@@ -19,7 +19,6 @@ const FeatureBanners = () => {
       
       const { data } = await getCategoryLanding("skin");
       
-      console.log("Feature Banners API Response:", data);
 
       // Handle different possible response structures
       const featureBanners = data.featureBanners || data.data?.featureBanners || [];
@@ -39,7 +38,6 @@ const FeatureBanners = () => {
 
   // Handle banner click with smart navigation
   const handleBannerClick = useCallback((banner) => {
-    console.log("Banner clicked:", banner);
 
     const link = banner.link || banner.image?.[0]?.link;
 

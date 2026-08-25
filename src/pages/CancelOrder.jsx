@@ -986,7 +986,6 @@ const CancelOrder = () => {
         // Otherwise fetch from API
         const res = await getRefundMethods();
         const data = res.data;
-        console.log("🟩 Refund Methods Response:", data);
 
         if (data?.success && Array.isArray(data.methods)) {
           setRefundOptions(data.methods);
@@ -1028,17 +1027,11 @@ const CancelOrder = () => {
     setSuccessMsg("");
 
     try {
-      console.log("📤 Sending Refund Request:", {
-        orderId: orderIdToUse,
-        method: selectedMethod,
-      });
-
       const res = await setRefundMethod({
         orderId: orderIdToUse,
         method: selectedMethod,
       });
       const data = res.data;
-      console.log("🟩 Refund Response:", data);
 
       if (data.success) {
         setSuccessMsg(data.message || "✅ Refund method submitted successfully!");

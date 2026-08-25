@@ -12,41 +12,28 @@ const Addtocard = ({ prod, selectedShade, showToastMsg, user }) => {
 
   const handleAddToCart = async () => {
     try {
-      console.log("🛒 Starting add to cart for:", prod.name);
-      console.log("👤 User prop:", user);
-      console.log("🍪 Token exists:", document.cookie.includes("token="));
-
       // 🟢 FIX: Better guest detection
       let isGuest = true;
       try {
         // Check if user is actually logged in by making a simple API call
         await getProfile();
         isGuest = false;
-        console.log("👤 Logged-in user detected via API");
       } catch (error) {
         // If API call fails, user is guest
         isGuest = true;
-        console.log("👤 Guest user detected (API call failed)");
       }
 
       // Also check user prop as fallback
       if (user && !user.guest) {
         isGuest = false;
-        console.log("👤 Logged-in user detected via prop");
       }
-
-      console.log("🎯 Final user type:", isGuest ? "Guest" : "Logged-in");
 
       const hasVariants = Array.isArray(prod.variants) && prod.variants.length > 0;
       let variantToAdd = null;
 
-      console.log("📦 Product variants:", prod.variants);
-      console.log("🎨 Selected shade:", selectedShade);
-
       // ✅ Handle product variants
       if (hasVariants) {
         const availableVariants = prod.variants.filter((v) => v.stock > 0);
-        console.log("✅ Available variants:", availableVariants);
 
         if (availableVariants.length === 0) {
           showToastMsg("❌ All variants are out of stock.", "error");
@@ -59,7 +46,6 @@ const Addtocard = ({ prod, selectedShade, showToastMsg, user }) => {
               v.sku === selectedShade.sku ||
               v.shadeName?.toLowerCase() === selectedShade.shadeName?.toLowerCase()
           );
-          console.log("🔍 Matched variant:", matchedVariant);
 
           if (matchedVariant && matchedVariant.stock > 0) {
             variantToAdd = {
@@ -84,7 +70,6 @@ const Addtocard = ({ prod, selectedShade, showToastMsg, user }) => {
               prod.images?.[0] ||
               "/placeholder.png",
           };
-          console.log("ℹ️ No shade selected, using first available variant");
         }
       } else {
         // ✅ Handle non-variant products
@@ -102,10 +87,7 @@ const Addtocard = ({ prod, selectedShade, showToastMsg, user }) => {
           discountedPrice: prod?.price || 0,
           stock: prod?.stock ?? 1,
         };
-        console.log("ℹ️ Non-variant product, using default variant");
       }
-
-      console.log("🚀 Final variant to add:", variantToAdd);
 
       if (!variantToAdd.sku) {
         console.error("❌ No SKU found for variant:", variantToAdd);
@@ -117,20 +99,16 @@ const Addtocard = ({ prod, selectedShade, showToastMsg, user }) => {
       const cache = JSON.parse(localStorage.getItem("cartVariantCache") || "{}");
       cache[prod._id] = variantToAdd;
       localStorage.setItem("cartVariantCache", JSON.stringify(cache));
-      console.log("💾 Variant cached successfully");
 
       // ✅ Add to cart using Context
-      console.log("🎯 Adding to cart...");
       try {
         const success = await addToCart(prod, variantToAdd, isGuest);
         if (success) {
-          console.log("✅ Successfully added to cart");
           showToastMsg(isGuest ? "✅ Added to cart! (Guest Mode)" : "✅ Product added to cart!", "success");
           setTimeout(() => {
             navigate("/cartpage", { state: { refresh: true } });
           }, 500);
         } else {
-          console.log("❌ addToCart returned false");
           showToastMsg("❌ Failed to add to cart", "error");
         }
       } catch (cartError) {
@@ -165,5 +143,3 @@ const Addtocard = ({ prod, selectedShade, showToastMsg, user }) => {
 };
 
 export default Addtocard;
-
-

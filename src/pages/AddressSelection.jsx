@@ -76,7 +76,6 @@ const AddressSelection = () => {
         appliedCoupon: location.state.priceDetails.appliedCoupon || null,
       });
       setCartData(location.state.cartItems || []);
-      console.log("🟢 Loaded price details from CartPage:", location.state.priceDetails);
     } else {
       loadCart();
     }
@@ -197,7 +196,6 @@ const AddressSelection = () => {
       return alert("This address already exists. Please use or edit the existing one.");
     }
 
-    console.log("📤 Sending to backend:", newAddress);
 
     try {
       let res;
@@ -208,7 +206,6 @@ const AddressSelection = () => {
       }
 
       const data = res.data;
-      console.log("📥 Response:", data);
 
       await loadProfileAndAddresses();
 
@@ -249,7 +246,6 @@ const AddressSelection = () => {
     try {
       const res = await deleteAddress(id);
       const data = res.data;
-      console.log("📥 DELETE Response:", data);
       await loadProfileAndAddresses();
       if (selectedAddressId === id) setSelectedAddressId(null);
     } catch (err) {
@@ -287,7 +283,6 @@ const AddressSelection = () => {
         gstRate: priceDetails?.gstRate || "0%",
       };
 
-      console.log("📦 Sending Initiate Order Payload:", payload);
 
       setProcessingMessage("Validating payment details...");
       await new Promise(resolve => setTimeout(resolve, 800));
@@ -297,7 +292,6 @@ const AddressSelection = () => {
       const initiateRes = await initiateOrder(payload);
       const initiateData = initiateRes.data;
 
-      console.log("🧾 initiateData from backend:", initiateData);
 
       const orderId =
         initiateData.orderId ||
@@ -311,8 +305,6 @@ const AddressSelection = () => {
         throw new Error(initiateData.message || "Failed to initiate order");
       }
 
-      console.log("✅ Using orderId:", orderId);
-      console.log("💰 Final Payable Amount:", priceDetails?.payable);
 
       setProcessingMessage("Order created successfully!");
 

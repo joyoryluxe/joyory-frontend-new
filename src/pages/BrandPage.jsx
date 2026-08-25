@@ -409,7 +409,6 @@ export default function BrandPage() {
     p.append("limit", "9");
 
     const queryString = p.toString();
-    console.log("BrandPage API Query →", `${PRODUCT_ALL_API}?${queryString}`);
     return queryString;
   };
 
@@ -552,7 +551,6 @@ export default function BrandPage() {
             : [{ url: data.category.bannerImage }];
         }
 
-        console.log("✅ Final banners set to state:", banners); // For debugging
 
         setBannerImages(banners);
 

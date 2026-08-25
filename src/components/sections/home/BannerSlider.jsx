@@ -28,11 +28,9 @@ const BannerSlider = () => {
   const fetchShadeFinderBanners = useCallback(async () => {
     try {
       setLoading(true);
-      console.log('🔥 Fetching Shade Finder Banners...');
 
       const { data } = await getCategoryLanding("makeup");
 
-      console.log('✅ API Response:', data);
 
       // Get featureBanners safely
       const featureBanners = data.featureBanners || data.data?.featureBanners || [];
@@ -42,7 +40,6 @@ const BannerSlider = () => {
         banner => banner.type === 'shadeFinder'
       );
 
-      console.log('🎯 ShadeFinder Banners Found:', shadeFinderBanners.length);
 
       const allSlides = [];
 
@@ -82,7 +79,6 @@ const BannerSlider = () => {
       });
 
       setBanners(allSlides);
-      console.log('✅ Final ShadeFinder Slides Created:', allSlides.length);
     } catch (err) {
       console.error('❌ Failed to fetch shade finder banners:', err);
       setBanners([]);
@@ -117,7 +113,6 @@ const BannerSlider = () => {
   }
 
   if (banners.length === 0) {
-    console.log('⚠️ No shade finder banners available');
     return null;
   }
 

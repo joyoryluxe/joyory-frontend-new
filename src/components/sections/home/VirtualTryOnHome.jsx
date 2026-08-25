@@ -33,11 +33,9 @@ const Virtualtryonhome = () => {
   const fetchVirtualTryOnBanners = useCallback(async () => {
     try {
       setLoading(true);
-      console.log('🔥 Fetching Virtual Try On Banners...');
 
       const { data } = await getCategoryLanding("makeup");
 
-      console.log('✅ API Response:', data);
 
       // 🔥 GET FEATURE BANNERS ARRAY
       const featureBanners = data.featureBanners || data.data?.featureBanners || [];
@@ -47,7 +45,6 @@ const Virtualtryonhome = () => {
         banner => banner.type === 'virtualTryOn'
       );
 
-      console.log('🎯 VirtualTryOn Banners Found:', virtualTryOnBanners.length);
 
       // 🔥 PROCESS VIRTUAL TRY ON BANNERS - SUPPORT MULTIPLE IMAGES (Same as BannerSlider)
       const allBanners = [];
@@ -92,7 +89,6 @@ const Virtualtryonhome = () => {
       });
 
       setBanners(allBanners);
-      console.log('✅ VirtualTryOn Slides Created:', allBanners.length);
 
     } catch (err) {
       console.error('❌ Failed to fetch virtual try on banners:', err);
@@ -110,11 +106,9 @@ const Virtualtryonhome = () => {
   const handleSlideClick = async () => {
     try {
       setNavLoading(true);
-      console.log('🔥 Calling VTO API...');
 
       // Call VTO API
       await getVtoEnabled();
-      console.log('✅ VTO API Called Successfully');
 
       // Navigate to virtual try on page
       navigate('/Mainvirtualtryon');
@@ -141,7 +135,6 @@ const Virtualtryonhome = () => {
 
   // 🔥 HIDE IF NO VIRTUAL TRY ON BANNERS FOUND (Same as BannerSlider)
   if (banners.length === 0) {
-    console.log('⚠️ No virtual try on banners available');
     return null;
   }
 
