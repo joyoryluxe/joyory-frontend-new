@@ -62,13 +62,29 @@ export default function UndertoneSlider() {
     return "#ddd";
   };
 
+  // Helper to get description based on undertone name
+  const getUndertoneDescription = (name) => {
+    if (!name) return "On the pink, red and blue side";
+    const n = name.toLowerCase();
+    if (n.includes("cool")) {
+      return "My veins appear blue or purple || silver & platinum jewelry look best on me.";
+    }
+    if (n.includes("neutral")) {
+      return "My veins appear blue-green || all shades of jewelry look good on me.";
+    }
+    if (n.includes("warm")) {
+      return "My veins appear green || yellow gold jewelry looks best on me";
+    }
+    return "On the pink, red and blue side";
+  };
+
   return (
     <div className="undertone-page-wrapper">
       <Header />
 
       <main className="container undertone-main-content">
         <div className="undertone-header mt-2 mt-md-5 pt-1 pt-md-4">
-          <h1 className="display-4 display-md-6 fw-normal undertone-title page-title-main-name">What’s Your Undertone</h1>
+          <h1 className="display-4 display-md-6 fw-normal undertone-title page-title-main-name mt-2">What’s Your Undertone</h1>
           <p className="text-muted undertone-subtitle page-title-main-name">
             Choose the group that best represents your skin tone.
           </p>
@@ -80,26 +96,26 @@ export default function UndertoneSlider() {
           <div className="row g-4 mt-lg-5 mt-3 justify-content-center page-title-main-name">
             {undertones.map((tone) => (
               <div key={tone._id} className="col-6 col-md-3">
-                <div 
+                <div
                   className={`undertone-card ${selectedUndertone === tone.key ? "active" : ""}`}
                   onClick={() => setSelectedUndertone(tone.key)}
                 >
                   {/* Top Color Bar */}
-                  <div 
-                    className="undertone-bar" 
+                  <div
+                    className="undertone-bar"
                     style={{ backgroundColor: getBarColor(tone.name) }}
                   ></div>
-                  
+
                   <div className="card-body-custom d-flex align-items-start mt-3">
                     {/* Custom Radio Circle */}
                     <div className={`custom-radio-circle me-3 ${selectedUndertone === tone.key ? "selected" : ""}`}>
                       {selectedUndertone === tone.key && <div className="inner-dot"></div>}
                     </div>
-                    
+
                     <div>
                       <h3 className="h4 fw-normal mb-1">{tone.name}</h3>
                       <p className="text-muted small undertone-desc">
-                        {tone.description || "On the pink, red and blue side"}
+                        {getUndertoneDescription(tone.name)}
                       </p>
                     </div>
                   </div>
@@ -114,9 +130,9 @@ export default function UndertoneSlider() {
           <button className="btn btn-previous btn-for-shadetones" onClick={handleBack}>
             <span className="me-2">←</span> Previous
           </button>
-          <button 
-            className="btn-next-black btn-for-back-buttons" 
-            disabled={!selectedUndertone} 
+          <button
+            className="btn-next-black btn-for-back-buttons"
+            disabled={!selectedUndertone}
             onClick={handleNext}
           >
             Next <span className="ms-2">→</span>

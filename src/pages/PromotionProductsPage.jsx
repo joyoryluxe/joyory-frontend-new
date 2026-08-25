@@ -422,11 +422,11 @@ const PromotionProducts = () => {
               );
             })()}
           </p>
-                  {prod.nextOrderDiscountMessage && (
-                    <div className="next-order-discount-tag" title={prod.nextOrderDiscountMessage} onClick={(e) => { e.stopPropagation(); window.showDiscountPopup && window.showDiscountPopup(prod.nextOrderDiscountMessage, e.currentTarget); }}>
-                      <span className="text-truncate">{prod.nextOrderDiscountMessage}</span>
-                    </div>
-                  )}
+          {prod.nextOrderDiscountMessage && (
+            <div className="next-order-discount-tag" title={prod.nextOrderDiscountMessage} onClick={(e) => { e.stopPropagation(); window.showDiscountPopup && window.showDiscountPopup(prod.nextOrderDiscountMessage, e.currentTarget); }}>
+              <span className="text-truncate">{prod.nextOrderDiscountMessage}</span>
+            </div>
+          )}
 
           <div className="mt-auto">
             <button
@@ -695,12 +695,12 @@ const PromotionProducts = () => {
                         <p className="mb-0 fs-6 fw-semibold page-title-main-name">Sort by</p>
                         <span className="text-muted small">
                           {
-                            filters.sort === 'priceHighToLow' ? 'Price: High to Low' : 
-                            filters.sort === 'priceLowToHigh' ? 'Price: Low to High' : 
-                            filters.sort === 'rating' ? 'Top Rated' :
-                            filters.sort === 'discountHighToLow' ? 'Discount: High to Low' :
-                            filters.sort === 'discountLowToHigh' ? 'Discount: Low to High' :
-                            'Newest First'
+                            filters.sort === 'priceHighToLow' ? 'Price: High to Low' :
+                              filters.sort === 'priceLowToHigh' ? 'Price: Low to High' :
+                                filters.sort === 'rating' ? 'Top Rated' :
+                                  filters.sort === 'discountHighToLow' ? 'Discount: High to Low' :
+                                    filters.sort === 'discountLowToHigh' ? 'Discount: Low to High' :
+                                      'Newest First'
                           }
                         </span>
                       </div>
@@ -778,22 +778,22 @@ const PromotionProducts = () => {
                   </button>
                 )} */}
                 {/* Desktop Sort Dropdown */}
-                <div className="d-none d-lg-flex align-items-center position-relative" style={{ gap: '6px'}}>
+                <div className="d-none d-lg-flex align-items-center position-relative" style={{ gap: '6px' }}>
                   <span className="text-muted page-title-main-name" style={{ fontSize: '14px' }}>Sort by:</span>
                   <div className="position-relative">
-                    <button 
+                    <button
                       type="button"
                       className="btn btn-link text-decoration-none p-0 page-title-main-name fw-semibold text-dark d-inline-flex align-items-center gap-1"
                       onClick={() => setShowDesktopSortDropdown(!showDesktopSortDropdown)}
                       style={{ border: 'none', background: 'none', boxShadow: 'none', fontSize: '14px' }}
                     >
                       {
-                        filters.sort === 'priceHighToLow' ? 'Price: High to Low' : 
-                        filters.sort === 'priceLowToHigh' ? 'Price: Low to High' : 
-                        filters.sort === 'rating' ? 'Top Rated' :
-                        filters.sort === 'discountHighToLow' ? 'Discount: High to Low' :
-                        filters.sort === 'discountLowToHigh' ? 'Discount: Low to High' :
-                        'Newest First'
+                        filters.sort === 'priceHighToLow' ? 'Price: High to Low' :
+                          filters.sort === 'priceLowToHigh' ? 'Price: Low to High' :
+                            filters.sort === 'rating' ? 'Top Rated' :
+                              filters.sort === 'discountHighToLow' ? 'Discount: High to Low' :
+                                filters.sort === 'discountLowToHigh' ? 'Discount: Low to High' :
+                                  'Newest First'
                       }
                       <FaChevronDown style={{ fontSize: '10px', transition: 'transform 0.2s', transform: showDesktopSortDropdown ? 'rotate(180deg)' : 'none' }} />
                     </button>
@@ -810,20 +810,20 @@ const PromotionProducts = () => {
                             { value: "discountLowToHigh", label: "Discount: Low to High" }
                           ].map(({ value, label }) => (
                             <li key={value}>
-                              <button 
+                              <button
                                 type="button"
                                 className={`dropdown-item page-title-main-name py-2 custom-sort-item ${filters.sort === value ? 'active' : ''}`}
                                 onClick={() => {
                                   setFilters(prev => ({ ...prev, sort: value }));
                                   setShowDesktopSortDropdown(false);
                                 }}
-                                style={{ 
-                                  fontSize: '13px', 
-                                  border: 'none', 
+                                style={{
+                                  fontSize: '13px',
+                                  border: 'none',
 
 
-                                  width: '100%', 
-                                  textAlign: 'left', 
+                                  width: '100%',
+                                  textAlign: 'left',
                                   cursor: 'pointer',
                                   padding: '8px 16px'
                                 }}

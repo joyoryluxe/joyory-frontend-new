@@ -5,7 +5,7 @@
     box-shadow: none !important;
     /* transition: all 0.3s ease; */
     /* background: white; */
-    height: 100%;
+    height: auto;
 }
 
 /* .foryou-card-wrapper:hover {
@@ -128,7 +128,7 @@
 }
 
 .support-beauty-badge .vto-text {
-  font-family: 'Montserrat', sans-serif;
+    font-family: 'Montserrat', sans-serif;
     font-size: 10px !important;
     font-weight: 700 !important;
     letter-spacing: 0.5px !important;
@@ -296,7 +296,11 @@
 /* Swiper Customization */
 
 .foryou-swiper {
-    padding: 10px 5px 20px !important;
+    padding: 10px 5px 0px !important;
+}
+
+.foryou-swiper .swiper-pagination {
+    display: none !important;
 }
 
 .swiper-button-next,
@@ -684,9 +688,6 @@
     transition: all 0.2s ease;
 }
 
-.color-circle.selected {
-    /* box-shadow: 0 0 0 2px white, 0 0 0 3px #000000 !important; */
-}
 
 .color-circle:hover:not(.out-of-stock):not(.selected) {
     transform: scale(1.1);
@@ -1214,5 +1215,31 @@
         to {
             transform: translateY(0);
         }
+    }
+}
+
+/* Mobile Layout Spacing Adjustments */
+@media (max-width: 768px) {
+    div.container-fluid.my-4.position-relative.margin-left-rights:not(.mb-0) {
+        margin-top: 12px !important;
+        margin-bottom: 8px !important;
+    }
+
+    div.container-fluid.my-4.position-relative.margin-left-rights.mb-0 {
+        margin-top: 12px !important;
+        margin-bottom: 0px !important;
+    }
+
+    .foryou-swiper {
+        padding-top: 5px !important;
+        padding-bottom: 0px !important;
+    }
+
+    .foryou-card-wrapper {
+        margin-bottom: 5px !important;
+    }
+
+    .swiper-pagination {
+        display: none !important;
     }
 }

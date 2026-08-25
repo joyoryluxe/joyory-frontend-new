@@ -6,7 +6,7 @@
     background-color: #fff;
     overflow-x: hidden;
     padding-bottom: 150px;
-    padding-top: 150px;
+    /* padding-top: 150px; */
     /* Space for the wave */
 }
 
@@ -129,9 +129,9 @@
 }
 
 @media (max-width: 768px) {
-    .undertone-page-wrapper {
+    /* .undertone-page-wrapper {
         padding-top: 95px !important;
-    }
+    } */
 
     .undertone-title {
         margin-top: 0px;

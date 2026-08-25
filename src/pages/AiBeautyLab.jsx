@@ -105,7 +105,9 @@ const AiBeautyLab = () => {
   }, []);
 
   useEffect(() => {
-    // Scroll Reveal Intersection Observer
+    const elements = document.querySelectorAll(".reveal-on-scroll");
+    elements.forEach((el) => el.classList.add("reveal-visible"));
+
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -114,12 +116,10 @@ const AiBeautyLab = () => {
           }
         });
       },
-      { threshold: 0.1 }
+      { threshold: 0.05 }
     );
 
-    const elements = document.querySelectorAll(".reveal-on-scroll");
     elements.forEach((el) => observer.observe(el));
-
     return () => observer.disconnect();
   }, []);
 
@@ -211,11 +211,12 @@ const AiBeautyLab = () => {
   ];
 
   return (
-    <div className="ai-beauty-lab-page">
+    <>
       <Header />
+      <div className="ai-beauty-lab-page">
 
       {/* Hero Section */}
-      <section className="lab-hero mt-lg-5" style={{ backgroundImage: `url(${beautyLabHeroImg})` }}>
+      <section className="lab-hero mt-lg-0" style={{ backgroundImage: `url(${beautyLabHeroImg})` }}>
         <div className="lab-hero-overlay"></div>
         <div className="lab-hero-content text-center text-lg-start container">
           <span className="lab-hero-tag">Science Behind Every Glow</span>
@@ -358,6 +359,7 @@ const AiBeautyLab = () => {
 
       <Footer />
     </div>
+    </>
   );
 };
 

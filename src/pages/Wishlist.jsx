@@ -158,8 +158,8 @@ const Wishlist = () => {
       <Header />
 
 
-      <div className="container py-4 mt-xl-5 pt-xl-5 mt-5 pt-5">
-        <h2 className="mb-4 fw-bold page-title-main-name mt-lg-5">
+      <div className="container py-4 mt-xl-0 pt-xl-5 mt-0 pt-4">
+        <h2 className="mb-4 fw-bold page-title-main-name mt-lg-3">
           My Wishlist ({wishlistItems.length})
         </h2>
 

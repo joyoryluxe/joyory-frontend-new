@@ -1,10 +1,8 @@
-/* SkinDiagnosis.css */
-
-.skin-diagnosis-page {
+/* .skin-diagnosis-page {
   color: #000;
   font-family: 'Montserrat', sans-serif;
   min-height: 100vh;
-  padding-top: 180px;
+  padding-top: 0px;
   overflow-x: hidden;
 }
 
@@ -14,10 +12,10 @@
   padding: 0 24px;
 }
 
-/* Page Header */
 .skin-diagnosis-header {
   text-align: center;
   margin-bottom: 45px;
+  margin-top: 60px;
 }
 
 .skin-diagnosis-tag {
@@ -51,7 +49,6 @@
   line-height: 1.6;
 }
 
-/* Tab Switcher Capsule */
 .tabs-container {
   display: flex;
   justify-content: center;
@@ -90,7 +87,6 @@
   color: #fff;
 }
 
-/* Glassmorphic Panel */
 .glass-panel {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -113,7 +109,6 @@
   }
 }
 
-/* STEP 1: Workspace */
 .scan-workspace {
   display: grid;
   grid-template-columns: 1.2fr 0.8fr;
@@ -126,9 +121,6 @@
     gap: 30px;
   }
 
-  .skin-diagnosis-page {
-    padding-top: 120px;
-  }
 }
 
 @media (max-width: 768px) {
@@ -147,6 +139,7 @@
 
   .skin-diagnosis-header {
     margin-bottom: 20px;
+    margin-top: 20px;
   }
 
   .glass-panel {
@@ -154,7 +147,6 @@
   }
 }
 
-/* Media Box */
 .media-box {
   border: 2px dashed #33333373;
   border-radius: 20px;
@@ -235,7 +227,6 @@
   box-shadow: 0 6px 20px rgba(212, 175, 55, 0.25);
 }
 
-/* Webcam Frame */
 .webcam-container {
   width: 100%;
   height: 100%;
@@ -335,7 +326,6 @@
 }
 
 .btn-webcam-cancel {
-  /* background: rgba(255, 255, 255, 0.08); */
   color: #000;
   border: 1px solid rgba(255, 255, 255, 0.15);
   width: 46px;
@@ -354,7 +344,6 @@
   color: #dc3545;
 }
 
-/* Image Preview */
 .preview-container {
   width: 100%;
   display: flex;
@@ -377,7 +366,6 @@
   gap: 20px;
 }
 
-/* Guidelines Checklist */
 .checklist-box {
   background: rgba(255, 255, 255, 0.015);
   border: 1px solid rgba(255, 255, 255, 0.04);
@@ -432,7 +420,6 @@
   margin-top: 24px;
   background: #000;
   color: #fff;
-  /* border: 1px solid rgba(212, 175, 55, 0.3); */
   padding: 14px;
   border-radius: 12px;
   font-weight: 600;
@@ -446,7 +433,6 @@
 }
 
 
-/* STEP 2: Scanning Workspace */
 .scanning-workspace {
   display: flex;
   flex-direction: column;
@@ -510,7 +496,6 @@
   animation: barProgress 10s infinite linear;
 }
 
-/* STEP 3: Results Panel */
 .results-grid {
   display: grid;
   grid-template-columns: 0.95fr 1.05fr;
@@ -561,7 +546,6 @@
   object-fit: cover;
 }
 
-/* Confidence SVG Ring */
 .confidence-wrapper {
   position: relative;
   width: 130px;
@@ -577,7 +561,6 @@
 
 .confidence-ring-progress {
   fill: none;
-  /* stroke: url(#goldGradient); */
   stroke: #000;
   stroke-width: 8px;
   stroke-linecap: round;
@@ -613,7 +596,6 @@
   margin-top: 5px;
 }
 
-/* Metrics Row */
 .metrics-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -656,15 +638,6 @@
   gap: 10px;
 }
 
-/* .color-swatch {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  border: 1.5px solid rgba(255, 255, 255, 0.25);
-  display: inline-block;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
-} */
-
 .undertone-badge {
   font-size: 11px;
   padding: 3px 12px;
@@ -706,7 +679,6 @@
   letter-spacing: 0.5px;
 }
 
-/* Identified Concerns */
 .concerns-box {
   width: 100%;
 }
@@ -736,7 +708,6 @@
   color: #d4af37;
 }
 
-/* Consultation box */
 .consultation-box {
   background: #0076b603;
   border: 1px solid #0076b620;
@@ -790,7 +761,6 @@
   box-shadow: 0 6px 20px rgba(212, 175, 55, 0.3);
 }
 
-/* STEP 4: Product Recommendations */
 .recs-section-header {
   margin-top: 70px;
   margin-bottom: 35px;
@@ -842,7 +812,6 @@
   }
 }
 
-/* Unused Rec Product Card Styles (replaced by bestsellers design) */
 .unused-rec-card {
   background: rgba(20, 20, 20, 0.85);
   border: 1px solid rgba(255, 255, 255, 0.05);
@@ -1005,9 +974,6 @@
   color: rgba(212, 175, 55, 0.4);
 }
 
-/* ========================================================
-   FIXED: HISTORY TAB STUNNING REDESIGN
-   ======================================================== */
 .history-container {
   display: flex;
   flex-direction: column;
@@ -1015,7 +981,6 @@
 }
 
 .history-card {
-  /* background: rgba(20, 20, 20, 0.6); */
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 18px;
   padding: 24px;
@@ -1051,11 +1016,9 @@
   object-fit: cover;
 }
 
-/* Card details (middle) */
 .history-details-col {
   flex-grow: 1;
   min-width: 0;
-  /* allows text truncation */
 }
 
 .history-details-header {
@@ -1092,7 +1055,6 @@
   overflow: hidden;
 }
 
-/* Card Glass Metrics Box (Right-Middle) */
 .history-metrics-box {
   flex-shrink: 0;
   min-width: 150px;
@@ -1128,7 +1090,6 @@
   text-transform: capitalize;
 }
 
-/* Card Action Box (Far Right) */
 .history-action-box {
   flex-shrink: 0;
 }
@@ -1213,7 +1174,6 @@
   margin-bottom: 24px;
 }
 
-/* Loading Overlay */
 .loading-overlay {
   display: flex;
   flex-direction: column;
@@ -1250,7 +1210,6 @@
   text-transform: uppercase;
 }
 
-/* webcam face outline mask */
 .webcam-hud-svg {
   position: absolute;
   top: 0;
@@ -1283,7 +1242,6 @@
   }
 }
 
-/* Smart lighting warnings indicator overlay */
 .lighting-hud-indicator {
   position: absolute;
   bottom: 15px;
@@ -1331,7 +1289,6 @@
   text-transform: uppercase;
 }
 
-/* Pinpoint dots over the selfie results */
 .results-photo-wrapper-relative {
   position: relative;
   overflow: visible !important;
@@ -1408,7 +1365,6 @@
   }
 }
 
-/* Pin interactive tooltips */
 .pin-tooltip {
   position: absolute;
   bottom: 24px;
@@ -1461,7 +1417,6 @@
   line-height: 1.4;
 }
 
-/* Melanin & Hydration Comparison Swatch Gauge */
 .swatches-gauge-card {
   width: 100%;
   margin-top: 30px;
@@ -1529,19 +1484,14 @@
   position: absolute;
   left: 0;
   top: 0;
-  /* box-shadow: 0 0 10px currentColor; */
 }
 
 .hydration-fill {
   background: #000;
-  /* background: linear-gradient(90deg, #17a2b8, #4dff4d); */
-  /* color: rgba(77, 255, 77, 0.4); */
 }
 
 .melanin-fill {
   background: #000;
-  /* background: linear-gradient(90deg, #d4af37, #b88a64);
-  color: rgba(212, 175, 55, 0.4); */
 }
 
 .swatch-ideal-marker {
@@ -1566,7 +1516,6 @@
   letter-spacing: 0.5px;
 }
 
-/* Routine Builder Export Button */
 .btn-export-routine {
   color: #000;
   background: transparent;
@@ -1591,7 +1540,6 @@
   box-shadow: 0 0 15px rgba(212, 175, 55, 0.15);
 }
 
-/* Bulk Checkout Regimen Banner */
 .bulk-checkout-banner {
   background: #0076b604;
   border: 1px solid rgba(212, 175, 55, 0.2);
@@ -1664,27 +1612,9 @@
     gap: 6px;
   }
 
-  /* .btn-bulk-checkout {
-  background: #000;
-  color: #fff;
-  border: none;
-  padding: 14px 28px;
-  border-radius: 10px;
-  font-weight: 700;
-  font-size: 12px;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  text-transform: capitalize;
-  letter-spacing: 1px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-shrink: 0;
-  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
-} */
+
 }
 
-/* Sequential AM/PM Badges & Allergen Alert Shield */
 .rec-badges-row {
   display: flex;
   flex-direction: column;
@@ -1730,7 +1660,6 @@
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-/* Micro animations for card entries */
 .animate-card {
   animation: cardFadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
@@ -1747,9 +1676,7 @@
   }
 }
 
-/* Skincare Progress Line Chart in history tab */
 .progress-chart-card {
-  /* background: rgba(20, 20, 20, 0.55); */
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 20px;
   padding: 24px;
@@ -1844,7 +1771,6 @@
 
 @media (min-width: 768px) {
 
-  /* Set container flex order, unified height, and ensure it doesn't use absolute positioning */
   .foryou-product-info-ai>div {
     position: relative !important;
     display: flex !important;
@@ -1852,8 +1778,8 @@
     height: 230px !important;
     min-height: unset !important;
   }
-}
+} */
 
 /* ========================================================
    VARIANT SELECTOR & MOBILE BOTTOM SHEET REMOVED (INHERITING FROM FORYOU.CSS)
-   ======================================================== */
+   ========================================================

@@ -54,8 +54,8 @@ const Referral = () => {
   return (
     <>
       <Header />
-      <div className="referral-page-container pt-xl-5">
-        <Container className="pt-4 mt-lg-5 pt-lg-4 mt-md-0 pt-md-5">
+      <div className="referral-page-container pt-xl-3">
+        <Container className="pt-4 mt-0 pt-lg-4 pt-md-5">
           {/* Hero Banner Section */}
           <div className="referral-hero">
             <Row className="w-100 align-items-center">

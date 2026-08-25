@@ -1,6 +1,6 @@
 .shadetone-wrapper {
     overflow-x: hidden;
-    padding-top: 95px;
+    padding-top: 60px;
 }
 
 
@@ -245,7 +245,7 @@
 
 @media (max-width: 768px) {
     .shadetone-wrapper {
-        padding-top: 85px !important;
+        padding-top: 30px !important;
     }
 
     .about-title {

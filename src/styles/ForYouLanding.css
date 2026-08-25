@@ -569,12 +569,12 @@ body {
 }
 
 .margin-padding-for-foryoulanding {
-    margin-top: 140px;
+    margin-top: 60px;
 }
 
 @media (max-width:1024px) {
     .margin-padding-for-foryoulanding {
-        margin-top: 70px !important;
+        margin-top: 0px !important;
     }
 }
 

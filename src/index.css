@@ -1,11 +1,34 @@
 html {
     scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.25) transparent;
 }
 
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.25) transparent;
+}
+
+/* Global Custom Ultra-Slim Scrollbar (Chrome, Edge, Safari) */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 4px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.45);
 }
 
 body {
@@ -58,7 +81,7 @@ body.modal-open,
 
 @media (max-width:1023px) {
     .hero-slider-image-responsive {
-        margin-top: 40px !important;
+        margin-top: 0px !important;
     }
 }
 
@@ -256,5 +279,71 @@ body.modal-open,
 @media (min-width: 3840px) {
     html {
         zoom: 2.4 !important;
+    }
+}
+
+/* =============================================================
+   HOMEPAGE HERO BANNERS (VTO, SHADE FINDER & QUIZ) RESPONSIVE SIZING
+   ============================================================= */
+
+/* Desktop view: 3:1 aspect ratio matching desktop banners */
+.vto-banner-image-wrapper,
+.shade-banner-image-wrapper,
+.quiz-banner-image-wrapper {
+    position: relative;
+    width: 100%;
+    height: 0;
+    padding-bottom: 33.33%;
+    overflow: hidden;
+}
+
+.vto-banner-image-wrapper img,
+.shade-banner-image-wrapper img,
+.quiz-banner-image-wrapper img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+
+/* Mobile Banner Custom Sizing (Responsive without cropping) */
+@media (max-width: 768px) {
+
+    .vto-banner-image-wrapper,
+    .shade-banner-image-wrapper,
+    .quiz-banner-image-wrapper {
+        position: relative !important;
+        width: 100% !important;
+        max-width: 414px !important;
+        height: auto !important;
+        padding-bottom: 0 !important;
+        overflow: hidden !important;
+        margin: 0 auto !important;
+        border-radius: 0px;
+    }
+
+    .vto-banner-image-wrapper picture,
+    .vto-banner-image-wrapper img,
+    .vto-banner-image,
+    .shade-banner-image-wrapper picture,
+    .shade-banner-image-wrapper img,
+    .shade-banner-image,
+    .quiz-banner-image-wrapper picture,
+    .quiz-banner-image-wrapper img,
+    .quiz-banner-image {
+        position: relative !important;
+        top: auto !important;
+        left: auto !important;
+        width: 100% !important;
+        max-width: 414px !important;
+        height: auto !important;
+        object-fit: contain !important;
+        object-position: center !important;
+        border-radius: 0px;
+        margin: 0 auto !important;
+        display: block !important;
     }
 }

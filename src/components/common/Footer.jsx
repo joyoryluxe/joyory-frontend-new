@@ -61,7 +61,7 @@ const Footer = () => {
   }, []);
 
   const fallbackCategories = [
- 
+
     {
       _id: 'fb2',
       name: 'Skin',
@@ -79,7 +79,7 @@ const Footer = () => {
         { name: 'Lip Masks', path: '/category/skin/lip-masks' }
       ]
     },
- 
+
     {
       _id: 'fb4',
       name: 'Makeup',
@@ -97,7 +97,7 @@ const Footer = () => {
         { name: 'Loose Powder', path: '/category/makeup/face/loose-powder' }
       ]
     },
-   
+
   ];
 
   const getSubcategoriesList = (cat) => {
@@ -261,7 +261,7 @@ const Footer = () => {
         <div className="container d-flex flex-md-row flex-column  align-items-start gap-md-4 gap-3">
           <div className="footer-brands-title">Popular Brands</div>
           <div className="footer-brands-list">
-            {(brands.length > 0 ? brands.slice(0, 15) : [
+            {(brands.length > 0 ? brands : [
               { _id: '1', name: 'Maybelline', slug: 'maybelline' },
               { _id: '2', name: 'Swiss Beauty', slug: 'swiss-beauty' },
               { _id: '3', name: 'Aqualogica', slug: 'aqualogica' },

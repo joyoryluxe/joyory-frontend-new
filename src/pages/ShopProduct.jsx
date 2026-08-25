@@ -128,7 +128,12 @@ export default function ProductPage() {
     const activeCategorySlug = useMemo(() => {
         return location.pathname.includes("/category/") && effectiveSlug ? effectiveSlug : null;
     }, [location.pathname, effectiveSlug]);
-    const [activeCategoryName, setActiveCategoryName] = useState("");
+    const activeCategoryName = useMemo(() => {
+        if (!activeCategorySlug) return "";
+        const found = trendingCategories.find((c) => c.slug === activeCategorySlug)
+            || filterData?.categories?.find((c) => c.slug === activeCategorySlug || c._id === activeCategorySlug);
+        return found ? found.name : "";
+    }, [activeCategorySlug, trendingCategories, filterData]);
 
     const [selectedVariants, setSelectedVariants] = useState({});
     const [tempSelectedVariants, setTempSelectedVariants] = useState({});
@@ -575,16 +580,8 @@ export default function ProductPage() {
 
                 if (data.trendingCategories && Array.isArray(data.trendingCategories)) {
                     setTrendingCategories(data.trendingCategories);
-                    if (effectiveSlug && !activeCategoryName) {
-                        const found = data.trendingCategories.find((c) => c.slug === effectiveSlug);
-                        if (found) setActiveCategoryName(found.name);
-                    }
                 } else {
                     setTrendingCategories([]);
-                }
-
-                if (data.category?.name && !activeCategoryName && effectiveSlug) {
-                    setActiveCategoryName(data.category.name);
                 }
 
                 if (reset && data.filters) {
@@ -625,16 +622,7 @@ export default function ProductPage() {
         }
     };
 
-    useEffect(() => {
-        if (location.pathname.includes("/category/") && effectiveSlug) {
-            if (trendingCategories.length > 0) {
-                const found = trendingCategories.find(c => c.slug === effectiveSlug);
-                if (found) setActiveCategoryName(found.name);
-            }
-        } else {
-            setActiveCategoryName("");
-        }
-    }, [effectiveSlug, location.pathname, trendingCategories]);
+    // Removed activeCategoryName sync useEffect since it is now computed dynamically
 
 
 
@@ -708,9 +696,13 @@ export default function ProductPage() {
     }, [navigate, slug]);
 
     const handleCategoryCheckboxToggle = useCallback((cat) => {
+        const value = cat.slug || cat._id;
+        if (activeCategorySlug === value) {
+            handleClearCategory();
+            return;
+        }
         setFilters(prev => {
             const current = prev.categoryIds || [];
-            const value = cat.slug || cat._id;
             const isActive = current.includes(value);
             return {
                 ...prev,
@@ -719,7 +711,7 @@ export default function ProductPage() {
                     : [...current, value]
             };
         });
-    }, []);
+    }, [activeCategorySlug, handleClearCategory]);
 
     const handleTopCategoryClick = useCallback((cat) => {
         setFilters(prev => {

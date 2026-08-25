@@ -9,6 +9,7 @@ import "swiper/css/pagination";
 import "swiper/css/navigation";
 import "swiper/css/effect-fade";
 import Loader from "../../common/Loader";
+import shadeFinderMobileBanner from "../../../assets/shade_finder_mobile_banner.png";
 import "../../../styles/BannerSlider.css";
 
 const BannerSlider = () => {
@@ -125,7 +126,7 @@ const BannerSlider = () => {
   }
 
   return (
-    <div className="px-lg-5 px-0 container-lg-fluid">
+    <div className="px-lg-5 px-4 container-lg-fluid">
       {/* Custom Pagination Styles - Same as HeroSlider */}
       <style>{`
         .banner-swiper .custom-swiper-bullet {
@@ -244,16 +245,19 @@ const BannerSlider = () => {
                 className="banner-slide position-relative overflow-hidden cursor-pointer"
                 onClick={() => handleBannerClick(banner.buttonLink)}
               >
-                <div className="banner-image-wrapper">
-                  <img
-                    src={banner.image}
-                    alt={banner.title || "Shade Finder"}
-                    className="img-fluid w-100 margin-left-for-Virtualtryonhome"
-                    loading="lazy"
-                    onError={(e) => {
-                      e.currentTarget.src = "https://via.placeholder.com/1920x600/764ba2/ffffff?text=Shade+Finder";
-                    }}
-                  />
+                <div className="shade-banner-image-wrapper d-flex justify-content-center">
+                  <picture className="w-100 h-100">
+                    <source media="(max-width: 768px)" srcSet={shadeFinderMobileBanner} />
+                    <img
+                      src={banner.image}
+                      alt={banner.title || "Shade Finder"}
+                      className="img-fluid w-100 margin-left-for-Virtualtryonhome shade-banner-image"
+                      loading="lazy"
+                      onError={(e) => {
+                        e.currentTarget.src = "https://via.placeholder.com/1920x600/764ba2/ffffff?text=Shade+Finder";
+                      }}
+                    />
+                  </picture>
                 </div>
               </div>
             </SwiperSlide>

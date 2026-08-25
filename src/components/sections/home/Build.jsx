@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Loader from "../../common/Loader";
+import quizMobileBanner from "../../../assets/quiz_mobile_banner.png";
 import "../../../styles/Build.css";
 
 const FEATURE_BANNER_API = "https://beauty.joyory.com/api/user/categories/category/skin/landing";
@@ -78,8 +79,8 @@ const FeatureBanners = () => {
   }
 
   return (
-    <section className="feature-banners py-2 bg-white">
-      <div className="container-fluid-lg p-0 ms-lg-4">
+    <section className="feature-banners py-2 px-4 bg-white">
+      <div className="container-fluid-lg p-0">
         {banners.map((banner, index) => (
           <div
             key={banner._id || index}
@@ -90,22 +91,22 @@ const FeatureBanners = () => {
             <div className="border-0 overflow-hidden">
               <div className="row g-0">
                 <div className="col-12">
-                  <img
-                    src={getBannerImage(banner)}
-                    alt={banner.title || "Feature"}
-                    className="w-100 img-fluid"
-                    style={{
-                      width: "100%",
-                      height: "auto",
-                      display: "block",
-                    }}
-                    onError={(e) => {
-                      e.target.src = "/placeholder-banner.jpg";
-                      e.target.style.objectFit = "contain";
-                      e.target.style.padding = "40px";
-                      e.target.style.background = "#f8f9fa";
-                    }}
-                  />
+                  <div className="quiz-banner-image-wrapper d-flex justify-content-center">
+                    <picture className="w-100 h-100">
+                      <source media="(max-width: 768px)" srcSet={quizMobileBanner} />
+                      <img
+                        src={getBannerImage(banner)}
+                        alt={banner.title || "Feature"}
+                        className="w-100 img-fluid quiz-banner-image"
+                        onError={(e) => {
+                          e.target.src = "/placeholder-banner.jpg";
+                          e.target.style.objectFit = "contain";
+                          e.target.style.padding = "40px";
+                          e.target.style.background = "#f8f9fa";
+                        }}
+                      />
+                    </picture>
+                  </div>
                 </div>
               </div>
             </div>

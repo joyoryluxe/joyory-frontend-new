@@ -87,8 +87,8 @@ const TopCategories = () => {
 
   return (
     // <div className="top-categories-wrapper container responsive-container  my-4">
-    <div className="top-categories-wrapper container-fluid  bg-white">
-      <h2 className="top-categories-title mb-1 text-left ms-lg-3 ms-2 ps-lg-4 mb-2 mb-lg-4 fw-normal">Top Categories</h2>
+    <div className="top-categories-wrapper container-fluid  bg-white mb-4">
+      <h2 className="top-categories-title mb-1 text-left ms-lg-3 ms-2 ps-lg-4 mb-2 m-lg-4  fw-normal">Top Categories</h2>
 
       {loading ? (
         <p className="text-center text-muted page-title-main-name">Loading categories...</p>

@@ -192,9 +192,9 @@ const Myorders = () => {
   return (
     <>
       <Header />
-      <div className="orders-page-wrapper bg-white pb-5 page-title-main-name mt-lg-5 pt-lg-5 mt-md-5 pt-md-5">
+      <div className="orders-page-wrapper bg-white pb-5 page-title-main-name mt-lg-0 pt-lg-5 mt-0 pt-md-5">
         <div className="container orders-container">
-          <h2 className="orders-title py-4 page-title-main-name mt-5 pt-lg-4 mt-md-0 pt-md-0">
+          <h2 className="orders-title py-0 page-title-main-name mt-0 pt-lg-3 mt-md-0 pt-md-0">
             My Orders
           </h2>
 

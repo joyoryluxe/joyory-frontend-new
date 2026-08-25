@@ -31,14 +31,14 @@ export default function IngredientDetailsDrawer({ isOpen, onClose, ingredient })
   return (
     <>
       {/* Backdrop */}
-      <div 
+      <div
         className="position-fixed top-0 start-0 w-100 h-100 bg-dark opacity-50"
         style={{ zIndex: 10050, transition: "opacity 0.3s ease" }}
         onClick={onClose}
       />
 
       {/* Drawer Panel */}
-      <div 
+      <div
         className="ic-drawer-panel position-fixed top-0 end-0 h-100 bg-white shadow-lg d-flex flex-column"
         style={{
           width: "420px",
@@ -59,7 +59,7 @@ export default function IngredientDetailsDrawer({ isOpen, onClose, ingredient })
               <small className="text-muted">Also known as: {ingredient.aliases.join(", ")}</small>
             )}
           </div>
-          <button 
+          <button
             onClick={onClose}
             className="btn btn-link text-muted p-2 border-0"
             style={{ fontSize: "20px", textDecoration: "none" }}
@@ -70,7 +70,7 @@ export default function IngredientDetailsDrawer({ isOpen, onClose, ingredient })
 
         {/* Scrollable Content */}
         <div className="p-4 flex-grow-1 overflow-auto" style={{ fontSize: "14px", lineHeight: "1.6" }}>
-          
+
           {/* Allergen Status */}
           {(ingredient.isAllergen || ingredient.isSensitive) && (
             <div className={`p-3 rounded mb-4 d-flex gap-2 align-items-center ${ingredient.isAllergen ? "bg-danger bg-opacity-10 text-danger" : "bg-warning bg-opacity-10 text-warning"}`} style={{ border: `1px solid ${ingredient.isAllergen ? "#f5c2c7" : "#ffecb5"}` }}>
@@ -80,8 +80,8 @@ export default function IngredientDetailsDrawer({ isOpen, onClose, ingredient })
                   {ingredient.isAllergen ? "⚠️ Allergen Alert!" : "⚠️ Sensitive Alert!"}
                 </strong>
                 <span className="small text-dark text-opacity-75">
-                  {ingredient.isAllergen 
-                    ? "Matches your high-risk allergen profile." 
+                  {ingredient.isAllergen
+                    ? "Matches your high-risk allergen profile."
                     : "You marked this as sensitive/irritating."}
                 </span>
               </div>
@@ -177,14 +177,14 @@ export default function IngredientDetailsDrawer({ isOpen, onClose, ingredient })
 
         {/* Footer Actions */}
         <div className="p-4 border-top bg-light d-flex gap-2">
-          <button 
+          <button
             className="btn btn-outline-dark flex-grow-1 d-flex align-items-center justify-content-center gap-2"
             onClick={handleSearchProducts}
             style={{ fontSize: "13px", padding: "10px 0" }}
           >
             <FaSearch size={12} /> Find Catalog Products
           </button>
-          <button 
+          <button
             className="btn btn-dark flex-grow-1"
             onClick={handleViewDetail}
             style={{ fontSize: "13px", padding: "10px 0" }}

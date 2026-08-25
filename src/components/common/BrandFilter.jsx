@@ -153,6 +153,12 @@ const BrandFilter = ({
 
         sections.forEach((sec) => {
             (filters[sec.key] || []).forEach((v) => {
+                // Skip category chip if it duplicates the active route category pill
+                if (sec.key === "categoryIds" && activeCategorySlug) {
+                    if (v === activeCategorySlug) return;
+                    const item = sec.list.find((i) => i[sec.field] === v || i._id === v || (i.slug && i.slug === v));
+                    if (item && (item.slug === activeCategorySlug || item._id === activeCategorySlug)) return;
+                }
                 const item = sec.list.find((i) => i[sec.field] === v || i._id === v || (i.slug && i.slug === v));
                 if (item) {
                     chips.push({ group: sec.key, val: v, label: item.name || v });
@@ -174,6 +180,7 @@ const BrandFilter = ({
         // Category pill from navigation
         if (activeCategorySlug) {
             const catName = activeCategoryName ||
+                categories.find(c => c.slug === activeCategorySlug || c._id === activeCategorySlug)?.name ||
                 trendingCategories.find(c => c.slug === activeCategorySlug)?.name ||
                 activeCategorySlug;
             chips.push({
@@ -185,7 +192,7 @@ const BrandFilter = ({
         }
 
         return chips;
-    }, [filters, filterData, activeCategorySlug, activeCategoryName, trendingCategories]);
+    }, [filters, filterData, activeCategorySlug, activeCategoryName, trendingCategories, categories]);
 
     // 👇 True when current filters exactly match the default state
     const isDefault = useMemo(() => {
@@ -317,7 +324,6 @@ const BrandFilter = ({
                     <div className="height-selcted-section p-2">
                         {(chipsExpanded ? activeChips : activeChips.slice(0, 3)).map((chip, idx) => (
                             <span key={idx} className="height-selcted-section-sub" style={{ fontSize: "11px" }}>
-                                {chip.isPill && <span style={{ opacity: 0.75 }}>Category: </span>}
                                 {chip.label}
                                 <FaTimes
                                     style={{ cursor: "pointer", marginLeft: 6 }}
@@ -365,11 +371,6 @@ const BrandFilter = ({
                     <h2 className="accordion-header pb-0 mb-0">
                         <button className="accordion-button text-black fw-normal" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCats">
                             Categories
-                            {activeCategoryName && (
-                                <span className="ms-2 text-muted" style={{ fontSize: 12 }}>
-                                    › {activeCategoryName}
-                                </span>
-                            )}
                         </button>
                     </h2>
                     <div id="collapseCats" className="accordion-collapse collapse show">
