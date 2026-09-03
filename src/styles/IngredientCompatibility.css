@@ -20,7 +20,7 @@
 
 .ic-container {
   /* margin: 8rem 3.75rem 0; */
-  margin: 9rem auto 5rem;
+  margin: 4rem auto 5rem;
   max-width: 999px;
   /* padding: 0 24px; */
 }
@@ -935,7 +935,7 @@
 @media (max-width: 850px) {
 
   .ic-container {
-    margin: 3rem auto 3rem !important;
+    margin: 0rem auto 3rem !important;
     padding: 0 16px;
   }
 

@@ -999,9 +999,9 @@ function RecommendationsPage({ onBack, onBannerClick }) {
             {/* <ToastContainer position="top-right" autoClose={3000} /> */}
             <Header />
 
-            <Container fluid className="py-5">
-                <div className="mb-lg-5 mb-4 text-center mt-lg-5 pt-lg-3 padding-left-rightss" style={{ cursor: 'pointer' }} onClick={onBannerClick}>
-                    <img src={FoyoulandingImg} alt="Personalize Your Experience" className="img-fluid mt-5" style={{ maxHeight: 'auto', width: '100%' }} />
+            <Container fluid className="py-lg-5 py-0">
+                <div className="mb-lg-5 mb-4 text-center mt-0 pt-lg-3 padding-left-rightss" style={{ cursor: 'pointer' }} onClick={onBannerClick}>
+                    <img src={FoyoulandingImg} alt="Personalize Your Experience" className="img-fluid mt-3" style={{ maxHeight: 'auto', width: '100%' }} />
                 </div>
 
                 {productSections.map((section) => (

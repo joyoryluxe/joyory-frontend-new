@@ -328,6 +328,45 @@ const MainVirtualTryon = () => {
   const smoothedLms = useRef(null);
   const faceMeshRef = useRef(null);
   const cameraRef = useRef(null);
+  const cameraTimeoutRef = useRef(null);
+  const isMountedRef = useRef(true);
+
+  const cleanupVTOEngine = useCallback(() => {
+    if (cameraTimeoutRef.current) {
+      clearTimeout(cameraTimeoutRef.current);
+      cameraTimeoutRef.current = null;
+    }
+    if (cameraRef.current) {
+      try {
+        cameraRef.current.stop();
+      } catch (err) {
+        console.warn("Camera stop suppressed error:", err?.message || err);
+      }
+      cameraRef.current = null;
+    }
+    if (faceMeshRef.current) {
+      const mesh = faceMeshRef.current;
+      faceMeshRef.current = null;
+      try {
+        const closePromise = mesh.close();
+        if (closePromise && typeof closePromise.catch === 'function') {
+          closePromise.catch((err) => {
+            console.warn("FaceMesh close promise suppressed:", err?.message || err);
+          });
+        }
+      } catch (err) {
+        console.warn("FaceMesh close suppressed error:", err?.message || err);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      cleanupVTOEngine();
+    };
+  }, [cleanupVTOEngine]);
 
   const fetchWishlistData = useCallback(async () => {
     try {
@@ -424,7 +463,15 @@ const MainVirtualTryon = () => {
 
     if (mode === 'photo' && faceMeshRef.current && uploadedImage) {
       const img = new Image();
-      img.onload = async () => { await faceMeshRef.current.send({ image: img }); };
+      img.onload = async () => {
+        try {
+          if (isMountedRef.current && faceMeshRef.current) {
+            await faceMeshRef.current.send({ image: img });
+          }
+        } catch (e) {
+          console.warn("FaceMesh send error suppressed:", e?.message || e);
+        }
+      };
       img.src = uploadedImage;
     }
   };
@@ -599,18 +646,27 @@ const MainVirtualTryon = () => {
 
   useEffect(() => {
     const handlePopState = () => {
+      cleanupVTOEngine();
       setVtoStep('landing');
     };
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
-  }, []);
+  }, [cleanupVTOEngine]);
 
   // Handle window resize in compare mode
   useEffect(() => {
     const handleResize = () => {
       if (compareMode && canvasRef.current && faceMeshRef.current && mode === 'photo' && uploadedImage) {
         const img = new Image();
-        img.onload = () => faceMeshRef.current.send({ image: img });
+        img.onload = async () => {
+          try {
+            if (isMountedRef.current && faceMeshRef.current) {
+              await faceMeshRef.current.send({ image: img });
+            }
+          } catch (e) {
+            console.warn("FaceMesh resize send error suppressed:", e?.message || e);
+          }
+        };
         img.src = uploadedImage;
       }
     };
@@ -621,18 +677,23 @@ const MainVirtualTryon = () => {
   // Initialize MediaPipe FaceMesh
   useEffect(() => {
     if (vtoStep === 'engine') {
+      let active = true;
+      let localMesh = null;
+      let localCamera = null;
+
       try {
-        const faceMesh = new FaceMesh({
+        localMesh = new FaceMesh({
           locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4/${file}`,
         });
-        faceMesh.setOptions({
+        localMesh.setOptions({
           maxNumFaces: 1,
           refineLandmarks: true,
           minDetectionConfidence: 0.5,
           minTrackingConfidence: 0.5
         });
 
-        faceMesh.onResults((results) => {
+        localMesh.onResults((results) => {
+          if (!active || !isMountedRef.current) return;
           const canvas = canvasRef.current;
           if (!canvas) return;
           const ctx = canvas.getContext('2d');
@@ -656,53 +717,78 @@ const MainVirtualTryon = () => {
           }
         });
 
-        faceMeshRef.current = faceMesh;
+        faceMeshRef.current = localMesh;
 
         if (mode === 'live') {
-          if (webcamRef.current && webcamRef.current.video) {
-            const camera = new Camera(webcamRef.current.video, {
-              onFrame: async () => {
-                if (webcamRef.current?.video && faceMeshRef.current) {
-                  await faceMeshRef.current.send({ image: webcamRef.current.video });
-                }
-              },
-              width: 640,
-              height: 480
-            });
-            camera.start();
-            cameraRef.current = camera;
-            setStatusMsg('Live Mode Active');
-          } else {
-            setTimeout(() => {
-              if (webcamRef.current && webcamRef.current.video) {
-                const camera = new Camera(webcamRef.current.video, {
+          const initCam = () => {
+            if (!active || !isMountedRef.current) return;
+            if (webcamRef.current && webcamRef.current.video) {
+              try {
+                localCamera = new Camera(webcamRef.current.video, {
                   onFrame: async () => {
-                    if (webcamRef.current?.video && faceMeshRef.current) {
+                    if (!active || !isMountedRef.current || !faceMeshRef.current || !webcamRef.current?.video) return;
+                    try {
                       await faceMeshRef.current.send({ image: webcamRef.current.video });
+                    } catch (frameErr) {
+                      // Suppress frame processing errors during teardown/navigation
                     }
                   },
                   width: 640,
                   height: 480
                 });
-                camera.start();
-                cameraRef.current = camera;
-                setStatusMsg('Live Mode Active');
+                localCamera.start();
+                cameraRef.current = localCamera;
+                if (active && isMountedRef.current) setStatusMsg('Live Mode Active');
+              } catch (camErr) {
+                console.warn("Camera init error:", camErr);
               }
+            }
+          };
+
+          if (webcamRef.current && webcamRef.current.video) {
+            initCam();
+          } else {
+            cameraTimeoutRef.current = setTimeout(() => {
+              initCam();
             }, 1000);
           }
         }
       } catch (err) {
         console.error("FaceMesh initialization error", err);
       }
+
+      return () => {
+        active = false;
+        if (cameraTimeoutRef.current) {
+          clearTimeout(cameraTimeoutRef.current);
+          cameraTimeoutRef.current = null;
+        }
+        if (cameraRef.current) {
+          try { cameraRef.current.stop(); } catch (e) {}
+          cameraRef.current = null;
+        }
+        if (localCamera) {
+          try { localCamera.stop(); } catch (e) {}
+        }
+        if (faceMeshRef.current) {
+          const mesh = faceMeshRef.current;
+          faceMeshRef.current = null;
+          try {
+            const p = mesh.close();
+            if (p && typeof p.catch === 'function') p.catch(() => {});
+          } catch (e) {}
+        }
+        if (localMesh && localMesh !== faceMeshRef.current) {
+          try {
+            const p = localMesh.close();
+            if (p && typeof p.catch === 'function') p.catch(() => {});
+          } catch (e) {}
+        }
+      };
     } else {
-      if (cameraRef.current) { cameraRef.current.stop(); cameraRef.current = null; }
-      if (faceMeshRef.current) { faceMeshRef.current.close(); faceMeshRef.current = null; }
+      cleanupVTOEngine();
     }
-    return () => {
-      if (cameraRef.current) cameraRef.current.stop();
-      if (faceMeshRef.current) faceMeshRef.current.close();
-    }
-  }, [vtoStep, mode]);
+  }, [vtoStep, mode, cleanupVTOEngine]);
 
   // Handle Photo Mode static analysis
   useEffect(() => {
@@ -711,10 +797,12 @@ const MainVirtualTryon = () => {
       const img = new Image();
       img.onload = async () => {
         try {
-          await faceMeshRef.current.send({ image: img });
-          setStatusMsg('Photo Ready!');
+          if (isMountedRef.current && faceMeshRef.current) {
+            await faceMeshRef.current.send({ image: img });
+            if (isMountedRef.current) setStatusMsg('Photo Ready!');
+          }
         } catch (e) {
-          console.error(e);
+          console.warn("Photo send error suppressed:", e?.message || e);
         }
       };
       img.src = uploadedImage;
@@ -766,7 +854,15 @@ const MainVirtualTryon = () => {
 
     if (mode === 'photo' && faceMeshRef.current && uploadedImage) {
       const img = new Image();
-      img.onload = async () => { await faceMeshRef.current.send({ image: img }); };
+      img.onload = async () => {
+        try {
+          if (isMountedRef.current && faceMeshRef.current) {
+            await faceMeshRef.current.send({ image: img });
+          }
+        } catch (e) {
+          console.warn("FaceMesh applyShade send suppressed:", e?.message || e);
+        }
+      };
       img.src = uploadedImage;
     }
   };
@@ -784,7 +880,15 @@ const MainVirtualTryon = () => {
 
     if (mode === 'photo' && faceMeshRef.current && uploadedImage) {
       const img = new Image();
-      img.onload = async () => { await faceMeshRef.current.send({ image: img }); };
+      img.onload = async () => {
+        try {
+          if (isMountedRef.current && faceMeshRef.current) {
+            await faceMeshRef.current.send({ image: img });
+          }
+        } catch (e) {
+          console.warn("FaceMesh handleIntensityChange send suppressed:", e?.message || e);
+        }
+      };
       img.src = uploadedImage;
     }
   };
@@ -949,14 +1053,7 @@ const MainVirtualTryon = () => {
   }, []);
 
   const goBackToLandingWithScroll = useCallback(() => {
-    if (cameraRef.current) {
-      cameraRef.current.stop();
-      cameraRef.current = null;
-    }
-    if (faceMeshRef.current) {
-      faceMeshRef.current.close();
-      faceMeshRef.current = null;
-    }
+    cleanupVTOEngine();
     setCompareMode(false);
     setMode(null);
     setActiveType(null);
@@ -971,7 +1068,7 @@ const MainVirtualTryon = () => {
       document.body.scrollTop = 0;
       document.documentElement.scrollTop = 0;
     }, 100);
-  }, [setSearchParams]);
+  }, [cleanupVTOEngine, setSearchParams]);
 
   // Back button: go one step back in the instructions flow
   const handleInstrBack = useCallback(() => {
@@ -986,10 +1083,9 @@ const MainVirtualTryon = () => {
   // Confirm exit → navigate to VirtualTryon page
   const handleConfirmExit = useCallback(() => {
     setShowExitConfirm(false);
-    if (cameraRef.current) { cameraRef.current.stop(); cameraRef.current = null; }
-    if (faceMeshRef.current) { faceMeshRef.current.close(); faceMeshRef.current = null; }
+    cleanupVTOEngine();
     navigate('/Virtualtryon');
-  }, [navigate]);
+  }, [cleanupVTOEngine, navigate]);
 
   const handleCancelExit = useCallback(() => {
     setShowExitConfirm(false);
@@ -1628,9 +1724,18 @@ class ErrorBoundary extends React.Component {
     this.state = { hasError: false, error: null };
   }
   static getDerivedStateFromError(error) {
+    const msg = error?.message || error?.toString() || '';
+    if (msg.includes('SolutionWasm') || msg.includes('already deleted') || msg.includes('BindingError')) {
+      return { hasError: false, error: null };
+    }
     return { hasError: true, error };
   }
   componentDidCatch(error, errorInfo) {
+    const msg = error?.message || error?.toString() || '';
+    if (msg.includes('SolutionWasm') || msg.includes('already deleted') || msg.includes('BindingError')) {
+      console.warn("Suppressed SolutionWasm unmount error in ErrorBoundary:", error);
+      return;
+    }
     console.error("ErrorBoundary caught VTO error", error, errorInfo);
   }
   render() {

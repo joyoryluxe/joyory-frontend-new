@@ -86,12 +86,12 @@ export default function HeroSlider() {
         }}
         navigation
         speed={800}
-        className="mt-lg-5 margin-setup"
+        className="mt-lg-4 margin-setup"
       >
         {slides.map((item, index) => (
           <SwiperSlide key={item._id || index}>
             <div
-              className="slide-wrapper position-relative mt-xl-4 padding-left-rightss"
+              className="slide-wrapper position-relative mt-xl-0 padding-left-rightss"
               onClick={() => handleSlideClick(item)}
               style={{
                 cursor: item.buttonLink ? "pointer" : "default",

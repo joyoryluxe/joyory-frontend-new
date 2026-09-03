@@ -396,7 +396,7 @@ const Login = () => {
       );
 
       if (res.data?.user) {
-        const redirectTo = location.state?.from || "/";
+        const redirectTo = location.state?.frpom || "/";
         loginUser(res.data.user);
         toast.success("Google login successful 🎉");
         navigate(redirectTo, { replace: true });

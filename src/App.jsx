@@ -86,7 +86,7 @@ import CategoryLandingPage from "./pages/CategoryLandingPage";
 import Offerlanding from "./pages/OfferLanding";
 import Foryoulanding from "./pages/ForYouLanding";
 import AiBeautyLab from "./pages/AiBeautyLab";
-import SkinDiagnosis from "./pages/SkinDiagnosis";
+// import SkinDiagnosis from "./pages/SkinDiagnosis";
 // import AddressSection from "./component/AddressSection";
 import AddressSections from "./pages/AddressSections";
 import PageNotFound from "./pages/PageNotFound";
@@ -99,6 +99,8 @@ import Privacy from "./pages/Privacy";
 import RoutineBuilder from "./pages/RoutineBuilder";
 import MetaPixelTracker from "./components/common/MetaPixelTracker";
 import DiscountPopup from "./components/common/DiscountPopup";
+
+import CookieConsentBanner from "./components/common/CookieConsentBanner";
 
 function App() {
   useEffect(() => {
@@ -180,6 +182,7 @@ function App() {
       <Router>
         <ScrollToTop />
         <MetaPixelTracker />
+        <CookieConsentBanner />
         <CartProvider>
           <WishlistProvider>
             <ToastContainer position="top-right" autoClose={3000} />
@@ -278,12 +281,11 @@ function App() {
               <Route path="/Offerlanding" element={<Offerlanding />} />
               <Route path="/Foryoulanding" element={<Foryoulanding />} />
               <Route path="/ai-beauty-lab" element={<AiBeautyLab />} />
-              <Route path="/skin-diagnosis" element={<SkinDiagnosis />} />
+              {/* <Route path="/skin-diagnosis" element={<SkinDiagnosis />} /> */}
               <Route path="/routines" element={<RoutineBuilder />} />
               <Route path="/routines/:shareToken" element={<RoutineBuilder />} />
               <Route path="/ingredient-compatibility" element={<IngredientCompatibility />} />
               <Route path="/ingredient/:name" element={<IngredientDetail />} />
-              <Route path="*" element={<PageNotFound />} />
               <Route path="/coming-soon" element={<ComingSoon />} />
 
               {/* Protected Routes */}
@@ -296,19 +298,9 @@ function App() {
                 }
               />
 
-
-
-              {/* <Route
-              path="/foryoulanding"
-              element={
-                <ProtectedRoute allowGuest={false}>
-                  <foryoulanding />
-                </ProtectedRoute>
-              }
-            /> */}
-
-              {/* Fallback */}
-              <Route path="*" element={<Navigate to="/" replace />} />
+              {/* 404 & Catch-All Fallback Routes */}
+              <Route path="/404" element={<PageNotFound />} />
+              <Route path="*" element={<PageNotFound />} />
             </Routes>
 
             {/* ── AI Beauty Concierge (global floating widget) ── */}

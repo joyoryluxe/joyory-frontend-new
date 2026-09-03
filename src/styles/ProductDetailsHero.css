@@ -111,7 +111,7 @@
     border-radius: 0.75rem;
     /* box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); */
     position: relative;
-    margin-top: 150px;
+    margin-top: 10px;
 }
 
 .product-hero-left {
@@ -342,7 +342,8 @@
         border-radius: 0.75rem;
         /* box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); */
         position: relative;
-        margin: 70px 0 0 0;
+        margin: 0;
+        margin-top: 0px;
         padding: 0;
     }
 
@@ -379,6 +380,14 @@
         width: 100%;
         object-fit: contain;
     }
+
+    .product-price-container {
+        margin-bottom: 10px !important;
+    }
+
+    .product-rating-container {
+        margin-bottom: 5px !important;
+    }
 }
 
 @media (max-width:1024px) {
@@ -390,7 +399,7 @@
         border-radius: 0.75rem;
         /* box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); */
         position: relative;
-        margin-top: 50px !important;
+        /* margin-top: 50px !important; */
     }
 }
 
@@ -585,6 +594,7 @@
     .product-title-text {
         font-size: 18px !important;
         font-weight: 500 !important;
+        margin-bottom: 0px !important;
     }
 
     .product-current-price {
@@ -1057,4 +1067,29 @@ select.review-filter-item {
     max-width: 420px !important;
     margin: 0 auto 24px auto !important;
     line-height: 1.6 !important;
+}
+
+/* Professional, Clean & Simple Ingredients Redesign */
+.ingredient-pill-clean {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0px !important;
+    /* padding: 6px 12px !important; */
+    font-size: 14px !important;
+    /* font-weight: 500 !important; */
+    color: #374151 !important;
+    /* Gray-700 */
+    /* background-color: #f9fafb !important;
+    border: 1px solid #e5e7eb !important; 
+    border-radius: 6px !important;  */
+    cursor: default !important;
+    text-transform: capitalize !important;
+    font-family: 'Montserrat', sans-serif !important;
+    outline: none !important;
+}
+
+.ing-tick-indicator {
+    display: inline-flex !important;
+    align-items: center !important;
+    flex-shrink: 0 !important;
 }

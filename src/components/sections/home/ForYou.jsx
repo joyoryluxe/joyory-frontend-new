@@ -799,8 +799,7 @@ const Foryou = () => {
       {memoizedProducts.length > 0 ? (
         <div className="mobile-responsive-code position-relative">
           <Swiper
-            modules={[Autoplay, Pagination, Navigation]}
-            pagination={{ clickable: true, dynamicBullets: true }}
+            modules={[Autoplay, Navigation]}
             navigation={{
               nextEl: '.swiper-button-next',
               prevEl: '.swiper-button-prev',
@@ -812,7 +811,7 @@ const Foryou = () => {
               992: { slidesPerView: 4, spaceBetween: 20 },
               1200: { slidesPerView: 4, spaceBetween: 25 },
             }}
-            className="foryou-swiper"
+            className="foryou-swiper pb-0 mb-0"
           >
             {memoizedProducts.map((item) => {
               if (!item) return null;

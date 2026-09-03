@@ -2,7 +2,9 @@
    Joyory Order Details Premium Stylesheet
    ========================================== */
 
+
 /* Variables & Base Theme definitions */
+
 :root {
     --primary-color: #000000;
     --accent-success: #1d9b4c;
@@ -13,7 +15,6 @@
     --accent-danger-bg: #fdebee;
     --accent-info: #1d809f;
     --accent-info-bg: #ebf5fe;
-
     --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
     --card-shadow-hover: 0 15px 35px rgba(0, 0, 0, 0.08);
     --border-light: 1px solid #eaeaea;
@@ -21,29 +22,30 @@
     --border-radius-lg: 16px;
     --border-radius-md: 12px;
     --border-radius-sm: 8px;
-
     --text-main: #222222;
     --text-muted: #666666;
     --text-light: #999999;
     --bg-light: #fafafa;
 }
 
+
 /* Page shell */
+
 .order-details-page {
     background-color: #ffffff;
     min-height: 100vh;
-    padding-top: 150px;
     /* Offset for fixed desktop header + categories */
 }
 
 @media (max-width: 1024px) {
     .order-details-page {
-        padding-top: 80px;
         /* Offset for fixed mobile header */
     }
 }
 
+
 /* Sleek back to orders button */
+
 .back-btn {
     border-radius: var(--border-radius-sm) !important;
     padding: 8px 18px !important;
@@ -61,7 +63,9 @@
     transform: translateX(-3px);
 }
 
+
 /* Header actions row */
+
 .details-header-row {
     margin-bottom: 28px;
     display: flex;
@@ -90,7 +94,9 @@
     flex-wrap: wrap;
 }
 
+
 /* Modern Card Layout */
+
 .od-card {
     background: #ffffff;
     border: var(--border-light);
@@ -122,7 +128,9 @@
     color: var(--text-main);
 }
 
+
 /* Metadata summary layout */
+
 .metadata-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -144,7 +152,9 @@
     color: var(--text-muted);
 }
 
+
 /* Status pills */
+
 .status-badge-pill {
     display: inline-flex;
     align-items: center;
@@ -182,7 +192,9 @@
     color: #555555;
 }
 
+
 /* Action button styles */
+
 .btn-premium-action {
     border-radius: var(--border-radius-sm);
     padding: 8px 16px;
@@ -229,7 +241,9 @@
     color: #ffffff;
 }
 
+
 /* Product list items */
+
 .product-row-item {
     display: flex;
     align-items: center;
@@ -319,7 +333,9 @@
     justify-content: center;
 }
 
+
 /* Timeline Layout */
+
 .timeline {
     position: relative;
     padding-left: 28px;
@@ -377,7 +393,9 @@
     color: var(--text-light);
 }
 
+
 /* Return Forms */
+
 .return-form-container {
     background-color: var(--bg-light);
     border: var(--border-light);
@@ -461,7 +479,9 @@
     font-size: 0.9rem;
 }
 
+
 /* Upload photo area */
+
 .od-upload-area {
     border: var(--border-dashed);
     border-radius: var(--border-radius-sm);
@@ -522,7 +542,9 @@
     cursor: pointer;
 }
 
+
 /* Price summary item rows */
+
 .price-row-item {
     display: flex;
     justify-content: space-between;
@@ -558,7 +580,9 @@
     box-shadow: 0 2px 8px rgba(29, 155, 76, 0.05);
 }
 
+
 /* Contact / Shipping Details details */
+
 .contact-detail-row {
     display: flex;
     align-items: center;
@@ -584,7 +608,9 @@
     color: var(--text-main);
 }
 
+
 /* Modals & Overlays */
+
 .od-modal-overlay {
     position: fixed;
     top: 0;
@@ -651,31 +677,29 @@
     gap: 12px;
 }
 
+
 /* Responsive adjustments */
+
 @media (max-width: 767.98px) {
     .details-header-row {
         flex-direction: column;
         align-items: flex-start;
         gap: 12px;
     }
-
     .details-header-actions {
         width: 100%;
         gap: 5px !important;
         /* justify-content: space-between; */
     }
-
     .metadata-grid {
         grid-template-columns: 1fr;
         gap: 10px;
     }
-
     .product-row-item {
         flex-direction: column;
         align-items: flex-start;
         gap: 14px;
     }
-
     .product-price-wrap {
         display: flex !important;
         gap: 7px !important;
@@ -686,12 +710,10 @@
         border-top: 1px dashed #eeeeee;
         padding-top: 10px;
     }
-
     .od-img-wrap {
         width: 72px;
         height: 72px;
     }
-
     .back-btn,
     .downl-inv {
         padding: 7px 10px !important;
@@ -704,36 +726,32 @@
         margin-bottom: 0px !important;
         min-height: auto;
     }
-
     .savings-highlight {
         font-weight: 500;
         font-size: 0.8rem;
     }
-
     .metadata-item span {
         font-size: 13px;
     }
-
     .metadata-item strong {
         font-size: 14px;
     }
-
     .status-badge-pill.warning {
         font-size: 10px !important;
         padding: 5px 10px !important;
     }
-
     .contact-detail-row .contact-text {
         font-size: 12px;
     }
 }
 
+
 /* Animations */
+
 @keyframes fadeIn {
     from {
         opacity: 0;
     }
-
     to {
         opacity: 1;
     }
@@ -744,14 +762,15 @@
         transform: translateY(20px);
         opacity: 0;
     }
-
     to {
         transform: translateY(0);
         opacity: 1;
     }
 }
 
+
 /* Reset global .badge absolute position override from Header.css on this page */
+
 .order-details-page .badge {
     position: static !important;
     /* margin: auto 5px !important; */
@@ -770,7 +789,9 @@
     /* border: 1px solid #000000 !important; */
 }
 
+
 /* Remove background color and set text color to black for status-badge-pill */
+
 .order-details-page .status-badge-pill {
     background: transparent !important;
     background-color: transparent !important;
@@ -778,7 +799,9 @@
     border: 1px solid #ddd !important;
 }
 
+
 /* Sticky Sidebar for desktop layout */
+
 @media (min-width: 992px) {
     .order-details-page .col-lg-4 {
         position: sticky;
@@ -789,7 +812,9 @@
     }
 }
 
+
 /* Premium Return Item Styling */
+
 .od-return-item {
     background: #fafafa;
     border: 1px solid #eaeaea;
@@ -813,7 +838,9 @@
     gap: 8px;
 }
 
+
 /* Override min-height only on large desktop and 4K viewports to prevent empty scrolling */
+
 @media (min-width: 1600px) {
     .order-details-page {
         min-height: 55vh;

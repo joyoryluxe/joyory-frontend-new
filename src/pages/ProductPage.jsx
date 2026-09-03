@@ -20,6 +20,7 @@ import "swiper/css/navigation";
 import updownarrow from "../assets/updownarrow.svg";
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import Loader from "../components/common/Loader";
+import PageNotFound from "./PageNotFound";
 import filtering from "../assets/filtering.svg";
 import Bag from "../assets/Bag.svg";
 
@@ -172,6 +173,41 @@ const getBrandName = (p) => {
     return "Unknown Brand";
 };
 
+let globalCategoryTreeCache = null;
+const fetchCategoryTree = async () => {
+    if (globalCategoryTreeCache && globalCategoryTreeCache.length > 0) {
+        return globalCategoryTreeCache;
+    }
+    try {
+        const { data } = await axios.get("https://beauty.joyory.com/api/user/categories/tree");
+        globalCategoryTreeCache = Array.isArray(data) ? data : (data?.categories || []);
+        return globalCategoryTreeCache;
+    } catch (err) {
+        console.error("Error fetching category tree:", err);
+        return [];
+    }
+};
+
+const isSlugInTree = (slugToMatch, tree) => {
+    if (!slugToMatch || !Array.isArray(tree) || tree.length === 0) return false;
+    const norm = slugToMatch.toLowerCase().trim();
+
+    const searchNode = (node) => {
+        if (!node) return false;
+        const s = (node.slug || "").toLowerCase().trim();
+        const id = (node._id || "").toLowerCase().trim();
+        const name = (node.name || "").toLowerCase().trim().replace(/\s+/g, "-");
+
+        if (s === norm || id === norm || name === norm) return true;
+        if (Array.isArray(node.subCategories) && node.subCategories.some(searchNode)) return true;
+        if (Array.isArray(node.children) && node.children.some(searchNode)) return true;
+        if (Array.isArray(node.subcategories) && node.subcategories.some(searchNode)) return true;
+        return false;
+    };
+
+    return tree.some(searchNode);
+};
+
 const parseFiltersFromSearchParams = (searchParams) => {
     const initialFilters = {
         brandIds: [], categoryIds: [], skinTypes: [], formulations: [],
@@ -220,7 +256,7 @@ const parseFiltersFromSearchParams = (searchParams) => {
 
 export default function ProductPage() {
     const params = useParams();
-    const slug = params.slug || params["*"];
+    const slug = params.filter || params.slug || params["*"];
     const navigate = useNavigate();
     const location = useLocation();
     const [searchParams, setSearchParams] = useSearchParams();
@@ -244,12 +280,18 @@ export default function ProductPage() {
     const [promotions, setPromotions] = useState([]);
 
     const [filterData, setFilterData] = useState(null);
+    const [pageNotFound, setPageNotFound] = useState(false);
     const lastContextRef = useRef("");
 
     const activeCategorySlug = useMemo(() => {
         return location.pathname.includes("/category/") && effectiveSlug ? effectiveSlug : null;
     }, [location.pathname, effectiveSlug]);
-    const [activeCategoryName, setActiveCategoryName] = useState("");
+    const activeCategoryName = useMemo(() => {
+        if (!activeCategorySlug) return "";
+        const found = trendingCategories.find((c) => c.slug === activeCategorySlug)
+            || filterData?.categories?.find((c) => c.slug === activeCategorySlug || c._id === activeCategorySlug);
+        return found ? found.name : "";
+    }, [activeCategorySlug, trendingCategories, filterData]);
 
     const [selectedVariants, setSelectedVariants] = useState({});
     const [tempSelectedVariants, setTempSelectedVariants] = useState({});
@@ -491,6 +533,91 @@ export default function ProductPage() {
                 { withCredentials: true }
             );
 
+            // Validation: Check if requested URL slug / filter is valid
+            const path = location.pathname.toLowerCase();
+            const normSlug = (effectiveSlug || "").toLowerCase().trim();
+
+            if (normSlug && normSlug !== "products") {
+                let urlValid = false;
+
+                const validKeywords = [
+                    "all", "bestsellers", "best-sellers", "trending", "new-arrivals",
+                    "sale", "discount", "foryou", "recommendations"
+                ];
+
+                if (validKeywords.includes(normSlug)) {
+                    urlValid = true;
+                }
+
+                if (!urlValid && data.category && (
+                    (data.category.slug || "").toLowerCase().trim() === normSlug ||
+                    (data.category._id || "").toLowerCase().trim() === normSlug ||
+                    (data.category.name || "").toLowerCase().trim().replace(/\s+/g, "-") === normSlug
+                )) {
+                    urlValid = true;
+                }
+
+                if (!urlValid && data.skinType && (
+                    (data.skinType.slug || "").toLowerCase().trim() === normSlug ||
+                    (data.skinType._id || "").toLowerCase().trim() === normSlug ||
+                    (data.skinType.name || "").toLowerCase().trim().replace(/\s+/g, "-") === normSlug
+                )) {
+                    urlValid = true;
+                }
+
+                if (!urlValid && data.promoMeta && (
+                    (data.promoMeta.slug || "").toLowerCase().trim() === normSlug ||
+                    (data.promoMeta._id || "").toLowerCase().trim() === normSlug ||
+                    (data.promoMeta.name || "").toLowerCase().trim().replace(/\s+/g, "-") === normSlug
+                )) {
+                    urlValid = true;
+                }
+
+                if (!urlValid) {
+                    const tree = await fetchCategoryTree();
+                    if (tree && tree.length > 0) {
+                        urlValid = isSlugInTree(normSlug, tree);
+                    }
+                }
+
+                if (!urlValid) {
+                    const checkItemInList = (list) => {
+                        if (!Array.isArray(list) || list.length === 0) return false;
+                        return list.some(item => {
+                            if (!item) return false;
+                            if (typeof item === "string") return item.toLowerCase().trim() === normSlug;
+                            const itemSlug = (item.slug || "").toLowerCase().trim();
+                            const itemId = (item._id || "").toLowerCase().trim();
+                            const itemName = (item.name || "").toLowerCase().trim().replace(/\s+/g, "-");
+                            if (itemSlug === normSlug || itemId === normSlug || itemName === normSlug) return true;
+                            if (item.children && checkItemInList(item.children)) return true;
+                            if (item.subCategories && checkItemInList(item.subCategories)) return true;
+                            if (item.subcategories && checkItemInList(item.subcategories)) return true;
+                            return false;
+                        });
+                    };
+
+                    if (checkItemInList(data.category ? [data.category] : [])) urlValid = true;
+                    else if (checkItemInList(data.trendingCategories)) urlValid = true;
+                    else if (checkItemInList(data.filters?.categories)) urlValid = true;
+                    else if (checkItemInList(data.categories)) urlValid = true;
+                    else if (checkItemInList(data.skinTypes)) urlValid = true;
+                    else if (checkItemInList(data.filters?.skinTypes)) urlValid = true;
+                    else if (checkItemInList(data.shopByIngredients)) urlValid = true;
+                    else if (checkItemInList(data.filters?.ingredients)) urlValid = true;
+                    else if (checkItemInList(data.filters?.brands)) urlValid = true;
+                    else if (checkItemInList(data.promotions)) urlValid = true;
+                }
+
+                if (!urlValid) {
+                    setPageNotFound(true);
+                    setLoading(false);
+                    setLoadingMore(false);
+                    return;
+                }
+            }
+            setPageNotFound(false);
+
             const currentContext = `${location.pathname}-${effectiveSlug}-${searchParams.get("q") || searchParams.get("search") || ""}`;
             const isContextChanged = lastContextRef.current !== currentContext;
 
@@ -544,16 +671,8 @@ export default function ProductPage() {
 
                 if (data.trendingCategories && Array.isArray(data.trendingCategories)) {
                     setTrendingCategories(data.trendingCategories);
-                    if (effectiveSlug && !activeCategoryName) {
-                        const found = data.trendingCategories.find((c) => c.slug === effectiveSlug);
-                        if (found) setActiveCategoryName(found.name);
-                    }
                 } else {
                     setTrendingCategories([]);
-                }
-
-                if (data.category?.name && !activeCategoryName && effectiveSlug) {
-                    setActiveCategoryName(data.category.name);
                 }
 
                 if (reset && data.filters) {
@@ -591,16 +710,7 @@ export default function ProductPage() {
         }
     };
 
-    useEffect(() => {
-        if (location.pathname.includes("/category/") && effectiveSlug) {
-            if (trendingCategories.length > 0) {
-                const found = trendingCategories.find(c => c.slug === effectiveSlug);
-                if (found) setActiveCategoryName(found.name);
-            }
-        } else {
-            setActiveCategoryName("");
-        }
-    }, [effectiveSlug, location.pathname, trendingCategories]);
+    // Removed activeCategoryName sync useEffect since it is now computed dynamically
 
 
 
@@ -666,9 +776,13 @@ export default function ProductPage() {
     );
 
     const handleCategoryCheckboxToggle = useCallback((cat) => {
+        const value = cat.slug || cat._id;
+        if (activeCategorySlug === value) {
+            navigate("/products");
+            return;
+        }
         setFilters(prev => {
             const current = prev.categoryIds || [];
-            const value = cat.slug || cat._id;
             const isActive = current.includes(value);
             return {
                 ...prev,
@@ -677,7 +791,7 @@ export default function ProductPage() {
                     : [...current, value]
             };
         });
-    }, []);
+    }, [activeCategorySlug, navigate]);
 
     const handleTopCategoryClick = useCallback((cat) => {
         setFilters(prev => {
@@ -1252,6 +1366,10 @@ export default function ProductPage() {
         onCategoryPillClick: handleCategoryCheckboxToggle,
     };
 
+    if (pageNotFound) {
+        return <PageNotFound />;
+    }
+
     // Keep your OLD loader for initial loading
     if (loading && allProducts.length === 0)
         return (
@@ -1287,7 +1405,7 @@ export default function ProductPage() {
             {bannerImages?.length > 0 &&
                 !location.pathname.toLowerCase().includes("/skintype") &&
                 !(filters.skinTypes && filters.skinTypes.length > 0) ? (
-                <section className="hero-slider text-center mt-xl-5 pt-xl-4 padding-left-rightss">
+                <section className="hero-slider text-center mt-0 pt-xl-4 padding-left-rightss">
                     <Swiper
                         ref={swiperRef}
                         modules={[Autoplay, Pagination, Navigation]}
@@ -1317,7 +1435,7 @@ export default function ProductPage() {
                             return (
                                 <SwiperSlide key={index}>
                                     <div
-                                        className="position-relative w-100 h-100 mt-5 pt-4 hero-slider-image-responsive"
+                                        className="position-relative w-100 h-100 mt-0 pt-0 hero-slider-image-responsive"
                                         style={{ cursor: targetLink ? "pointer" : "default" }}
                                         onClick={() => {
                                             if (!targetLink) return;

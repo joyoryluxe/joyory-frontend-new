@@ -477,10 +477,10 @@ const OrderDetails = () => {
   return (
     <div className="order-details-page">
       <Header />
-      <div className="container py-4 mt-3 pt-0">
+      <div className="container py-4 mt-lg-5 mt-3 pt-0">
 
         {/* Navigation / Back Button */}
-        <div className="mb-3">
+        <div className="mb-3 pt-lg-3">
           <button className="btn back-btn" onClick={() => navigate(-1)}>
             <FaArrowLeft className="me-2" /> Back to Orders
           </button>

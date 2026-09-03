@@ -8,7 +8,7 @@ import {
 } from "react-icons/fa";
 import "../../../styles/ProductDetailsHero.css";
 import "../../../styles/ForYou.css";
-import { ingredientScan, getProductSafetyScore } from "../../../api/ingredientApi";
+import { ingredientScan, getProductSafetyScore, getIngredientByName } from "../../../api/ingredientApi";
 import IngredientDetailsDrawer from "../../../pages/IngredientDetailsDrawer";
 import axiosInstance from "../../../utils/axiosInstance";
 
@@ -49,7 +49,7 @@ const formatPrice = (price) => {
 };
 
 // Description Accordion
-const ProductDetailDescription = ({ product, scannedIngredients, onIngredientClick }) => {
+const ProductDetailDescription = ({ product, scannedIngredients, onIngredientClick, safetyScore }) => {
   return (
     <section className="product-extra-section mt-5 border-none">
       <div className="details-section border-none">
@@ -61,29 +61,41 @@ const ProductDetailDescription = ({ product, scannedIngredients, onIngredientCli
           <details>
             <summary>Ingredients</summary>
             <div className="mt-3 text-start">
+              {/* <p className="text-muted mb-3" style={{ fontSize: "12px" }}>
+                Click any ingredient to view details, benefits, and compatibility.
+              </p> */}
+
+              {/* Ingredients List (Static tags, no click trigger) */}
               {scannedIngredients && scannedIngredients.length > 0 ? (
                 <div className="d-flex flex-wrap gap-2">
                   {scannedIngredients.map((ing, idx) => {
-                    let badgeClass = "badge bg-light text-dark border p-2";
-                    if (ing.isAllergen) badgeClass = "badge bg-danger text-white p-2";
-                    else if (ing.isSensitive) badgeClass = "badge bg-warning text-dark p-2";
-
                     return (
                       <span
                         key={idx}
-                        className={badgeClass}
-                        style={{ borderRadius: "12px", transition: "all 0.15s ease", fontSize: "12px", display: "inline-flex", alignItems: "center", gap: "4px" }}
-                        title={ing.isAllergen ? "High Allergen Alert!" : ing.isSensitive ? "Sensitivity Alert" : ing.name}
+                        className="ingredient-pill-clean"
+                        title={ing.name}
                       >
-                        {ing.name} {ing.isAllergen && "⚠️"} {ing.isSensitive && "⚠️"}
+                        <FaCheck className="ing-tick-indicator" style={{ fontSize: "8px", marginRight: "6px", color: "#9ca3af" }} />
+                        {ing.name}
                       </span>
                     );
                   })}
                 </div>
               ) : product.ingredients?.length > 0 ? (
-                <p>{product.ingredients.join(", ")}</p>
+                <div className="d-flex flex-wrap gap-2">
+                  {product.ingredients.map((ing, idx) => (
+                    <span
+                      key={idx}
+                      className="ingredient-pill-clean"
+                      title={ing}
+                    >
+                      <FaCheck className="ing-tick-indicator" style={{ fontSize: "9px", marginRight: "6px", color: "#9ca3af" }} />
+                      {ing}
+                    </span>
+                  ))}
+                </div>
               ) : (
-                <p>Ingredients not provided.</p>
+                <p className="">Ingredients not provided.</p>
               )}
             </div>
           </details>
@@ -216,8 +228,36 @@ const ProductDetailsHero = ({
     fetchSafetyScore();
   }, [product?._id]);
 
-  const handleIngredientClick = (ing) => {
-    setSelectedIngredient(ing);
+  const handleIngredientClick = async (ing) => {
+    if (typeof ing === "string") {
+      try {
+        const res = await getIngredientByName(ing);
+        if (res.data.success && res.data.ingredient) {
+          setSelectedIngredient(res.data.ingredient);
+        } else {
+          setSelectedIngredient({
+            name: ing,
+            description: "A premium cosmetic ingredient selected for this formulation.",
+            benefits: ["Skin Conditioning"],
+            goodForSkinTypes: [],
+            avoidForSkinTypes: [],
+            incompatibleWith: []
+          });
+        }
+      } catch (err) {
+        console.error("Error fetching ingredient details:", err);
+        setSelectedIngredient({
+          name: ing,
+          description: "A premium cosmetic ingredient selected for this formulation.",
+          benefits: ["Skin Conditioning"],
+          goodForSkinTypes: [],
+          avoidForSkinTypes: [],
+          incompatibleWith: []
+        });
+      }
+    } else {
+      setSelectedIngredient(ing);
+    }
     setIsDrawerOpen(true);
   };
 
@@ -515,7 +555,7 @@ const ProductDetailsHero = ({
 
         {product?.cashback?.message && (
           <div
-            className="next-order-discount-tag mt-2 mb-3"
+            className="next-order-discount-tag mt-lg-2 mb-lg-3"
             style={{ cursor: "pointer", width: "fit-content" }}
             title={product.cashback.message}
             onClick={(e) => {
@@ -685,20 +725,20 @@ const ProductDetailsHero = ({
         </div>
 
         {nextOrderDiscountMessage && (
-          <div className="next-order-discount-tag mt-2 mb-3" style={{ cursor: "pointer", width: "fit-content" }} title={nextOrderDiscountMessage} onClick={(e) => { e.stopPropagation(); window.showDiscountPopup && window.showDiscountPopup(nextOrderDiscountMessage, e.currentTarget); }}>
+          <div className="next-order-discount-tag mt-lg-2 mb-lg-3" style={{ cursor: "pointer", width: "fit-content" }} title={nextOrderDiscountMessage} onClick={(e) => { e.stopPropagation(); window.showDiscountPopup && window.showDiscountPopup(nextOrderDiscountMessage, e.currentTarget); }}>
             <span className="text-truncate">{nextOrderDiscountMessage}</span>
           </div>
         )}
 
         {/* Selected Variant Display */}
         {selectedShade && (
-          <div className="text-muted small text-start mb-3">
+          <div className="text-muted small text-start mb-lg-3 mb-1">
             Selected: <span className="fw-bold text-dark">{getVariantDisplayText(selectedShade)}</span>
           </div>
         )}
 
         {/* Color Variants */}
-        <div className="mb-4 text-start">
+        <div className="mb-lg-4 mb-1 text-start">
           <p className="fw-bold mb-2">Color</p>
           <div className="d-flex flex-wrap align-items-center gap-2">
             {((!isMobile || isExpanded) ? groupedVariants.color : groupedVariants.color.slice(0, 4)).map((v, i) => {
@@ -802,6 +842,7 @@ const ProductDetailsHero = ({
           product={product}
           scannedIngredients={scanResult?.ingredients}
           onIngredientClick={handleIngredientClick}
+          safetyScore={safetyScore}
         />
       </div>
 

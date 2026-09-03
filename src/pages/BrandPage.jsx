@@ -18,6 +18,7 @@ import Header from "../components/common/Header";
 import SEOMeta from "../components/common/SEOMeta";
 import Footer from "../components/common/Footer";
 import Loader from "../components/common/Loader";
+import PageNotFound from "./PageNotFound";
 import { CartContext } from "../Context/CartContext";
 import { UserContext } from "../context/UserContext.jsx";
 import BrandFilter from "../components/common/BrandFilter";
@@ -82,6 +83,7 @@ export default function BrandPage() {
 
   const [trendingCategories, setTrendingCategories] = useState([]);
   const [filterData, setFilterData] = useState(null);
+  const [pageNotFound, setPageNotFound] = useState(false);
 
   const [selectedVariants, setSelectedVariants] = useState({});
   const [addingToCart, setAddingToCart] = useState({});
@@ -498,6 +500,34 @@ export default function BrandPage() {
         `${PRODUCT_ALL_API}?${buildQueryParams(cursor)}`,
         { withCredentials: true },
       );
+
+      if (brandSlug) {
+        const normBrand = (brandSlug || "").toLowerCase().trim();
+        let brandValid = false;
+        if (data.brand && (
+          (data.brand.slug || "").toLowerCase().trim() === normBrand ||
+          (data.brand._id || "").toLowerCase().trim() === normBrand ||
+          (data.brand.name || "").toLowerCase().trim().replace(/\s+/g, "-") === normBrand
+        )) {
+          brandValid = true;
+        }
+        if (!brandValid) {
+          const brandsList = data.filters?.brands || data.brands || [];
+          brandValid = brandsList.some(b => {
+            if (!b) return false;
+            const bSlug = (b.slug || b._id || b.name || "").toLowerCase().trim().replace(/\s+/g, "-");
+            return bSlug === normBrand || b.slug === brandSlug || b._id === brandSlug;
+          });
+        }
+
+        if (!brandValid && (data.filters?.brands || data.brands || data.brand !== undefined)) {
+          setPageNotFound(true);
+          setLoading(false);
+          setLoadingMore(false);
+          return;
+        }
+      }
+      setPageNotFound(false);
 
       if (data.titleMessage) setPageTitle(data.titleMessage);
       else if (data.brand?.name) setPageTitle(data.brand.name);
@@ -1193,6 +1223,10 @@ export default function BrandPage() {
     onCategoryPillClick: handleCategoryCheckboxToggle,
     isSubCategoryView: !!activeCategorySlug,
   };
+
+  if (pageNotFound) {
+    return <PageNotFound />;
+  }
 
   /* ── render ─────────────────────────────────────────────────────────────── */
   return (

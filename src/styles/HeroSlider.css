@@ -147,7 +147,7 @@
 
 @media (max-width:1023px) {
     .hero-slider-image-responsive {
-        margin-top: 40px !important;
+        margin-top: 0px !important;
     }
 }
 
@@ -189,7 +189,7 @@
         height: auto;
     }
     .hero-slider-image-responsive {
-        margin-top: 60px !important;
+        margin-top: 0px !important;
     }
 
     /* .slide-content {

@@ -87,6 +87,20 @@ const DiscountPopup = () => {
     };
   }, [isOpen]);
 
+  // Dismiss on any scroll event (window or nested scrollable containers)
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleScroll = () => {
+      setIsOpen(false);
+    };
+
+    window.addEventListener('scroll', handleScroll, true);
+    return () => {
+      window.removeEventListener('scroll', handleScroll, true);
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (

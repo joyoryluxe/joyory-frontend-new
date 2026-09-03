@@ -242,7 +242,7 @@
 /* Custom Slider Overrides */
 
 .shadefinder-wrapper {
-    margin-top: 150px;
+    margin-top: 70px;
     padding-top: 1.5rem;
     padding-bottom: 3rem;
 }
@@ -282,7 +282,7 @@
 
 @media (max-width: 768px) {
     .shadefinder-wrapper {
-        margin-top: 110px !important;
+        margin-top: 10px !important;
         padding-top: 1rem !important;
         padding-bottom: 1.5rem !important;
     }

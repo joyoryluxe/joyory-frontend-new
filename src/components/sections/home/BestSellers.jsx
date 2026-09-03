@@ -773,8 +773,7 @@ const BestSellers = () => {
             {products.length > 0 ? (
                 <div className="mobile-responsive-code position-relative">
                     <Swiper
-                        modules={[Autoplay, Pagination, Navigation]}
-                        pagination={{ clickable: true, dynamicBullets: true }}
+                        modules={[Autoplay, Navigation]}
                         navigation={{
                             nextEl: '.swiper-button-next',
                             prevEl: '.swiper-button-prev',

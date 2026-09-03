@@ -25,7 +25,7 @@
   padding: 10px;
   max-width: 1200px;
   margin: 0 auto;
-font-family: 'Montserrat', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   color: var(--joyory-charcoal);
 }
 
@@ -510,7 +510,7 @@ font-family: 'Montserrat', sans-serif;
   outline: none;
   background-color: #ffffff;
   transition: var(--joyory-transition);
- font-family: 'Montserrat', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   margin-top: auto;
 }
 
@@ -524,7 +524,7 @@ font-family: 'Montserrat', sans-serif;
 
 /* --- Step Customizer --- */
 .rb-section-title {
- font-family: 'Montserrat', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 1.3rem;
   margin: 35px 0 20px 0;
   border-bottom: 1px solid var(--joyory-border);
@@ -803,7 +803,7 @@ font-family: 'Montserrat', sans-serif;
 }
 
 .rb-checkin-card h3 {
- font-family: 'Montserrat', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 1.25rem;
   margin: 0 0 15px 0;
   border-bottom: 1px solid var(--joyory-border);
@@ -2067,41 +2067,41 @@ font-family: 'Montserrat', sans-serif;
     font-size: 1.15rem;
     padding: 12px 30px;
   }
-  
+
   .rb-create-btn {
     font-size: 1.1rem;
     padding: 12px 24px;
   }
-  
+
   .rb-ai-banner-content h4 {
     font-size: 1.6rem;
   }
-  
+
   .rb-ai-banner-content p {
     font-size: 1.15rem;
   }
-  
+
   .rb-ai-btn {
     font-size: 1.15rem;
     padding: 14px 28px;
   }
-  
+
   .rb-container h4 {
     font-size: 1.5rem;
   }
-  
+
   .rb-container p {
     font-size: 1.15rem;
   }
-  
+
   .rb-login-card h2 {
     font-size: 2.5rem;
   }
-  
+
   .rb-login-card p {
     font-size: 1.25rem;
   }
-  
+
   .rb-btn-primary {
     font-size: 1.2rem;
     padding: 15px 40px;
