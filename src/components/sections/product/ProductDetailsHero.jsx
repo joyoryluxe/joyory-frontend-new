@@ -204,7 +204,7 @@ const ProductDetailsHero = ({
       if (!product?._id) return;
       try {
         const res = await ingredientScan(product._id);
-        if (res.data.success) {
+        if (res?.data?.success) {
           setScanResult(res.data);
         }
       } catch (err) {
@@ -216,7 +216,7 @@ const ProductDetailsHero = ({
       if (!product?._id) return;
       try {
         const res = await getProductSafetyScore(product._id);
-        if (res.data.success) {
+        if (res?.data?.success) {
           setSafetyScore(res.data);
         }
       } catch (err) {
@@ -232,7 +232,7 @@ const ProductDetailsHero = ({
     if (typeof ing === "string") {
       try {
         const res = await getIngredientByName(ing);
-        if (res.data.success && res.data.ingredient) {
+        if (res?.data?.success && res.data.ingredient) {
           setSelectedIngredient(res.data.ingredient);
         } else {
           setSelectedIngredient({

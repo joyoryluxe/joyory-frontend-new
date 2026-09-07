@@ -301,7 +301,7 @@ const AddressSelection = () => {
         initiateData.order?._id ||
         null;
 
-      if (!initiateRes.ok || !orderId) {
+      if (!orderId) {
         throw new Error(initiateData.message || "Failed to initiate order");
       }
 
@@ -499,9 +499,9 @@ const AddressSelection = () => {
       <Header />
       <ProcessingOverlay />
 
-      <div className="address-selection-container mt-lg-5 pt-lg-5 page-title-main-name">
+      <div className="address-selection-container mt-lg-5 mt-3 pt-lg-5 page-title-main-name">
         {/* Stepper */}
-        <div className="stepper-wrapper pt-lg-5 mt-lg-4 mt-5 pt-4">
+        <div className="stepper-wrapper">
           <div className="step step-active page-title-main-name">Cart</div>
           <div className="dividers"></div>
           <div className="step step-active page-title-main-name">Address</div>

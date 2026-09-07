@@ -1,6 +1,13 @@
+/**
+ * HeroSlider.jsx
+ * ─────────────────────────────────────────────────────────────
+ * Swiper Hero Slider component using HeroSlide sub-component.
+ * ─────────────────────────────────────────────────────────────
+ */
+
 import React, { useRef, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getMedia } from "../../../api/mediaApi";
+import { getMedia } from "../../../../api/mediaApi";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination, Navigation } from "swiper/modules";
 
@@ -8,8 +15,9 @@ import { Autoplay, Pagination, Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
-import Loader from "../../common/Loader";
-import "../../../styles/HeroSlider.css";
+import Loader from "../../../common/Loader";
+import "../../../../styles/HeroSlider.css";
+import HeroSlide from "./HeroSlide";
 
 export default function HeroSlider() {
   const swiperRef = useRef(null);
@@ -44,23 +52,25 @@ export default function HeroSlider() {
     document.querySelectorAll(".slide-video").forEach((v) => v.pause());
     const activeSlide = swiper.slides[swiper.activeIndex];
     const video = activeSlide?.querySelector("video");
-    if (video) video.play().catch(() => { });
+    if (video) video.play().catch(() => {});
   };
 
-  // ✅ Click anywhere on the image/video → redirect
   const handleSlideClick = (item) => {
     if (!item?.buttonLink) return;
 
     if (item.buttonLink.startsWith("http")) {
-      window.location.href = item.buttonLink;   // external or full URL
+      window.location.href = item.buttonLink;
     } else {
-      navigate(item.buttonLink);                // internal route
+      navigate(item.buttonLink);
     }
   };
 
   if (loading) {
     return (
-      <div className="hero-slider d-flex justify-content-center align-items-center" style={{ height: "500px" }}>
+      <div
+        className="hero-slider d-flex justify-content-center align-items-center"
+        style={{ height: "500px" }}
+      >
         <Loader text="Loading hero slider..." height={100} />
       </div>
     );
@@ -79,8 +89,8 @@ export default function HeroSlider() {
         spaceBetween={10}
         pagination={{
           clickable: true,
-          bulletClass: 'custom-swiper-bullet',
-          bulletActiveClass: 'custom-swiper-bullet-active',
+          bulletClass: "custom-swiper-bullet",
+          bulletActiveClass: "custom-swiper-bullet-active",
         }}
         navigation
         speed={800}
@@ -88,33 +98,12 @@ export default function HeroSlider() {
       >
         {slides.map((item, index) => (
           <SwiperSlide key={item._id || index}>
-            <div
-              className="slide-wrapper position-relative mt-xl-0 padding-left-rightss"
-              onClick={() => handleSlideClick(item)}
-              style={{
-                cursor: item.buttonLink ? "pointer" : "default",
-              }}
-            >
-              {item.type === "image" ? (
-                <img
-                  src={item.url}
-                  alt={item.title || "Joyory"}
-                  className="slide-media hero-slider-image-responsive"
-                />
-              ) : (
-                <video
-                  className="slide-media slide-video mt-5"
-                  src={item.url}
-                  muted
-                  playsInline
-                  loop
-                  preload="auto"
-                />
-              )}
-            </div>
+            <HeroSlide item={item} onClick={() => handleSlideClick(item)} />
           </SwiperSlide>
         ))}
       </Swiper>
     </section>
   );
 }
+
+export { HeroSlide };

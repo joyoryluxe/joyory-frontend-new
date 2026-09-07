@@ -27,8 +27,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination, Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
-import "swiper/css/navigation";
-import Certificate from "../components/sections/home/Certificate.jsx";
+import { Certificate } from "../components/sections/home";
 
 /* ---------- helpers ---------- */
 const formatPrice = (price) => "₹" + parseFloat(price || 0).toLocaleString("en-IN");

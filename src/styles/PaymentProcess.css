@@ -448,15 +448,12 @@
 }
 
 .margin-top-in-payment {
-    margin-top: 170px;
+    margin-top: 70px;
     /* margin-left: 180px; */
 }
 
 @media (max-width:992px) {
-    .margin-top-in-payment {
-        margin-top: 85px !important;
-        margin-left: 0;
-    }
+ 
 
     .stepper-wrapper {
         display: flex;
@@ -464,8 +461,6 @@
         justify-content: center;
         margin-bottom: 40px;
         padding: 0 24px;
-        padding-top: 24px !important;
-        margin-top: 90px !important;
     }
 
     .margin-top-in-payments {

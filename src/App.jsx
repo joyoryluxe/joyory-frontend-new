@@ -14,11 +14,8 @@ import ForgotPassword from "./pages/ForgotPassword";
 import Otp from "./pages/Otp";
 import ResetPassword from "./pages/ResetPassword";
 import VerifyOtp from "./pages/VerifyOtp";
-import TopCategories from "./components/sections/home/TopCategories";
 import ProductPage from "./pages/ProductPage";
 import ProductDetail from "./pages/ProductDetail";
-import BestSellers from "./components/sections/home/BestSellers";
-import Foryou from "./components/sections/home/ForYou";
 import Blog from "./pages/Blog";
 import BlogDetails from "./pages/BlogDetails";
 import Wishlist from "./pages/Wishlist";
@@ -26,12 +23,9 @@ import AddressSelection from "./pages/AddressSelection";
 import PaymentPage from "./pages/PaymentPage";
 import Wallet from "./pages/Wallet";
 import Myorders from "./pages/MyOrders";
-import OffersSlider from "./components/sections/home/OffersSlider";
-import BrandsSlider from "./components/sections/home/BrandsSlider";
 import BrandPage from "./pages/BrandPage";
 import PromotionProductsPage from "./pages/PromotionProductsPage";
 import Aboutus from "./pages/AboutUs";
-import VideoSlider from "./components/sections/home/VideoSlider";
 import FoundationShadeFinder from "./pages/FoundationShadeFinder";
 import Shadefinder from "./pages/ShadeFinder";
 import Shadefinderundertone from "./pages/ShadeFinderUndertone";
@@ -40,7 +34,6 @@ import Foundation from "./pages/Foundation";
 import Virtualtryon from "./pages/VirtualTryOn";
 import VtoProducts from "./pages/VtoProducts";
 import Recommendations from "./pages/Recommendations";
-import Skintypes from "./components/sections/home/SkinTypes";
 import Allsaleproduct from "./pages/AllSaleProduct";
 import Referral from "./pages/Referral";
 import Sidebarcomon from "./components/common/SidebarCommon";
@@ -62,7 +55,6 @@ import ShopProduct from "./pages/ShopProduct";
 import OrderDetails from "./pages/OrderDetails";
 import OrderTrack from "./pages/OrderTrack";
 import Chatbot from "./components/common/Chatbot";
-import Virtualtryonhome from "./components/sections/home/VirtualTryOnHome";
 import Help from "./pages/Help";
 import AffiliateSignup from "./pages/AffiliateSignup";
 import Affiliatelogin from "./pages/AffiliateLogin";
@@ -74,18 +66,30 @@ import ReturnReplaceDetails from "./pages/ReturnReplaceDetails";
 import Mainvirtualtryon from "./pages/MainVirtualTryOn";
 import DiscountProductsPage from "./pages/DiscountProductsPage";
 import HeaderSearchbar from "./components/common/HeaderSearchbar";
-import Bannerslider from "./components/sections/home/BannerSlider";
 import ProductDetailDescription from "./components/sections/product/ProductDetailDescription";
 import ProductDetailsHero from "./components/sections/product/ProductDetailsHero";
 import CustomerReviews from "./components/common/CustomerReviews";
 import HeaderCategories from "./components/common/HeaderCategories";
-import Build from "./components/sections/home/Build";
-import Certificate from "./components/sections/home/Certificate";
 import Mobileheaderview from "./components/common/MobileHeaderView";
 import CategoryLandingPage from "./pages/CategoryLandingPage";
 import Offerlanding from "./pages/OfferLanding";
 import Foryoulanding from "./pages/ForYouLanding";
 import AiBeautyLab from "./pages/AiBeautyLab";
+
+// Home Section Components
+import {
+  TopCategories,
+  BestSellers,
+  ForYou as Foryou,
+  OffersSlider,
+  BrandsSlider,
+  VideoSlider,
+  SkinTypes as Skintypes,
+  VirtualTryOnHome as Virtualtryonhome,
+  BannerSlider as Bannerslider,
+  Build,
+  Certificate,
+} from "./components/sections/home";
 // import SkinDiagnosis from "./pages/SkinDiagnosis";
 // import AddressSection from "./component/AddressSection";
 import AddressSections from "./pages/AddressSections";

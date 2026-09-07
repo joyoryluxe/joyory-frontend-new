@@ -1,10 +1,8 @@
-/* BannerComponent.css */
+/* Certificate.css */
 
 .banner {
     background-color: #fff;
-    /* Light peach color, adjust as needed */
     padding: 20px 0;
-    /* display: flex; */
     justify-content: center;
     align-items: center;
 }
@@ -12,12 +10,11 @@
 .item {
     text-align: center;
     flex: 1;
-    padding: 0 0 0 20px;
+    padding: 0 10px;
 }
 
 .icon {
     font-size: 24px;
-    /* margin-bottom: 10px; */
 }
 
 .title {
@@ -30,11 +27,11 @@
     color: #555;
 }
 
-.subtitle-Certificate{
+.subtitle-Certificate {
     font-size: 16px;
 }
 
-@media (max-width:568px) {
+@media (max-width: 568px) {
     .subtitle-Certificate {
         font-size: 13px !important;
     }
@@ -42,11 +39,11 @@
         font-size: 15px !important;
     }
     .item {
-        padding: 0 15px 0 30px;
+        padding: 0 10px;
     }
 }
 
-@media (max-width:768px) {
+@media (max-width: 768px) {
     .Virtualtryonhome-container-width-responsive {
         margin: 0px;
         padding: 0px;

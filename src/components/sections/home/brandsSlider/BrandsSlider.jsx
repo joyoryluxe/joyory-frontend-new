@@ -1,15 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay, Pagination } from "swiper/modules"; // Added Navigation
-import { getBrands } from "../../../api/brandApi";
+import { Autoplay, Pagination } from "swiper/modules";
+import { getBrands } from "../../../../api/brandApi";
 import { useNavigate } from "react-router-dom";
 import "swiper/css";
 import "swiper/css/pagination";
-import "swiper/css/navigation"; // Import navigation CSS
-import "../../../styles/BrandsSlider.css"; // custom css
-import "../../../styles/Home.css";
-import "../../../app.css";
-
+import "swiper/css/navigation";
+import "../../../../styles/BrandsSlider.css";
+import "../../../../styles/Home.css";
+import "../../../../App.css";
 
 const BrandsSlider = () => {
   const [brands, setBrands] = useState([]);
@@ -40,15 +39,15 @@ const BrandsSlider = () => {
   }
 
   return (
-    <div className="brands-slider-wrapper container-fluid my-4" >
-      {/* <h2 className="mb-3 text-center mt-3 mb-4 mb-lg-5 mt-lg-5 Shop-by-brand spacing">SHOP BY BRANDS</h2> */}
-      <h3 className="mb-3 text-left ms-lg-5 ps-lg-4 mt-3 mb-2 mb-lg-4 mt-lg-5 Shop-by-brand spacing fw-normal">Shop By Brands</h3>
+    <div className="brands-slider-wrapper container-fluid my-4">
+      <h3 className="mb-3 text-left ms-lg-5 ps-lg-4 mt-3 mb-2 mb-lg-4 mt-lg-5 Shop-by-brand spacing fw-normal">
+        Shop By Brands
+      </h3>
       <div className="brands-box mobile-responsive-code">
         <Swiper
-          // modules={[Autoplay, Pagination, Navigation]} // Added Navigation
-          modules={[Autoplay, Pagination]} // Added Navigation
+          modules={[Autoplay, Pagination]}
           pagination={{ clickable: true }}
-          navigation={false} // Enable arrows
+          navigation={false}
           autoplay={{ delay: 1500, disableOnInteraction: false }}
           speed={800}
           spaceBetween={15}
@@ -58,7 +57,7 @@ const BrandsSlider = () => {
             576: { slidesPerView: 3 },
             768: { slidesPerView: 3 },
             992: { slidesPerView: 4 },
-            1200:{ slidesPerView: 6 },
+            1200: { slidesPerView: 6 },
           }}
         >
           {brands.map((brand, index) => (

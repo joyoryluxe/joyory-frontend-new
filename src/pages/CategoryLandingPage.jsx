@@ -37,7 +37,7 @@ import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
-import Certificate from "../components/sections/home/Certificate.jsx";
+import { Certificate } from "../components/sections/home";
 
 
 /* ---------- helpers ---------- */

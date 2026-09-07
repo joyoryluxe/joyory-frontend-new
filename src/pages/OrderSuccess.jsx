@@ -75,7 +75,7 @@ const CancelOrderPopup = ({ show, handleClose, order }) => {
   const checkAuthentication = async () => {
     try {
       const response = await getProfile();
-      const ok = Boolean(response?.data?.success);
+      const ok = Boolean(response?.data?.profile);
       setIsAuthenticated(ok);
       return ok;
     } catch {
@@ -267,7 +267,7 @@ const OrderSuccess = () => {
   const checkAuthAndRedirect = async () => {
     try {
       const response = await getProfile();
-      if (!response?.data?.success) {
+      if (!response?.data?.profile) {
         setIsAuthenticated(false);
         sessionStorage.setItem("redirectAfterLogin", window.location.pathname);
         navigate("/login");

@@ -32,16 +32,14 @@
 .order-details-page {
     background-color: #ffffff;
     min-height: 100vh;
-    padding-top: 150px;
     /* Offset for fixed desktop header + categories */
 }
 
-@media (max-width: 1024px) {
+/* @media (max-width: 1024px) {
     .order-details-page {
         padding-top: 80px;
-        /* Offset for fixed mobile header */
     }
-}
+} */
 
 /* Sleek back to orders button */
 .back-btn {

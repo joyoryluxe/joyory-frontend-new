@@ -471,7 +471,7 @@ const OrderDetails = () => {
 
         {/* Navigation / Back Button */}
         <div className="mb-3">
-          <button className="btn back-btn" onClick={() => navigate(-1)}>
+          <button className="btn back-btn mt-lg-5 mt-md-5 mt-sm-3" onClick={() => navigate(-1)}>
             <FaArrowLeft className="me-2" /> Back to Orders
           </button>
         </div>
