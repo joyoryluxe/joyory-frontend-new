@@ -263,8 +263,14 @@ export default function ProductPage() {
 
     let effectiveSlug = slug;
     if (slug && slug.includes("/")) {
-        const segments = slug.split("/");
-        effectiveSlug = segments[segments.length - 1];
+        const segments = slug.split("/").filter(Boolean);
+        effectiveSlug = segments.length > 0 ? segments[segments.length - 1] : null;
+    }
+
+    const isCategoryRoot = location.pathname.toLowerCase().replace(/\/+$/, "") === "/products/category" ||
+                           location.pathname.toLowerCase().replace(/\/+$/, "") === "/category";
+    if (isCategoryRoot || (effectiveSlug && (effectiveSlug.toLowerCase() === "category" || effectiveSlug.toLowerCase() === "products"))) {
+        effectiveSlug = null;
     }
 
     /* ── state ──────────────────────────────────────────────────────────────── */
@@ -472,7 +478,7 @@ export default function ProductPage() {
         if (!hasCategoryFilters) {
             if (activeCategorySlug) {
                 p.append("categoryIds", activeCategorySlug);
-            } else if (path.includes("/category/")) {
+            } else if (path.includes("/category/") && effectiveSlug && effectiveSlug.toLowerCase() !== "category") {
                 p.append("categoryIds", effectiveSlug);
             }
         }
@@ -537,7 +543,7 @@ export default function ProductPage() {
             const path = location.pathname.toLowerCase();
             const normSlug = (effectiveSlug || "").toLowerCase().trim();
 
-            if (normSlug && normSlug !== "products") {
+            if (normSlug && normSlug !== "products" && normSlug !== "category") {
                 let urlValid = false;
 
                 const validKeywords = [
@@ -618,18 +624,20 @@ export default function ProductPage() {
             }
             setPageNotFound(false);
 
-            const currentContext = `${location.pathname}-${effectiveSlug}-${searchParams.get("q") || searchParams.get("search") || ""}`;
+            const currentContext = `${location.pathname}-${effectiveSlug || ""}-${searchParams.get("q") || searchParams.get("search") || ""}`;
             const isContextChanged = lastContextRef.current !== currentContext;
 
             if (isContextChanged) {
                 // title & banner
                 const q = searchParams.get("q") || searchParams.get("search");
                 if (q) setPageTitle(`Search Results for "${q}"`);
-                else if (data.titleMessage) setPageTitle(data.titleMessage);
+                else if (searchParams.get("discountMin")) setPageTitle(`Flat ${searchParams.get("discountMin")}% Off`);
+                else if (searchParams.get("maxPrice")) setPageTitle(`Under ₹${searchParams.get("maxPrice")}`);
                 else if (data.category?.name) setPageTitle(data.category.name);
                 else if (data.promoMeta?.name) setPageTitle(data.promoMeta.name);
                 else if (data.skinType?.name) setPageTitle(data.skinType.name);
                 else if (activeCategoryName) setPageTitle(activeCategoryName);
+                else if (data.titleMessage) setPageTitle(data.titleMessage);
                 else setPageTitle("Products");
                 // Extract banner array
                 let extractedBanners = [];

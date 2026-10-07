@@ -174,7 +174,11 @@ const BrandFilter = ({
             const p = priceRanges.find((pr) =>
                 pr.min === filters.priceRange.min && pr.max === filters.priceRange.max
             );
-            chips.push({ group: "priceRange", val: null, label: p?.label || "Price Filter" });
+            chips.push({
+                group: "priceRange",
+                val: null,
+                label: p?.label || (filters.priceRange.min === 0 ? `Under ₹${filters.priceRange.max}` : `₹${filters.priceRange.min} - ₹${filters.priceRange.max}`)
+            });
         }
 
         // Category pill from navigation

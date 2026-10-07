@@ -886,7 +886,9 @@ const PhoneAuth = () => {
     try {
       setLoading(true);
       const code = referralCode.trim().toUpperCase();
-      const isUserReferral = /^[0-9A-F]{8}$/.test(code) || /^JOY/i.test(code);
+      const isFromPromoParam = Boolean(searchParams.get("promo") || searchParams.get("promoCode"));
+      const isHexReferral = /^[0-9A-F]{8}$/.test(code);
+      const isUserReferral = !isFromPromoParam && isHexReferral;
 
       const payload = {
         name: fullName,
