@@ -199,7 +199,10 @@ function App() {
 
               {/* ✅ FIXED: Wildcard route for all category depths */}
               <Route path="/category/*" element={<ProductPage />} />
+              <Route path="/Products/category" element={<ProductPage />} />
+              <Route path="/products/category" element={<ProductPage />} />
               <Route path="/Products/category/:slug" element={<ProductPage />} />
+              <Route path="/products/category/:slug" element={<ProductPage />} />
               <Route path="/products/:filter?" element={<ProductPage />} />
 
               <Route path="/products/skintype/:slug" element={<ProductPage />} />

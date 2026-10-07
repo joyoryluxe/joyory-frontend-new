@@ -1097,8 +1097,8 @@ export default function OffersPage() {
                                         }}
 
                                         onClick={() => {
-                                            // Extract discount percentage from subLabel (e.g., "25% Off" -> 25)
-                                            const discountPercent = parseInt(range.subLabel);
+                                            // Extract discount percentage from range.discountMin or subLabel (e.g., "15% OFF" -> 15)
+                                            const discountPercent = range.discountMin || parseInt(range.subLabel);
                                             if (!isNaN(discountPercent)) {
                                                 // Navigate to ProductPage with discountMin parameter
                                                 navigate(`/products/category/?discountMin=${discountPercent}`);
@@ -1261,7 +1261,10 @@ export default function OffersPage() {
                                     <div
                                         className="offersss ticket-card text-white text-center border-0 shadow-sm cursor-pointer hover-lift py-4 px-2 rounded-3 d-lg-flex flex-lg-row justify-content-center align-items-center gap-2 page-title-main-name"
                                         style={{ height: "140px" }}
-                                        onClick={() => navigate(`/products/category/?maxPrice=${item.maxPrice}`)}
+                                        onClick={() => {
+                                            const minP = item.minPrice !== undefined ? item.minPrice : 0;
+                                            navigate(`/products/category/?minPrice=${minP}&maxPrice=${item.maxPrice}`);
+                                        }}
                                     >
                                         <span className="text-black d-block pt-lg-0 pt-3 offersssfonts offer-font-weight-500">
                                             {item.subLabel}

@@ -213,6 +213,21 @@ const Mobileheaderview = ({
   //   getWishlistCount();
   // }, [user]);
 
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (menuOpen) {
+      document.body.style.overflow = "hidden";
+      document.body.style.touchAction = "none";
+    } else {
+      document.body.style.overflow = "";
+      document.body.style.touchAction = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+      document.body.style.touchAction = "";
+    };
+  }, [menuOpen]);
+
   // Close drawer when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -221,7 +236,11 @@ const Mobileheaderview = ({
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside, { passive: true });
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
   }, [menuOpen, setMenuOpen]);
 
   // Toggle subcategory dropdown
@@ -514,13 +533,21 @@ const Mobileheaderview = ({
           )}
         </div>
 
+        {/* Mobile Drawer Menu Backdrop */}
+        {menuOpen && (
+          <div
+            className="mobile-menu-backdrop"
+            onClick={closeMenu}
+          />
+        )}
+
         {/* Mobile Drawer Menu */}
         <nav className={`nav-links ${menuOpen ? "active" : ""}`} ref={mobileMenuRef}>
           <div className="mobile-menu-header">
-            <div className="mobile-menu-logo">
+            <div className="mobile-menu-logo" onClick={handleLogoClick}>
               <img src={logo} alt="JOYORY Logo" />
             </div>
-            <div className="menu-close" onClick={handleCloseMenu}>
+            <div className="menu-close" onClick={closeMenu}>
               <FaTimes size={22} />
             </div>
           </div>
