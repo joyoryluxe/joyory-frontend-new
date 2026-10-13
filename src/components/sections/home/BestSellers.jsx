@@ -575,7 +575,8 @@ const BestSellers = () => {
             }
 
             showToastMsg("Product added to cart!", "success");
-            navigate("/cartpage");
+            await syncCartFromBackend();
+            openCart();
         } catch (err) {
             console.error("Add to Cart error:", err);
             const msg = err.response?.data?.message || err.message || "Failed to add product to cart";

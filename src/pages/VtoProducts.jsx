@@ -94,6 +94,7 @@ const parseFiltersFromSearchParams = (searchParams) => {
 
 export default function VtoProducts() {
     const navigate = useNavigate();
+    const { openCart, syncCartFromBackend } = useContext(CartContext);
     const location = useLocation();
     const [searchParams, setSearchParams] = useSearchParams();
 
@@ -423,7 +424,8 @@ export default function VtoProducts() {
             const { data } = await axiosInstance.post(`${CART_API_BASE}/add`, payload);
             if (!data.success) throw new Error(data.message || "Cart add failed");
             toast.success("Product added to cart!");
-            navigate("/cartpage");
+            await syncCartFromBackend();
+            openCart();
         } catch (e) {
             toast.error(e.response?.data?.message || "Failed to add to cart");
             if (e.response?.status === 401) navigate("/login", { state: { from: location.pathname } });

@@ -70,7 +70,7 @@ export default function CartDrawer() {
 
   const handleNavigateToCheckout = () => {
     closeCart();
-    navigate("/cartpage");
+    navigate("/AddressSelection");
   };
 
   const handleStartShopping = () => {

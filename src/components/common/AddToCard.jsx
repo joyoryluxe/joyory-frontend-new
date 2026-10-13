@@ -126,9 +126,7 @@ const Addtocard = ({ prod, selectedShade, showToastMsg, user }) => {
         if (success) {
           console.log("✅ Successfully added to cart");
           showToastMsg(isGuest ? "✅ Added to cart! (Guest Mode)" : "✅ Product added to cart!", "success");
-          setTimeout(() => {
-            navigate("/cartpage", { state: { refresh: true } });
-          }, 500);
+          openCart();
         } else {
           console.log("❌ addToCart returned false");
           showToastMsg("❌ Failed to add to cart", "error");

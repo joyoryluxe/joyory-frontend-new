@@ -19,7 +19,7 @@ import SEOMeta from "../components/common/SEOMeta";
 import Footer from "../components/common/Footer";
 import Loader from "../components/common/Loader";
 import PageNotFound from "./PageNotFound";
-import { CartContext } from "../Context/CartContext";
+import { CartContext } from "../context/CartContext";
 import { UserContext } from "../context/UserContext.jsx";
 import BrandFilter from "../components/common/BrandFilter";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
@@ -712,7 +712,8 @@ export default function BrandPage() {
       });
       if (!data.success) throw new Error(data.message || "Cart add failed");
       showToastMsg("Product added to cart!", "success");
-      navigate("/cartpage");
+      await syncCartFromBackend();
+      openCart();
     } catch (e) {
       const msg =
         e.response?.data?.message || e.message || "Failed to add to cart";

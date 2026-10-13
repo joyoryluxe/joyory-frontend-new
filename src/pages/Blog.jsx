@@ -99,6 +99,7 @@ const Blog = () => {
   const width = useWindowWidth();
   const isMobileOrTablet = width < 992;
   const navigate = useNavigate();
+  const { openCart, syncCartFromBackend } = useContext(CartContext);
   const location = useLocation();
   const { user } = useContext(UserContext);
 
@@ -508,7 +509,8 @@ const Blog = () => {
       }
 
       showToastMsg("Product added to cart!", "success");
-      navigate("/cartpage");
+      await syncCartFromBackend();
+      openCart();
     } catch (err) {
       console.error("Add to Cart error:", err);
       const msg = err.response?.data?.message || err.message || "Failed to add product to cart";

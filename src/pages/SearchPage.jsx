@@ -1176,7 +1176,8 @@ const SearchPage = () => {
       }
 
       showToastMsg("Product added to cart!", "success");
-      navigate("/cartpage");
+      await syncCartFromBackend();
+      openCart();
     } catch (err) {
       console.error("Add to Cart error:", err);
       showToastMsg(err.response?.data?.message || "Failed to add to cart", "error");

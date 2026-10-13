@@ -1,5 +1,7 @@
 /* =========================================================
-   JOYORY LUXURY SLIDING CART DRAWER (GLASSMORPHISM)
+   JOYORY SIGNATURE BLUE GLASSMORPHISM SLIDING CART DRAWER
+   Theme: Joyory Cerulean Blue (#0077b6, #0096c7, #005a8c, #ebf6fc)
+   Zero Gold / Zero Brown tones
    ========================================================= */
 
 /* Backdrop overlay */
@@ -7,7 +9,7 @@
   position: fixed;
   inset: 0;
   z-index: 9998;
-  background: rgba(18, 14, 11, 0.45);
+  background: rgba(10, 25, 41, 0.45);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   opacity: 0;
@@ -32,12 +34,12 @@
   display: flex;
   flex-direction: column;
 
-  /* Premium Glassmorphism */
-  background: rgba(255, 255, 255, 0.88);
+  /* Premium Blue-tinted Glassmorphism */
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(28px) saturate(190%);
   -webkit-backdrop-filter: blur(28px) saturate(190%);
-  border-left: 1px solid rgba(255, 255, 255, 0.85);
-  box-shadow: -15px 0 50px rgba(0, 0, 0, 0.12), -1px 0 0 rgba(181, 132, 90, 0.12);
+  border-left: 1px solid rgba(255, 255, 255, 0.95);
+  box-shadow: -15px 0 50px rgba(0, 119, 182, 0.12), -1px 0 0 rgba(0, 119, 182, 0.15);
 
   transform: translateX(100%);
   transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -54,10 +56,10 @@
   align-items: center;
   justify-content: space-between;
   padding: 20px 22px;
-  background: rgba(255, 255, 255, 0.7);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.85);
+  border-bottom: 1px solid rgba(0, 119, 182, 0.1);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 }
 
 .cart-drawer-title-wrap {
@@ -70,16 +72,16 @@
   width: 40px;
   height: 40px;
   border-radius: 12px;
-  background: linear-gradient(135deg, rgba(181, 132, 90, 0.15), rgba(181, 132, 90, 0.05));
-  border: 1px solid rgba(181, 132, 90, 0.25);
+  background: linear-gradient(135deg, rgba(0, 119, 182, 0.14), rgba(0, 150, 199, 0.05));
+  border: 1px solid rgba(0, 119, 182, 0.25);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #a06d40;
+  color: #0077b6;
 }
 
 .cart-drawer-bag-icon {
-  color: #a06d40;
+  color: #0077b6;
 }
 
 .cart-drawer-title-row {
@@ -92,12 +94,12 @@
   margin: 0;
   font-size: 1.15rem;
   font-weight: 700;
-  color: #1a1a1a;
+  color: #111e2e;
   letter-spacing: -0.02em;
 }
 
 .cart-drawer-count-badge {
-  background: #111;
+  background: #0077b6;
   color: #fff;
   font-size: 11px;
   font-weight: 700;
@@ -108,36 +110,36 @@
 
 .cart-drawer-subtitle {
   font-size: 0.8rem;
-  color: #777;
+  color: #64748b;
   display: block;
   margin-top: 2px;
 }
 
 .cart-drawer-close-btn {
-  background: rgba(0, 0, 0, 0.04);
-  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: rgba(0, 119, 182, 0.05);
+  border: 1px solid rgba(0, 119, 182, 0.12);
   border-radius: 50%;
   width: 34px;
   height: 34px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #444;
+  color: #475569;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .cart-drawer-close-btn:hover {
-  background: rgba(0, 0, 0, 0.09);
-  color: #111;
+  background: rgba(0, 119, 182, 0.14);
+  color: #0077b6;
   transform: scale(1.05);
 }
 
 /* ── SHIPPING PROGRESS BANNER ── */
 .cart-drawer-shipping-banner {
   padding: 12px 22px;
-  background: linear-gradient(135deg, rgba(246, 243, 238, 0.85), rgba(255, 255, 255, 0.75));
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  background: linear-gradient(135deg, rgba(235, 246, 252, 0.9), rgba(255, 255, 255, 0.85));
+  border-bottom: 1px solid rgba(0, 119, 182, 0.1);
 }
 
 .cart-drawer-shipping-text {
@@ -145,7 +147,7 @@
   align-items: center;
   justify-content: space-between;
   font-size: 0.82rem;
-  color: #333;
+  color: #1e293b;
   margin-bottom: 8px;
 }
 
@@ -153,36 +155,37 @@
   display: flex;
   align-items: center;
   gap: 5px;
-  color: #1b7a48;
+  color: #0077b6;
+  font-weight: 600;
 }
 
 .sparkle-icon {
-  color: #1b7a48;
+  color: #0077b6;
 }
 
 .cart-drawer-shipping-percent {
   font-weight: 700;
   font-size: 0.78rem;
-  color: #a06d40;
+  color: #0077b6;
 }
 
 .cart-drawer-progress-track {
   width: 100%;
   height: 6px;
   border-radius: 10px;
-  background: rgba(0, 0, 0, 0.06);
+  background: rgba(0, 119, 182, 0.1);
   overflow: hidden;
 }
 
 .cart-drawer-progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #b5845a, #d4af37);
+  background: linear-gradient(90deg, #0077b6, #00b4d8);
   border-radius: 10px;
   transition: width 0.4s ease;
 }
 
 .cart-drawer-progress-fill.completed {
-  background: linear-gradient(90deg, #1b7a48, #2ecc71);
+  background: linear-gradient(90deg, #0284c7, #38bdf8);
 }
 
 /* ── BODY & ITEMS LIST ── */
@@ -191,7 +194,7 @@
   overflow-y: auto;
   padding: 18px 20px;
   scrollbar-width: thin;
-  scrollbar-color: rgba(181, 132, 90, 0.3) transparent;
+  scrollbar-color: rgba(0, 119, 182, 0.3) transparent;
 }
 
 .cart-drawer-body::-webkit-scrollbar {
@@ -199,7 +202,7 @@
 }
 
 .cart-drawer-body::-webkit-scrollbar-thumb {
-  background: rgba(181, 132, 90, 0.3);
+  background: rgba(0, 119, 182, 0.25);
   border-radius: 10px;
 }
 
@@ -219,25 +222,25 @@
   width: 84px;
   height: 84px;
   border-radius: 50%;
-  background: linear-gradient(135deg, rgba(181, 132, 90, 0.12), rgba(181, 132, 90, 0.04));
-  border: 1px solid rgba(181, 132, 90, 0.2);
+  background: linear-gradient(135deg, rgba(0, 119, 182, 0.12), rgba(0, 150, 199, 0.04));
+  border: 1px solid rgba(0, 119, 182, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #a06d40;
+  color: #0077b6;
   margin-bottom: 18px;
 }
 
 .cart-drawer-empty-heading {
   font-size: 1.2rem;
   font-weight: 700;
-  color: #222;
+  color: #0f172a;
   margin: 0 0 8px 0;
 }
 
 .cart-drawer-empty-desc {
   font-size: 0.88rem;
-  color: #777;
+  color: #64748b;
   max-width: 260px;
   line-height: 1.5;
   margin: 0 0 22px 0;
@@ -249,19 +252,20 @@
   gap: 8px;
   padding: 12px 24px;
   border-radius: 10px;
-  background: #111;
+  background: #0077b6;
   color: #fff;
   font-weight: 600;
   font-size: 0.9rem;
   border: none;
   cursor: pointer;
   transition: all 0.25s ease;
+  box-shadow: 0 4px 14px rgba(0, 119, 182, 0.25);
 }
 
 .cart-drawer-shop-btn:hover {
-  background: #b5845a;
+  background: #005a8c;
   transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(181, 132, 90, 0.35);
+  box-shadow: 0 6px 18px rgba(0, 119, 182, 0.35);
 }
 
 /* Item Card */
@@ -276,18 +280,18 @@
   gap: 14px;
   padding: 14px;
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.9);
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 4px 18px rgba(0, 119, 182, 0.05);
   transition: all 0.2s ease;
 }
 
 .cart-drawer-item-card:hover {
-  background: rgba(255, 255, 255, 0.9);
-  border-color: rgba(181, 132, 90, 0.25);
-  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.06);
+  background: rgba(255, 255, 255, 0.96);
+  border-color: rgba(0, 119, 182, 0.25);
+  box-shadow: 0 6px 22px rgba(0, 119, 182, 0.09);
 }
 
 .cart-drawer-item-img-wrapper {
@@ -296,8 +300,8 @@
   min-width: 78px;
   border-radius: 10px;
   overflow: hidden;
-  background: #fbf9f6;
-  border: 1px solid rgba(0, 0, 0, 0.04);
+  background: #f8fafc;
+  border: 1px solid rgba(0, 119, 182, 0.08);
 }
 
 .cart-drawer-item-img {
@@ -326,13 +330,13 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #a06d40;
+  color: #0077b6;
 }
 
 .cart-drawer-item-remove-btn {
   background: transparent;
   border: none;
-  color: #999;
+  color: #94a3b8;
   cursor: pointer;
   padding: 2px;
   display: flex;
@@ -342,14 +346,14 @@
 }
 
 .cart-drawer-item-remove-btn:hover {
-  color: #d9534f;
+  color: #ef4444;
 }
 
 .cart-drawer-item-name {
   margin: 0 0 4px 0;
   font-size: 0.88rem;
   font-weight: 600;
-  color: #1a1a1a;
+  color: #0f172a;
   line-height: 1.35;
   white-space: nowrap;
   overflow: hidden;
@@ -361,8 +365,8 @@
   align-items: center;
   gap: 6px;
   font-size: 0.74rem;
-  color: #666;
-  background: rgba(0, 0, 0, 0.035);
+  color: #475569;
+  background: rgba(0, 119, 182, 0.06);
   padding: 2px 8px;
   border-radius: 6px;
   width: fit-content;
@@ -386,20 +390,20 @@
 .cart-drawer-item-price {
   font-size: 0.92rem;
   font-weight: 700;
-  color: #111;
+  color: #0f172a;
 }
 
 .cart-drawer-item-original {
   font-size: 0.78rem;
-  color: #888;
+  color: #94a3b8;
   text-decoration: line-through;
 }
 
 .cart-drawer-item-discount-badge {
   font-size: 0.68rem;
   font-weight: 700;
-  color: #1b7a48;
-  background: rgba(46, 204, 113, 0.12);
+  color: #0077b6;
+  background: rgba(0, 119, 182, 0.1);
   padding: 1px 6px;
   border-radius: 4px;
 }
@@ -415,8 +419,8 @@
 .cart-drawer-stepper {
   display: inline-flex;
   align-items: center;
-  background: rgba(246, 242, 238, 0.9);
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(241, 245, 249, 0.95);
+  border: 1px solid rgba(0, 119, 182, 0.15);
   border-radius: 20px;
   padding: 2px 6px;
   gap: 6px;
@@ -431,15 +435,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #333;
+  color: #1e293b;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .cart-drawer-stepper-btn:hover:not(:disabled) {
   background: #fff;
-  color: #111;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  color: #0077b6;
+  box-shadow: 0 1px 4px rgba(0, 119, 182, 0.15);
 }
 
 .cart-drawer-stepper-btn:disabled {
@@ -450,7 +454,7 @@
 .cart-drawer-stepper-qty {
   font-size: 0.82rem;
   font-weight: 700;
-  color: #111;
+  color: #0f172a;
   min-width: 14px;
   text-align: center;
 }
@@ -458,17 +462,17 @@
 .cart-drawer-item-subtotal {
   font-size: 0.78rem;
   font-weight: 600;
-  color: #555;
+  color: #64748b;
 }
 
 /* ── STICKY FOOTER ── */
 .cart-drawer-footer {
   padding: 18px 22px;
-  background: rgba(255, 255, 255, 0.88);
+  background: rgba(255, 255, 255, 0.94);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
-  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.04);
+  border-top: 1px solid rgba(0, 119, 182, 0.1);
+  box-shadow: 0 -10px 30px rgba(0, 119, 182, 0.05);
 }
 
 .cart-drawer-total-row {
@@ -480,7 +484,7 @@
 
 .cart-drawer-total-label {
   font-size: 0.78rem;
-  color: #777;
+  color: #64748b;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   display: block;
@@ -489,16 +493,16 @@
 .cart-drawer-total-amount {
   font-size: 1.25rem;
   font-weight: 800;
-  color: #111;
+  color: #0f172a;
   letter-spacing: -0.01em;
 }
 
 .cart-drawer-savings-badge {
   font-size: 0.74rem;
   font-weight: 700;
-  color: #1b7a48;
-  background: rgba(46, 204, 113, 0.14);
-  border: 1px solid rgba(46, 204, 113, 0.25);
+  color: #0077b6;
+  background: rgba(0, 119, 182, 0.1);
+  border: 1px solid rgba(0, 119, 182, 0.25);
   padding: 4px 10px;
   border-radius: 20px;
 }
@@ -525,26 +529,27 @@
 }
 
 .cart-drawer-btn-secondary {
-  background: rgba(255, 255, 255, 0.85);
-  border: 1px solid rgba(181, 132, 90, 0.35);
-  color: #222;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1.5px solid #0077b6;
+  color: #0077b6;
 }
 
 .cart-drawer-btn-secondary:hover {
-  background: rgba(246, 241, 235, 0.9);
-  border-color: #b5845a;
+  background: rgba(235, 246, 252, 0.95);
+  border-color: #005a8c;
+  color: #005a8c;
   transform: translateY(-1px);
 }
 
 .cart-drawer-btn-primary {
-  background: #111;
+  background: #0077b6;
   color: #fff;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 14px rgba(0, 119, 182, 0.25);
 }
 
 .cart-drawer-btn-primary:hover {
-  background: #b5845a;
-  box-shadow: 0 6px 18px rgba(181, 132, 90, 0.35);
+  background: #005a8c;
+  box-shadow: 0 6px 18px rgba(0, 119, 182, 0.35);
   transform: translateY(-1px);
 }
 
@@ -554,12 +559,12 @@
   justify-content: center;
   gap: 8px;
   font-size: 0.7rem;
-  color: #888;
+  color: #64748b;
   padding-top: 4px;
 }
 
 .trust-icon {
-  color: #a06d40;
+  color: #0077b6;
   vertical-align: -2px;
 }
 

@@ -79,7 +79,7 @@ const RecommendationSlider = ({ title, products: initialProducts }) => {
   // ===================== END OUT OF STOCK POPUP STATE =====================
 
   const navigate = useNavigate();
-  const { addToCart } = useContext(CartContext);
+  const { addToCart, openCart, syncCartFromBackend } = useContext(CartContext);
   const { user } = useContext(UserContext);
 
   // Helper to get product slug safely
@@ -428,7 +428,8 @@ const RecommendationSlider = ({ title, products: initialProducts }) => {
       }
 
       showToastMsg("Product added to cart!", "success");
-      navigate("/cartpage");
+            await syncCartFromBackend();
+            openCart();
     } catch (err) {
       console.error("Add to Cart error:", err);
       const msg = err.response?.data?.message || err.message || "Failed to add product to cart";

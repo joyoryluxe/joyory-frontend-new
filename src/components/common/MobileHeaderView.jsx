@@ -525,7 +525,7 @@ const Mobileheaderview = ({
               <div className="mobile-search-icon-wrapper" onClick={() => setShowMobileSearch(true)}>
                 <img src={search} alt="Search" />
               </div>
-              <Link to="/cartpage" className="mobile-cart-icon" onClick={(e) => { e.preventDefault(); handleCloseMenu(); openCart(); }}>
+              <Link to="/cartpage" className="mobile-cart-icon" onClick={handleCloseMenu}>
                 <img src={Cart} alt="Cart" />
                 {cartCount > 0 && <span className="cart-count page-title-main-name">{cartCount > 99 ? '99+' : cartCount}</span>}
               </Link>

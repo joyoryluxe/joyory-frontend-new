@@ -13,7 +13,7 @@ import {
 } from "react-icons/fa";
 import Header from "../components/common/Header";
 import Footer from "../components/common/Footer";
-import { CartContext } from "../Context/CartContext";
+import { CartContext } from "../context/CartContext";
 import { UserContext } from "../context/UserContext.jsx";
 import "../styles/CategoryLandingPage.css";
 import "../styles/BestSellers.css";
@@ -515,7 +515,8 @@ export default function CategoryLandingPage() {
             if (!data.success) throw new Error(data.message || "Cart add failed");
 
             showToastMsg("Product added to cart!", "success");
-            navigate("/cartpage");
+            await syncCartFromBackend();
+            openCart();
         } catch (e) {
             const msg =
                 e.response?.data?.message || e.message || "Failed to add to cart";

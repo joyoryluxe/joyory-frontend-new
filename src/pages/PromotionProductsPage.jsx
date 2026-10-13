@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { FaStar, FaHeart, FaRegHeart, FaChevronDown } from "react-icons/fa";
 import Header from "../components/common/Header";
 import Footer from "../components/common/Footer";
-import { CartContext } from "../Context/CartContext";
+import { CartContext } from "../context/CartContext";
 import { UserContext } from "../context/UserContext.jsx";
 import BrandFilter from "../components/common/BrandFilter";
 import axiosInstance from "../utils/axiosInstance.js";
@@ -47,6 +47,7 @@ const getBrandName = (p) => {
 const PromotionProducts = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const { openCart, syncCartFromBackend } = useContext(CartContext);
   const { user } = useContext(UserContext);
 
   const [products, setProducts] = useState([]);
@@ -318,7 +319,8 @@ const PromotionProducts = () => {
       if (!data.success) throw new Error(data.message || "Cart add failed");
 
       toast.success("Product added to cart!");
-      navigate("/cartpage");
+      await syncCartFromBackend();
+      openCart();
     } catch (e) {
       toast.error(e.response?.data?.message || "Failed to add to cart");
       if (e.response?.status === 401) navigate("/login");
