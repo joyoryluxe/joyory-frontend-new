@@ -25,7 +25,7 @@ const ProductDetail = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { addToCart } = useContext(CartContext);
+  const { addToCart, openCart } = useContext(CartContext);
   const { user } = useContext(UserContext);
   const { toggleWishlist: contextToggleWishlist, isInWishlist: contextIsInWishlist } = useContext(WishlistContext);
 

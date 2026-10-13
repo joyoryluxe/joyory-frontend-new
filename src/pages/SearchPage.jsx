@@ -504,7 +504,7 @@ const writeSearchCache = (key, data) => {
 const SearchPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { addToCart } = useContext(CartContext);
+  const { addToCart, openCart, syncCartFromBackend } = useContext(CartContext);
   const { user } = useContext(UserContext);
 
   // URL Syncing

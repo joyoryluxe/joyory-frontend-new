@@ -257,6 +257,7 @@ export default function CategoryLandingPage() {
     const { slug } = useParams();
     const navigate = useNavigate();
     const { user } = useContext(UserContext);
+    const { openCart, syncCartFromBackend } = useContext(CartContext);
 
     // ========== ADDED: Effective slug for handling nested routes ==========
     const effectiveSlug = slug?.includes("/")

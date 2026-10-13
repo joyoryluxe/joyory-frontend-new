@@ -238,7 +238,7 @@ const Header = ({ hideCategories = false }) => {
   const [showMobileSearch, setShowMobileSearch] = useState(false);
 
   // ---------- cart & wishlist ----------
-  const { cartCount } = useContext(CartContext);
+  const { cartCount, openCart } = useContext(CartContext);
   const { wishlistCount } = useContext(WishlistContext);
 
   // ---------- search ----------
@@ -1452,7 +1452,7 @@ const Header = ({ hideCategories = false }) => {
 
           {/* Desktop Icons */}
           <div className="nav-icons user-dropdown gap-3 d-none d-lg-flex page-title-main-name" style={{ alignItems: "center" }}>
-            <Link to="/cartpage" style={{ position: "relative" }}>
+            <Link to="/cartpage" onClick={(e) => { e.preventDefault(); openCart(); }} style={{ position: "relative" }}>
               <img src={Cart} alt="cart" />
               {cartCount > 0 && (
                 <span style={{

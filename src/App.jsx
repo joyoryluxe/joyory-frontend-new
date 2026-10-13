@@ -99,6 +99,7 @@ import Privacy from "./pages/Privacy";
 import RoutineBuilder from "./pages/RoutineBuilder";
 import MetaPixelTracker from "./components/common/MetaPixelTracker";
 import DiscountPopup from "./components/common/DiscountPopup";
+import CartDrawer from "./components/common/CartDrawer";
 
 import CookieConsentBanner from "./components/common/CookieConsentBanner";
 
@@ -370,6 +371,7 @@ function App() {
             </Routes>
 
             {/* ── AI Beauty Concierge (global floating widget) ── */}
+            <CartDrawer />
             <BeautyConcierge />
             <DiscountPopup />
           </WishlistProvider>

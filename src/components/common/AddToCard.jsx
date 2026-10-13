@@ -6,7 +6,7 @@ import bagIcon from "../../assets/bag.svg";
 
 const Addtocard = ({ prod, selectedShade, showToastMsg, user }) => {
   const navigate = useNavigate();
-  const { addToCart } = useContext(CartContext);
+  const { addToCart, openCart } = useContext(CartContext);
 
   if (!prod) return null;
 

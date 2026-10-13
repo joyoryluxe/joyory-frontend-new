@@ -386,6 +386,7 @@ export default function ProductPage() {
     }, [allProducts, filters.sort, selectedVariants, tempSelectedVariants]);
 
     const { user } = useContext(UserContext);
+    const { openCart, syncCartFromBackend } = useContext(CartContext);
     const loaderRef = useRef(null);
 
     /* ── toast ──────────────────────────────────────────────────────────────── */

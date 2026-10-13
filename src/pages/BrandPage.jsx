@@ -74,6 +74,7 @@ export default function BrandPage() {
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams(); // NEW
   const { user } = useContext(UserContext);
+    const { openCart, syncCartFromBackend } = useContext(CartContext);
 
   /* ── state ──────────────────────────────────────────────────────────────── */
   const [allProducts, setAllProducts] = useState([]);

@@ -79,7 +79,7 @@ const Foryou = () => {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const { addToCart } = useContext(CartContext);
+  const { addToCart, openCart, syncCartFromBackend } = useContext(CartContext);
   const { user } = useContext(UserContext);
 
   // Helper to get product slug safely
