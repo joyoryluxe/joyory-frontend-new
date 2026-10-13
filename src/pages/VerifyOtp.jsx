@@ -91,6 +91,9 @@ const VerifyOTP = () => {
           <>
             <input
               type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              autoComplete="one-time-code"
               className="form-control mb-3"
               placeholder="Enter OTP"
               value={otp}

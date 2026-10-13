@@ -555,6 +555,9 @@ const PhoneAuth = () => {
                         key={idx}
                         ref={(el) => (otpInputsRef.current[idx] = el)}
                         type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        autoComplete="one-time-code"
                         maxLength={1}
                         className="otp-digit-field"
                         value={digit}
@@ -800,6 +803,9 @@ const PhoneAuth = () => {
                         key={idx}
                         ref={(el) => (emailOtpInputsRef.current[idx] = el)}
                         type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        autoComplete="one-time-code"
                         maxLength={1}
                         className="otp-digit-field"
                         value={digit}

@@ -153,6 +153,9 @@ const ForgotPassword = () => {
                     <input
                       key={i}
                       type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      autoComplete="one-time-code"
                       maxLength="1"
                       className="form-control text-center otp-input-box"
                       style={{
