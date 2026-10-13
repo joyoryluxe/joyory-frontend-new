@@ -92,7 +92,6 @@ export default function CartDrawer() {
   const handleTouchEnd = () => {
     if (isHorizontalSwipe.current) {
       if (dragOffset > 50) {
-        // Swiped right past threshold -> close drawer
         closeCart();
       }
       setDragOffset(0);
@@ -135,7 +134,7 @@ export default function CartDrawer() {
         aria-hidden={!isCartOpen}
       />
 
-      {/* ── DRAWER PANEL (Covers 90-95% on mobile, closes on swipe right) ── */}
+      {/* ── DRAWER PANEL (Compact height, 90-95% mobile width, swipe-to-close) ── */}
       <aside
         className={`cart-drawer-panel ${isCartOpen ? "open" : ""}`}
         onTouchStart={handleTouchStart}
@@ -150,7 +149,7 @@ export default function CartDrawer() {
             : undefined
         }
       >
-        {/* ── HEADER (Reference layout: "Your Cart (X Items)" + minimal Close icon) ── */}
+        {/* ── HEADER (Compact) ── */}
         <div className="cart-drawer-header">
           <div className="cart-drawer-title-group">
             <h3 className="cart-drawer-title">Your Cart</h3>
@@ -163,17 +162,17 @@ export default function CartDrawer() {
             onClick={closeCart}
             aria-label="Close cart"
           >
-            <X size={20} strokeWidth={1.8} />
+            <X size={17} strokeWidth={2} />
           </button>
         </div>
 
-        {/* ── FREE SHIPPING PROGRESS BANNER ── */}
+        {/* ── FREE SHIPPING PROGRESS BANNER (Compact) ── */}
         {cartItems.length > 0 && (
           <div className="cart-drawer-shipping-banner">
             <div className="cart-drawer-shipping-text">
               {remainingForFreeShipping === 0 ? (
                 <span className="shipping-text-unlocked">
-                  <Sparkles size={13} className="sparkle-icon" />
+                  <Sparkles size={12} className="sparkle-icon" />
                   Yay! You unlocked <strong>FREE Shipping</strong>
                 </span>
               ) : (
@@ -202,7 +201,7 @@ export default function CartDrawer() {
           {cartItems.length === 0 ? (
             <div className="cart-drawer-empty-state">
               <div className="cart-drawer-empty-icon-box">
-                <ShoppingBag size={42} strokeWidth={1.5} />
+                <ShoppingBag size={38} strokeWidth={1.5} />
               </div>
               <h3 className="cart-drawer-empty-heading">Your cart is empty</h3>
               <p className="cart-drawer-empty-desc">
@@ -212,7 +211,7 @@ export default function CartDrawer() {
                 className="cart-drawer-shop-btn"
                 onClick={handleStartShopping}
               >
-                Start Shopping <ArrowRight size={16} />
+                Start Shopping <ArrowRight size={15} />
               </button>
             </div>
           ) : (
@@ -304,7 +303,7 @@ export default function CartDrawer() {
                             }
                             aria-label="Decrease quantity"
                           >
-                            <Minus size={13} strokeWidth={2} />
+                            <Minus size={11} strokeWidth={2.2} />
                           </button>
                           <span className="cart-drawer-stepper-qty">
                             {item.quantity}
@@ -322,7 +321,7 @@ export default function CartDrawer() {
                             disabled={item.quantity >= 6}
                             aria-label="Increase quantity"
                           >
-                            <Plus size={13} strokeWidth={2} />
+                            <Plus size={11} strokeWidth={2.2} />
                           </button>
                         </div>
 
@@ -338,7 +337,7 @@ export default function CartDrawer() {
                           aria-label="Remove item"
                           title="Remove item"
                         >
-                          <Trash2 size={16} strokeWidth={1.7} />
+                          <Trash2 size={14} strokeWidth={1.8} />
                         </button>
                       </div>
                     </div>
@@ -349,7 +348,7 @@ export default function CartDrawer() {
           )}
         </div>
 
-        {/* ── STICKY FOOTER ── */}
+        {/* ── STICKY FOOTER (Ultra-Compact Sleek Height) ── */}
         {cartItems.length > 0 && (
           <div className="cart-drawer-footer">
             <div className="cart-drawer-total-row">
@@ -361,7 +360,7 @@ export default function CartDrawer() {
                   </span>
                 ) : (
                   <span className="cart-drawer-sub-note">
-                    Shipping calculated at next step
+                    Shipping at checkout
                   </span>
                 )}
               </div>
@@ -372,30 +371,30 @@ export default function CartDrawer() {
               </div>
             </div>
 
-            {/* CTAs: Full-width Primary Checkout + Secondary Go to Cart */}
+            {/* CTAs: Sleek side-by-side single row (Drastically reduced height!) */}
             <div className="cart-drawer-cta-group">
-              <button
-                className="cart-drawer-btn cart-drawer-btn-primary"
-                onClick={handleNavigateToCheckout}
-              >
-                PROCEED TO CHECKOUT <ArrowRight size={16} />
-              </button>
               <button
                 className="cart-drawer-btn cart-drawer-btn-secondary"
                 onClick={handleNavigateToCart}
               >
-                View Full Cart
+                View Cart
+              </button>
+              <button
+                className="cart-drawer-btn cart-drawer-btn-primary"
+                onClick={handleNavigateToCheckout}
+              >
+                Checkout <ArrowRight size={14} />
               </button>
             </div>
 
             {/* Trust Badges */}
             <div className="cart-drawer-trust-badges">
               <span>
-                <ShieldCheck size={12} className="trust-icon" /> 100% Genuine
+                <ShieldCheck size={11} className="trust-icon" /> 100% Genuine
               </span>
               <span>•</span>
               <span>
-                <RotateCcw size={12} className="trust-icon" /> Easy 7-Day Returns
+                <RotateCcw size={11} className="trust-icon" /> Easy Returns
               </span>
               <span>•</span>
               <span>Secure Payments</span>
