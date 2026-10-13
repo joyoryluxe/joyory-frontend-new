@@ -412,8 +412,32 @@ const Header = ({ hideCategories = false }) => {
     const fetchData = async () => {
       try {
         setIsSearchLoading(true);
+
+        // Check sessionStorage cache to prevent repeated store downloads
+        const cachedCats = sessionStorage.getItem("cachedCategoriesTree");
+        const cachedProds = sessionStorage.getItem("cachedSearchProducts");
+        if (cachedCats && cachedProds) {
+          try {
+            const parsedCats = JSON.parse(cachedCats);
+            const parsedProds = JSON.parse(cachedProds);
+            setCategories(parsedCats);
+            setAllProducts(parsedProds);
+            const index = parsedProds.map(p => ({
+              product: p,
+              searchString: getSearchableString(p)
+            }));
+            setSearchIndex(index);
+            hasFetchedProducts.current = true;
+            extractPopularSearches(parsedProds);
+            setIsSearchLoading(false);
+            return;
+          } catch (_) {}
+        }
+
         const catRes = await axiosInstance.get("/api/user/categories/tree");
-        setCategories(Array.isArray(catRes.data) ? catRes.data : catRes.data.categories || []);
+        const catsData = Array.isArray(catRes.data) ? catRes.data : catRes.data.categories || [];
+        setCategories(catsData);
+        try { sessionStorage.setItem("cachedCategoriesTree", JSON.stringify(catsData)); } catch (_) {}
 
         let allFetchedProducts = [];
         let currentCursor = null;
@@ -490,6 +514,7 @@ const Header = ({ hideCategories = false }) => {
         }));
         setSearchIndex(index);
         hasFetchedProducts.current = true;
+        try { sessionStorage.setItem("cachedSearchProducts", JSON.stringify(processed)); } catch (_) {}
         extractPopularSearches(processed);
       } catch (err) {
         console.error("Error fetching products:", err);

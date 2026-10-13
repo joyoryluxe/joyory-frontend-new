@@ -7,6 +7,31 @@ import ReactDOM from "react-dom/client";
 import './index.css'
 import App from './App.jsx'
 
+import axios from "axios";
+
+// 🔄 Local Development Redirect
+if (import.meta.env.DEV) {
+  const LOCAL_BACKEND = "http://localhost:5000";
+  const PROD_BACKEND = "https://beauty.joyory.com";
+
+  // Redirect Axios calls
+  axios.interceptors.request.use((config) => {
+    if (config.url && config.url.includes(PROD_BACKEND)) {
+      config.url = config.url.replace(PROD_BACKEND, LOCAL_BACKEND);
+    }
+    return config;
+  });
+
+  // Redirect fetch() calls
+  const originalFetch = window.fetch;
+  window.fetch = (input, init) => {
+    if (typeof input === "string" && input.includes(PROD_BACKEND)) {
+      input = input.replace(PROD_BACKEND, LOCAL_BACKEND);
+    }
+    return originalFetch(input, init);
+  };
+}
+
 // Global trigger for nextOrderDiscountMessage popup bubble
 window.showDiscountPopup = (message, targetEl) => {
   if (!message || !targetEl) return;

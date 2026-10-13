@@ -633,3 +633,101 @@
     color: #000000 !important;
   }
 }
+
+/* ─── Email Verification & Conflict Resolution Styles ─── */
+.email-conflict-card {
+  background: #FFF5F5;
+  border: 1px solid #FEB2B2;
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin-bottom: 20px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(226, 62, 62, 0.08);
+}
+
+.email-conflict-icon {
+  font-size: 24px;
+  margin-bottom: 6px;
+}
+
+.email-conflict-title {
+  font-family: var(--font-display, inherit);
+  font-size: 15px;
+  font-weight: 600;
+  color: #C53030;
+  margin: 0 0 6px 0;
+}
+
+.email-conflict-desc {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #4A5568;
+  margin: 0 0 14px 0;
+}
+
+.email-conflict-phone {
+  font-weight: 700;
+  color: #2D3748;
+}
+
+.email-conflict-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.email-conflict-login-btn {
+  background: #2D3748;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.email-conflict-login-btn:hover {
+  background: #1A202C;
+  transform: translateY(-1px);
+}
+
+.email-conflict-cancel-btn {
+  background: transparent;
+  color: #718096;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.email-conflict-cancel-btn:hover {
+  background: #EDF2F7;
+  color: #2D3748;
+}
+
+.email-otp-highlight {
+  display: inline-block;
+  font-weight: 600;
+  color: var(--text-dark, #222222);
+  background: #F7FAFC;
+  padding: 2px 8px;
+  border-radius: 6px;
+  border: 1px solid #E2E8F0;
+  margin: 0 4px;
+}
+
+.email-edit-btn {
+  background: none;
+  border: none;
+  color: #E23E3E;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+  margin-left: 6px;
+  padding: 0;
+}

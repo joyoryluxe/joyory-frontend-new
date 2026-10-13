@@ -138,7 +138,7 @@ const OutOfStockPopup = ({ isOpen, onClose, productName }) => {
 
 const CART_API_BASE = "/api/user/cart";
 const WISHLIST_CACHE_KEY = "guestWishlist";
-const PRODUCT_ALL_API = "https://beauty.joyory.com/api/user/products/all";
+const PRODUCT_ALL_API = "/api/user/products/all";
 
 // ==================== HELPER FUNCTIONS ====================
 const sanitizeSearchQuery = (query) => {
@@ -452,6 +452,54 @@ const parseSemanticQuery = (term, categoriesList, brandsList) => {
   };
 };
 
+
+// ==================== SEARCH CACHE & SWR HELPERS ====================
+const SEARCH_CACHE_PREFIX = "joyory_search_v2_";
+const SEARCH_CACHE_TTL = 90 * 1000; // 90 seconds freshness for back-and-forth navigation
+
+const getSearchCacheKey = (query, filterObj) => {
+  const q = (query || "").trim().toLowerCase();
+  const cleanFilters = {};
+  if (filterObj) {
+    Object.keys(filterObj).forEach(k => {
+      const v = filterObj[k];
+      if (v !== null && v !== undefined && v !== "" && (!Array.isArray(v) || v.length > 0)) {
+        cleanFilters[k] = v;
+      }
+    });
+  }
+  return `${SEARCH_CACHE_PREFIX}${encodeURIComponent(q)}_${JSON.stringify(cleanFilters)}`;
+};
+
+const readSearchCache = (key) => {
+  try {
+    const raw = sessionStorage.getItem(key);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch (_) {
+    return null;
+  }
+};
+
+const writeSearchCache = (key, data) => {
+  try {
+    sessionStorage.setItem(key, JSON.stringify({
+      ...data,
+      timestamp: Date.now()
+    }));
+  } catch (e) {
+    try {
+      for (let i = 0; i < sessionStorage.length; i++) {
+        const k = sessionStorage.key(i);
+        if (k && k.startsWith("joyory_search_")) {
+          sessionStorage.removeItem(k);
+        }
+      }
+      sessionStorage.setItem(key, JSON.stringify({ ...data, timestamp: Date.now() }));
+    } catch (_) {}
+  }
+};
+
 // ==================== MAIN COMPONENT ====================
 const SearchPage = () => {
   const location = useLocation();
@@ -485,6 +533,7 @@ const SearchPage = () => {
   const [isSyncing, setIsSyncing] = useState(false);
   const [error, setError] = useState(null);
   const hasFetched = useRef(false);
+  const loaderSentinelRef = useRef(null);
 
 
 
@@ -568,125 +617,122 @@ const SearchPage = () => {
       p.append("cursor", currentCursor);
     }
 
-    // Set limit to 500 for search term query to fetch all relevant products on the first page, allowing accurate re-ranking
-    if (searchTerm) {
-      p.append("limit", "500");
-    } else {
-      p.append("limit", "9");
-    }
+    // Fetch 20 products per page for responsive load & smooth pagination on scroll
+    p.append("limit", "20");
 
     return p.toString();
   }, [searchTerm, filters, categories, brandsList]);
 
   const fetchProducts = useCallback(async (currentCursor = null, reset = false) => {
-    try {
-      if (reset) {
+    const cacheKey = getSearchCacheKey(searchTerm, filters);
+
+    // If initial load / reset, check cache first for instant back/forth restore
+    if (reset && !currentCursor) {
+      const cached = readSearchCache(cacheKey);
+      if (cached && Array.isArray(cached.products) && cached.products.length > 0) {
+        setAllProducts(cached.products);
+        setTotalCount(cached.totalCount || cached.products.length);
+        setCursor(cached.cursor || null);
+        setHasMore(cached.hasMore ?? false);
+        if (cached.filterData && !filterData) setFilterData(cached.filterData);
+        if (cached.trendingCategories && (!trendingCategories || trendingCategories.length === 0)) {
+          setTrendingCategories(cached.trendingCategories);
+        }
+        setIsLoading(false);
+
+        // Restore scroll position smoothly
+        if (cached.scrollY && cached.scrollY > 0) {
+          setTimeout(() => {
+            window.scrollTo({ top: cached.scrollY, behavior: "instant" });
+          }, 60);
+        }
+
+        // Freshness check: if within 90s, skip network fetch entirely for instant UI
+        const age = Date.now() - (cached.timestamp || 0);
+        if (age < SEARCH_CACHE_TTL) {
+          return;
+        }
+        // If older than 90s, silently revalidate page 1 in background without showing full-screen loader
+      } else {
         setIsLoading(true);
         setCursor(null);
         setHasMore(true);
-      } else {
-        setIsFetchingMore(true);
       }
+    } else {
+      setIsFetchingMore(true);
+    }
 
-      let products = [];
+    try {
+      const queryString = buildQueryParams(currentCursor);
+      const response = await axiosInstance.get(`${PRODUCT_ALL_API}?${queryString}`, {
+        withCredentials: true
+      });
+
+      let pageProducts = [];
       let pagination = {};
       let titleMsg = null;
 
-      if (searchTerm && reset) {
-        // Loop to fetch all pages of matching products when a search term is supplied
-        let hasMorePages = true;
-        let pageCursor = currentCursor;
-        const productMap = new Map();
-
-        while (hasMorePages) {
-          const queryString = buildQueryParams(pageCursor);
-          const response = await axiosInstance.get(`${PRODUCT_ALL_API}?${queryString}`, {
-            withCredentials: true
-          });
-
-          let pageProducts = [];
-          let pagePag = {};
-
-          if (response.data && Array.isArray(response.data.products)) {
-            pageProducts = response.data.products;
-            pagePag = response.data.pagination || {};
-          } else if (Array.isArray(response.data)) {
-            pageProducts = response.data;
-          }
-
-          if (response.data?.titleMessage) {
-            titleMsg = response.data.titleMessage;
-          }
-
-          if (response.data?.filters && !filterData) {
-            setFilterData(response.data.filters);
-          }
-          if (response.data?.trendingCategories && trendingCategories.length === 0) {
-            setTrendingCategories(response.data.trendingCategories);
-          }
-
-          pageProducts.forEach(p => {
-            const id = p._id || p.id;
-            if (id) productMap.set(id, p);
-          });
-
-          if (!pagePag.hasMore || !pagePag.nextCursor || pageProducts.length === 0) {
-            hasMorePages = false;
-            pagination = pagePag;
-          } else {
-            pageCursor = pagePag.nextCursor;
-          }
-        }
-        products = Array.from(productMap.values());
-      } else {
-        const queryString = buildQueryParams(currentCursor);
-        const response = await axiosInstance.get(`${PRODUCT_ALL_API}?${queryString}`, {
-          withCredentials: true
-        });
-
-        if (response.data && Array.isArray(response.data.products)) {
-          products = response.data.products;
-          pagination = response.data.pagination || {};
-        } else if (Array.isArray(response.data)) {
-          products = response.data;
-        }
-
-        if (response.data?.titleMessage) {
-          titleMsg = response.data.titleMessage;
-        }
-
-        if (response.data?.filters && !filterData) {
-          setFilterData(response.data.filters);
-        }
-        if (response.data?.trendingCategories && trendingCategories.length === 0) {
-          setTrendingCategories(response.data.trendingCategories);
-        }
+      if (response.data && Array.isArray(response.data.products)) {
+        pageProducts = response.data.products;
+        pagination = response.data.pagination || {};
+      } else if (Array.isArray(response.data)) {
+        pageProducts = response.data;
       }
 
+      if (response.data?.titleMessage) {
+        titleMsg = response.data.titleMessage;
+      }
+      if (response.data?.filters && !filterData) {
+        setFilterData(response.data.filters);
+      }
+      if (response.data?.trendingCategories && (!trendingCategories || trendingCategories.length === 0)) {
+        setTrendingCategories(response.data.trendingCategories);
+      }
+
+      let newTotal = totalCount;
+      if (titleMsg) {
+        const match = titleMsg.match(/\d+/);
+        if (match) {
+          newTotal = parseInt(match[0], 10);
+          setTotalCount(newTotal);
+        } else {
+          newTotal = reset ? pageProducts.length : (totalCount + pageProducts.length);
+          setTotalCount(newTotal);
+        }
+      } else if (reset) {
+        newTotal = pageProducts.length;
+        setTotalCount(newTotal);
+      }
+
+      let updatedProducts = [];
       if (reset) {
-        setAllProducts(products);
+        updatedProducts = pageProducts;
+        setAllProducts(pageProducts);
       } else {
         setAllProducts(prev => {
           const productMap = new Map();
           prev.forEach(p => productMap.set(p._id, p));
-          products.forEach(p => productMap.set(p._id, p));
-          return Array.from(productMap.values());
+          pageProducts.forEach(p => productMap.set(p._id, p));
+          updatedProducts = Array.from(productMap.values());
+          return updatedProducts;
         });
       }
 
-      if (titleMsg) {
-        const match = titleMsg.match(/\d+/);
-        if (match) {
-          setTotalCount(parseInt(match[0], 10));
-        } else {
-          setTotalCount(prev => reset ? products.length : prev + products.length);
-        }
-      } else {
-        setTotalCount(prev => reset ? products.length : prev + products.length);
-      }
+      const nextCursor = pagination.nextCursor || null;
+      const nextHasMore = pagination.hasMore || false;
+      setHasMore(nextHasMore);
+      setCursor(nextCursor);
 
-      setHasMore(pagination.hasMore || false);
-      setCursor(pagination.nextCursor || null);
+      // Save to sessionStorage cache
+      writeSearchCache(cacheKey, {
+        products: reset ? pageProducts : updatedProducts,
+        totalCount: newTotal,
+        cursor: nextCursor,
+        hasMore: nextHasMore,
+        filterData: response.data?.filters || filterData,
+        trendingCategories: response.data?.trendingCategories || trendingCategories,
+        scrollY: window.scrollY
+      });
 
     } catch (err) {
       console.error("Fetch Error:", err);
@@ -695,12 +741,12 @@ const SearchPage = () => {
       setIsLoading(false);
       setIsFetchingMore(false);
     }
-  }, [buildQueryParams, filterData, trendingCategories, searchTerm]);
+  }, [buildQueryParams, filterData, trendingCategories, searchTerm, filters, totalCount]);
 
   const fetchMoreProducts = useCallback(async () => {
-    if (isFetchingMore || !hasMore) return;
+    if (isFetchingMore || !hasMore || isLoading || !cursor) return;
     await fetchProducts(cursor, false);
-  }, [cursor, isFetchingMore, hasMore, fetchProducts]);
+  }, [cursor, isFetchingMore, hasMore, isLoading, fetchProducts]);
 
 
   // ==================== WISHLIST STATES ====================
@@ -882,19 +928,50 @@ const SearchPage = () => {
 
 
 
+  // 1. IntersectionObserver for auto-loading next page when scrolling near bottom
+  useEffect(() => {
+    if (!hasMore || isFetchingMore || isLoading || !cursor) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !isFetchingMore && !isLoading && hasMore && cursor) {
+          fetchMoreProducts();
+        }
+      },
+      { root: null, rootMargin: "300px", threshold: 0.1 }
+    );
+    const el = loaderSentinelRef.current;
+    if (el) observer.observe(el);
+    return () => el && observer.unobserve(el);
+  }, [fetchMoreProducts, hasMore, isFetchingMore, isLoading, cursor]);
+
+  // 2. Scroll event fallback + save scroll position to cache for back/forth navigation
   useEffect(() => {
     const handleScroll = () => {
-      const isBottom =
-        window.innerHeight + window.scrollY >= document.body.offsetHeight - 150;
+      // Auto-save scroll position to cache
+      const cacheKey = getSearchCacheKey(searchTerm, filters);
+      const cached = readSearchCache(cacheKey);
+      if (cached) {
+        cached.scrollY = window.scrollY;
+        try { sessionStorage.setItem(cacheKey, JSON.stringify(cached)); } catch (_) {}
+      }
 
+      // Trigger fetch more if near bottom
+      if (isFetchingMore || !hasMore || isLoading || !cursor) return;
+      const scrollHeight = Math.max(
+        document.body.scrollHeight,
+        document.documentElement.scrollHeight,
+        document.body.offsetHeight,
+        document.documentElement.offsetHeight
+      );
+      const isBottom = window.innerHeight + window.scrollY >= scrollHeight - 350;
       if (isBottom) {
         fetchMoreProducts();
       }
     };
 
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [fetchMoreProducts]);
+  }, [fetchMoreProducts, isFetchingMore, hasMore, isLoading, cursor, searchTerm, filters]);
 
   // ==================== DATA FETCHING WITH FILTERS ====================
   // Fetch categories tree and brands list on mount
@@ -1908,13 +1985,15 @@ const SearchPage = () => {
                     {filteredProducts.map(renderProductCard)}
                   </div>
 
-                  {/* 🔥 Infinite Scroll Loader */}
-                  {isFetchingMore && (
-                    <Loader text="Loading more products..." height={100} />
-                  )}
+                  {/* 🔥 Infinite Scroll Sentinel & Loader */}
+                  <div ref={loaderSentinelRef} style={{ minHeight: "20px", margin: "15px 0" }}>
+                    {isFetchingMore && (
+                      <Loader text="Loading more products..." height={100} />
+                    )}
+                  </div>
 
                   {/* Optional End Message */}
-                  {!hasMore && (
+                  {!hasMore && allProducts.length > 0 && (
                     <div className="text-center py-4 text-muted">
                       No more products to show
                     </div>

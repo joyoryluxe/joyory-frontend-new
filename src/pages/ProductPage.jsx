@@ -516,7 +516,7 @@ export default function ProductPage() {
         // Do not pass sort to backend API due to cursor pagination limitation (nextCursor is null when sorting)
         // if (filters.sort) p.append("sort", filters.sort);
         if (cursor) p.append("cursor", cursor);
-        p.append("limit", "9");
+        p.append("limit", "16");
 
         const queryString = p.toString();
         console.log("API Query →", `${PRODUCT_ALL_API}?${queryString}`);
@@ -857,15 +857,19 @@ export default function ProductPage() {
     }, [nextCursor, hasMore, loadingMore]);
 
     useEffect(() => {
-        if (!hasMore || loadingMore) return;
+        if (!hasMore || loadingMore || loading || allProducts.length === 0) return;
         const obs = new IntersectionObserver(
-            ([e]) => e.isIntersecting && loadMore(),
-            { root: null, rootMargin: "100px", threshold: 0.1 }
+            ([e]) => {
+                if (e.isIntersecting && !loading && !loadingMore && hasMore) {
+                    loadMore();
+                }
+            },
+            { root: null, rootMargin: "0px", threshold: 0.1 }
         );
         const el = loaderRef.current;
         if (el) obs.observe(el);
         return () => el && obs.unobserve(el);
-    }, [loadMore, hasMore, loadingMore]);
+    }, [loadMore, hasMore, loadingMore, loading, allProducts.length]);
 
     /* ── cart ───────────────────────────────────────────────────────────────── */
     const handleAddToCart = async (prod, forceVariant = null) => {

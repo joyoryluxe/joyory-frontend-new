@@ -1,9 +1,9 @@
 // src/api/axios.js
 import axios from "axios";
-
 const api = axios.create({
-  baseURL: "https://beauty.joyory.com/api",
-  withCredentials: true,   // ✅ always send cookies
+  baseURL: import.meta.env.DEV ? "http://localhost:5000/api" : "https://beauty.joyory.com/api",
+  withCredentials: true,
 });
+
 
 export default api;
