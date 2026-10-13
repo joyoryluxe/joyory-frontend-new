@@ -1,8 +1,10 @@
 // ✅ axiosInstance.js (fixed for guest + logged-in flow)
 import axios from "axios";
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "https://beauty.joyory.com";
+
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.DEV ? `http://${typeof window !== "undefined" && window.location?.hostname ? window.location.hostname : "localhost"}:5000` : "https://beauty.joyory.com",
+  baseURL: BACKEND_URL,
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
@@ -21,11 +23,10 @@ axiosInstance.interceptors.response.use(
   }
 );
 
-// Automatically route hardcoded production URLs to local backend in development
+// If custom backend configured, route hardcoded production URLs to it
 axiosInstance.interceptors.request.use((config) => {
-  if (import.meta.env.DEV && config.url && config.url.includes("https://beauty.joyory.com")) {
-    const devHost = typeof window !== "undefined" && window.location?.hostname ? window.location.hostname : "localhost";
-    config.url = config.url.replace("https://beauty.joyory.com", `http://${devHost}:5000`);
+  if (BACKEND_URL !== "https://beauty.joyory.com" && config.url && config.url.includes("https://beauty.joyory.com")) {
+    config.url = config.url.replace("https://beauty.joyory.com", BACKEND_URL);
   }
   return config;
 });
