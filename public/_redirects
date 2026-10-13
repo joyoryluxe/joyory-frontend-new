@@ -7,7 +7,7 @@
 /sitemap-blogs.xml            /sitemap-blog.xml             200
 /sitemap-products.xml         /sitemap-products.xml         200
 /sitemap-products-:page.xml   https://beauty.joyory.com/sitemap-products-:page.xml   200
-/robots.txt                   https://beauty.joyory.com/robots.txt                  200
+/robots.txt                   /robots.txt                  200
 
 # ─── React SPA Routing ───────────────────────────────────────────────────────
 /*                            /index.html                                           200
