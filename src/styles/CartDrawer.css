@@ -1,6 +1,6 @@
 /* =========================================================
    JOYORY SIGNATURE BLUE GLASSMORPHISM SLIDING CART DRAWER
-   Mobile Layout & Typography Refinement (Referencing Let's Hyphen)
+   Mobile Screen Coverage: 90-95% with Swipe Right to Close
    Theme: Joyory Cerulean Blue (#0077b6, #0096c7, #005a8c, #ebf6fc)
    ========================================================= */
 
@@ -9,7 +9,7 @@
   position: fixed;
   inset: 0;
   z-index: 9998;
-  background: rgba(10, 25, 41, 0.45);
+  background: rgba(10, 25, 41, 0.48);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   opacity: 0;
@@ -44,6 +44,9 @@
   transform: translateX(100%);
   transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1);
   font-family: var(--font-primary, "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .cart-drawer-panel.open {
@@ -162,6 +165,8 @@
   padding: 16px 18px;
   scrollbar-width: thin;
   scrollbar-color: rgba(0, 119, 182, 0.25) transparent;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
 }
 
 .cart-drawer-body::-webkit-scrollbar {
@@ -553,12 +558,17 @@
   vertical-align: -2px;
 }
 
-/* ── RESPONSIVE (MOBILE OPTIMIZATIONS) ── */
-@media (max-width: 480px) {
+/* ── RESPONSIVE: 90-95% SCREEN COVERAGE ON MOBILE ── */
+@media (max-width: 768px) {
   .cart-drawer-panel {
-    max-width: 100%;
-    /* Subtle rounded top corners on mobile screen */
-    border-radius: 18px 18px 0 0;
+    width: 92% !important;
+    max-width: 92vw !important;
+    /* Rounded top and bottom left corners matching reference */
+    border-top-left-radius: 24px !important;
+    border-bottom-left-radius: 24px !important;
+    border-top-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+    box-shadow: -15px 0 45px rgba(10, 25, 41, 0.35), -1px 0 0 rgba(0, 119, 182, 0.15) !important;
   }
 
   .cart-drawer-header {
@@ -629,5 +639,14 @@
   .cart-drawer-btn-secondary {
     padding: 8px 14px;
     font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .cart-drawer-panel {
+    width: 94% !important;
+    max-width: 94vw !important;
+    border-top-left-radius: 20px !important;
+    border-bottom-left-radius: 20px !important;
   }
 }

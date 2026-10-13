@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from "react";
+import React, { useContext, useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { CartContext } from "../../context/CartContext";
 import {
@@ -52,6 +52,54 @@ export default function CartDrawer() {
     };
   }, [isCartOpen]);
 
+  // ── Swipe Right to Close Gesture ──────────────────────────────────
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
+  const isHorizontalSwipe = useRef(false);
+  const [dragOffset, setDragOffset] = useState(0);
+
+  useEffect(() => {
+    if (!isCartOpen) {
+      setDragOffset(0);
+      isHorizontalSwipe.current = false;
+    }
+  }, [isCartOpen]);
+
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+    isHorizontalSwipe.current = false;
+  };
+
+  const handleTouchMove = (e) => {
+    const currentX = e.touches[0].clientX;
+    const currentY = e.touches[0].clientY;
+    const diffX = currentX - touchStartX.current;
+    const diffY = currentY - touchStartY.current;
+
+    // Only engage if movement is clearly horizontal to the right
+    if (!isHorizontalSwipe.current) {
+      if (diffX > 8 && Math.abs(diffX) > Math.abs(diffY)) {
+        isHorizontalSwipe.current = true;
+      }
+    }
+
+    if (isHorizontalSwipe.current && diffX > 0) {
+      setDragOffset(diffX);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (isHorizontalSwipe.current) {
+      if (dragOffset > 50) {
+        // Swiped right past threshold -> close drawer
+        closeCart();
+      }
+      setDragOffset(0);
+      isHorizontalSwipe.current = false;
+    }
+  };
+
   // Calculate free shipping progress
   const currentPayable = Number(cartSummary?.payable || 0);
   const remainingForFreeShipping = Math.max(
@@ -87,8 +135,21 @@ export default function CartDrawer() {
         aria-hidden={!isCartOpen}
       />
 
-      {/* ── DRAWER PANEL ── */}
-      <aside className={`cart-drawer-panel ${isCartOpen ? "open" : ""}`}>
+      {/* ── DRAWER PANEL (Covers 90-95% on mobile, closes on swipe right) ── */}
+      <aside
+        className={`cart-drawer-panel ${isCartOpen ? "open" : ""}`}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        style={
+          dragOffset > 0
+            ? {
+                transform: `translateX(${dragOffset}px)`,
+                transition: "none",
+              }
+            : undefined
+        }
+      >
         {/* ── HEADER (Reference layout: "Your Cart (X Items)" + minimal Close icon) ── */}
         <div className="cart-drawer-header">
           <div className="cart-drawer-title-group">
