@@ -80,61 +80,46 @@ export default function CartDrawer() {
 
   return (
     <>
-      {/* Backdrop overlay */}
+      {/* ── BACKDROP ── */}
       <div
         className={`cart-drawer-backdrop ${isCartOpen ? "open" : ""}`}
         onClick={closeCart}
         aria-hidden={!isCartOpen}
       />
 
-      {/* Sliding Side Panel */}
-      <aside
-        className={`cart-drawer-panel ${isCartOpen ? "open" : ""}`}
-        aria-label="Shopping Cart Drawer"
-        role="dialog"
-        aria-modal="true"
-      >
-        {/* ── HEADER ── */}
+      {/* ── DRAWER PANEL ── */}
+      <aside className={`cart-drawer-panel ${isCartOpen ? "open" : ""}`}>
+        {/* ── HEADER (Reference layout: "Your Cart (X Items)" + minimal Close icon) ── */}
         <div className="cart-drawer-header">
-          <div className="cart-drawer-title-wrap">
-            <div className="cart-drawer-icon-bubble">
-              <ShoppingBag size={20} className="cart-drawer-bag-icon" />
-            </div>
-            <div>
-              <div className="cart-drawer-title-row">
-                <h2 className="cart-drawer-title">Shopping Bag</h2>
-                <span className="cart-drawer-count-badge">{cartCount}</span>
-              </div>
-              <span className="cart-drawer-subtitle">
-                {cartCount === 1 ? "1 item selected" : `${cartCount} items selected`}
-              </span>
-            </div>
+          <div className="cart-drawer-title-group">
+            <h3 className="cart-drawer-title">Your Cart</h3>
+            <span className="cart-drawer-item-count">
+              ({cartCount} {cartCount === 1 ? "Item" : "Items"})
+            </span>
           </div>
           <button
             className="cart-drawer-close-btn"
             onClick={closeCart}
-            aria-label="Close cart drawer"
+            aria-label="Close cart"
           >
-            <X size={20} />
+            <X size={20} strokeWidth={1.8} />
           </button>
         </div>
 
-        {/* ── FREE SHIPPING PROGRESS BAR ── */}
+        {/* ── FREE SHIPPING PROGRESS BANNER ── */}
         {cartItems.length > 0 && (
           <div className="cart-drawer-shipping-banner">
             <div className="cart-drawer-shipping-text">
               {remainingForFreeShipping === 0 ? (
-                <>
-                  <span className="shipping-text-unlocked">
-                    <Sparkles size={14} className="sparkle-icon" /> Yay! You unlocked <strong>FREE Shipping</strong>
-                  </span>
-                </>
+                <span className="shipping-text-unlocked">
+                  <Sparkles size={13} className="sparkle-icon" />
+                  Yay! You unlocked <strong>FREE Shipping</strong>
+                </span>
               ) : (
-                <>
-                  <span>
-                    Add <strong>₹{remainingForFreeShipping}</strong> more for <strong>FREE Shipping</strong>
-                  </span>
-                </>
+                <span>
+                  Add <strong>₹{remainingForFreeShipping}</strong> more for{" "}
+                  <strong>FREE Shipping</strong>
+                </span>
               )}
               <span className="cart-drawer-shipping-percent">
                 {progressPercent}%
@@ -143,7 +128,7 @@ export default function CartDrawer() {
             <div className="cart-drawer-progress-track">
               <div
                 className={`cart-drawer-progress-fill ${
-                  remainingForFreeShipping === 0 ? "completed" : ""
+                  progressPercent >= 100 ? "completed" : ""
                 }`}
                 style={{ width: `${progressPercent}%` }}
               />
@@ -156,9 +141,9 @@ export default function CartDrawer() {
           {cartItems.length === 0 ? (
             <div className="cart-drawer-empty-state">
               <div className="cart-drawer-empty-icon-box">
-                <ShoppingBag size={46} strokeWidth={1.5} />
+                <ShoppingBag size={42} strokeWidth={1.5} />
               </div>
-              <h3 className="cart-drawer-empty-heading">Your bag is empty</h3>
+              <h3 className="cart-drawer-empty-heading">Your cart is empty</h3>
               <p className="cart-drawer-empty-desc">
                 Discover our curated collections of luxury makeup and clean skincare.
               </p>
@@ -205,58 +190,46 @@ export default function CartDrawer() {
                     </div>
 
                     <div className="cart-drawer-item-details">
-                      <div className="cart-drawer-item-header">
-                        <span className="cart-drawer-item-brand">
-                          {item.brand || "JOYORY"}
-                        </span>
-                        <button
-                          className="cart-drawer-item-remove-btn"
-                          onClick={() =>
-                            removeItemFromCart(
-                              item.cartItemId,
-                              item.productId,
-                              variant.sku
-                            )
-                          }
-                          aria-label="Remove item"
-                          title="Remove item"
-                        >
-                          <Trash2 size={15} />
-                        </button>
-                      </div>
-
-                      <h4 className="cart-drawer-item-name">{item.name}</h4>
-
-                      {variantLabel && (
-                        <div className="cart-drawer-item-variant">
-                          {variant.hex && (
-                            <span
-                              className="cart-drawer-shade-dot"
-                              style={{ backgroundColor: variant.hex }}
-                            />
+                      {/* Top Row: Title on Left, Price on Right */}
+                      <div className="cart-drawer-item-top-row">
+                        <div className="cart-drawer-item-title-box">
+                          <h4 className="cart-drawer-item-name" title={item.name}>
+                            {item.name}
+                          </h4>
+                          {variantLabel && (
+                            <div className="cart-drawer-item-variant">
+                              {variant.hex && (
+                                <span
+                                  className="cart-drawer-shade-dot"
+                                  style={{ backgroundColor: variant.hex }}
+                                />
+                              )}
+                              <span>{variantLabel}</span>
+                            </div>
                           )}
-                          <span>{variantLabel}</span>
                         </div>
-                      )}
 
-                      <div className="cart-drawer-item-price-row">
-                        <span className="cart-drawer-item-price">
-                          ₹{item.price}
-                        </span>
-                        {isDiscounted && (
-                          <span className="cart-drawer-item-original">
-                            ₹{originalPrice}
+                        <div className="cart-drawer-item-price-box">
+                          <span className="cart-drawer-item-price">
+                            ₹{item.price}
                           </span>
-                        )}
-                        {discountPercent > 0 && (
-                          <span className="cart-drawer-item-discount-badge">
-                            {discountPercent}% OFF
-                          </span>
-                        )}
+                          {isDiscounted && (
+                            <div className="cart-drawer-item-original-wrap">
+                              <span className="cart-drawer-item-original">
+                                ₹{originalPrice}
+                              </span>
+                              {discountPercent > 0 && (
+                                <span className="cart-drawer-item-discount-badge">
+                                  {discountPercent}% OFF
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </div>
 
-                      {/* Stepper + Subtotal Row */}
-                      <div className="cart-drawer-item-footer-row">
+                      {/* Bottom Row: Stepper Pill on Left, Trash Button on Right */}
+                      <div className="cart-drawer-item-bottom-row">
                         <div className="cart-drawer-stepper">
                           <button
                             className="cart-drawer-stepper-btn"
@@ -270,7 +243,7 @@ export default function CartDrawer() {
                             }
                             aria-label="Decrease quantity"
                           >
-                            <Minus size={13} />
+                            <Minus size={13} strokeWidth={2} />
                           </button>
                           <span className="cart-drawer-stepper-qty">
                             {item.quantity}
@@ -288,13 +261,24 @@ export default function CartDrawer() {
                             disabled={item.quantity >= 6}
                             aria-label="Increase quantity"
                           >
-                            <Plus size={13} />
+                            <Plus size={13} strokeWidth={2} />
                           </button>
                         </div>
 
-                        <span className="cart-drawer-item-subtotal">
-                          Total: ₹{item.price * item.quantity}
-                        </span>
+                        <button
+                          className="cart-drawer-item-remove-btn"
+                          onClick={() =>
+                            removeItemFromCart(
+                              item.cartItemId,
+                              item.productId,
+                              variant.sku
+                            )
+                          }
+                          aria-label="Remove item"
+                          title="Remove item"
+                        >
+                          <Trash2 size={16} strokeWidth={1.7} />
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -308,42 +292,49 @@ export default function CartDrawer() {
         {cartItems.length > 0 && (
           <div className="cart-drawer-footer">
             <div className="cart-drawer-total-row">
-              <div>
-                <span className="cart-drawer-total-label">Total Amount</span>
+              <div className="cart-drawer-total-left">
+                <span className="cart-drawer-total-label">SUBTOTAL</span>
+                {Number(cartSummary?.totalSavings || 0) > 0 ? (
+                  <span className="cart-drawer-savings-text">
+                    Saved ₹{cartSummary.totalSavings}
+                  </span>
+                ) : (
+                  <span className="cart-drawer-sub-note">
+                    Shipping calculated at next step
+                  </span>
+                )}
+              </div>
+              <div className="cart-drawer-total-right">
                 <span className="cart-drawer-total-amount">
                   ₹{cartSummary?.payable || 0}
                 </span>
               </div>
-              {Number(cartSummary?.totalSavings || 0) > 0 && (
-                <span className="cart-drawer-savings-badge">
-                  Saved ₹{cartSummary.totalSavings}
-                </span>
-              )}
             </div>
 
+            {/* CTAs: Full-width Primary Checkout + Secondary Go to Cart */}
             <div className="cart-drawer-cta-group">
-              <button
-                className="cart-drawer-btn cart-drawer-btn-secondary"
-                onClick={handleNavigateToCart}
-              >
-                Go to Cart
-              </button>
               <button
                 className="cart-drawer-btn cart-drawer-btn-primary"
                 onClick={handleNavigateToCheckout}
               >
-                Checkout <ArrowRight size={16} />
+                PROCEED TO CHECKOUT <ArrowRight size={16} />
+              </button>
+              <button
+                className="cart-drawer-btn cart-drawer-btn-secondary"
+                onClick={handleNavigateToCart}
+              >
+                View Full Cart
               </button>
             </div>
 
             {/* Trust Badges */}
             <div className="cart-drawer-trust-badges">
               <span>
-                <ShieldCheck size={13} className="trust-icon" /> 100% Genuine
+                <ShieldCheck size={12} className="trust-icon" /> 100% Genuine
               </span>
               <span>•</span>
               <span>
-                <RotateCcw size={13} className="trust-icon" /> Easy 7-Day Returns
+                <RotateCcw size={12} className="trust-icon" /> Easy 7-Day Returns
               </span>
               <span>•</span>
               <span>Secure Payments</span>
