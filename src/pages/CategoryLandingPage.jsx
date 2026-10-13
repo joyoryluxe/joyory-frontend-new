@@ -1365,7 +1365,7 @@ export default function CategoryLandingPage() {
                             {section.products?.length > 4 && (
                                 <button
                                     className="btn btn-link text-decoration-none text-dark page-title-main-name"
-                                    onClick={() => navigate(`/section/${section._id}`)}
+                                    onClick={() => navigate(`/Products/category/${category?.slug || effectiveSlug || ''}`)}
                                 >
                                     View All
                                 </button>

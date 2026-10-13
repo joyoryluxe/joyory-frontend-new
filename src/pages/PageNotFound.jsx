@@ -31,7 +31,7 @@ const PageNotFound = () => {
             </div>
 
             <div className="pnf__links" aria-label="Popular links">
-              <button className="pnf__link" onClick={() => navigate("/virtualtryon")}>
+              <button className="pnf__link" onClick={() => navigate("/virtual-try-on")}>
                 Virtual Try-On
               </button>
               <button className="pnf__link" onClick={() => navigate("/foryoulanding")}>

@@ -304,7 +304,7 @@ const OrderSuccess = () => {
       const isAuth = await checkAuthAndRedirect();
       if (!isAuth) return;
 
-      const orderIdToFetch = id || orderId;
+      const orderIdToFetch = id || orderId || location.state?.backendResponse?.orderId || location.state?.backendResponse?.order?._id || location.state?.orderId;
       if (!orderIdToFetch) throw new Error("No order ID provided");
 
       const endpoints = [
