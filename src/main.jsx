@@ -9,16 +9,15 @@ import App from './App.jsx'
 
 import axios from "axios";
 
-// 🔄 Local Development Redirect
-if (import.meta.env.DEV) {
-  const devHost = typeof window !== "undefined" && window.location?.hostname ? window.location.hostname : "localhost";
-  const LOCAL_BACKEND = `http://${devHost}:5000`;
-  const PROD_BACKEND = "https://beauty.joyory.com";
+// 🔄 Backend Redirect (only redirects if VITE_BACKEND_URL is explicitly configured to a local/custom backend)
+const PROD_BACKEND = "https://beauty.joyory.com";
+const TARGET_BACKEND = import.meta.env.VITE_BACKEND_URL || PROD_BACKEND;
 
+if (TARGET_BACKEND !== PROD_BACKEND) {
   // Redirect Axios calls
   axios.interceptors.request.use((config) => {
     if (config.url && config.url.includes(PROD_BACKEND)) {
-      config.url = config.url.replace(PROD_BACKEND, LOCAL_BACKEND);
+      config.url = config.url.replace(PROD_BACKEND, TARGET_BACKEND);
     }
     return config;
   });
@@ -27,7 +26,7 @@ if (import.meta.env.DEV) {
   const originalFetch = window.fetch;
   window.fetch = (input, init) => {
     if (typeof input === "string" && input.includes(PROD_BACKEND)) {
-      input = input.replace(PROD_BACKEND, LOCAL_BACKEND);
+      input = input.replace(PROD_BACKEND, TARGET_BACKEND);
     }
     return originalFetch(input, init);
   };
