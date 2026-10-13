@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import "../styles/AboutUs.css";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import {
   Sparkles,
   BadgeCheck,
@@ -14,7 +14,7 @@ import {
 import Header from "../components/common/Header";
 import Footer from "../components/common/Footer";
 import aboutWhyImg from "../assets/about-why.png";
-import SEOMeta from "../components/common/SEOMeta"; // Add import at top
+import SEOMeta from "../components/common/SEOMeta";
 
 function useInView(threshold = 0.1) {
   const ref = useRef(null);
@@ -53,9 +53,63 @@ const AboutUs = () => {
     });
   };
 
+  const featureCards = [
+    {
+      icon: <Sparkles size={28} />,
+      title: "Smart Beauty Quiz",
+      text: "Decode your skin concerns and goals through an intelligent questionnaire for custom advice.",
+      link: "/foryoulanding",
+      actionText: "Take Quiz",
+    },
+    {
+      icon: <ScanFace size={28} />,
+      title: "Foundation Shade Finder",
+      text: "Scan and detect your exact undertone and shade matches in real-time using our AI camera tool.",
+      link: "/shadefinder",
+      actionText: "Find Shade",
+    },
+    {
+      icon: <Wand2 size={28} />,
+      title: "AI Virtual Try-On",
+      text: "Instantly test lipstick shades, eye palettes, and blush overlays with a virtual mirror.",
+      link: "/Mainvirtualtryon",
+      actionText: "Launch Try-On",
+    },
+    {
+      icon: <BadgeCheck size={28} />,
+      title: "Ingredient Compatibility",
+      text: "Analyze ingredients side-by-side to ensure compatibility and verify safety ratings.",
+      link: "/ingredient-compatibility",
+      actionText: "Scan Actives",
+    },
+    {
+      icon: <ShoppingBag size={28} />,
+      title: "Skincare Routine Builder",
+      text: "Build tailored day-and-night skincare regimens based on skin compatibility profiles.",
+      link: "/routines",
+      actionText: "Build Routine",
+    },
+    {
+      icon: <HeartHandshake size={28} />,
+      title: "AI Beauty Concierge",
+      text: "Chat 24/7 with our trained beauty assistant for instant routine and product suggestions.",
+      link: "/Chatbot",
+      actionText: "Chat Now",
+    },
+  ];
+
+  const brandPills = [
+    { name: "LAKMÉ", slug: "lakme" },
+    { name: "MARS", slug: "mars" },
+    { name: "MAYBELLINE", slug: "maybelline" },
+    { name: "SWISS BEAUTY", slug: "swiss-beauty" },
+    { name: "PLUM", slug: "plum" },
+    { name: "JOYORY ORIGINALS", path: "/products" },
+  ];
+
   return (
     <>
-      <SEOMeta type="aboutus" /> {/* Add this */}
+      <SEOMeta type="aboutus" />
       <Header />
 
       <div className="about-page">
@@ -85,7 +139,7 @@ const AboutUs = () => {
             <div className="hero-buttons">
               <button
                 className="primary-btn"
-                onClick={() => navigate("/")}
+                onClick={() => navigate("/products")}
               >
                 Explore Products <ArrowRight size={18} />
               </button>
@@ -136,43 +190,20 @@ const AboutUs = () => {
             className={`story-right ${storyVisible ? "anim-fade-left" : ""
               }`}
           >
-            {[
-              {
-                icon: <Sparkles size={28} />,
-                title: "Smart Beauty Quiz",
-                text: "Decode your skin concerns and goals through an intelligent questionnaire for custom advice.",
-              },
-              {
-                icon: <ScanFace size={28} />,
-                title: "Foundation Shade Finder",
-                text: "Scan and detect your exact undertone and shade matches in real-time using our AI camera tool.",
-              },
-              {
-                icon: <Wand2 size={28} />,
-                title: "AI Virtual Try-On",
-                text: "Instantly test lipstick shades, eye palettes, and blush overlays with a virtual mirror.",
-              },
-              {
-                icon: <BadgeCheck size={28} />,
-                title: "Ingredient Compatibility",
-                text: "Analyze ingredients side-by-side to ensure compatibility and verify safety ratings.",
-              },
-              {
-                icon: <ShoppingBag size={28} />,
-                title: "Skincare Routine Builder",
-                text: "Build tailored day-and-night skincare regimens based on skin compatibility profiles.",
-              },
-              {
-                icon: <HeartHandshake size={28} />,
-                title: "AI Beauty Concierge",
-                text: "Chat 24/7 with our trained beauty assistant for instant routine and product suggestions.",
-              },
-            ].map((item, index) => (
-              <div className="story-card" key={index}>
+            {featureCards.map((item, index) => (
+              <Link
+                to={item.link}
+                className="story-card"
+                key={index}
+                aria-label={`Explore ${item.title}`}
+              >
                 <div className="icon-wrapper">{item.icon}</div>
                 <h3>{item.title}</h3>
                 <p>{item.text}</p>
-              </div>
+                <span className="story-card-link">
+                  {item.actionText} <ArrowRight size={14} className="story-card-arrow" />
+                </span>
+              </Link>
             ))}
           </div>
         </section>
@@ -228,10 +259,15 @@ const AboutUs = () => {
             <div className="brand-marquee-container">
               <div className="brand-marquee">
                 {/* Double the brands for infinite scroll effect */}
-                {["LAKMÉ", "MARS", "MAYBELLINE", "SWISS BEAUTY", "PLUM", "JOYORY ORIGINALS", "LAKMÉ", "MARS", "MAYBELLINE", "SWISS BEAUTY", "PLUM", "JOYORY ORIGINALS"].map((brand, i) => (
-                  <div className="brand-pill" key={i}>
-                    <Sparkles size={14} className="brand-pill-icon" /> {brand}
-                  </div>
+                {[...brandPills, ...brandPills].map((brand, i) => (
+                  <Link
+                    to={brand.path || `/brand/${brand.slug}`}
+                    className="brand-pill"
+                    key={i}
+                    aria-label={`Shop ${brand.name} collection`}
+                  >
+                    <Sparkles size={14} className="brand-pill-icon" /> {brand.name}
+                  </Link>
                 ))}
               </div>
             </div>
@@ -254,7 +290,7 @@ const AboutUs = () => {
             </p>
 
             <div className="why-right">
-              <div className="why-box">
+              <Link to="/products" className="why-box" aria-label="Explore authentic products">
                 <BadgeCheck size={24} />
                 <div>
                   <h4>Authentic Products</h4>
@@ -263,9 +299,9 @@ const AboutUs = () => {
                     from brands.
                   </p>
                 </div>
-              </div>
+              </Link>
 
-              <div className="why-box">
+              <Link to="/topcategories" className="why-box" aria-label="Explore curated collections">
                 <ShoppingBag size={24} />
                 <div>
                   <h4>Curated Collections</h4>
@@ -274,9 +310,9 @@ const AboutUs = () => {
                     journey.
                   </p>
                 </div>
-              </div>
+              </Link>
 
-              <div className="why-box">
+              <Link to="/ai-beauty-lab" className="why-box" aria-label="Explore beauty and technology">
                 <Wand2 size={24} />
                 <div>
                   <h4>Beauty + Technology</h4>
@@ -285,7 +321,7 @@ const AboutUs = () => {
                     customer experience.
                   </p>
                 </div>
-              </div>
+              </Link>
             </div>
           </div>
 
@@ -313,7 +349,7 @@ const AboutUs = () => {
 
             <button
               className="cta-btn"
-              onClick={() => navigate("/")}
+              onClick={() => navigate("/products")}
             >
               Start Exploring <ChevronRight size={20} />
             </button>
