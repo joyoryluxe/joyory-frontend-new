@@ -11,7 +11,8 @@ import axios from "axios";
 
 // 🔄 Local Development Redirect
 if (import.meta.env.DEV) {
-  const LOCAL_BACKEND = "http://localhost:5000";
+  const devHost = typeof window !== "undefined" && window.location?.hostname ? window.location.hostname : "localhost";
+  const LOCAL_BACKEND = `http://${devHost}:5000`;
   const PROD_BACKEND = "https://beauty.joyory.com";
 
   // Redirect Axios calls

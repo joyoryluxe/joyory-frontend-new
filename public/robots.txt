@@ -1,0 +1,31 @@
+User-agent: *
+Allow: /
+
+# Block private/customer pages
+Disallow: /cart
+Disallow: /checkout
+Disallow: /account
+Disallow: /login
+Disallow: /register
+Disallow: /wishlist
+
+# Block internal search results
+Disallow: /search
+Disallow: /search/
+
+# Block URL parameters used for filtering/sorting
+Disallow: /*?*sort=
+Disallow: /*?*filter=
+Disallow: /*?*page=
+Disallow: /*?*price=
+Disallow: /*?*brand=
+Disallow: /*?*color=
+Disallow: /*?*size=
+
+# Block tracking/session parameters
+Disallow: /*?*utm_
+Disallow: /*?*session=
+Disallow: /*?*sid=
+
+# Sitemap
+Sitemap: https://joyory.com/sitemap.xml

@@ -2,7 +2,7 @@
 import axios from "axios";
 
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.DEV ? "http://localhost:5000" : "https://beauty.joyory.com",
+  baseURL: import.meta.env.DEV ? `http://${typeof window !== "undefined" && window.location?.hostname ? window.location.hostname : "localhost"}:5000` : "https://beauty.joyory.com",
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
@@ -24,7 +24,8 @@ axiosInstance.interceptors.response.use(
 // Automatically route hardcoded production URLs to local backend in development
 axiosInstance.interceptors.request.use((config) => {
   if (import.meta.env.DEV && config.url && config.url.includes("https://beauty.joyory.com")) {
-    config.url = config.url.replace("https://beauty.joyory.com", "http://localhost:5000");
+    const devHost = typeof window !== "undefined" && window.location?.hostname ? window.location.hostname : "localhost";
+    config.url = config.url.replace("https://beauty.joyory.com", `http://${devHost}:5000`);
   }
   return config;
 });

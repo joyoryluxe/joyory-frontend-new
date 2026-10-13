@@ -1,11 +1,13 @@
-# ─── SEO Backend Redirects (Netlify Proxying) ─────────────────────────────────
-# Proxy sitemaps and robots.txt requests directly to your backend API domain
-/sitemap.xml                  https://beauty.joyory.com/sitemap.xml                 200
+# ─── SEO Sitemaps & Robots ──────────────────────────────────────────────────
+/sitemap.xml                  /sitemap.xml                  200
+/sitemap-pages.xml            /sitemap-pages.xml            200
+/sitemap-categories.xml       /sitemap-categories.xml       200
+/sitemap-brands.xml           /sitemap-brands.xml           200
+/sitemap-blog.xml             /sitemap-blog.xml             200
+/sitemap-blogs.xml            /sitemap-blog.xml             200
+/sitemap-products.xml         /sitemap-products.xml         200
 /sitemap-products-:page.xml   https://beauty.joyory.com/sitemap-products-:page.xml   200
-/sitemap-categories.xml       https://beauty.joyory.com/sitemap-categories.xml       200
-/sitemap-brands.xml           https://beauty.joyory.com/sitemap-brands.xml           200
-/sitemap-blogs.xml            https://beauty.joyory.com/sitemap-blogs.xml            200
-/robots.txt                   https://beauty.joyory.com/robots.txt                  200
+/robots.txt                   /robots.txt                  200
 
-# ─── React SPA Routing ────────────────────────────────────────────────────────
+# ─── React SPA Routing ───────────────────────────────────────────────────────
 /*                            /index.html                                           200

@@ -167,6 +167,9 @@ const Otp = () => {
                   key={index}
                   id={`otp-${index}`}
                   type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  autoComplete="one-time-code"
                   value={digit}
                   onChange={(e) => handleChange(e.target.value, index)}
                   className="otp-box text-center"
