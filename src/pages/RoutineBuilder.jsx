@@ -98,6 +98,7 @@ const RoutineBuilder = () => {
 
   // --- Progress Tracker Active States ---
   const [activeTrackerRoutine, setActiveTrackerRoutine] = useState(null);
+
   const [trackerTab, setTrackerTab] = useState("checkin"); // "checkin", "trends", "diary"
   const [trackerLogs, setTrackerLogs] = useState([]);
   const [trackerStats, setTrackerStats] = useState({
@@ -163,6 +164,80 @@ const RoutineBuilder = () => {
   const [alternativesLoading, setAlternativesLoading] = useState(false);
   const [alternativesStepIdx, setAlternativesStepIdx] = useState(null);
   const [showAlternativesModal, setShowAlternativesModal] = useState(false);
+
+// --- Restore Active Builder Draft from Session on Load ---
+  useEffect(() => {
+    try {
+      const savedDraft = sessionStorage.getItem("joyory_routine_builder_draft");
+      if (savedDraft) {
+        const draft = JSON.parse(savedDraft);
+        if (draft && (draft.steps?.length > 0 || draft.routineName || draft.aiPromptQuery)) {
+          if (draft.routineName) setRoutineName(draft.routineName);
+          if (draft.routineDesc) setRoutineDesc(draft.routineDesc);
+          if (draft.routineType) setRoutineType(draft.routineType);
+          if (draft.timeOfDay) setTimeOfDay(draft.timeOfDay);
+          if (draft.estimatedMinutes) setEstimatedMinutes(draft.estimatedMinutes);
+          if (draft.steps && draft.steps.length > 0) setSteps(draft.steps);
+          if (typeof draft.isAISuggested === "boolean") setIsAISuggested(draft.isAISuggested);
+          if (draft.routineGoal) setRoutineGoal(draft.routineGoal);
+          if (draft.milestoneTitle) setMilestoneTitle(draft.milestoneTitle);
+          if (draft.durationDays) setDurationDays(draft.durationDays);
+          if (draft.startDate) setStartDate(draft.startDate);
+          if (draft.aiPromptQuery) setAiPromptQuery(draft.aiPromptQuery);
+          if (draft.aiBudgetSummary) setAiBudgetSummary(draft.aiBudgetSummary);
+          if (draft.aiSafetyAdvice) setAiSafetyAdvice(draft.aiSafetyAdvice);
+          if (draft.editingRoutineId) setEditingRoutineId(draft.editingRoutineId);
+        }
+      }
+    } catch (e) {
+      console.warn("Failed to restore routine builder draft from session:", e);
+    }
+  }, []);
+
+  // --- Persist Active Builder Draft in Session ---
+  useEffect(() => {
+    if (steps.length > 0 || routineName.trim() || aiPromptQuery.trim()) {
+      try {
+        const draft = {
+          routineName,
+          routineDesc,
+          routineType,
+          timeOfDay,
+          estimatedMinutes,
+          steps,
+          isAISuggested,
+          routineGoal,
+          milestoneTitle,
+          durationDays,
+          startDate,
+          aiPromptQuery,
+          aiBudgetSummary,
+          aiSafetyAdvice,
+          editingRoutineId
+        };
+        sessionStorage.setItem("joyory_routine_builder_draft", JSON.stringify(draft));
+      } catch (e) {
+        console.warn("Failed to save routine builder draft to session:", e);
+      }
+    }
+  }, [
+    steps,
+    routineName,
+    routineDesc,
+    routineType,
+    timeOfDay,
+    estimatedMinutes,
+    isAISuggested,
+    routineGoal,
+    milestoneTitle,
+    durationDays,
+    startDate,
+    aiPromptQuery,
+    aiBudgetSummary,
+    aiSafetyAdvice,
+    editingRoutineId
+  ]);
+
 
   // --- Load User Routines ---
   const fetchMyRoutines = async () => {
@@ -1336,6 +1411,9 @@ const RoutineBuilder = () => {
         }
       }
 
+      try {
+        sessionStorage.removeItem("joyory_routine_builder_draft");
+      } catch (_) {}
       resetForm();
       setActiveTab("my");
       fetchMyRoutines();
@@ -1361,6 +1439,9 @@ const RoutineBuilder = () => {
     setMilestoneTitle("");
     setDurationDays(30);
     setStartDate(getTodayDateString());
+    try {
+      sessionStorage.removeItem("joyory_routine_builder_draft");
+    } catch (_) {}
   };
 
   // --- Filtering Products ---
@@ -1618,21 +1699,21 @@ const RoutineBuilder = () => {
                     <div className="rb-tabs">
                       <button
                         className={`rb-tab-btn ${activeTab === "my" ? "active" : ""}`}
-                        onClick={() => { resetForm(); setActiveTab("my"); }}
+                        onClick={() => setActiveTab("my")}
                       >
                         My Routines ({routines.length})
                       </button>
                       <button
                         className={`rb-tab-btn ${activeTab === "templates" ? "active" : ""}`}
-                        onClick={() => { resetForm(); setActiveTab("templates"); }}
+                        onClick={() => setActiveTab("templates")}
                       >
                         Routine Templates ({templates.length})
                       </button>
                       <button
                         className={`rb-tab-btn ${activeTab === "builder" ? "active" : ""}`}
-                        onClick={() => { resetForm(); setActiveTab("builder"); }}
+                        onClick={() => setActiveTab("builder")}
                       >
-                        {editingRoutineId ? "Edit Routine" : "Custom Builder"}
+                        {editingRoutineId ? "Edit Routine" : (steps.length > 0 ? `Custom Builder (${steps.length})` : "Custom Builder")}
                       </button>
                     </div>
 
@@ -1650,8 +1731,18 @@ const RoutineBuilder = () => {
                       </button>
 
                       {(activeTab === "my" || activeTab === "templates") && (
-                        <button className="rb-create-btn" onClick={() => { resetForm(); setActiveTab("builder"); }}>
-                          <FaPlus /> Build Custom
+                        <button
+                          className="rb-create-btn"
+                          onClick={() => {
+                            if (steps.length > 0 && !editingRoutineId) {
+                              setActiveTab("builder");
+                            } else {
+                              resetForm();
+                              setActiveTab("builder");
+                            }
+                          }}
+                        >
+                          <FaPlus /> {steps.length > 0 && !editingRoutineId ? "Continue Regimen" : "Build Custom"}
                         </button>
                       )}
                     </div>
@@ -2425,6 +2516,72 @@ const RoutineBuilder = () => {
                 {/* Tab Content: Custom Builder / Editor */}
                 {activeTab === "builder" && (
                   <form onSubmit={handleSaveRoutine} className="rb-form-card">
+
+                    {/* Active AI Prescribed Regimen Context Banner */}
+                    {isAISuggested && (
+                      <div className="mb-4 p-3 rounded" style={{
+                        background: "#f9fafb",
+                        border: "1px solid #e5e7eb",
+                        borderRadius: "12px",
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.03)"
+                      }}>
+                        <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                          <div className="d-flex align-items-center gap-2">
+                            <span style={{ fontSize: "1.2rem" }}>✨</span>
+                            <span style={{ fontWeight: "700", fontSize: "0.95rem", color: "#111827" }}>
+                              AI Prescribed Regimen
+                            </span>
+                            <span style={{
+                              background: "#000",
+                              color: "#fff",
+                              borderRadius: "12px",
+                              fontSize: "0.72rem",
+                              fontWeight: "600",
+                              padding: "2px 8px"
+                            }}>
+                              {steps.length} Steps
+                            </span>
+                          </div>
+                          <div className="d-flex align-items-center gap-2">
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-outline-dark d-flex align-items-center gap-1"
+                              onClick={() => setActiveTab("my")}
+                              title="Go back to AI Coach to modify your prompt"
+                              style={{ fontSize: "0.8rem", borderRadius: "20px", padding: "4px 14px", fontWeight: "600" }}
+                            >
+                              <FaEdit /> Refine Prompt
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-outline-danger"
+                              onClick={() => {
+                                if (window.confirm("Do you want to discard this AI regimen and start a clean custom routine?")) {
+                                  resetForm();
+                                }
+                              }}
+                              style={{ fontSize: "0.8rem", borderRadius: "20px", padding: "4px 12px" }}
+                            >
+                              Start Fresh
+                            </button>
+                          </div>
+                        </div>
+
+                        {aiPromptQuery && (
+                          <div className="mt-2 text-muted" style={{
+                            fontSize: "0.85rem",
+                            background: "#ffffff",
+                            padding: "8px 12px",
+                            borderRadius: "8px",
+                            border: "1px dashed #d1d5db"
+                          }}>
+                            <strong className="text-dark">Your Prompt: </strong>
+                            <em>“{aiPromptQuery}”</em>
+                          </div>
+                        )}
+
+                      </div>
+                    )}
 
                     <div className="rb-form-header">
                       <h2>{editingRoutineId ? "Edit Routine Journey" : "Design A Goal Skincare Journey"}</h2>
