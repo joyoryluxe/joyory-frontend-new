@@ -1725,3 +1725,270 @@
         border-radius: 15px;
     }
 }
+
+/* ==========================================================================
+   FACE DETECTION & ALIGNMENT GUIDANCE OVERLAY (AR INDUSTRY STANDARD)
+   ========================================================================== */
+
+.vto-face-guide-wrap {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 15;
+    transition: opacity 0.4s ease;
+}
+
+.vto-face-guide-wrap.detected {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.vto-face-guide-wrap.not-detected {
+    opacity: 1;
+}
+
+/* Oval Guide Reticle in Center */
+.vto-face-oval-guide {
+    position: relative;
+    width: min(280px, 64vw);
+    height: min(370px, 60vh);
+    border-radius: 50%;
+    border: 2px dashed rgba(212, 175, 55, 0.7);
+    box-shadow: 0 0 30px rgba(212, 175, 55, 0.2), inset 0 0 30px rgba(212, 175, 55, 0.1);
+    animation: vtoGuidePulse 2.4s ease-in-out infinite;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@keyframes vtoGuidePulse {
+    0%, 100% {
+        border-color: rgba(212, 175, 55, 0.75);
+        box-shadow: 0 0 25px rgba(212, 175, 55, 0.25), inset 0 0 20px rgba(212, 175, 55, 0.1);
+        transform: scale(1);
+    }
+    50% {
+        border-color: rgba(212, 175, 55, 0.4);
+        box-shadow: 0 0 12px rgba(212, 175, 55, 0.1), inset 0 0 10px rgba(212, 175, 55, 0.05);
+        transform: scale(0.985);
+    }
+}
+
+/* Reticle Corner Brackets */
+.vto-guide-corner {
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border-color: #d4af37;
+    border-style: solid;
+    pointer-events: none;
+}
+.vto-corner-tl {
+    top: -6px;
+    left: -6px;
+    border-width: 3px 0 0 3px;
+    border-top-left-radius: 6px;
+}
+.vto-corner-tr {
+    top: -6px;
+    right: -6px;
+    border-width: 3px 3px 0 0;
+    border-top-right-radius: 6px;
+}
+.vto-corner-bl {
+    bottom: -6px;
+    left: -6px;
+    border-width: 0 0 3px 3px;
+    border-bottom-left-radius: 6px;
+}
+.vto-corner-br {
+    bottom: -6px;
+    right: -6px;
+    border-width: 0 3px 3px 0;
+    border-bottom-right-radius: 6px;
+}
+
+/* Subtle Scanner Sweep */
+.vto-guide-scan-line {
+    position: absolute;
+    width: 80%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.8), transparent);
+    animation: vtoScanSweep 3s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes vtoScanSweep {
+    0% { top: 15%; opacity: 0; }
+    20% { opacity: 0.9; }
+    80% { opacity: 0.9; }
+    100% { top: 85%; opacity: 0; }
+}
+
+/* Floating Alert Pill */
+.vto-face-alert-pill {
+    position: absolute;
+    top: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(18, 18, 18, 0.88);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(212, 175, 55, 0.4);
+    border-radius: 30px;
+    padding: 8px 22px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 15px rgba(212, 175, 55, 0.15);
+    z-index: 25;
+    animation: fadeInDown 0.3s ease-out;
+    pointer-events: auto;
+    white-space: nowrap;
+}
+
+.vto-face-alert-icon-wrap {
+    color: #e5a970;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: alertPulse 1.6s ease-in-out infinite;
+}
+
+@keyframes alertPulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.15); opacity: 0.75; }
+}
+
+.vto-face-alert-text {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+}
+
+.vto-face-alert-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    color: #fff;
+    text-transform: uppercase;
+}
+
+.vto-face-alert-subtitle {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.7);
+    letter-spacing: 0.5px;
+}
+
+/* Enhanced Status Dot in Bottom Pill */
+.vto-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.vto-status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.vto-status.status-detected .vto-status-dot {
+    background: #4caf50;
+    box-shadow: 0 0 8px #4caf50;
+}
+
+.vto-status.status-lost .vto-status-dot {
+    background: #e5a970;
+    box-shadow: 0 0 8px #e5a970;
+}
+
+/* Camera Error Card */
+.vto-camera-error-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.88);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 30;
+    padding: 20px;
+}
+
+.vto-camera-error-card {
+    background: #181818;
+    border: 1px solid rgba(212, 175, 55, 0.35);
+    border-radius: 16px;
+    padding: 28px;
+    max-width: 420px;
+    text-align: center;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7);
+}
+
+.vto-camera-error-icon {
+    font-size: 36px;
+    margin-bottom: 12px;
+}
+
+.vto-camera-error-title {
+    color: #fff;
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+}
+
+.vto-camera-error-msg {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 13px;
+    line-height: 1.5;
+    margin-bottom: 20px;
+}
+
+.vto-camera-error-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.vto-btn-gold {
+    background: #b5845a;
+    color: #fff;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 25px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.vto-btn-gold:hover {
+    background: #c99368;
+}
+
+.vto-btn-outline {
+    background: transparent;
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 10px 20px;
+    border-radius: 25px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.vto-btn-outline:hover {
+    border-color: #fff;
+    background: rgba(255, 255, 255, 0.05);
+}
