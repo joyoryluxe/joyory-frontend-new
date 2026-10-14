@@ -11,7 +11,15 @@ import axios from "axios";
 
 // 🔄 Backend Redirect (only redirects if VITE_BACKEND_URL is explicitly configured to a local/custom backend)
 const PROD_BACKEND = "https://beauty.joyory.com";
-const TARGET_BACKEND = import.meta.env.VITE_BACKEND_URL || PROD_BACKEND;
+const getTargetBackend = () => {
+  const envUrl = import.meta.env.VITE_BACKEND_URL;
+  if (!envUrl) return PROD_BACKEND;
+  if (typeof window !== 'undefined' && window.location?.hostname && window.location.hostname !== 'localhost') {
+    return envUrl.replace('localhost', window.location.hostname).replace('127.0.0.1', window.location.hostname);
+  }
+  return envUrl;
+};
+const TARGET_BACKEND = getTargetBackend();
 
 if (TARGET_BACKEND !== PROD_BACKEND) {
   // Redirect Axios calls
