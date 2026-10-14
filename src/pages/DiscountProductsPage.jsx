@@ -172,7 +172,7 @@ const DiscountProductsPage = () => {
   }, [activeCategorySlug, trendingCategories, filterData]);
 
   // Context
-  const { addToCart } = useContext(CartContext);
+  const { addToCart, openCart, syncCartFromBackend } = useContext(CartContext);
   const { user } = useContext(UserContext);
 
   // ===================== TOAST UTILITY =====================
@@ -556,7 +556,8 @@ const DiscountProductsPage = () => {
       if (!data.success) throw new Error(data.message || "Cart add failed");
 
       showToastMsg("Product added to cart!", "success");
-      navigate("/cartpage");
+      await syncCartFromBackend();
+      openCart();
     } catch (err) {
       console.error("Add to Cart error:", err);
       const msg = err.response?.data?.message || err.message || "Failed to add to cart";

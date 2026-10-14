@@ -79,7 +79,7 @@ const Foryou = () => {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const { addToCart } = useContext(CartContext);
+  const { addToCart, openCart, syncCartFromBackend } = useContext(CartContext);
   const { user } = useContext(UserContext);
 
   // Helper to get product slug safely
@@ -492,7 +492,8 @@ const Foryou = () => {
       }
 
       showToastMsg("Product added to cart!", "success");
-      navigate("/cartpage");
+      await syncCartFromBackend();
+      openCart();
     } catch (err) {
       console.error("Add to Cart error:", err);
       const msg = err.response?.data?.message || err.message || "Failed to add product to cart";

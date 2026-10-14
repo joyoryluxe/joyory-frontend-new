@@ -15,6 +15,7 @@ import bagIcon from "../../../assets/bag.svg";
 import tick from "../../../assets/tick.svg";
 import { FaHeart, FaRegHeart, FaChevronDown, FaTimes, FaCheck } from "react-icons/fa";
 import { UserContext } from "../../../context/UserContext";
+import { CartContext } from "../../../context/CartContext";
 
 const API_LIST = "https://beauty.joyory.com/api/user/products/top-sellers";
 const CART_API_BASE = "https://beauty.joyory.com/api/user/cart";
@@ -76,6 +77,7 @@ const BestSellers = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { user } = useContext(UserContext);
+    const { openCart, syncCartFromBackend } = useContext(CartContext);
 
     // Conditional SEO meta tag configuration to prevent Google sitelinks indexing
     useEffect(() => {
@@ -573,7 +575,8 @@ const BestSellers = () => {
             }
 
             showToastMsg("Product added to cart!", "success");
-            navigate("/cartpage");
+            await syncCartFromBackend();
+            openCart();
         } catch (err) {
             console.error("Add to Cart error:", err);
             const msg = err.response?.data?.message || err.message || "Failed to add product to cart";

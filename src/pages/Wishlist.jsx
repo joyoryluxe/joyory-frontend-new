@@ -15,7 +15,7 @@ import "../styles/BestSellers.css";
 
 const Wishlist = () => {
   const { wishlistItems, loading, removeFromWishlist: contextRemoveFromWishlist, syncWishlist } = useContext(WishlistContext);
-  const { addToCart, syncCartFromBackend } = useContext(CartContext);
+  const { addToCart, openCart, syncCartFromBackend } = useContext(CartContext);
   const [removingItems, setRemovingItems] = useState({});
   const navigate = useNavigate();
   const { user } = useContext(UserContext);
@@ -95,7 +95,7 @@ const Wishlist = () => {
       await contextRemoveFromWishlist(item.productId, item.sku, true);
       await syncCartFromBackend();
       toast.success("Moved to cart successfully!");
-      navigate("/cartpage");
+      openCart();
     } catch (err) {
       console.error(err);
       toast.error("Failed to move to cart");

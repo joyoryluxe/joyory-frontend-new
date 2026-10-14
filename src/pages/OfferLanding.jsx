@@ -12,7 +12,7 @@ import {
 } from "react-icons/fa";
 import Header from "../components/common/Header";
 import Footer from "../components/common/Footer";
-import { CartContext } from "../Context/CartContext";
+import { CartContext } from "../context/CartContext";
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { UserContext } from "../context/UserContext.jsx";
 import Bag from "../assets/Bag.svg";
@@ -258,6 +258,7 @@ const OutOfStockPopup = ({ isOpen, onClose, productName }) => {
 
 export default function OffersPage() {
     const navigate = useNavigate();
+    const { openCart, syncCartFromBackend } = useContext(CartContext);
     const { user } = useContext(UserContext);
 
     // State
@@ -418,7 +419,8 @@ export default function OffersPage() {
             if (!data.success) throw new Error(data.message || "Cart add failed");
 
             showToastMsg("Product added to cart!", "success");
-            navigate("/cartpage");
+            await syncCartFromBackend();
+            openCart();
         } catch (e) {
             showToastMsg(e.response?.data?.message || e.message || "Failed to add to cart", "error");
             if (e.response?.status === 401) navigate("/login");

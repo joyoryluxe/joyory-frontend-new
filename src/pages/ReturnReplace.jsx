@@ -100,7 +100,7 @@ const ReturnReplace = () => {
       <Header />
       <div className="container mt-4 mb-5" style={{ minHeight: "60vh" }}>
         <div className="d-flex align-items-center mb-4">
-          <button className="btn btn-outline-secondary me-3" onClick={() => navigate("/profile")}>
+          <button className="btn btn-outline-secondary me-3" onClick={() => navigate("/useraccount")}>
             <FaArrowLeft />
           </button>
           <h4 className="mb-0 fw-bold page-title-main-name">My Returns & Replacements</h4>
@@ -112,7 +112,7 @@ const ReturnReplace = () => {
           <div className="text-center py-5 border rounded bg-light page-title-main-name">
             <FaBoxOpen size={50} className="text-muted mb-3" />
             <h5>No requests found</h5>
-            <button className="btn btn-primary page-title-main-name" onClick={() => navigate("/orders")}>Go to Orders</button>
+            <button className="btn btn-primary page-title-main-name" onClick={() => navigate("/myorders")}>Go to Orders</button>
           </div>
         ) : (
           <div className="row">

@@ -99,6 +99,7 @@ import Privacy from "./pages/Privacy";
 import RoutineBuilder from "./pages/RoutineBuilder";
 import MetaPixelTracker from "./components/common/MetaPixelTracker";
 import DiscountPopup from "./components/common/DiscountPopup";
+import CartDrawer from "./components/common/CartDrawer";
 
 import CookieConsentBanner from "./components/common/CookieConsentBanner";
 
@@ -197,12 +198,14 @@ function App() {
               <Route path="/verifyotp" element={<VerifyOtp />} />
               <Route path="/topcategories" element={<TopCategories />} />
 
-              {/* ✅ FIXED: Wildcard route for all category depths */}
+              {/* Category & Product Routes */}
               <Route path="/category/*" element={<ProductPage />} />
               <Route path="/Products/category" element={<ProductPage />} />
               <Route path="/products/category" element={<ProductPage />} />
               <Route path="/Products/category/:slug" element={<ProductPage />} />
               <Route path="/products/category/:slug" element={<ProductPage />} />
+              <Route path="/products" element={<ProductPage />} />
+              <Route path="/Products" element={<ProductPage />} />
               <Route path="/products/:filter?" element={<ProductPage />} />
 
               <Route path="/products/skintype/:slug" element={<ProductPage />} />
@@ -210,30 +213,47 @@ function App() {
               <Route path="/products/Skintype/*" element={<ProductPage />} />
               <Route path="/product/:slug" element={<ProductDetail />} />
               <Route path="/bestsellers" element={<BestSellers />} />
-              <Route path="/foryou" element={<Foryou />} />
               <Route path="/blog/:slug" element={<BlogDetails />} />
               <Route path="/Blog" element={<Blog />} />
               <Route path="/search" element={<SearchPage />} />
               <Route path="/OffersSlider" element={<OffersSlider />} />
               <Route path="/BrandsSlider" element={<BrandsSlider />} />
               <Route path="/brand/:brandSlug" element={<BrandPage />} />
-              {/* <Route path="/promotion/:slug" element={<PromotionProductsPage />} /> */}
+              <Route path="/promotion/:slug" element={<PromotionProductsPage />} />
+              <Route path="/promotions/:slug" element={<PromotionProductsPage />} />
               <Route path="/Products/promotion/:slug" element={<ProductPage />} />
               <Route path="/Products/:slug" element={<ProductPage />} />
 
+              {/* About Us Routes */}
               <Route path="/Aboutus" element={<Aboutus />} />
+              <Route path="/aboutus" element={<Aboutus />} />
+              <Route path="/about-us" element={<Aboutus />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/privacy-policy" element={<Privacy />} />
               <Route path="/VideoSlider" element={<VideoSlider />} />
+
+              {/* Shade Finder Routes */}
               <Route path="/FoundationShadeFinder" element={<FoundationShadeFinder />} />
+              <Route path="/foundation-shade-finder" element={<FoundationShadeFinder />} />
               <Route path="/shadefinder" element={<Shadefinder />} />
+              <Route path="/shade-finder" element={<Shadefinder />} />
               <Route path="/Shadefinderundertone" element={<Shadefinderundertone />} />
               <Route path="/Shadetone" element={<Shadetone />} />
               <Route path="/Foundation" element={<Foundation />} />
+
+              {/* Virtual Try-On Routes */}
               <Route path="/Mainvirtualtryon" element={<Mainvirtualtryon />} />
+              <Route path="/mainvirtualtryon" element={<Mainvirtualtryon />} />
+              <Route path="/main-virtual-try-on" element={<Mainvirtualtryon />} />
               <Route path="/Virtualtryon" element={<Virtualtryon />} />
+              <Route path="/virtualtryon" element={<Virtualtryon />} />
+              <Route path="/virtual-try-on" element={<Virtualtryon />} />
+              <Route path="/Virtualtryonhome" element={<Virtualtryonhome />} />
               <Route path="/vto-products" element={<VtoProducts />} />
+
+              {/* Recommendations & Sales */}
               <Route path="/Recommendations" element={<Recommendations />} />
+              <Route path="/recommendations" element={<Recommendations />} />
               <Route path="/Skintypes" element={<Skintypes />} />
               <Route path="/productpage/:slug" element={<PromotionProductsPage />} />
               <Route path="/Allsaleproduct" element={<Allsaleproduct />} />
@@ -243,33 +263,65 @@ function App() {
               <Route path="/RecommendationSlider" element={<RecommendationSlider />} />
               <Route path="/Giftcardinnersection/:id" element={<Giftcardinnersection />} />
               <Route path="/Giftcardinnersection" element={<Giftcardinnersection />} />
+
+              {/* Cart & Wishlist Routes */}
               <Route path="/CartPage" element={<CartPage />} />
-              <Route path="/Useraccount" element={<Useraccount />} />
-              <Route path="/AddressSections" element={<AddressSections />} />
+              <Route path="/cartpage" element={<CartPage />} />
+              <Route path="/cart" element={<CartPage />} />
               <Route path="/Wishlist" element={<Wishlist />} />
+              <Route path="/wishlist" element={<Wishlist />} />
               <Route path="/Addtocard" element={<Addtocard />} />
               <Route path="/Wallet" element={<Wallet />} />
+              <Route path="/AddressSections" element={<AddressSections />} />
               <Route path="/AddressSelection" element={<AddressSelection />} />
               <Route path="/PaymentPage" element={<PaymentPage />} />
               <Route path="/PaymentProcess" element={<PaymentProcess />} />
+
+              {/* User Account & Orders Routes */}
+              <Route path="/Useraccount" element={<Useraccount />} />
+              <Route path="/useraccount" element={<Useraccount />} />
+              <Route path="/profile" element={<Useraccount />} />
+              <Route path="/account" element={<Useraccount />} />
               <Route path="/Myorders" element={<Myorders />} />
+              <Route path="/myorders" element={<Myorders />} />
+              <Route path="/orders" element={<Myorders />} />
+              <Route path="/my-orders" element={<Myorders />} />
               <Route path="/Ordersuccess/:orderId" element={<Ordersuccess />} />
+              <Route path="/Ordersuccess" element={<Ordersuccess />} />
+              <Route path="/ordersuccess/:orderId" element={<Ordersuccess />} />
+              <Route path="/ordersuccess" element={<Ordersuccess />} />
               <Route path="/TrackOrder" element={<TrackOrder />} />
               <Route path="/CancelOrder/:orderId" element={<CancelOrder />} />
               <Route path="/ShopProduct" element={<ShopProduct />} />
               <Route path="/order-details/:shipmentId" element={<OrderDetails />} />
               <Route path="/orderTrack/:awb" element={<OrderTrack />} />
+
+              {/* AI & Chatbot */}
               <Route path="/Chatbot" element={<Chatbot />} />
-              <Route path="/Virtualtryonhome" element={<Virtualtryonhome />} />
               <Route path="/Help" element={<Help />} />
+              <Route path="/help" element={<Help />} />
               <Route path="/Help/category/:categoryId" element={<Help />} />
+              <Route path="/help/category/:categoryId" element={<Help />} />
+
+              {/* Affiliate Routes */}
               <Route path="/affiliate" element={<Affiliate />} />
               <Route path="/Affiliatesignup" element={<AffiliateSignup />} />
+              <Route path="/affiliatesignup" element={<AffiliateSignup />} />
+              <Route path="/affiliate-signup" element={<AffiliateSignup />} />
               <Route path="/Affiliatelogin" element={<Affiliatelogin />} />
+              <Route path="/affiliatelogin" element={<Affiliatelogin />} />
+              <Route path="/affiliate-login" element={<Affiliatelogin />} />
               <Route path="/Affiliatedashboard" element={<Affiliatedashboard />} />
+              <Route path="/affiliatedashboard" element={<Affiliatedashboard />} />
+              <Route path="/affiliate-dashboard" element={<Affiliatedashboard />} />
+
+              {/* Returns & Replacements */}
               <Route path="/VariantOverlay" element={<VariantOverlay />} />
               <Route path="/returnreplace" element={<Returnreplace />} />
+              <Route path="/return-policy" element={<Returnreplace />} />
+              <Route path="/returns" element={<Returnreplace />} />
               <Route path="/ReturnReplaceDetails/:shipmentId/:returnId" element={<ReturnReplaceDetails />} />
+
               <Route path="/DiscountProductsPage" element={<DiscountProductsPage />} />
               <Route path="/HeaderSearchbar" element={<HeaderSearchbar />} />
               <Route path="/Bannerslider" element={<Bannerslider />} />
@@ -282,11 +334,23 @@ function App() {
               <Route path="/Mobileheaderview" element={<Mobileheaderview />} />
               <Route path="/category/:slug" element={<CategoryLandingPage />} />
               <Route path="/Offerlanding" element={<Offerlanding />} />
+              <Route path="/offerlanding" element={<Offerlanding />} />
+              <Route path="/offers" element={<Offerlanding />} />
+
+              {/* For You / Beauty Quiz Routes */}
               <Route path="/Foryoulanding" element={<Foryoulanding />} />
+              <Route path="/foryoulanding" element={<Foryoulanding />} />
+              <Route path="/foryou" element={<Foryou />} />
+              <Route path="/quiz" element={<Foryoulanding />} />
+              <Route path="/beauty-quiz" element={<Foryoulanding />} />
+
+              {/* AI Beauty Lab & Routine Routes */}
               <Route path="/ai-beauty-lab" element={<AiBeautyLab />} />
               {/* <Route path="/skin-diagnosis" element={<SkinDiagnosis />} /> */}
               <Route path="/routines" element={<RoutineBuilder />} />
               <Route path="/routines/:shareToken" element={<RoutineBuilder />} />
+              <Route path="/routine-builder" element={<RoutineBuilder />} />
+              <Route path="/skincare-routine-builder" element={<RoutineBuilder />} />
               <Route path="/ingredient-compatibility" element={<IngredientCompatibility />} />
               <Route path="/ingredient/:name" element={<IngredientDetail />} />
               <Route path="/coming-soon" element={<ComingSoon />} />
@@ -307,6 +371,7 @@ function App() {
             </Routes>
 
             {/* ── AI Beauty Concierge (global floating widget) ── */}
+            <CartDrawer />
             <BeautyConcierge />
             <DiscountPopup />
           </WishlistProvider>

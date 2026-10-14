@@ -25,7 +25,7 @@ const ProductDetail = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { addToCart } = useContext(CartContext);
+  const { addToCart, openCart } = useContext(CartContext);
   const { user } = useContext(UserContext);
   const { toggleWishlist: contextToggleWishlist, isInWishlist: contextIsInWishlist } = useContext(WishlistContext);
 
@@ -258,7 +258,7 @@ const ProductDetail = () => {
       const success = await addToCart(product, selectedShade, isGuest);
       if (success) {
         toast.success("Added to cart!");
-        setTimeout(() => navigate("/cartpage"), 1000);
+        openCart();
       } else {
         toast.error("❌ Failed to add to cart");
       }

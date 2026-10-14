@@ -279,6 +279,9 @@
     }
 
     .story-card {
+        text-decoration: none;
+        color: inherit;
+        cursor: pointer;
         background: white;
         border: 1px solid rgba(0, 0, 0, 0.05);
         padding: 24px;
@@ -332,6 +335,29 @@
         font-size: 14px;
         line-height: 1.6;
         margin: 0;
+    }
+    .story-card-link {
+        margin-top: auto;
+        padding-top: 1rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--primary);
+        transition: all 0.3s ease;
+    }
+
+    .story-card:hover .story-card-link {
+        gap: 10px;
+    }
+
+    .story-card-arrow {
+        transition: transform 0.3s ease;
+    }
+
+    .story-card:hover .story-card-arrow {
+        transform: translateX(4px);
     }
 
     /* ---------------- MISSION ---------------- */
@@ -467,6 +493,8 @@
     }
 
     .brand-pill {
+        text-decoration: none;
+        cursor: pointer;
         display: flex;
         align-items: center;
         gap: 10px;
@@ -525,6 +553,9 @@
     }
 
     .why-box {
+        text-decoration: none;
+        color: inherit;
+        cursor: pointer;
         display: flex;
         gap: 16px;
         /* background: var(--dark); */

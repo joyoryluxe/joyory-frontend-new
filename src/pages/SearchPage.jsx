@@ -504,7 +504,7 @@ const writeSearchCache = (key, data) => {
 const SearchPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { addToCart } = useContext(CartContext);
+  const { addToCart, openCart, syncCartFromBackend } = useContext(CartContext);
   const { user } = useContext(UserContext);
 
   // URL Syncing
@@ -1176,7 +1176,8 @@ const SearchPage = () => {
       }
 
       showToastMsg("Product added to cart!", "success");
-      navigate("/cartpage");
+      await syncCartFromBackend();
+      openCart();
     } catch (err) {
       console.error("Add to Cart error:", err);
       showToastMsg(err.response?.data?.message || "Failed to add to cart", "error");

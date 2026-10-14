@@ -239,7 +239,7 @@ const Header = ({ hideCategories = false }) => {
   const [showMobileSearch, setShowMobileSearch] = useState(false);
 
   // ---------- cart & wishlist ----------
-  const { cartCount } = useContext(CartContext);
+  const { cartCount, openCart } = useContext(CartContext);
   const { wishlistCount } = useContext(WishlistContext);
 
   // ---------- search ----------

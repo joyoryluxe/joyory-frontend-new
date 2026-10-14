@@ -13,7 +13,7 @@ import {
 } from "react-icons/fa";
 import Header from "../components/common/Header";
 import Footer from "../components/common/Footer";
-import { CartContext } from "../Context/CartContext";
+import { CartContext } from "../context/CartContext";
 import { UserContext } from "../context/UserContext.jsx";
 import "../styles/CategoryLandingPage.css";
 import "../styles/BestSellers.css";
@@ -257,6 +257,7 @@ export default function CategoryLandingPage() {
     const { slug } = useParams();
     const navigate = useNavigate();
     const { user } = useContext(UserContext);
+    const { openCart, syncCartFromBackend } = useContext(CartContext);
 
     // ========== ADDED: Effective slug for handling nested routes ==========
     const effectiveSlug = slug?.includes("/")
@@ -514,7 +515,8 @@ export default function CategoryLandingPage() {
             if (!data.success) throw new Error(data.message || "Cart add failed");
 
             showToastMsg("Product added to cart!", "success");
-            navigate("/cartpage");
+            await syncCartFromBackend();
+            openCart();
         } catch (e) {
             const msg =
                 e.response?.data?.message || e.message || "Failed to add to cart";
@@ -1365,7 +1367,7 @@ export default function CategoryLandingPage() {
                             {section.products?.length > 4 && (
                                 <button
                                     className="btn btn-link text-decoration-none text-dark page-title-main-name"
-                                    onClick={() => navigate(`/section/${section._id}`)}
+                                    onClick={() => navigate(`/Products/category/${category?.slug || effectiveSlug || ''}`)}
                                 >
                                     View All
                                 </button>

@@ -104,7 +104,7 @@ const BlogDetail = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useContext(UserContext);
-  const { addToCart } = useContext(CartContext);
+  const { addToCart, openCart, syncCartFromBackend } = useContext(CartContext);
 
   const [blog, setBlog] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -249,7 +249,8 @@ const BlogDetail = () => {
       const response = await axios.post(`${CART_API_BASE}/add`, payload, { withCredentials: true });
       if (response.data.success) {
         toast.success("Product added to cart!");
-        navigate("/cartpage");
+        await syncCartFromBackend();
+        openCart();
       }
     } catch (err) {
       toast.error("Failed to add to cart");

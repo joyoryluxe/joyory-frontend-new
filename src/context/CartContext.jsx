@@ -1,538 +1,4 @@
-
-
-
-// // src/context/CartContext.jsx
-// import React, { createContext, useState } from "react";
-// import axios from "axios";
-
-// export const CartContext = createContext();
-
-// const VARIANT_CACHE_KEY = "cartVariantCache";
-
-// // ---- tiny helpers to persist the variant locally ----
-// const putVariantInCache = (productId, variant) => {
-//   try {
-//     const cache = JSON.parse(localStorage.getItem(VARIANT_CACHE_KEY) || "{}");
-//     cache[productId] = variant; // last chosen variant per product
-//     localStorage.setItem(VARIANT_CACHE_KEY, JSON.stringify(cache));
-//   } catch {}
-// };
-
-// const CartProvider = ({ children }) => {
-//   const [cartCount, setCartCount] = useState(0);
-//   const [cartItems, setCartItems] = useState([]);
-
-//   const updateCartCount = (items) => {
-//     const total = items.reduce((acc, item) => acc + item.quantity, 0);
-//     setCartCount(total);
-//   };
-
-//   // selectedVariant is the full object: { sku?, shadeName?, hex?, image? }
-//   const addToCart = async (product, selectedVariant) => {
-//     try {
-//       const token = localStorage.getItem("token");
-//       if (!token) {
-//         alert("Please login first!");
-//         return;
-//       }
-
-//       const brand =
-//         product.brand?.name ||
-//         (typeof product.brand === "string" ? product.brand : "Unknown");
-
-//       // keep client state consistent (same product+sku treated as same line)
-//       const existingItem = cartItems.find(
-//         (item) =>
-//           item.productId === product._id &&
-//           (item.selectedVariant?.sku || item.selectedVariant?.shadeName) ===
-//             (selectedVariant?.sku || selectedVariant?.shadeName)
-//       );
-
-//       let response;
-
-//       if (existingItem) {
-//         response = await axios.post(
-//           "https://beauty.joyory.com/api/user/cart/add",
-//           {
-//             productId: product._id,
-//             selectedVariant,
-//             brand,
-//             quantity: existingItem.quantity + 1,
-//           },
-//           {
-//             headers: {
-//               "Content-Type": "application/json",
-//               Authorization: `Bearer ${token}`,
-//             },
-//           }
-//         );
-
-//         const updatedItems = cartItems.map((item) =>
-//           item.productId === product._id &&
-//           (item.selectedVariant?.sku || item.selectedVariant?.shadeName) ===
-//             (selectedVariant?.sku || selectedVariant?.shadeName)
-//             ? { ...item, quantity: item.quantity + 1 }
-//             : item
-//         );
-//         setCartItems(updatedItems);
-//         updateCartCount(updatedItems);
-//       } else {
-//         response = await axios.post(
-//           "https://beauty.joyory.com/api/user/cart/add",
-//           {
-//             productId: product._id,
-//             selectedVariant,
-//             brand,
-//             quantity: 1,
-//           },
-//           {
-//             headers: {
-//               "Content-Type": "application/json",
-//               Authorization: `Bearer ${token}`,
-//             },
-//           }
-//         );
-
-//         const updatedItems = [
-//           ...cartItems,
-//           {
-//             productId: product._id,
-//             selectedVariant,
-//             brand,
-//             quantity: 1,
-//           },
-//         ];
-//         setCartItems(updatedItems);
-//         updateCartCount(updatedItems);
-//       }
-
-//       // ✅ Always remember the chosen variant locally (covers API returning null)
-//       if (selectedVariant && Object.keys(selectedVariant).length) {
-//         putVariantInCache(product._id, selectedVariant);
-//       }
-
-//       console.log("Cart updated:", response.data);
-//     } catch (error) {
-//       console.error("Error adding to cart", error?.response?.data || error);
-//       alert(error?.response?.data?.message || "Failed to add product to cart");
-//     }
-//   };
-
-//   return (
-//     <CartContext.Provider value={{ cartCount, cartItems, addToCart }}>
-//       {children}
-//     </CartContext.Provider>
-//   );
-// };
-
-// export default CartProvider;
-
-
-
-
-
-
-
-// src/context/CartContext.jsx
-// import React, { createContext, useState } from "react";
-// import axios from "axios";
-
-// export const CartContext = createContext();
-
-// const VARIANT_CACHE_KEY = "cartVariantCache";
-
-// // ---- Helpers to persist variant locally ----
-// // const putVariantInCache = (productId, variant) => {
-// //   try {
-// //     const cache = JSON.parse(localStorage.getItem(VARIANT_CACHE_KEY) || "{}");
-// //     cache[productId] = variant; // last chosen variant per product
-// //     localStorage.setItem(VARIANT_CACHE_KEY, JSON.stringify(cache));
-// //   } catch {}
-// // };
-// const getVariantCacheKey = (productId, sku) => `${productId}_${sku}`;
-
-
-// const putVariantInCache = (productId, variant) => {
-//   try {
-//     const cache = JSON.parse(localStorage.getItem(VARIANT_CACHE_KEY) || "{}");
-//     cache[productId] = variant;
-//     localStorage.setItem(VARIANT_CACHE_KEY, JSON.stringify(cache));
-//   } catch { }
-// };
-
-// const addToCart = async (product, variant) => {
-//   try {
-//     const finalVariant = normalizeVariant(variant, readVariantFromCache(product._id));
-
-//     // Send to backend
-//     await axios.post(
-//       "https://beauty.joyory.com/api/user/cart/add",
-//       {
-//         productId: product._id,
-//         selectedVariant: finalVariant,
-//         brand: product.brand,
-//         quantity: 1,
-//       },
-//       { withCredentials: true }
-//     );
-
-//     // Update cache
-//     putVariantInCache(product._id, finalVariant);
-//   } catch (err) {
-//     console.error(err);
-//   }
-// };
-
-
-// const readVariantFromCache = (productId) => {
-//   try {
-//     const cache = JSON.parse(localStorage.getItem(VARIANT_CACHE_KEY) || "{}");
-//     return cache[productId] || null;
-//   } catch {
-//     return null;
-//   }
-// };
-
-// const CartProvider = ({ children }) => {
-//   const [cartItems, setCartItems] = useState([]);
-//   const [cartCount, setCartCount] = useState(0);
-
-//   const updateCartCount = (items) => {
-//     const total = items.reduce((acc, item) => acc + item.quantity, 0);
-//     setCartCount(total);
-//   };
-
-//   // Fetch latest cart from backend
-//   const syncCartFromBackend = async () => {
-//     try {
-//       const res = await fetch("https://beauty.joyory.com/api/user/cart/summary", {
-//         credentials: "include", // ✅ sends HTTP-only cookie
-//       });
-//       if (!res.ok) return;
-
-//       const data = await res.json();
-
-//       const normalizedCart = (data.cart || []).map((item) => {
-//         const serverVariant = item.variant || {};
-//         const cacheVariant = readVariantFromCache(item._id);
-
-//         const finalVariant = {
-//           // sku: serverVariant.sku ?? cacheVariant?.sku ?? null,
-//           // shadeName: serverVariant.shadeName ?? cacheVariant?.shadeName ?? "N/A",
-//           // hex: serverVariant.hex ?? cacheVariant?.hex ?? "#ccc",
-//           image: serverVariant.image ?? cacheVariant?.image ?? "/placeholder.png",
-//           originalPrice: serverVariant.originalPrice ?? cacheVariant?.originalPrice ?? 0,
-//           discountedPrice:
-//             serverVariant.discountedPrice ??
-//             cacheVariant?.discountedPrice ??
-//             serverVariant.originalPrice ??
-//             0,
-//           discountPercent:
-//             serverVariant.discountPercent ?? cacheVariant?.discountPercent ?? null,
-//           stock: serverVariant.stock ?? cacheVariant?.stock ?? 0,
-//           sku: serverVariant.sku ?? cacheVariant?.sku,
-//           shadeName: serverVariant.shadeName ?? cacheVariant?.shadeName,
-//           hex: serverVariant.hex ?? cacheVariant?.hex,
-//         };
-
-//         const finalPrice = finalVariant.discountedPrice || finalVariant.originalPrice || 0;
-//         const quantity = item.quantity || 1;
-//         const discounts = finalVariant.discountPercent
-//           ? [
-//             {
-//               type: "Discount",
-//               amount: (finalVariant.originalPrice || 0) - finalPrice,
-//               note: finalVariant.discountPercent,
-//             },
-//           ]
-//           : [];
-
-//         return {
-//           cartItemId: item._id,
-//           productId: item.product,
-//           name: item.name || "Unnamed Product",
-//           image: finalVariant.image || "/placeholder.png",
-//           quantity,
-//           price: finalPrice,
-//           subTotal: finalPrice * quantity - (discounts.reduce((s, d) => s + (d.amount || 0), 0) || 0),
-//           brand: item.brand || "",
-//           selectedVariant: finalVariant,
-//           discounts,
-//           variant: item.variant // send full variant object here
-//         };
-//       });
-
-//       setCartItems(normalizedCart);
-//       updateCartCount(normalizedCart);
-//     } catch (err) {
-//       console.error("Failed to sync cart from backend", err);
-//     }
-//   };
-
-//   // Add to cart
-//   const addToCart = async (product, selectedVariant) => {
-//     try {
-//       const brand =
-//         product.brand?.name ||
-//         (typeof product.brand === "string" ? product.brand : "Unknown");
-
-//       const existingItem = cartItems.find(
-//         (item) =>
-//           item.productId === product._id &&
-//           (item.selectedVariant?.sku || item.selectedVariant?.shadeName) ===
-//           (selectedVariant?.sku || selectedVariant?.shadeName)
-//       );
-
-//       const quantity = existingItem ? existingItem.quantity + 1 : 1;
-
-//       const response = await axios.post(
-//         "https://beauty.joyory.com/api/user/cart/add",
-//         {
-//           // productId: product._id,
-//           // selectedVariant,
-//           // brand,
-//           // quantity,
-//           product: product._id,
-//           quantity,
-//           // variant: selectedVariant, // store full object, not just image & prices
-//           variant: item.varint, // store full object, not just image & prices
-//         },
-//         {
-//           headers: { "Content-Type": "application/json" },
-//           withCredentials: true, // ✅ sends HTTP-only cookie automatically
-//         }
-//       );
-
-//       let updatedItems;
-//       if (existingItem) {
-//         updatedItems = cartItems.map((item) =>
-//           item.productId === product._id &&
-//             (item.selectedVariant?.sku || item.selectedVariant?.shadeName) ===
-//             (selectedVariant?.sku || selectedVariant?.shadeName)
-//             ? { ...item, quantity }
-//             : item
-//         );
-//       } else {
-//         updatedItems = [
-//           ...cartItems,
-//           { productId: product._id, selectedVariant, brand, quantity },
-//         ];
-//       }
-
-//       setCartItems(updatedItems);
-//       updateCartCount(updatedItems);
-
-//       // Save variant locally
-//       if (selectedVariant && Object.keys(selectedVariant).length) {
-//         putVariantInCache(product._id, selectedVariant);
-//       }
-
-//       console.log("Cart updated:", response.data);
-//     } catch (error) {
-//       console.error("Error adding to cart", error?.response?.data || error);
-//       alert(error?.response?.data?.message || "Failed to add product to cart");
-//     }
-//   };
-
-//   return (
-//     <CartContext.Provider
-//       value={{
-//         cartItems,
-//         cartCount,
-//         addToCart,
-//         syncCartFromBackend,
-//       }}
-//     >
-//       {children}
-//     </CartContext.Provider>
-//   );
-// };
-
-// export default CartProvider;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// import React, { createContext, useState } from "react";
-// import axios from "axios";
-
-// export const CartContext = createContext();
-// const VARIANT_CACHE_KEY = "cartVariantCache";
-
-// const putVariantInCache = (productId, variant) => {
-//   try {
-//     const cache = JSON.parse(localStorage.getItem(VARIANT_CACHE_KEY) || "{}");
-//     cache[productId] = variant;
-//     localStorage.setItem(VARIANT_CACHE_KEY, JSON.stringify(cache));
-//   } catch {}
-// };
-
-// const readVariantFromCache = (productId) => {
-//   try {
-//     const cache = JSON.parse(localStorage.getItem(VARIANT_CACHE_KEY) || "{}");
-//     return cache[productId] || null;
-//   } catch {
-//     return null;
-//   }
-// };
-
-// const CartProvider = ({ children }) => {
-//   const [cartItems, setCartItems] = useState([]);
-//   const [cartCount, setCartCount] = useState(0);
-
-//   const updateCartCount = (items) => {
-//     const total = items.reduce((acc, item) => acc + item.quantity, 0);
-//     setCartCount(total);
-//   };
-
-//   const syncCartFromBackend = async () => {
-//     try {
-//       const res = await fetch(
-//         "https://beauty.joyory.com/api/user/cart/summary",
-//         { credentials: "include" }
-//       );
-//       if (!res.ok) return;
-//       const data = await res.json();
-
-//       const normalized = (data.cart || []).map((item) => ({
-//         cartItemId: item._id,
-//         productId: item.product,
-//         name: item.name || "Unnamed Product",
-//         quantity: item.quantity || 1,
-//         image: item.variant?.image || "/placeholder.png",
-//         price: item.variant?.discountedPrice || item.variant?.originalPrice || 0,
-//         brand: item.brand || "",
-//         selectedVariant: item.variant || {},
-//       }));
-
-//       setCartItems(normalized);
-//       updateCartCount(normalized);
-//     } catch (err) {
-//       console.error("Failed to sync cart", err);
-//     }
-//   };
-
-//   // ✅ Fixed addToCart
-//   const addToCart = async (product, selectedVariant) => {
-//     try {
-//       if (!selectedVariant?.sku) {
-//         alert("Please select a shade or variant before adding to cart");
-//         return;
-//       }
-
-//       const payload = {
-//         productId: product._id,
-//         variants: [{ variantSku: selectedVariant.sku, quantity: 1 }],
-//       };
-
-//       const res = await axios.post(
-//         "https://beauty.joyory.com/api/user/cart/add",
-//         payload,
-//         { withCredentials: true }
-//       );
-
-//       if (res.data.success) {
-//         // ✅ Update cache
-//         putVariantInCache(product._id, selectedVariant);
-
-//         // ✅ Update UI state
-//         const existing = cartItems.find(
-//           (i) =>
-//             i.productId === product._id &&
-//             i.selectedVariant?.sku === selectedVariant.sku
-//         );
-
-//         const updated = existing
-//           ? cartItems.map((i) =>
-//               i.productId === product._id &&
-//               i.selectedVariant?.sku === selectedVariant.sku
-//                 ? { ...i, quantity: i.quantity + 1 }
-//                 : i
-//             )
-//           : [
-//               ...cartItems,
-//               {
-//                 productId: product._id,
-//                 selectedVariant,
-//                 quantity: 1,
-//                 image:
-//                   selectedVariant.image || product.images?.[0] || "/placeholder.png",
-//                 price:
-//                   selectedVariant.discountedPrice ||
-//                   selectedVariant.originalPrice ||
-//                   product.price,
-//                 name: product.name,
-//                 brand:
-//                   product.brand?.name ||
-//                   (typeof product.brand === "string"
-//                     ? product.brand
-//                     : "Unknown"),
-//               },
-//             ];
-
-//         setCartItems(updated);
-//         updateCartCount(updated);
-//       }
-//     } catch (error) {
-//       console.error("Add to Cart error:", error?.response?.data || error);
-//       alert(error?.response?.data?.message || "Failed to add to cart");
-//     }
-//   };
-
-//   return (
-//     <CartContext.Provider
-//       value={{
-//         cartItems,
-//         cartCount,
-//         addToCart,
-//         syncCartFromBackend,
-//       }}
-//     >
-//       {children}
-//     </CartContext.Provider>
-//   );
-// };
-
-// export default CartProvider;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-import React, { createContext, useState, useEffect, useContext } from "react";
+import React, { createContext, useState, useEffect, useContext, useCallback } from "react";
 import axios from "axios";
 import { UserContext } from "./UserContext";
 
@@ -576,27 +42,37 @@ const CartProvider = ({ children }) => {
   const { user } = useContext(UserContext);
   const [cartItems, setCartItems] = useState([]);
   const [cartCount, setCartCount] = useState(0);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [cartSummary, setCartSummary] = useState({
+    bagMrp: 0,
+    bagDiscount: 0,
+    totalSavings: 0,
+    shipping: 0,
+    payable: 0,
+    grandTotal: 0,
+  });
 
-  // Initialize and sync cart based on user auth status
-  useEffect(() => {
-    const initializeCart = () => {
-      if (user) {
-        syncCartFromBackend();
-      }
-    };
+  const openCart = useCallback(() => {
+    setIsCartOpen(true);
+    syncCartFromBackend();
+  }, []);
 
-    initializeCart();
-  }, [user]);
+  const closeCart = useCallback(() => {
+    setIsCartOpen(false);
+  }, []);
+
+  const toggleCart = useCallback(() => {
+    setIsCartOpen((prev) => !prev);
+  }, []);
 
   const updateCartCount = (items) => {
-    const total = items.reduce((acc, item) => acc + item.quantity, 0);
+    const total = items.reduce((acc, item) => acc + (Number(item.quantity) || 1), 0);
     setCartCount(total);
   };
 
   const syncCartFromBackend = async () => {
     try {
       const queryParams = new URLSearchParams();
-      // Add cache buster
       queryParams.append("t", Date.now().toString());
 
       const wantPoints = localStorage.getItem("useRewardPoints") === "true";
@@ -617,34 +93,85 @@ const CartProvider = ({ children }) => {
         : `https://beauty.joyory.com/api/user/cart/summary?t=${Date.now()}`;
 
       const res = await fetch(url, { cache: "no-store", credentials: "include" });
-      if (res.status === 400 || res.status === 401) {
+
+      if (res.status === 400 || res.status === 401 || !res.ok) {
         // Fallback to localStorage guest cart
         const guestCart = getGuestCart();
-        setCartItems(guestCart);
-        updateCartCount(guestCart);
+        const normalizedGuest = guestCart.map((item) => {
+          const price = Number(item.price || item.selectedVariant?.discountedPrice || item.selectedVariant?.originalPrice || 0);
+          const originalPrice = Number(item.selectedVariant?.originalPrice || item.originalPrice || price);
+          const discountPercent = item.discountPercent || (originalPrice > price ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0);
+          return {
+            cartItemId: item.cartItemId || `${item.productId}-${item.selectedVariant?.sku || "default"}`,
+            productId: item.productId,
+            name: item.name || "Unnamed Product",
+            quantity: Number(item.quantity) || 1,
+            image: item.image || item.selectedVariant?.image || "/placeholder.png",
+            price,
+            originalPrice,
+            discountPercent,
+            brand: item.brand || "JOYORY",
+            selectedVariant: item.selectedVariant || {},
+            isGuest: true,
+          };
+        });
+
+        const payable = normalizedGuest.reduce((acc, i) => acc + i.price * i.quantity, 0);
+        const bagMrp = normalizedGuest.reduce((acc, i) => acc + i.originalPrice * i.quantity, 0);
+        const totalSavings = Math.max(0, bagMrp - payable);
+
+        setCartItems(normalizedGuest);
+        updateCartCount(normalizedGuest);
+        setCartSummary({
+          bagMrp,
+          bagDiscount: totalSavings,
+          totalSavings,
+          shipping: payable >= 499 || payable === 0 ? 0 : 50,
+          payable,
+          grandTotal: payable,
+        });
         return;
       }
-      if (!res.ok) {
-        const guestCart = getGuestCart();
-        setCartItems(guestCart);
-        updateCartCount(guestCart);
-        return;
-      }
+
       const data = await res.json();
 
-      const normalized = (data.cart || []).map((item) => ({
-        cartItemId: item._id,
-        productId: item.product,
-        name: item.name || "Unnamed Product",
-        quantity: item.quantity || 1,
-        image: item.variant?.image || "/placeholder.png",
-        price: item.variant?.discountedPrice || item.variant?.originalPrice || 0,
-        brand: item.brand || "",
-        selectedVariant: item.variant || {},
-      }));
+      const normalized = (data.cart || []).map((item) => {
+        const variant = item.variant || {};
+        const price = Number(variant.displayPrice || variant.discountedPrice || variant.price || 0);
+        const originalPrice = Number(variant.originalPrice || variant.mrp || price);
+        const discountPercent = variant.discountPercent || (originalPrice > price ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0);
+
+        return {
+          cartItemId: item._id,
+          productId: item.product?._id || item.product || item.productId,
+          productSlug: item.slug || (item.product && typeof item.product === "object" ? item.product.slugs?.[0] || item.product.slug : null) || null,
+          name: item.name || (item.product && typeof item.product === "object" ? item.product.name : "Unnamed Product"),
+          quantity: Number(item.quantity) || 1,
+          image: variant.image || (item.product && typeof item.product === "object" ? item.product.images?.[0] : null) || "/placeholder.png",
+          price,
+          originalPrice,
+          discountPercent,
+          brand: item.brand || (item.product && typeof item.product === "object" ? item.product.brand?.name || item.product.brand : "") || "JOYORY",
+          selectedVariant: variant,
+        };
+      });
+
+      const p = data.priceDetails || {};
+      const payable = Number(p.payable || data.grandTotal || normalized.reduce((acc, i) => acc + i.price * i.quantity, 0));
+      const bagMrp = Number(p.bagMrp || normalized.reduce((acc, i) => acc + (i.originalPrice || i.price) * i.quantity, 0));
+      const totalSavings = Number(p.totalSavings || Math.max(0, bagMrp - payable));
+      const shipping = Number(p.shippingCharge || (payable >= 499 || payable === 0 ? 0 : 50));
 
       setCartItems(normalized);
       updateCartCount(normalized);
+      setCartSummary({
+        bagMrp,
+        bagDiscount: Number(p.bagDiscount || totalSavings),
+        totalSavings,
+        shipping,
+        payable,
+        grandTotal: payable,
+      });
     } catch (err) {
       console.error("Failed to sync cart", err);
       const guestCart = getGuestCart();
@@ -653,7 +180,12 @@ const CartProvider = ({ children }) => {
     }
   };
 
-  // ✅ UPDATED: addToCart with guest support
+  // Initialize and sync cart based on user auth status
+  useEffect(() => {
+    syncCartFromBackend();
+  }, [user]);
+
+  // ✅ ADD TO CART (with automatic slide-in panel opening!)
   const addToCart = async (product, selectedVariant, isGuest = false) => {
     try {
       if (!selectedVariant?.sku) {
@@ -661,7 +193,7 @@ const CartProvider = ({ children }) => {
         return false;
       }
 
-      // Try backend first for BOTH guest and logged-in flows
+      // Try backend first
       const payload = {
         productId: product._id,
         variants: [{ variantSku: selectedVariant.sku, quantity: 1 }],
@@ -678,7 +210,6 @@ const CartProvider = ({ children }) => {
         );
         if (res.data && res.data.success) {
           backendSuccess = true;
-          // Refresh state from backend
           await syncCartFromBackend();
         }
       } catch (err) {
@@ -687,20 +218,21 @@ const CartProvider = ({ children }) => {
       }
 
       if (backendSuccess) {
-        // Track AddToCart in Meta Pixel
         if (window.fbq) {
-          window.fbq('track', 'AddToCart', {
+          window.fbq("track", "AddToCart", {
             content_ids: [product._id],
             content_name: product.name,
-            content_type: 'product',
+            content_type: "product",
             value: selectedVariant.discountedPrice || selectedVariant.originalPrice || product.price,
-            currency: 'INR'
+            currency: "INR",
           });
         }
+        // ✨ Open sliding side panel immediately!
+        setIsCartOpen(true);
         return true;
       }
 
-      // If backend failed (or returned 401/400) and it's a guest request, fall back to localStorage
+      // If backend failed (or guest request), fall back to localStorage guestCart
       if (isGuest || backendErrorStatus === 401 || backendErrorStatus === 400) {
         const guestCart = getGuestCart();
         const existingItemIndex = guestCart.findIndex(
@@ -713,7 +245,7 @@ const CartProvider = ({ children }) => {
         if (existingItemIndex >= 0) {
           updatedCart = guestCart.map((item, index) =>
             index === existingItemIndex
-              ? { ...item, quantity: item.quantity + 1 }
+              ? { ...item, quantity: (Number(item.quantity) || 1) + 1 }
               : item
           );
         } else {
@@ -722,31 +254,33 @@ const CartProvider = ({ children }) => {
             selectedVariant,
             quantity: 1,
             image: selectedVariant.image || product.images?.[0] || "/placeholder.png",
-            price: selectedVariant.discountedPrice || selectedVariant.originalPrice || product.price,
+            price: Number(selectedVariant.discountedPrice || selectedVariant.originalPrice || product.price || 0),
+            originalPrice: Number(selectedVariant.originalPrice || selectedVariant.discountedPrice || product.price || 0),
             name: product.name,
-            brand: product.brand?.name || (typeof product.brand === "string" ? product.brand : "Unknown"),
-            isGuest: true
+            brand: product.brand?.name || (typeof product.brand === "string" ? product.brand : "JOYORY"),
+            isGuest: true,
           };
           updatedCart = [...guestCart, newCartItem];
         }
 
         saveGuestCart(updatedCart);
-        setCartItems(updatedCart);
-        updateCartCount(updatedCart);
+        await syncCartFromBackend();
 
         if (window.fbq) {
-          window.fbq('track', 'AddToCart', {
+          window.fbq("track", "AddToCart", {
             content_ids: [product._id],
             content_name: product.name,
-            content_type: 'product',
+            content_type: "product",
             value: selectedVariant.discountedPrice || selectedVariant.originalPrice || product.price,
-            currency: 'INR'
+            currency: "INR",
           });
         }
+
+        // ✨ Open sliding side panel immediately!
+        setIsCartOpen(true);
         return true;
       }
 
-      // If it wasn't a guest request and failed with 401, throw Auth error
       if (backendErrorStatus === 401) {
         throw new Error("Authentication required");
       }
@@ -762,16 +296,100 @@ const CartProvider = ({ children }) => {
     }
   };
 
-  // ✅ ADD: Function to get guest cart items
+  // ✅ UPDATE QUANTITY (Smooth without full-page reloads!)
+  const updateItemQuantity = async (cartItemId, productId, variantSku, newQty) => {
+    if (newQty < 1) {
+      return removeItemFromCart(cartItemId, productId, variantSku);
+    }
+    if (newQty > 6) {
+      alert("Maximum 6 units allowed per item.");
+      return;
+    }
+
+    try {
+      // Optimistic update
+      setCartItems((prev) =>
+        prev.map((item) =>
+          item.cartItemId === cartItemId || (item.productId === productId && (!variantSku || item.selectedVariant?.sku === variantSku))
+            ? { ...item, quantity: newQty }
+            : item
+        )
+      );
+
+      // Check if logged in vs guest
+      const hasToken = document.cookie.includes("token=");
+      if (hasToken) {
+        await axios.put(
+          "https://beauty.joyory.com/api/user/cart/update",
+          { productId, variantSku: variantSku || null, quantity: newQty },
+          { withCredentials: true }
+        );
+        await syncCartFromBackend();
+      } else {
+        const guestCart = getGuestCart();
+        const updated = guestCart.map((item) =>
+          item.productId === productId && (!variantSku || item.selectedVariant?.sku === variantSku)
+            ? { ...item, quantity: newQty }
+            : item
+        );
+        saveGuestCart(updated);
+        await syncCartFromBackend();
+      }
+    } catch (err) {
+      console.error("Error updating cart quantity:", err);
+      await syncCartFromBackend();
+    }
+  };
+
+  // ✅ REMOVE ITEM (Smooth without full-page reloads!)
+  const removeItemFromCart = async (cartItemId, productId, variantSku) => {
+    try {
+      // Optimistic update
+      setCartItems((prev) =>
+        prev.filter(
+          (item) =>
+            !(item.cartItemId === cartItemId || (item.productId === productId && (!variantSku || item.selectedVariant?.sku === variantSku)))
+        )
+      );
+
+      const hasToken = document.cookie.includes("token=");
+      if (hasToken) {
+        const url = variantSku
+          ? `https://beauty.joyory.com/api/user/cart/remove/${productId}?variantSku=${encodeURIComponent(variantSku)}`
+          : `https://beauty.joyory.com/api/user/cart/remove/${productId}`;
+        await axios.delete(url, { withCredentials: true });
+        await syncCartFromBackend();
+      } else {
+        const guestCart = getGuestCart();
+        const updated = guestCart.filter(
+          (item) =>
+            !(item.productId === productId && (!variantSku || item.selectedVariant?.sku === variantSku))
+        );
+        saveGuestCart(updated);
+        await syncCartFromBackend();
+      }
+    } catch (err) {
+      console.error("Error removing cart item:", err);
+      await syncCartFromBackend();
+    }
+  };
+
   const getGuestCartItems = () => {
     return getGuestCart();
   };
 
-  // ✅ ADD: Function to clear guest cart
   const clearGuestCart = () => {
     localStorage.removeItem(GUEST_CART_KEY);
     setCartItems([]);
     setCartCount(0);
+    setCartSummary({
+      bagMrp: 0,
+      bagDiscount: 0,
+      totalSavings: 0,
+      shipping: 0,
+      payable: 0,
+      grandTotal: 0,
+    });
   };
 
   return (
@@ -779,7 +397,14 @@ const CartProvider = ({ children }) => {
       value={{
         cartItems,
         cartCount,
+        cartSummary,
+        isCartOpen,
+        openCart,
+        closeCart,
+        toggleCart,
         addToCart,
+        updateItemQuantity,
+        removeItemFromCart,
         syncCartFromBackend,
         getGuestCartItems,
         clearGuestCart,
@@ -791,4 +416,3 @@ const CartProvider = ({ children }) => {
 };
 
 export default CartProvider;
-

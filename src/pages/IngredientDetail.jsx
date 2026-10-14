@@ -75,7 +75,7 @@ export default function IngredientDetail() {
   const [nextProductsCursor, setNextProductsCursor] = useState(null);
 
   // Wishlist and Cart context/states
-  const { addToCart } = useContext(CartContext);
+  const { addToCart, openCart, syncCartFromBackend } = useContext(CartContext);
   const { user } = useContext(UserContext);
 
   const [selectedVariants, setSelectedVariants] = useState({});
@@ -245,7 +245,8 @@ export default function IngredientDetail() {
       if (!data.success) throw new Error(data.message || "Cart add failed");
 
       showToastMsg("Product added to cart!", "success");
-      navigate("/cartpage");
+      await syncCartFromBackend();
+      openCart();
     } catch (err) {
       console.error("Add to Cart error:", err);
       const msg = err.response?.data?.message || err.message || "Failed to add to cart";

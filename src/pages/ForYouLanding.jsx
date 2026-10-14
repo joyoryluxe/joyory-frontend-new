@@ -66,6 +66,7 @@ const formatPrice = (price) =>
 ───────────────────────────────────────────── */
 function ProductCard({ product, navigate, location }) {
     const { user } = useContext(UserContext);
+    const { openCart, syncCartFromBackend } = useContext(CartContext);
 
     const allVariants = useMemo(
         () => product?.variants || product?.product?.variants || product?.shadeOptions || product?.product?.shadeOptions || [],
@@ -199,7 +200,8 @@ function ProductCard({ product, navigate, location }) {
             const res = await axios.post(`${CART_API_BASE}/add`, payload, { withCredentials: true });
             if (!res.data.success) throw new Error(res.data.message || 'Failed');
             showToast('Product added to cart!', 'success');
-            navigate('/cartpage');
+            await syncCartFromBackend();
+            openCart();
         } catch (err) {
             showToast(err.response?.data?.message || err.message || 'Failed to add product');
             if (err.response?.status === 401) navigate('/login', { state: { from: location?.pathname } });

@@ -5,7 +5,7 @@ import { FaStar, FaHeart, FaRegHeart, FaChevronDown, FaTimes, FaCheck } from "re
 import Header from "../components/common/Header";
 import SEOMeta from "../components/common/SEOMeta";
 import Footer from "../components/common/Footer";
-// import { CartContext } from "../Context/CartContext";
+import { CartContext } from "../context/CartContext";
 import { UserContext } from "../context/UserContext.jsx";
 import BrandFilter from "../components/common/BrandFilter";
 import "../styles/ProductPage.css";
@@ -386,6 +386,7 @@ export default function ProductPage() {
     }, [allProducts, filters.sort, selectedVariants, tempSelectedVariants]);
 
     const { user } = useContext(UserContext);
+    const { openCart, syncCartFromBackend } = useContext(CartContext);
     const loaderRef = useRef(null);
 
     /* ── toast ──────────────────────────────────────────────────────────────── */
@@ -892,7 +893,8 @@ export default function ProductPage() {
             const { data } = await axios.post(`${CART_API_BASE}/add`, payload, { withCredentials: true });
             if (!data.success) throw new Error(data.message || "Cart add failed");
             showToastMsg("Product added to cart!", "success");
-            navigate("/cartpage");
+            await syncCartFromBackend();
+            openCart();
         } catch (e) {
             const msg = e.response?.data?.message || e.message || "Failed to add to cart";
             showToastMsg(msg, "error");

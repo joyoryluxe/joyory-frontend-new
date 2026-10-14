@@ -200,7 +200,7 @@ export default function ProductPage() {
     const [showVariantOverlay, setShowVariantOverlay] = useState(null);
     const [selectedVariantType, setSelectedVariantType] = useState("all");
 
-    const { addToCart } = useContext(CartContext);
+    const { addToCart, openCart, syncCartFromBackend } = useContext(CartContext);
     const { user } = useContext(UserContext);
     const loaderRef = useRef(null);
     const containerRef = useRef(null);
@@ -843,7 +843,8 @@ export default function ProductPage() {
             const { data } = await axios.post(`${CART_API_BASE}/add`, payload, { withCredentials: true });
             if (!data.success) throw new Error(data.message || "Cart add failed");
             showToastMsg("Product added to cart!", "success");
-            navigate("/cartpage");
+            await syncCartFromBackend();
+            openCart();
         } catch (e) {
             const msg = e.response?.data?.message || e.message || "Failed to add to cart";
             showToastMsg(msg, "error");

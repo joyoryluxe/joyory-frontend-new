@@ -56,7 +56,7 @@ const getBrandName = (product) => {
 export default function Recommendations() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { addToCart } = useContext(CartContext);
+  const { addToCart, openCart, syncCartFromBackend } = useContext(CartContext);
   const { user } = useContext(UserContext);
 
   const {
@@ -242,7 +242,8 @@ export default function Recommendations() {
       if (!response.data.success) throw new Error(response.data.message || "Cart add failed");
 
       showToastMsg("Product added to cart!", "success");
-      navigate("/cartpage");
+      await syncCartFromBackend();
+      openCart();
     } catch (e) {
       const msg = e.response?.data?.message || e.message || "Failed to add to cart";
       showToastMsg(msg, "error");

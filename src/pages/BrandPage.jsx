@@ -19,7 +19,7 @@ import SEOMeta from "../components/common/SEOMeta";
 import Footer from "../components/common/Footer";
 import Loader from "../components/common/Loader";
 import PageNotFound from "./PageNotFound";
-import { CartContext } from "../Context/CartContext";
+import { CartContext } from "../context/CartContext";
 import { UserContext } from "../context/UserContext.jsx";
 import BrandFilter from "../components/common/BrandFilter";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
@@ -74,6 +74,7 @@ export default function BrandPage() {
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams(); // NEW
   const { user } = useContext(UserContext);
+    const { openCart, syncCartFromBackend } = useContext(CartContext);
 
   /* ── state ──────────────────────────────────────────────────────────────── */
   const [allProducts, setAllProducts] = useState([]);
@@ -711,7 +712,8 @@ export default function BrandPage() {
       });
       if (!data.success) throw new Error(data.message || "Cart add failed");
       showToastMsg("Product added to cart!", "success");
-      navigate("/cartpage");
+      await syncCartFromBackend();
+      openCart();
     } catch (e) {
       const msg =
         e.response?.data?.message || e.message || "Failed to add to cart";
