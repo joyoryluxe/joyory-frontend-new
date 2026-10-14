@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useContext } from "react";
 import { FaTimes, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import { User, Package, LogOut, LogIn, UserPlus } from "lucide-react";
 import "../../styles/Header.css";
 import "../../App.css";
 import logo from "../../assets/logo.png";
@@ -254,6 +255,7 @@ const Header = ({ hideCategories = false }) => {
   const [categories, setCategories] = useState([]);
   const [listening, setListening] = useState(false);
   const [userDropdown, setUserDropdown] = useState(false);
+  const userDropdownRef = useRef(null);
 
   const searchTimeoutRef = useRef(null);
   const recognitionRef = useRef(null);
@@ -392,6 +394,36 @@ const Header = ({ hideCategories = false }) => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [showSearchResults]);
+
+  // ---------- CLICK OUTSIDE HANDLER FOR USER DROPDOWN ----------
+  useEffect(() => {
+    const handleClickOutsideUserDropdown = (event) => {
+      if (
+        userDropdownRef.current &&
+        !userDropdownRef.current.contains(event.target)
+      ) {
+        setUserDropdown(false);
+      }
+    };
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        setUserDropdown(false);
+      }
+    };
+
+    if (userDropdown) {
+      document.addEventListener("mousedown", handleClickOutsideUserDropdown);
+      document.addEventListener("touchstart", handleClickOutsideUserDropdown);
+      document.addEventListener("keydown", handleKeyDown);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutsideUserDropdown);
+      document.removeEventListener("touchstart", handleClickOutsideUserDropdown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [userDropdown]);
 
   // ---------- load recent searches ----------
   useEffect(() => {
@@ -1497,110 +1529,158 @@ const Header = ({ hideCategories = false }) => {
             </Link>
 
             <div
-              style={{ position: "relative", cursor: "pointer" }}
-              onClick={() => {
-                if (user && !user.guest) {
-                  setUserDropdown(!userDropdown);
-                } else {
-                  navigate("/login");
-                }
-              }}
+              ref={userDropdownRef}
+              className="header-user-menu-wrapper"
             >
-              <img src={users} className="icon" alt="user" />
+              <div
+                className="header-user-trigger"
+                onClick={() => {
+                  if (user && !user.guest) {
+                    setUserDropdown((prev) => !prev);
+                  } else {
+                    navigate("/login");
+                  }
+                }}
+                title={user && !user.guest ? "Account menu" : "Login"}
+              >
+                <img src={users} className="icon" alt="user" />
+              </div>
+
               {userDropdown && (
-                <div style={{ position: "absolute", top: "100%", right: 0, background: "white", border: "1px solid #ddd", borderRadius: "8px", boxShadow: "0 4px 15px rgba(0,0,0,0.1)", zIndex: 1000, minWidth: "180px", marginTop: "20px" }}>
+                <div
+                  className="header-user-dropdown-menu"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   {user && !user.guest ? (
                     <>
-                      <div onClick={() => { navigate("/useraccount"); setUserDropdown(false); }} style={{ padding: "10px 15px", borderBottom: "1px solid #eee", cursor: "pointer" }}>My Account</div>
-                      <div onClick={() => { navigate("/Myorders"); setUserDropdown(false); }} style={{ padding: "10px 15px", borderBottom: "1px solid #eee", cursor: "pointer" }}>My Orders</div>
                       <div
+                        className="header-user-dropdown-item"
+                        onClick={() => {
+                          navigate("/useraccount");
+                          setUserDropdown(false);
+                        }}
+                      >
+                        <User size={16} className="dropdown-item-icon" />
+                        <span>My Account</span>
+                      </div>
+                      <div
+                        className="header-user-dropdown-item"
+                        onClick={() => {
+                          navigate("/Myorders");
+                          setUserDropdown(false);
+                        }}
+                      >
+                        <Package size={16} className="dropdown-item-icon" />
+                        <span>My Orders</span>
+                      </div>
+                      <div className="header-user-dropdown-divider" />
+                      <div
+                        className="header-user-dropdown-item logout-item"
                         onClick={() => {
                           setUserDropdown(false);
                           setShowLogoutModal(true);
                         }}
-                        style={{ padding: "10px 15px", cursor: "pointer" }}
                       >
-                        Logout
+                        <LogOut size={16} className="dropdown-item-icon" />
+                        <span>Logout</span>
                       </div>
                     </>
                   ) : (
                     <>
-                      <div onClick={() => { navigate("/login"); setUserDropdown(false); }} style={{ padding: "10px 15px", borderBottom: "1px solid #eee", cursor: "pointer" }}>Login</div>
-                      <div onClick={() => { navigate("/Signup"); setUserDropdown(false); }} style={{ padding: "10px 15px", cursor: "pointer" }}>Register</div>
+                      <div
+                        className="header-user-dropdown-item"
+                        onClick={() => {
+                          navigate("/login");
+                          setUserDropdown(false);
+                        }}
+                      >
+                        <LogIn size={16} className="dropdown-item-icon" />
+                        <span>Login</span>
+                      </div>
+                      <div
+                        className="header-user-dropdown-item"
+                        onClick={() => {
+                          navigate("/Signup");
+                          setUserDropdown(false);
+                        }}
+                      >
+                        <UserPlus size={16} className="dropdown-item-icon" />
+                        <span>Register</span>
+                      </div>
                     </>
                   )}
                 </div>
               )}
+            </div>
 
-
-              {showLogoutModal && (
+            {showLogoutModal && (
+              <div
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  position: "fixed",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  height: "100%",
+                  background: "rgba(0,0,0,0.5)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  zIndex: 9999,
+                }}
+              >
                 <div
                   style={{
-                    position: "fixed",
-                    top: 0,
-                    left: 0,
-                    width: "100%",
-                    height: "100%",
-                    background: "rgba(0,0,0,0.5)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    zIndex: 9999,
+                    background: "#fff",
+                    padding: "25px",
+                    borderRadius: "10px",
+                    width: "320px",
+                    textAlign: "center",
+                    boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
                   }}
                 >
-                  <div
-                    style={{
-                      background: "#fff",
-                      padding: "25px",
-                      borderRadius: "10px",
-                      width: "320px",
-                      textAlign: "center",
-                      boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
-                    }}
-                  >
-                    <h3 style={{ marginBottom: "10px", fontSize: "18px" }}>
-                      Confirm Logout
-                    </h3>
+                  <h3 style={{ marginBottom: "10px", fontSize: "18px" }}>
+                    Confirm Logout
+                  </h3>
 
-                    <p style={{ fontSize: "14px", color: "#666", marginBottom: "20px" }}>
-                      Are you sure you want to logout?
-                    </p>
+                  <p style={{ fontSize: "14px", color: "#666", marginBottom: "20px" }}>
+                    Are you sure you want to logout?
+                  </p>
 
-                    <div style={{ display: "flex", gap: "10px" }}>
-                      <button
-                        onClick={() => setShowLogoutModal(false)}
-                        style={{
-                          flex: 1,
-                          padding: "10px",
-                          borderRadius: "6px",
-                          border: "1px solid #ddd",
-                          background: "#f5f5f5",
-                          cursor: "pointer",
-                        }}
-                      >
-                        Cancel
-                      </button>
+                  <div style={{ display: "flex", gap: "10px" }}>
+                    <button
+                      onClick={() => setShowLogoutModal(false)}
+                      style={{
+                        flex: 1,
+                        padding: "10px",
+                        borderRadius: "6px",
+                        border: "1px solid #ddd",
+                        background: "#f5f5f5",
+                        cursor: "pointer",
+                      }}
+                    >
+                      Cancel
+                    </button>
 
-                      <button
-                        onClick={confirmLogout}
-                        style={{
-                          flex: 1,
-                          padding: "10px",
-                          borderRadius: "6px",
-                          border: "none",
-                          background: "#e63946",
-                          color: "#fff",
-                          fontWeight: "600",
-                          cursor: "pointer",
-                        }}
-                      >
-                        Logout
-                      </button>
-                    </div>
+                    <button
+                      onClick={confirmLogout}
+                      style={{
+                        flex: 1,
+                        padding: "10px",
+                        borderRadius: "6px",
+                        border: "none",
+                        background: "#e63946",
+                        color: "#fff",
+                        fontWeight: "600",
+                        cursor: "pointer",
+                      }}
+                    >
+                      Logout
+                    </button>
                   </div>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
 

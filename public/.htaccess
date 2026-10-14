@@ -2,16 +2,21 @@
   RewriteEngine On
   RewriteBase /
 
-  # ─── SEO Sitemaps & Robots ────────────────────────────────────────────────
-  # If sitemap files or static assets exist, serve them directly without routing to React
+  # ─── Canonical Domain: Redirect www to non-www for SEO ──────────────────────
+  RewriteCond %{HTTP_HOST} ^www\.joyory\.com$ [NC]
+  RewriteRule ^ https://joyory.com%{REQUEST_URI} [R=301,L]
+
+  # ─── Static Files, Sitemaps & Robots ────────────────────────────────────────
+  # If the requested file or directory exists locally, serve it directly
   RewriteCond %{REQUEST_FILENAME} -f [OR]
   RewriteCond %{REQUEST_FILENAME} -d
   RewriteRule ^ - [L]
 
-  # Redirect legacy or backend robots/sitemaps if not found locally
+  # Fallback for robots.txt if ever missing locally
   RewriteRule ^robots\.txt$ https://beauty.joyory.com/robots.txt [R=301,L]
 
-  # ─── React SPA Routing ───────────────────────────────────────────────────
-  # Otherwise, route everything else to index.html for React Router
+  # ─── React SPA Routing ──────────────────────────────────────────────────────
+  # Route everything else to index.html for React Router
   RewriteRule ^ /index.html [L]
 </IfModule>
+

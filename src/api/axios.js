@@ -1,15 +1,10 @@
 // src/api/axios.js
 import axios from "axios";
 
-const getDevHost = () => {
-  if (typeof window !== "undefined" && window.location?.hostname) {
-    return window.location.hostname;
-  }
-  return "localhost";
-};
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "https://beauty.joyory.com";
 
 const api = axios.create({
-  baseURL: import.meta.env.DEV ? `http://${getDevHost()}:5000/api` : "https://beauty.joyory.com/api",
+  baseURL: `${BACKEND_URL}/api`,
   withCredentials: true,
 });
 

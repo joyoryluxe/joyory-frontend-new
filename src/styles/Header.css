@@ -2664,3 +2664,131 @@ a:focus {
         transform: translateX(-50%);
     }
 }
+
+/* ==============================================================
+   USER PROFILE DROPDOWN MENU & HOVER EFFECTS
+   ============================================================== */
+.header-user-menu-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.header-user-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    padding: 4px;
+    border-radius: 50%;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.header-user-trigger:hover {
+    opacity: 0.85;
+    transform: scale(1.05);
+}
+
+.header-user-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 14px);
+    right: -6px;
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 12px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+    z-index: 1000;
+    min-width: 195px;
+    padding: 8px;
+    animation: userDropdownFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    transform-origin: top right;
+}
+
+/* Subtle top arrow pointing towards profile icon */
+.header-user-dropdown-menu::before {
+    content: "";
+    position: absolute;
+    top: -6px;
+    right: 14px;
+    width: 10px;
+    height: 10px;
+    background: #ffffff;
+    transform: rotate(45deg);
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    border-left: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+@keyframes userDropdownFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-8px) scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.header-user-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+    border-radius: 8px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    user-select: none;
+    background: transparent;
+    position: relative;
+}
+
+.header-user-dropdown-item:hover {
+    background-color: #f0f7ff;
+    color: #2d6f9f;
+    transform: translateX(4px);
+    padding-left: 17px;
+}
+
+.header-user-dropdown-item .dropdown-item-icon {
+    color: #6b7280;
+    transition: transform 0.2s ease, color 0.2s ease;
+    flex-shrink: 0;
+}
+
+.header-user-dropdown-item:hover .dropdown-item-icon {
+    color: #2d6f9f;
+    transform: scale(1.12);
+}
+
+.header-user-dropdown-divider {
+    height: 1px;
+    background-color: #f1f5f9;
+    margin: 6px 4px;
+}
+
+/* Specific styling for Logout item */
+.header-user-dropdown-item.logout-item {
+    color: #4b5563;
+}
+
+.header-user-dropdown-item.logout-item:hover {
+    background-color: #fef2f2;
+    color: #ef4444;
+    transform: translateX(4px);
+    padding-left: 17px;
+}
+
+.header-user-dropdown-item.logout-item .dropdown-item-icon {
+    color: #6b7280;
+}
+
+.header-user-dropdown-item.logout-item:hover .dropdown-item-icon {
+    color: #ef4444;
+    transform: scale(1.12);
+}
