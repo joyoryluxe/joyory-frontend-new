@@ -9,8 +9,14 @@ export const getBackendUrl = () => {
       : "https://beauty.joyory.com";
   }
 
-  // 💻 In Local Development: target local machine or mobile LAN IP
-  const envUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+  // 💻 In Local Development:
+  // If not explicitly configured in local .env, default to production (for frontend-only developers)
+  const envUrl = import.meta.env.VITE_BACKEND_URL;
+  if (!envUrl) {
+    return "https://beauty.joyory.com";
+  }
+
+  // If local backend is configured (e.g. http://localhost:5000), support LAN/mobile testing
   if (typeof window !== "undefined" && window.location?.hostname && window.location.hostname !== "localhost") {
     return envUrl.replace("localhost", window.location.hostname).replace("127.0.0.1", window.location.hostname);
   }

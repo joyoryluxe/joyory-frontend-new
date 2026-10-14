@@ -13,7 +13,8 @@ import axios from "axios";
 const PROD_BACKEND = "https://beauty.joyory.com";
 const getTargetBackend = () => {
   if (import.meta.env.PROD) return PROD_BACKEND;
-  const envUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+  const envUrl = import.meta.env.VITE_BACKEND_URL;
+  if (!envUrl) return PROD_BACKEND;
   if (typeof window !== "undefined" && window.location?.hostname && window.location.hostname !== "localhost") {
     return envUrl.replace("localhost", window.location.hostname).replace("127.0.0.1", window.location.hostname);
   }
