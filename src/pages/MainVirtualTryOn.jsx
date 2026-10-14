@@ -272,6 +272,84 @@ function applyAdaptiveSmoothing(newLms, prevLms, w, h) {
     z: prevLms[i].z !== undefined ? (prevLms[i].z * dynFactor + p.z * (1 - dynFactor)) : p.z
   }));
 }
+
+/**
+ * Industry-standard AR Face Validator for Virtual Try-On.
+ * Checks biometric geometry, proximity, boundary containment, and topological layout.
+ * Rejects wall textures, furniture, distant users, and non-face visual artifacts.
+ */
+function validateFaceLandmarks(lms, w, h) {
+  if (!lms || lms.length < 468) {
+    return { valid: false, reason: 'NO_FACE', message: 'No Face Detected' };
+  }
+
+  // 1. Check Landmark Coordinate Integrity
+  const keyIndices = [33, 263, 10, 152, 234, 454, 4, 0, 17];
+  for (let i = 0; i < keyIndices.length; i++) {
+    const p = lms[keyIndices[i]];
+    if (!p || typeof p.x !== 'number' || typeof p.y !== 'number' || isNaN(p.x) || isNaN(p.y)) {
+      return { valid: false, reason: 'INVALID_GEOMETRY', message: 'No Face Detected' };
+    }
+  }
+
+  const leftEye = lms[33];
+  const rightEye = lms[263];
+  const forehead = lms[10];
+  const chin = lms[152];
+  const leftCheek = lms[234];
+  const rightCheek = lms[454];
+  const nose = lms[4];
+  const upperLip = lms[0];
+  const lowerLip = lms[17];
+
+  // 2. Inter-ocular & Face Dimension Scales (Proximity / Distance Check)
+  const eyeDx = (rightEye.x - leftEye.x) * w;
+  const eyeDy = (rightEye.y - leftEye.y) * h;
+  const eyeDist = Math.sqrt(eyeDx * eyeDx + eyeDy * eyeDy);
+  const normEyeDist = eyeDist / (w || 1);
+
+  const faceHDx = (chin.x - forehead.x) * w;
+  const faceHDy = (chin.y - forehead.y) * h;
+  const faceH = Math.sqrt(faceHDx * faceHDx + faceHDy * faceHDy);
+  const normFaceH = faceH / (h || 1);
+
+  const faceWDx = (rightCheek.x - leftCheek.x) * w;
+  const faceWDy = (rightCheek.y - leftCheek.y) * h;
+  const faceW = Math.sqrt(faceWDx * faceWDx + faceWDy * faceWDy);
+  const normFaceW = faceW / (w || 1);
+
+  // If user moved away from camera / stepped back:
+  if (normEyeDist < 0.08 || normFaceW < 0.12 || normFaceH < 0.14) {
+    return { valid: false, reason: 'TOO_FAR', message: 'Move Closer — Face is too far' };
+  }
+
+  // If face is pressed unnaturally close against camera or exploded
+  if (normFaceW > 0.95 || normFaceH > 0.98) {
+    return { valid: false, reason: 'TOO_CLOSE', message: 'Move Back — Too close to camera' };
+  }
+
+  // 3. Aspect Ratio Check (Eliminates horizontal wall lines or tall vertical shadows)
+  const aspectRatio = faceH / (faceW || 1);
+  if (aspectRatio < 0.8 || aspectRatio > 2.2) {
+    return { valid: false, reason: 'INVALID_PROPORTIONS', message: 'No Face Detected' };
+  }
+
+  // 4. Relative Biometric Topology (Upright Orientation Check)
+  const eyeMidY = (leftEye.y + rightEye.y) / 2;
+  if (nose.y < eyeMidY - 0.03 || upperLip.y < nose.y - 0.03 || chin.y < lowerLip.y - 0.03) {
+    return { valid: false, reason: 'INVALID_ORIENTATION', message: 'Align Face — Keep head upright' };
+  }
+
+  // 5. Center of Face Boundaries
+  const centerX = (leftEye.x + rightEye.x + nose.x) / 3;
+  const centerY = (forehead.y + chin.y + nose.y) / 3;
+  if (centerX < 0.06 || centerX > 0.94 || centerY < 0.06 || centerY > 0.94) {
+    return { valid: false, reason: 'OUT_OF_FRAME', message: 'Center Your Face in Frame' };
+  }
+
+  return { valid: true, reason: 'VALID', message: 'Face Detected' };
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 
 const MainVirtualTryon = () => {
@@ -292,6 +370,18 @@ const MainVirtualTryon = () => {
   const [baPos, setBaPos] = useState(0.5);
   const [isDragging, setIsDragging] = useState(false);
   const [statusMsg, setStatusMsg] = useState('Initializing...');
+  const [faceStatus, setFaceStatus] = useState({
+    isDetected: false,
+    reason: 'INITIALIZING',
+    message: 'Initializing Camera...'
+  });
+  const [cameraError, setCameraError] = useState(null);
+  const faceStateRef = useRef({
+    isDetected: false,
+    reason: 'INITIALIZING',
+    validStreak: 0,
+    invalidStreak: 0
+  });
 
   const [vtoTypes, setVtoTypes] = useState([]);
   const [products, setProducts] = useState([]);
@@ -332,6 +422,15 @@ const MainVirtualTryon = () => {
   const isMountedRef = useRef(true);
 
   const cleanupVTOEngine = useCallback(() => {
+    faceStateRef.current = {
+      isDetected: false,
+      reason: 'INITIALIZING',
+      validStreak: 0,
+      invalidStreak: 0
+    };
+    smoothedLms.current = null;
+    setFaceStatus({ isDetected: false, reason: 'INITIALIZING', message: 'Initializing Camera...' });
+    setCameraError(null);
     if (cameraTimeoutRef.current) {
       clearTimeout(cameraTimeoutRef.current);
       cameraTimeoutRef.current = null;
@@ -688,8 +787,8 @@ const MainVirtualTryon = () => {
         localMesh.setOptions({
           maxNumFaces: 1,
           refineLandmarks: true,
-          minDetectionConfidence: 0.5,
-          minTrackingConfidence: 0.5
+          minDetectionConfidence: 0.65,
+          minTrackingConfidence: 0.65
         });
 
         localMesh.onResults((results) => {
@@ -703,17 +802,66 @@ const MainVirtualTryon = () => {
           canvas.height = videoHeight;
           ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+          // Always draw the clean camera / photo image first (no makeup overlay on canvas yet)
           ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
 
-          if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
-            let lms = results.multiFaceLandmarks[0];
-            if (mode === 'live') {
-              lms = applyAdaptiveSmoothing(lms, smoothedLms.current, canvas.width, canvas.height);
-              smoothedLms.current = lms;
+          const hasCandidates = Boolean(results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0);
+          const rawLms = hasCandidates ? results.multiFaceLandmarks[0] : null;
+          const validation = hasCandidates
+            ? validateFaceLandmarks(rawLms, canvas.width, canvas.height)
+            : { valid: false, reason: 'NO_FACE', message: 'No Face Detected' };
+
+          if (mode === 'live') {
+            if (validation.valid) {
+              faceStateRef.current.validStreak++;
+              faceStateRef.current.invalidStreak = 0;
+
+              // Hysteresis: require 2 consecutive valid frames to engage detected status
+              if (faceStateRef.current.validStreak >= 2) {
+                if (!faceStateRef.current.isDetected || faceStateRef.current.reason !== 'VALID') {
+                  faceStateRef.current.isDetected = true;
+                  faceStateRef.current.reason = 'VALID';
+                  setFaceStatus({ isDetected: true, reason: 'VALID', message: 'Face Detected' });
+                  setStatusMsg('Face Detected');
+                }
+              }
+
+              if (faceStateRef.current.isDetected) {
+                let lms = applyAdaptiveSmoothing(rawLms, smoothedLms.current, canvas.width, canvas.height);
+                smoothedLms.current = lms;
+                applyMakeup(ctx, lms, canvas.width, canvas.height, S.current);
+              }
+            } else {
+              // Face invalid or lost - immediately wipe smoothed coordinates so stale landmarks don't linger
+              smoothedLms.current = null;
+              faceStateRef.current.invalidStreak++;
+              faceStateRef.current.validStreak = 0;
+
+              // Hysteresis: require 2 consecutive invalid frames to declare lost
+              if (faceStateRef.current.invalidStreak >= 2) {
+                if (faceStateRef.current.isDetected || faceStateRef.current.reason !== validation.reason) {
+                  faceStateRef.current.isDetected = false;
+                  faceStateRef.current.reason = validation.reason;
+                  setFaceStatus({ isDetected: false, reason: validation.reason, message: validation.message });
+                  setStatusMsg(validation.message);
+                }
+              }
+              // CRITICAL: Do NOT call applyMakeup! Canvas retains clean passthrough without makeup on walls/surroundings.
             }
-            applyMakeup(ctx, lms, canvas.width, canvas.height, S.current);
-          } else {
-            if (mode === 'live') smoothedLms.current = null;
+          } else if (mode === 'photo') {
+            if (validation.valid) {
+              faceStateRef.current.isDetected = true;
+              faceStateRef.current.reason = 'VALID';
+              setFaceStatus({ isDetected: true, reason: 'VALID', message: 'Face Detected' });
+              setStatusMsg('Photo Ready');
+              applyMakeup(ctx, rawLms, canvas.width, canvas.height, S.current);
+            } else {
+              smoothedLms.current = null;
+              faceStateRef.current.isDetected = false;
+              faceStateRef.current.reason = validation.reason;
+              setFaceStatus({ isDetected: false, reason: validation.reason, message: validation.message });
+              setStatusMsg(validation.message);
+            }
           }
         });
 
@@ -722,6 +870,17 @@ const MainVirtualTryon = () => {
         if (mode === 'live') {
           const initCam = () => {
             if (!active || !isMountedRef.current) return;
+            // Browser Security Check: Browsers disable getUserMedia on insecure HTTP origins (e.g. 192.168.x.x)
+            if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
+              const isHttpIp = window.location.protocol === 'http:' && window.location.hostname !== 'localhost';
+              const msg = isHttpIp
+                ? 'Mobile browsers require HTTPS to access the camera over Wi-Fi (http://192.168.x.x is blocked by Chrome/Safari for security). Please use HTTPS or switch to Upload Photo.'
+                : 'Camera access is not supported or blocked in this browser. Please use Upload Photo mode.';
+              console.warn('Camera blocked:', msg);
+              setCameraError(msg);
+              setStatusMsg('Camera unavailable');
+              return;
+            }
             if (webcamRef.current && webcamRef.current.video) {
               try {
                 localCamera = new Camera(webcamRef.current.video, {
@@ -736,11 +895,20 @@ const MainVirtualTryon = () => {
                   width: 640,
                   height: 480
                 });
-                localCamera.start();
+                const startPromise = localCamera.start();
+                if (startPromise && typeof startPromise.catch === 'function') {
+                  startPromise.catch((err) => {
+                    console.warn('Camera start promise error suppressed:', err?.message || err);
+                    setCameraError('Failed to acquire camera feed. Please check permissions or use Upload Photo.');
+                    setStatusMsg('Camera unavailable');
+                  });
+                }
                 cameraRef.current = localCamera;
                 if (active && isMountedRef.current) setStatusMsg('Live Mode Active');
               } catch (camErr) {
-                console.warn("Camera init error:", camErr);
+                console.warn('Camera init error:', camErr);
+                setCameraError('Camera initialization error. Please use Upload Photo.');
+                setStatusMsg('Camera unavailable');
               }
             }
           };
@@ -1371,7 +1539,29 @@ const MainVirtualTryon = () => {
                         objectFit: 'cover',
                         transform: 'scaleX(-1)',
                       }}
-                      videoConstraints={{ facingMode: "user" }}
+                      videoConstraints={{ facingMode: { ideal: "user" } }}
+                      onUserMedia={() => {
+                        setCameraError(null);
+                      }}
+                      onUserMediaError={(err) => {
+                        console.warn("Webcam access error:", err);
+                        const errName = err?.name || '';
+                        const errMsg = err?.message || String(err || '');
+                        let detail = "Camera permission was not granted or was blocked.";
+                        if (errName === 'NotAllowedError' || errName === 'PermissionDeniedError') {
+                          detail = "Camera permission is blocked. Tap the settings/warning icon on the left of the URL in your browser address bar → Permissions → Allow Camera, then tap Retry Camera.";
+                        } else if (errName === 'SecurityError' || !window.isSecureContext) {
+                          detail = "Browser blocked camera due to insecure HTTP connection. Please ensure http://192.168.1.5:5173 is added to chrome://flags and Chrome was force-closed & reopened.";
+                        } else if (errName === 'NotFoundError' || errName === 'DevicesNotFoundError') {
+                          detail = "No front camera found on this device. Please use Upload Photo mode.";
+                        } else if (errName === 'NotReadableError' || errName === 'TrackStartError') {
+                          detail = "Camera is currently in use by another app. Please close background camera apps and tap Retry.";
+                        } else if (errMsg) {
+                          detail = errMsg + " (Check camera permissions in browser address bar).";
+                        }
+                        setCameraError(detail);
+                        setStatusMsg("Camera unavailable");
+                      }}
                     />
                   )}
 
@@ -1567,7 +1757,108 @@ const MainVirtualTryon = () => {
                   </>
                 )}
 
-                {!compareMode && <div className="vto-status" style={{ zIndex: 20 }}>{statusMsg}</div>}
+                {/* Face Alignment & Guidance Overlay (Live Mode) */}
+                {mode === 'live' && (
+                  <div
+                    className={`vto-face-guide-wrap ${faceStatus.isDetected ? 'detected' : 'not-detected'}`}
+                    aria-live="polite"
+                  >
+                    <div className="vto-face-oval-guide">
+                      <div className="vto-guide-corner vto-corner-tl" />
+                      <div className="vto-guide-corner vto-corner-tr" />
+                      <div className="vto-guide-corner vto-corner-bl" />
+                      <div className="vto-guide-corner vto-corner-br" />
+                      <div className="vto-guide-scan-line" />
+                    </div>
+
+                    {!faceStatus.isDetected && faceStatus.reason !== 'INITIALIZING' && (
+                      <div className="vto-face-alert-pill">
+                        <div className="vto-face-alert-icon-wrap">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="12" y1="8" x2="12" y2="12" />
+                            <line x1="12" y1="16" x2="12.01" y2="16" />
+                          </svg>
+                        </div>
+                        <div className="vto-face-alert-text">
+                          <div className="vto-face-alert-title">
+                            {faceStatus.reason === 'TOO_FAR'
+                              ? 'MOVE CLOSER'
+                              : faceStatus.reason === 'OUT_OF_FRAME'
+                              ? 'CENTER YOUR FACE'
+                              : faceStatus.reason === 'INVALID_ORIENTATION'
+                              ? 'KEEP HEAD UPRIGHT'
+                              : 'NO FACE DETECTED'}
+                          </div>
+                          <div className="vto-face-alert-subtitle">
+                            {faceStatus.reason === 'TOO_FAR'
+                              ? 'Bring your face closer to the camera'
+                              : faceStatus.reason === 'OUT_OF_FRAME'
+                              ? 'Position face within the oval guide'
+                              : faceStatus.reason === 'INVALID_ORIENTATION'
+                              ? 'Keep your head straight and facing forward'
+                              : 'Position your face in front of the camera'}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Photo Mode Face Alert Pill */}
+                {mode === 'photo' && !faceStatus.isDetected && faceStatus.reason !== 'PROCESSING' && faceStatus.reason !== 'INITIALIZING' && (
+                  <div className="vto-face-alert-pill" style={{ pointerEvents: 'auto' }}>
+                    <div className="vto-face-alert-icon-wrap">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="8" x2="12" y2="12" />
+                        <line x1="12" y1="16" x2="12.01" y2="16" />
+                      </svg>
+                    </div>
+                    <div className="vto-face-alert-text">
+                      <div className="vto-face-alert-title">NO FACE DETECTED IN PHOTO</div>
+                      <div className="vto-face-alert-subtitle">Please upload a clear, front-facing portrait photo</div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Camera Error / Unavailable Fallback */}
+                {cameraError && mode === 'live' && (
+                  <div className="vto-camera-error-overlay">
+                    <div className="vto-camera-error-card">
+                      <div className="vto-camera-error-icon">📷</div>
+                      <h3 className="vto-camera-error-title">Camera Unavailable</h3>
+                      <p className="vto-camera-error-msg">{cameraError}</p>
+                      <div className="vto-camera-error-actions">
+                        <button
+                          className="vto-btn-gold"
+                          onClick={() => {
+                            setMode('photo');
+                            setVtoStep('instructions');
+                          }}
+                        >
+                          UPLOAD PHOTO INSTEAD
+                        </button>
+                        <button
+                          className="vto-btn-outline"
+                          onClick={() => {
+                            setCameraError(null);
+                            window.location.reload();
+                          }}
+                        >
+                          RETRY CAMERA
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {!compareMode && (
+                  <div className={`vto-status ${faceStatus.isDetected ? 'status-detected' : 'status-lost'}`} style={{ zIndex: 20 }}>
+                    <span className="vto-status-dot" />
+                    <span>{statusMsg}</span>
+                  </div>
+                )}
               </div>
 
               {!compareMode && (
