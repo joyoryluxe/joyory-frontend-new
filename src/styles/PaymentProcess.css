@@ -1072,3 +1072,43 @@
         margin: auto 20px !important;
     }
 }
+/* ==================== DISABLED PAYMENT METHOD (COD < ₹499) ==================== */
+.payment-method-item.disabled-payment-method {
+    background-color: #f8f9fa !important;
+    cursor: not-allowed !important;
+    border-left: 4px solid #dc3545 !important;
+    opacity: 0.88;
+    transition: background-color 0.2s ease;
+}
+
+.payment-method-item.disabled-payment-method:hover {
+    background-color: #f1f3f5 !important;
+    cursor: not-allowed !important;
+}
+
+.payment-method-item.disabled-payment-method::before {
+    display: none !important;
+}
+
+.cod-unavailable-notice {
+    color: #dc3545 !important;
+    font-size: 11.5px;
+    font-weight: 600;
+    margin-top: 5px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    letter-spacing: 0.2px;
+}
+
+.badge-cod-disabled {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background-color: #ffe5e7;
+    color: #dc3545;
+    padding: 2px 7px;
+    border-radius: 4px;
+    border: 1px solid #f5c2c7;
+}

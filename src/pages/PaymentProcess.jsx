@@ -76,6 +76,18 @@ const PaymentProcess = () => {
 
   const pointsDiscount = priceDetails.pointsDiscount || priceDetails.referralPointsDiscount || 0;
 
+  // COD availability rule: orders must be ₹499 or above
+  const payableAmount = Number(
+    priceDetails.payable ?? priceDetails.totalAmount ?? priceDetails.total ?? 0
+  );
+  const isCodAllowed = payableAmount >= 499;
+
+  useEffect(() => {
+    if (!isCodAllowed && activeTab === "cod") {
+      setActiveTab(null);
+    }
+  }, [isCodAllowed, activeTab]);
+
   const loadRazorpayScript = () =>
     new Promise((resolve) => {
       if (window.Razorpay) return resolve(true);
@@ -116,6 +128,14 @@ const PaymentProcess = () => {
   }, []);
 
   const handleSelectMethod = async (methodKey) => {
+    if (methodKey === "cod" && !isCodAllowed) {
+      showAlert(
+        "Cash on Delivery is available only on orders of ₹499 and above. Please choose an online payment method.",
+        "COD Unavailable",
+        "warning"
+      );
+      return;
+    }
     setActiveTab(methodKey);
     if (!orderId) return;
     try {
@@ -134,6 +154,14 @@ const PaymentProcess = () => {
   };
 
   const handleCashOnDelivery = async () => {
+    if (!isCodAllowed) {
+      showAlert(
+        "Cash on Delivery is available only on orders of ₹499 and above. Please choose an online payment method.",
+        "COD Unavailable",
+        "warning"
+      );
+      return;
+    }
     try {
       setIsProcessing(true);
       const cleanAddress = {
@@ -479,16 +507,37 @@ const PaymentProcess = () => {
                   {/* ==================== PAYMENT METHODS ==================== */}
                   <div className="flex-grow-1 col-lg-5">
                     <div className="payment-method-card shadow-sm">
-                      {methods.map((m) => (
-                        <div
-                          key={m.key}
-                          onClick={() => handleSelectMethod(m.key)}
-                          className={`payment-method-item ${activeTab === m.key ? "active" : ""}`}
-                        >
-                          <div className="d-flex align-items-center">
+                      {methods.map((m) => {
+                        const isMethodDisabled = m.key === "cod" && !isCodAllowed;
+                        return (
+                          <div
+                            key={m.key}
+                            onClick={() => {
+                              if (isMethodDisabled) {
+                                showAlert(
+                                  "Cash on Delivery is available only on orders of ₹499 and above. Please choose an online payment method.",
+                                  "COD Unavailable",
+                                  "warning"
+                                );
+                                return;
+                              }
+                              handleSelectMethod(m.key);
+                            }}
+                            className={`payment-method-item ${
+                              activeTab === m.key ? "active" : ""
+                            } ${isMethodDisabled ? "disabled-payment-method" : ""}`}
+                          >
+                            <div className="d-flex align-items-center">
 
-                            {/* Payment Icon */}
-                            <div className="payment-method-icon me-3 d-flex align-items-center">
+                              {/* Payment Icon */}
+                              <div
+                                className="payment-method-icon me-3 d-flex align-items-center"
+                                style={
+                                  isMethodDisabled
+                                    ? { opacity: 0.45, filter: "grayscale(100%)" }
+                                    : {}
+                                }
+                              >
                               {m.key === "upi" ? (
                                 <img
                                   src={BhimUPI}
@@ -531,18 +580,36 @@ const PaymentProcess = () => {
 
                             {/* Payment Method Details */}
                             <div className="flex-grow-1 payment-method-font-size">
-                              <h5 className="mb-1 fw-normal page-title-main-name">{m.name}</h5>
+                              <div className="d-flex align-items-center justify-content-between">
+                                <h5
+                                  className="mb-1 fw-normal page-title-main-name"
+                                  style={isMethodDisabled ? { color: "#6c757d" } : {}}
+                                >
+                                  {m.name}
+                                </h5>
+                                {isMethodDisabled && (
+                                  <span className="badge-cod-disabled">
+                                    Unavailable
+                                  </span>
+                                )}
+                              </div>
                               <p className="mb-0 text-muted small">{m.description}</p>
+                              {isMethodDisabled && (
+                                <div className="cod-unavailable-notice">
+                                  <i className="bi bi-info-circle-fill"></i>
+                                  <span>COD available only on orders above ₹499</span>
+                                </div>
+                              )}
                             </div>
 
                             {/* Checkmark for active method */}
-                            {activeTab === m.key && (
+                            {activeTab === m.key && !isMethodDisabled && (
                               <i className="bi bi-check-circle-fill text-success fs-4 ms-3"></i>
                             )}
                           </div>
 
                           {/* ==================== SHOW BUTTON + EXTRA FIELDS ONLY WHEN ACTIVE ==================== */}
-                          {activeTab === m.key && (
+                          {activeTab === m.key && !isMethodDisabled && (
                             <div className="">
                               {m.key === "cod" ? (
                                 <button
@@ -611,7 +678,8 @@ const PaymentProcess = () => {
                             </div>
                           )}
                         </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                   {/* <div className="col-lg-7 mt-lg-0 mt-5">
