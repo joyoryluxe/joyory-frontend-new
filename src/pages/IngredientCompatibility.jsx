@@ -104,19 +104,38 @@ export default function IngredientCompatibility() {
     }
   }, [activeTab, catalogProducts.length]);
 
-  // Tab 1: Autocomplete filtering
+  // Tab 1: Autocomplete ingredient filtering (Dynamic backend search with debounce + local cache fallback)
   useEffect(() => {
     if (!searchInput.trim()) {
       setSuggestions([]);
       return;
     }
-    const val = searchInput.toLowerCase();
-    const filtered = dbIngredients.filter(ing =>
+    const query = searchInput.trim();
+    const val = query.toLowerCase();
+    const localFiltered = dbIngredients.filter(ing =>
       (ing.name.toLowerCase().includes(val) ||
         ing.aliases?.some(a => a.toLowerCase().includes(val))) &&
       !selectedIngredients.some(sel => sel.toLowerCase() === ing.name.toLowerCase())
     );
-    setSuggestions(filtered.slice(0, 5));
+    if (localFiltered.length > 0) {
+      setSuggestions(localFiltered.slice(0, 8));
+    }
+
+    const delayDebounceFn = setTimeout(async () => {
+      try {
+        const res = await listIngredients({ search: query, limit: 12 });
+        if (res.data?.success && Array.isArray(res.data.ingredients)) {
+          const remoteFiltered = res.data.ingredients.filter(ing =>
+            !selectedIngredients.some(sel => sel.toLowerCase() === ing.name.toLowerCase())
+          );
+          setSuggestions(remoteFiltered.slice(0, 8));
+        }
+      } catch (err) {
+        console.error("Error searching ingredients:", err);
+      }
+    }, 200);
+
+    return () => clearTimeout(delayDebounceFn);
   }, [searchInput, dbIngredients, selectedIngredients]);
 
   // Tab 2: Autocomplete Product A filtering (Dynamic Backend Search with Debounce)
@@ -422,23 +441,26 @@ export default function IngredientCompatibility() {
   const handleIngredientNameClick = async (name) => {
     if (!name) return;
     try {
+      const cleanName = name.replace(/\b\d+(\.\d+)?%\s*/gi, "").trim() || name;
+
       // 1. Try to find in dbIngredients which is already loaded on mount
       let found = dbIngredients.find(
         ing => ing.name.toLowerCase() === name.toLowerCase() ||
-               ing.aliases?.some(a => a.toLowerCase() === name.toLowerCase())
+               ing.name.toLowerCase() === cleanName.toLowerCase() ||
+               ing.aliases?.some(a => a.toLowerCase() === name.toLowerCase() || a.toLowerCase() === cleanName.toLowerCase())
       );
 
       if (found) {
         handleIngredientClick(found);
       } else {
-        // 2. Fetch from backend by name
-        const res = await getIngredientByName(name);
-        if (res.data.success && res.data.ingredient) {
+        // 2. Fetch from backend by cleanName
+        const res = await getIngredientByName(cleanName);
+        if (res.data?.success && res.data.ingredient) {
           handleIngredientClick(res.data.ingredient);
         } else {
           // Construct minimal object so drawer still opens
           handleIngredientClick({
-            name: name,
+            name: cleanName,
             category: "Active",
             description: "No description available in the database for this ingredient.",
             benefits: [],
@@ -449,9 +471,10 @@ export default function IngredientCompatibility() {
       }
     } catch (err) {
       console.error("Error loading ingredient details:", err);
+      const cleanName = name.replace(/\b\d+(\.\d+)?%\s*/gi, "").trim() || name;
       // Fallback
       handleIngredientClick({
-        name: name,
+        name: cleanName,
         category: "Active",
         description: "No description available in the database for this ingredient.",
         benefits: [],
@@ -619,17 +642,7 @@ export default function IngredientCompatibility() {
               {/* Verdict and Results */}
               {result && (
                 <div className="mt-4 border-top pt-4 text-start">
-                  {result.conflicts?.length === 0 ? (
-                    <div className="ic-alert ic-alert-success mb-3">
-                      <FaCheckCircle size={28} className="flex-shrink-0 mt-1" />
-                      <div>
-                        <h5 className="fw-bold mb-1">Perfect Harmony!</h5>
-                        <p className="mb-0 text-muted small">
-                          All selected ingredients are fully compatible and can be safely layered or combined in your AM/PM routine. Remember to apply from thinnest texture to thickest texture!
-                        </p>
-                      </div>
-                    </div>
-                  ) : (
+                  {result.conflicts?.length > 0 ? (
                     <div className="ic-alert ic-alert-warning mb-3">
                       <FaExclamationTriangle size={28} className="flex-shrink-0 mt-1" />
                       <div>
@@ -637,6 +650,41 @@ export default function IngredientCompatibility() {
                         <p className="mb-0 text-muted small">
                           We identified {result.conflicts.length} conflict(s). Review the pairing details below to adjust your application times.
                         </p>
+                      </div>
+                    </div>
+                  ) : result.notFound?.length > 0 ? (
+                    <div className="ic-alert ic-alert-warning mb-3" style={{ background: "#fff9e6", borderColor: "#ffe082" }}>
+                      <FaExclamationTriangle size={28} className="flex-shrink-0 mt-1 text-warning" />
+                      <div>
+                        <h5 className="fw-bold mb-1 text-dark">Incomplete Evaluation</h5>
+                        <p className="mb-0 text-muted small">
+                          {result.notFound.join(", ")} {result.notFound.length === 1 ? "was" : "were"} not recognized in our verified clinical database. We cannot guarantee layering compatibility for unverified terms.
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="ic-alert ic-alert-success mb-3">
+                      <FaCheckCircle size={28} className="flex-shrink-0 mt-1" />
+                      <div>
+                        <h5 className="fw-bold mb-1">Perfect Harmony!</h5>
+                        <p className="mb-0 text-muted small">
+                          All selected ingredients are verified and fully compatible. They can be safely layered or combined in your AM/PM routine!
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Synergy Benefits (Positive Pairing Combinations) */}
+                  {result.synergies?.length > 0 && (
+                    <div className="mb-4">
+                      <h5 className="fw-bold fs-6 mb-2 ic-text-blue">Synergistic Power Pairings Detected:</h5>
+                      <div className="d-flex flex-column gap-2">
+                        {result.synergies.map((syn, idx) => (
+                          <div key={idx} className="p-2 border rounded bg-opacity-5" style={{ fontSize: "12.5px" }}>
+                            <strong className="ic-text-blue uppercase d-block mb-1">{syn.pair.toUpperCase()}</strong>
+                            <span className="text-muted">{syn.benefit}</span>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   )}
@@ -671,6 +719,11 @@ export default function IngredientCompatibility() {
                               <span className={`ic-severity-badge ic-severity-${conflict.severity || 'low'}`}>
                                 {conflict.severity?.toUpperCase()} SEVERITY
                               </span>
+                              {conflict.source === "ai" && (
+                                <span className="badge bg-light text-dark border ms-2" style={{ fontSize: "11px", fontWeight: "600", padding: "4px 8px" }}>
+                                  ✨ AI Decoded
+                                </span>
+                              )}
                             </div>
                             <div className="d-flex gap-2 align-items-start text-muted mb-2" style={{ fontSize: "12.5px" }}>
                               <FaInfoCircle className="flex-shrink-0 mt-1" />
@@ -708,10 +761,38 @@ export default function IngredientCompatibility() {
                     </div>
                   )}
 
+                  {/* AI Decoded Ingredients & Phototoxicity / Clinical Notes */}
+                  {result.analyzed?.some(a => a.source === "ai_analysis" || (a.cautions && a.cautions.length > 0)) && (
+                    <div className="mt-4 p-3 rounded border bg-light text-start shadow-sm" style={{ fontSize: "12.5px" }}>
+                      <div className="fw-bold mb-2 text-dark d-flex align-items-center gap-1">
+                        <span>✨ Ingredients Decoded via AI Intelligence:</span>
+                      </div>
+                      <div className="d-flex flex-column gap-2">
+                        {result.analyzed.filter(a => a.source === "ai_analysis" || (a.cautions && a.cautions.length > 0)).map((ing, i) => (
+                          <div key={i} className="p-2 bg-white rounded border">
+                            <div className="d-flex align-items-center justify-content-between mb-1">
+                              <strong className="text-dark" style={{ fontSize: "13px" }}>{ing.name}</strong>
+                              <span className="badge bg-secondary-subtle text-dark border small">{ing.family || 'Active'}</span>
+                            </div>
+                            {ing.cautions && ing.cautions.length > 0 ? (
+                              <div className="text-danger small mt-1">
+                                <strong>⚠️ Clinical Caution:</strong> {ing.cautions.join("; ")}
+                              </div>
+                            ) : (
+                              <div className="text-muted small mt-1">
+                                Analyzed on-the-fly and cataloged into intelligence library.
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Ingredients not found in DB */}
                   {result.notFound?.length > 0 && (
-                    <div className="mt-3 text-muted small">
-                      Note: The following ingredients were not found in our intelligence library and could not be analyzed: <em>{Array.from(new Set(result.notFound)).join(", ")}</em>
+                    <div className="mt-3 p-3 bg-light border rounded text-dark small">
+                      <strong>⚠️ Unverified Ingredients:</strong> The following ingredient(s) could not be matched against our clinical formulation library: <strong className="text-danger">{Array.from(new Set(result.notFound)).join(", ")}</strong>. Because these ingredients are unverified, please patch test or consult a dermatologist.
                     </div>
                   )}
                 </div>

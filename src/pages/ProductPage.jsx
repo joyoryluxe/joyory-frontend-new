@@ -143,8 +143,11 @@ const OutOfStockPopup = ({ isOpen, onClose, productName }) => {
     );
 };
 
-const CART_API_BASE = "https://beauty.joyory.com/api/user/cart";
-const PRODUCT_ALL_API = "https://beauty.joyory.com/api/user/products/all";
+const BACKEND_BASE = (typeof window !== "undefined" && import.meta.env.VITE_BACKEND_URL)
+    ? import.meta.env.VITE_BACKEND_URL
+    : "https://beauty.joyory.com";
+const CART_API_BASE = `${BACKEND_BASE}/api/user/cart`;
+const PRODUCT_ALL_API = `${BACKEND_BASE}/api/user/products/all`;
 
 /* ─── helpers ───────────────────────────────────────────────────────────── */
 const getSku = (v) => v?.sku || v?.variantSku || `sku-${v?._id || "default"}`;
@@ -487,7 +490,8 @@ export default function ProductPage() {
         if (path.includes("/skintype/")) {
             p.append("skinTypes", effectiveSlug.replace(/\+/g, " "));
         } else if (path.includes("/ingredients/")) {
-            p.append("ingredients", effectiveSlug);
+            const cleanIng = (effectiveSlug || "").replace(/^(\d+(\.\d+)?%?-?)+/g, "").replace(/-/g, " ").trim() || effectiveSlug;
+            p.append("ingredients", cleanIng);
         } else if (path.includes("/promotion/")) {
             p.append("promoSlug", effectiveSlug);
         }
@@ -546,6 +550,10 @@ export default function ProductPage() {
 
             if (normSlug && normSlug !== "products" && normSlug !== "category") {
                 let urlValid = false;
+
+                if (path.includes("/ingredients/")) {
+                    urlValid = true;
+                }
 
                 const validKeywords = [
                     "all", "bestsellers", "best-sellers", "trending", "new-arrivals",
@@ -634,6 +642,10 @@ export default function ProductPage() {
                 if (q) setPageTitle(`Search Results for "${q}"`);
                 else if (searchParams.get("discountMin")) setPageTitle(`Flat ${searchParams.get("discountMin")}% Off`);
                 else if (searchParams.get("maxPrice")) setPageTitle(`Under ₹${searchParams.get("maxPrice")}`);
+                else if (path.includes("/ingredients/") && effectiveSlug) {
+                    const cleanTitle = decodeURIComponent(effectiveSlug).replace(/^(\d+(\.\d+)?%?-?)+/g, "").replace(/-/g, " ").trim();
+                    setPageTitle(`${cleanTitle.replace(/\b\w/g, l => l.toUpperCase())} Products`);
+                }
                 else if (data.category?.name) setPageTitle(data.category.name);
                 else if (data.promoMeta?.name) setPageTitle(data.promoMeta.name);
                 else if (data.skinType?.name) setPageTitle(data.skinType.name);
