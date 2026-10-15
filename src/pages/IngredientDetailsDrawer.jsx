@@ -20,12 +20,19 @@ export default function IngredientDetailsDrawer({ isOpen, onClose, ingredient })
 
   const handleSearchProducts = () => {
     onClose();
-    navigate(`/products/ingredients/${encodeURIComponent(ingredient.name.toLowerCase())}`);
+    const cleanName = (ingredient.name || "")
+      .replace(/\b\d+(\.\d+)?%\s*/gi, "")
+      .trim() || ingredient.name;
+    const slug = cleanName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+    navigate(`/products/ingredients/${slug || encodeURIComponent(cleanName.toLowerCase())}`);
   };
 
   const handleViewDetail = () => {
     onClose();
-    navigate(`/ingredient/${encodeURIComponent(ingredient.name)}`);
+    const cleanName = (ingredient.name || "")
+      .replace(/\b\d+(\.\d+)?%\s*/gi, "")
+      .trim() || ingredient.name;
+    navigate(`/ingredient/${encodeURIComponent(cleanName)}`);
   };
 
   return (
