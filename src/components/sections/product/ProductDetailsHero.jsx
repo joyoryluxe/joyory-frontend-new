@@ -390,6 +390,15 @@ const ProductDetailsHero = ({
     }
   };
 
+  const handleMoreTextVariantsClick = () => {
+    if (window.innerWidth > 768) {
+      setIsExpanded(true);
+    } else {
+      setSelectedVariantType("text");
+      setShowVariantOverlay(true);
+    }
+  };
+
   const visibleThumbnails = initialDisplayImages.slice(
     thumbnailStartIndex,
     thumbnailStartIndex + thumbnailsPerView
@@ -409,6 +418,48 @@ const ProductDetailsHero = ({
   }
 
   const nextOrderDiscountMessage = selectedShade?.nextOrderDiscountMessage || product?.nextOrderDiscountMessage;
+
+  const displayableTextVariants = useMemo(() => {
+    if (!groupedVariants.text || groupedVariants.text.length === 0) return [];
+    if (
+      groupedVariants.text.length === 1 &&
+      getVariantDisplayText(groupedVariants.text[0]) === "DEFAULT"
+    ) {
+      return [];
+    }
+    return groupedVariants.text;
+  }, [groupedVariants.text]);
+
+  const isVariantSelected = (v) => {
+    if (!selectedShade || !v) return false;
+    const vSku = getSku(v);
+    const selSku = getSku(selectedShade);
+    if (vSku && selSku && vSku === selSku) return true;
+    if (v._id && selectedShade._id && v._id === selectedShade._id) return true;
+    if (v.slug && selectedShade.slug && v.slug === selectedShade.slug) return true;
+    return false;
+  };
+
+  const getMobileSlicedVariants = (list, maxCount) => {
+    if (!isMobile || isExpanded || list.length <= maxCount) {
+      return list;
+    }
+    const selectedIndex = list.findIndex((v) => isVariantSelected(v));
+    if (selectedIndex === -1 || selectedIndex < maxCount) {
+      return list.slice(0, maxCount);
+    }
+    const result = list.slice(0, maxCount - 1);
+    result.push(list[selectedIndex]);
+    return result;
+  };
+
+  const visibleColorVariants = useMemo(() => {
+    return getMobileSlicedVariants(groupedVariants.color, 4);
+  }, [groupedVariants.color, isMobile, isExpanded, selectedShade]);
+
+  const visibleTextVariants = useMemo(() => {
+    return getMobileSlicedVariants(displayableTextVariants, 2);
+  }, [displayableTextVariants, isMobile, isExpanded, selectedShade]);
 
   return (
     <article className="product-hero-container pb-lg-0 pb-0">
@@ -731,71 +782,94 @@ const ProductDetailsHero = ({
         )}
 
         {/* Selected Variant Display */}
-        {selectedShade && (
+        {selectedShade && getVariantDisplayText(selectedShade) !== "DEFAULT" && (
           <div className="text-muted small text-start mb-lg-3 mb-1">
             Selected: <span className="fw-bold text-dark">{getVariantDisplayText(selectedShade)}</span>
           </div>
         )}
 
         {/* Color Variants */}
-        <div className="mb-lg-4 mb-1 text-start">
-          <p className="fw-bold mb-2">Color</p>
-          <div className="d-flex flex-wrap align-items-center gap-2">
-            {((!isMobile || isExpanded) ? groupedVariants.color : groupedVariants.color.slice(0, 4)).map((v, i) => {
-              const isSelected = selectedShade?.sku === getSku(v);
-              const outOfStock = isOutOfStock(v);
-              return (
+        {groupedVariants.color.length > 0 && (
+          <div className="mb-lg-4 mb-1 text-start">
+            <p className="fw-bold mb-2">Color</p>
+            <div className="d-flex flex-wrap align-items-center gap-2">
+              {visibleColorVariants.map((v, i) => {
+                const isSelected = isVariantSelected(v);
+                const outOfStock = isOutOfStock(v);
+                return (
+                  <div
+                    key={getSku(v) || i}
+                    onClick={() => !outOfStock && handleVariantClick(v)}
+                    className={`color-swatch ${outOfStock ? 'out-of-stock-swatch' : ''}`}
+                    style={{
+                      backgroundColor: v.hex,
+                      border: isSelected ? '2px solid #000' : '1px solid #ddd',
+                      cursor: outOfStock ? 'not-allowed' : 'pointer',
+                      opacity: outOfStock ? 0.5 : 1,
+                      borderRadius: '4px',
+                    }}
+                    title={outOfStock ? `${v.shadeName || v.name} - Out of Stock` : v.shadeName || v.name}
+                  >
+                    {isSelected && !outOfStock && <FaCheck className="color-swatch-check" />}
+                    {outOfStock && <FaTimes className="color-swatch-cross" />}
+                  </div>
+                );
+              })}
+              {groupedVariants.color.length > 4 && isMobile && !isExpanded && (
                 <div
-                  key={i}
-                  onClick={() => !outOfStock && handleVariantClick(v)}
-                  className={`color-swatch ${outOfStock ? 'out-of-stock-swatch' : ''}`}
-                  style={{
-                    backgroundColor: v.hex,
-                    border: isSelected ? '2px solid #000' : '1px solid #ddd',
-                    cursor: outOfStock ? 'not-allowed' : 'pointer',
-                    opacity: outOfStock ? 0.5 : 1,
-                    borderRadius: '4px',
-                  }}
-                  title={outOfStock ? `${v.shadeName || v.name} - Out of Stock` : v.shadeName || v.name}
+                  className="btn border fw-normal more-variants-btn"
+                  onClick={handleMoreVariantsClick}
+                  role="button"
+                  tabIndex={0}
+                  style={{ cursor: "pointer" }}
                 >
-                  {isSelected && !outOfStock && <FaCheck className="color-swatch-check" />}
-                  {outOfStock && <FaTimes className="color-swatch-cross" />}
+                  +{groupedVariants.color.length - 4}
                 </div>
-              );
-            })}
-            {groupedVariants.color.length > 4 && isMobile && !isExpanded && (
-              <div
-                className="btn border fw-normal more-variants-btn"
-                onClick={handleMoreVariantsClick}
-                role="button"
-                tabIndex={0}
-                style={{ cursor: "pointer" }}
-              >
-                +{groupedVariants.color.length - 4}
-              </div>
-            )}
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Text Variants */}
-        <div className="mb-4 d-flex gap-2">
-          {groupedVariants.text.slice(0, 2).map((v, i) => {
-            const isSelected = selectedShade?.sku === getSku(v);
-            const outOfStock = isOutOfStock(v);
-            return (
-              <button
-                key={i}
-                className={`btn text-variant-btn ${outOfStock ? 'out-of-stock-text-btn' : (isSelected ? "btn-dark" : "btn-outline-secondary")}`}
-                onClick={() => !outOfStock && handleVariantClick(v)}
-                disabled={outOfStock}
-                title={outOfStock ? `${getVariantDisplayText(v)} - Out of Stock` : getVariantDisplayText(v)}
-              >
-                {outOfStock && <span className="text-cross me-1">✕</span>}
-                {getVariantDisplayText(v)}
-              </button>
-            );
-          })}
-        </div>
+        {displayableTextVariants.length > 0 && (
+          <div className="mb-4 text-start">
+            <p className="fw-bold mb-2">
+              {groupedVariants.color.length > 0
+                ? "Size"
+                : (displayableTextVariants.some(v => v.size || v.ml || v.weight) ? "Size" : "Variant")}
+            </p>
+            <div className="d-flex flex-wrap align-items-center gap-2">
+              {visibleTextVariants.map((v, i) => {
+                const isSelected = isVariantSelected(v);
+                const outOfStock = isOutOfStock(v);
+                return (
+                  <button
+                    key={getSku(v) || i}
+                    type="button"
+                    className={`btn text-variant-btn ${outOfStock ? 'out-of-stock-text-btn' : (isSelected ? "btn-dark" : "btn-outline-secondary")}`}
+                    onClick={() => !outOfStock && handleVariantClick(v)}
+                    disabled={outOfStock}
+                    title={outOfStock ? `${getVariantDisplayText(v)} - Out of Stock` : getVariantDisplayText(v)}
+                  >
+                    {outOfStock && <span className="text-cross me-1">✕</span>}
+                    {getVariantDisplayText(v)}
+                  </button>
+                );
+              })}
+              {displayableTextVariants.length > 2 && isMobile && !isExpanded && (
+                <div
+                  className="btn border fw-normal more-text-variants-btn"
+                  onClick={handleMoreTextVariantsClick}
+                  role="button"
+                  tabIndex={0}
+                  style={{ cursor: "pointer" }}
+                >
+                  +{displayableTextVariants.length - 2}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Allergen Alerts Banner */}
         {scanResult && (scanResult.allergenWarnings?.length > 0 || scanResult.sensitiveWarnings?.length > 0) && (
