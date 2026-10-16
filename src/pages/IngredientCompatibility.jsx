@@ -24,6 +24,57 @@ import {
 } from "react-icons/fa";
 import "../styles/IngredientCompatibility.css";
 
+
+// ─── Layering Carousel & Compatibility Cache ──────────────────────────────────
+const CAROUSEL_CACHE_KEY = "joyory_layering_carousel_skin_v1";
+const CAROUSEL_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+const COMPAT_CACHE_KEY = "joyory_product_compat_cache_v1";
+
+const readCarouselCache = () => {
+  try {
+    const raw = sessionStorage.getItem(CAROUSEL_CACHE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch (_) {
+    return null;
+  }
+};
+
+const writeCarouselCache = (data) => {
+  try {
+    sessionStorage.setItem(CAROUSEL_CACHE_KEY, JSON.stringify({
+      ...data,
+      timestamp: Date.now()
+    }));
+  } catch (_) {
+    try {
+      sessionStorage.removeItem(CAROUSEL_CACHE_KEY);
+      sessionStorage.setItem(CAROUSEL_CACHE_KEY, JSON.stringify({ ...data, timestamp: Date.now() }));
+    } catch (_) {}
+  }
+};
+
+const readCompatCache = (key) => {
+  try {
+    const raw = sessionStorage.getItem(COMPAT_CACHE_KEY);
+    if (!raw) return null;
+    const map = JSON.parse(raw);
+    return map[key] || null;
+  } catch (_) {
+    return null;
+  }
+};
+
+const writeCompatCache = (key, data) => {
+  try {
+    let map = {};
+    const raw = sessionStorage.getItem(COMPAT_CACHE_KEY);
+    if (raw) map = JSON.parse(raw);
+    map[key] = data;
+    sessionStorage.setItem(COMPAT_CACHE_KEY, JSON.stringify(map));
+  } catch (_) {}
+};
+
 const PRESETS = [
   { label: "Retinol + Vitamin C", ingredients: ["Retinol", "Vitamin C"] },
   { label: "Niacinamide + Vitamin C", ingredients: ["Niacinamide", "Vitamin C"] },
@@ -81,29 +132,97 @@ export default function IngredientCompatibility() {
     fetchIngs();
   }, []);
 
-  // Fetch catalog products when Tab 2 is active
+  // Fetch popular skincare products when Tab 2 is active (Threshold: 12, Category: skin, sorted by rating)
+  const fetchCarouselProducts = async (cursor = null) => {
+    if (cursor) {
+      setCarouselLoadingMore(true);
+    } else {
+      setProductsLoading(true);
+    }
+    try {
+      const params = {
+        categoryIds: "skin",
+        sort: "rating",
+        limit: 12
+      };
+      if (cursor) params.cursor = cursor;
+
+      const res = await listAllProducts(params);
+      let products = [];
+      let pagination = {};
+      if (res.data && Array.isArray(res.data.products)) {
+        products = res.data.products;
+        pagination = res.data.pagination || {};
+      } else if (Array.isArray(res.data)) {
+        products = res.data;
+      }
+
+      // Filter products that have active ingredient lists
+      const skincareWithIngredients = products.filter(p => Array.isArray(p.ingredients) && p.ingredients.length > 0);
+      const itemsToUse = skincareWithIngredients.length > 0 ? skincareWithIngredients : products;
+      const nextCursor = pagination.nextCursor || null;
+      const nextHasMore = pagination.hasMore || false;
+
+      if (cursor) {
+        setCatalogProducts(prev => {
+          const map = new Map();
+          prev.forEach(p => map.set(p._id || p.id, p));
+          itemsToUse.forEach(p => map.set(p._id || p.id, p));
+          const updated = Array.from(map.values());
+          writeCarouselCache({
+            products: updated,
+            cursor: nextCursor,
+            hasMore: nextHasMore
+          });
+          return updated;
+        });
+      } else {
+        setCatalogProducts(itemsToUse);
+        writeCarouselCache({
+          products: itemsToUse,
+          cursor: nextCursor,
+          hasMore: nextHasMore
+        });
+      }
+
+      setCarouselCursor(nextCursor);
+      setCarouselHasMore(nextHasMore);
+    } catch (err) {
+      console.error("Error loading skincare products for carousel:", err);
+    } finally {
+      setProductsLoading(false);
+      setCarouselLoadingMore(false);
+    }
+  };
+
+  // Progressive loading and caching for Tab 2 carousel
   useEffect(() => {
     if (activeTab === "products" && catalogProducts.length === 0) {
-      const fetchProducts = async () => {
-        setProductsLoading(true);
-        try {
-          const res = await listAllProducts({ limit: 50 });
-          let products = [];
-          if (res.data && Array.isArray(res.data.products)) {
-            products = res.data.products;
-          } else if (Array.isArray(res.data)) {
-            products = res.data;
-          }
-          setCatalogProducts(products);
-        } catch (err) {
-          console.error("Error loading products list:", err);
-        } finally {
-          setProductsLoading(false);
+      const cached = readCarouselCache();
+      if (cached && Array.isArray(cached.products) && cached.products.length > 0) {
+        setCatalogProducts(cached.products);
+        setCarouselCursor(cached.cursor || null);
+        setCarouselHasMore(cached.hasMore || false);
+
+        // Stale-while-revalidate: if older than 10 mins, refresh in background
+        const age = Date.now() - (cached.timestamp || 0);
+        if (age >= CAROUSEL_CACHE_TTL) {
+          fetchCarouselProducts(null);
         }
-      };
-      fetchProducts();
+      } else {
+        fetchCarouselProducts(null);
+      }
     }
   }, [activeTab, catalogProducts.length]);
+
+  // Horizontal scroll threshold trigger for infinite carousel
+  const handleCarouselScroll = (e) => {
+    const el = e.currentTarget;
+    if (!el || carouselLoadingMore || !carouselHasMore || !carouselCursor) return;
+    if (el.scrollLeft + el.clientWidth >= el.scrollWidth - 120) {
+      fetchCarouselProducts(carouselCursor);
+    }
+  };
 
   // Tab 1: Autocomplete ingredient filtering (Dynamic backend search with debounce + local cache fallback)
   useEffect(() => {
@@ -828,7 +947,11 @@ export default function IngredientCompatibility() {
                   </div>
                 ) : (
                   <div className="popular-products-scroll-wrapper">
-                    <div className="d-flex gap-3 overflow-auto pb-2 pt-2 scrollbar-thin" style={{ scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}>
+                    <div
+                      className="d-flex gap-3 overflow-auto pb-2 pt-2 scrollbar-thin"
+                      style={{ scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}
+                      onScroll={handleCarouselScroll}
+                    >
                       {catalogProducts.map((p) => {
                         const imgUrl = p.variants?.[0]?.images?.[0] || p.image || "/placeholder.png";
                         return (
