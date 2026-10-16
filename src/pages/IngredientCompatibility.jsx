@@ -26,7 +26,7 @@ import "../styles/IngredientCompatibility.css";
 
 
 // ─── Layering Carousel & Compatibility Cache ──────────────────────────────────
-const CAROUSEL_CACHE_KEY = "joyory_layering_carousel_skin_v1";
+const CAROUSEL_CACHE_KEY = "joyory_layering_carousel_skin_v2";
 const CAROUSEL_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
 const COMPAT_CACHE_KEY = "joyory_product_compat_cache_v1";
 
@@ -146,7 +146,7 @@ export default function IngredientCompatibility() {
     try {
       const params = {
         categoryIds: "skin",
-        sort: "rating",
+        sort: "recent",
         limit: 12
       };
       if (cursor) params.cursor = cursor;
@@ -223,7 +223,8 @@ export default function IngredientCompatibility() {
   const handleCarouselScroll = (e) => {
     const el = e.currentTarget;
     if (!el || carouselLoadingMore || !carouselHasMore || !carouselCursor) return;
-    if (el.scrollLeft + el.clientWidth >= el.scrollWidth - 120) {
+    const isNearEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 160;
+    if (isNearEnd) {
       fetchCarouselProducts(carouselCursor);
     }
   };
