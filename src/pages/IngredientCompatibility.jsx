@@ -24,6 +24,57 @@ import {
 } from "react-icons/fa";
 import "../styles/IngredientCompatibility.css";
 
+
+// ─── Layering Carousel & Compatibility Cache ──────────────────────────────────
+const CAROUSEL_CACHE_KEY = "joyory_layering_carousel_skin_v2";
+const CAROUSEL_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+const COMPAT_CACHE_KEY = "joyory_product_compat_cache_v1";
+
+const readCarouselCache = () => {
+  try {
+    const raw = sessionStorage.getItem(CAROUSEL_CACHE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch (_) {
+    return null;
+  }
+};
+
+const writeCarouselCache = (data) => {
+  try {
+    sessionStorage.setItem(CAROUSEL_CACHE_KEY, JSON.stringify({
+      ...data,
+      timestamp: Date.now()
+    }));
+  } catch (_) {
+    try {
+      sessionStorage.removeItem(CAROUSEL_CACHE_KEY);
+      sessionStorage.setItem(CAROUSEL_CACHE_KEY, JSON.stringify({ ...data, timestamp: Date.now() }));
+    } catch (_) {}
+  }
+};
+
+const readCompatCache = (key) => {
+  try {
+    const raw = sessionStorage.getItem(COMPAT_CACHE_KEY);
+    if (!raw) return null;
+    const map = JSON.parse(raw);
+    return map[key] || null;
+  } catch (_) {
+    return null;
+  }
+};
+
+const writeCompatCache = (key, data) => {
+  try {
+    let map = {};
+    const raw = sessionStorage.getItem(COMPAT_CACHE_KEY);
+    if (raw) map = JSON.parse(raw);
+    map[key] = data;
+    sessionStorage.setItem(COMPAT_CACHE_KEY, JSON.stringify(map));
+  } catch (_) {}
+};
+
 const PRESETS = [
   { label: "Retinol + Vitamin C", ingredients: ["Retinol", "Vitamin C"] },
   { label: "Niacinamide + Vitamin C", ingredients: ["Niacinamide", "Vitamin C"] },
@@ -45,6 +96,10 @@ export default function IngredientCompatibility() {
   // --- TAB 2: PRODUCTS STATE ---
   const [catalogProducts, setCatalogProducts] = useState([]);
   const [productsLoading, setProductsLoading] = useState(false);
+  
+  const [carouselCursor, setCarouselCursor] = useState(null);
+  const [carouselHasMore, setCarouselHasMore] = useState(false);
+  const [carouselLoadingMore, setCarouselLoadingMore] = useState(false);
   const [productASearch, setProductASearch] = useState("");
   const [productBSearch, setProductBSearch] = useState("");
   const [productASuggestions, setProductASuggestions] = useState([]);
@@ -55,6 +110,23 @@ export default function IngredientCompatibility() {
   const [productLoading, setProductLoading] = useState(false);
   const [productASearchLoading, setProductASearchLoading] = useState(false);
   const [productBSearchLoading, setProductBSearchLoading] = useState(false);
+
+  // --- SMART AUTO-SLOT ASSIGNMENT & CONFLICT HANDLING ---
+  const [slotNotification, setSlotNotification] = useState(null);
+  const [slotConflictProduct, setSlotConflictProduct] = useState(null);
+
+  const showSlotNotification = (message, type = "info") => {
+    setSlotNotification({ message, type, id: Date.now() });
+  };
+
+  useEffect(() => {
+    if (slotNotification) {
+      const timer = setTimeout(() => {
+        setSlotNotification(null);
+      }, 3500);
+      return () => clearTimeout(timer);
+    }
+  }, [slotNotification]);
 
   // --- TAB 3: OCR RAW TEXT STATE ---
   const [ocrText, setOcrText] = useState("");
@@ -81,29 +153,144 @@ export default function IngredientCompatibility() {
     fetchIngs();
   }, []);
 
-  // Fetch catalog products when Tab 2 is active
+  // Fetch popular skincare products when Tab 2 is active (Threshold: 12, Category: skin, sorted by rating)
+  const fetchCarouselProducts = async (cursor = null) => {
+    if (cursor) {
+      setCarouselLoadingMore(true);
+    } else {
+      setProductsLoading(true);
+    }
+    try {
+      const params = {
+        categoryIds: "skin",
+        sort: "recent",
+        limit: 12
+      };
+      if (cursor) params.cursor = cursor;
+
+      const res = await listAllProducts(params);
+      let products = [];
+      let pagination = {};
+      if (res.data && Array.isArray(res.data.products)) {
+        products = res.data.products;
+        pagination = res.data.pagination || {};
+      } else if (Array.isArray(res.data)) {
+        products = res.data;
+      }
+
+      // Filter products that have active ingredient lists
+      const skincareWithIngredients = products.filter(p => Array.isArray(p.ingredients) && p.ingredients.length > 0);
+      const itemsToUse = skincareWithIngredients.length > 0 ? skincareWithIngredients : products;
+      const nextCursor = pagination.nextCursor || null;
+      const nextHasMore = pagination.hasMore || false;
+
+      if (cursor) {
+        setCatalogProducts(prev => {
+          const map = new Map();
+          prev.forEach(p => map.set(p._id || p.id, p));
+          itemsToUse.forEach(p => map.set(p._id || p.id, p));
+          const updated = Array.from(map.values());
+          writeCarouselCache({
+            products: updated,
+            cursor: nextCursor,
+            hasMore: nextHasMore
+          });
+          return updated;
+        });
+      } else {
+        setCatalogProducts(itemsToUse);
+        writeCarouselCache({
+          products: itemsToUse,
+          cursor: nextCursor,
+          hasMore: nextHasMore
+        });
+      }
+
+      setCarouselCursor(nextCursor);
+      setCarouselHasMore(nextHasMore);
+    } catch (err) {
+      console.error("Error loading skincare products for carousel:", err);
+    } finally {
+      setProductsLoading(false);
+      setCarouselLoadingMore(false);
+    }
+  };
+
+  // Progressive loading and caching for Tab 2 carousel
   useEffect(() => {
     if (activeTab === "products" && catalogProducts.length === 0) {
-      const fetchProducts = async () => {
-        setProductsLoading(true);
-        try {
-          const res = await listAllProducts({ limit: 50 });
-          let products = [];
-          if (res.data && Array.isArray(res.data.products)) {
-            products = res.data.products;
-          } else if (Array.isArray(res.data)) {
-            products = res.data;
-          }
-          setCatalogProducts(products);
-        } catch (err) {
-          console.error("Error loading products list:", err);
-        } finally {
-          setProductsLoading(false);
+      const cached = readCarouselCache();
+      if (cached && Array.isArray(cached.products) && cached.products.length > 0) {
+        setCatalogProducts(cached.products);
+        setCarouselCursor(cached.cursor || null);
+        setCarouselHasMore(cached.hasMore || false);
+
+        // Stale-while-revalidate: if older than 10 mins, refresh in background
+        const age = Date.now() - (cached.timestamp || 0);
+        if (age >= CAROUSEL_CACHE_TTL) {
+          fetchCarouselProducts(null);
         }
-      };
-      fetchProducts();
+      } else {
+        fetchCarouselProducts(null);
+      }
     }
   }, [activeTab, catalogProducts.length]);
+
+  // Handle tap / click on popular product card to automatically assign to available slot
+  const handleProductCardClick = (product) => {
+    // 1. If product is already in Slot A -> toggle off / remove
+    if (selectedProductA?._id === product._id) {
+      setSelectedProductA(null);
+      setProductResult(null);
+      showSlotNotification(`Removed "${product.name}" from Slot A.`, "info");
+      return;
+    }
+
+    // 2. If product is already in Slot B -> toggle off / remove
+    if (selectedProductB?._id === product._id) {
+      setSelectedProductB(null);
+      setProductResult(null);
+      showSlotNotification(`Removed "${product.name}" from Slot B.`, "info");
+      return;
+    }
+
+    // 3. Both slots are available -> assign to Slot A
+    if (!selectedProductA && !selectedProductB) {
+      setSelectedProductA(product);
+      setProductResult(null);
+      showSlotNotification(`Added "${product.name}" to Slot A. Select a second product for Slot B!`, "success");
+      return;
+    }
+
+    // 4. Slot A is occupied, Slot B is available -> assign to Slot B
+    if (selectedProductA && !selectedProductB) {
+      setSelectedProductB(product);
+      setProductResult(null);
+      showSlotNotification(`Added "${product.name}" to Slot B. Ready to analyze!`, "success");
+      return;
+    }
+
+    // 5. Slot B is occupied, Slot A is available -> assign to Slot A
+    if (!selectedProductA && selectedProductB) {
+      setSelectedProductA(product);
+      setProductResult(null);
+      showSlotNotification(`Added "${product.name}" to Slot A. Ready to analyze!`, "success");
+      return;
+    }
+
+    // 6. Both slots are full -> open replacement dialog for graceful handling
+    setSlotConflictProduct(product);
+  };
+
+  // Horizontal scroll threshold trigger for infinite carousel
+  const handleCarouselScroll = (e) => {
+    const el = e.currentTarget;
+    if (!el || carouselLoadingMore || !carouselHasMore || !carouselCursor) return;
+    const isNearEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 160;
+    if (isNearEnd) {
+      fetchCarouselProducts(carouselCursor);
+    }
+  };
 
   // Tab 1: Autocomplete ingredient filtering (Dynamic backend search with debounce + local cache fallback)
   useEffect(() => {
@@ -239,6 +426,69 @@ export default function IngredientCompatibility() {
     setSearchInput("");
   };
 
+// Skincare Routine Step Order Definitions
+const ROUTINE_STEPS = [
+  {
+    step: 1,
+    name: "Cleanser / Face Wash",
+    type: "Cleanse",
+    keywords: ["face wash", "cleanser", "cleansing balm", "cleansing oil", "cleansing foam", "micellar", "facial wash", "face cleanser", "facial foam", "body wash", "wash"]
+  },
+  {
+    step: 2,
+    name: "Exfoliant / Mask",
+    type: "Exfoliate & Mask",
+    keywords: ["peeling solution", "peel", "clay mask", "face mask", "scrub", "exfoliating", "sheet mask", "mud mask"]
+  },
+  {
+    step: 3,
+    name: "Toner / Mist / Essence",
+    type: "Tone & Prep",
+    keywords: ["toner", "facial mist", "mist", "essence", "prep water", "toning water", "astringent", "lotion toner"]
+  },
+  {
+    step: 4,
+    name: "Serum / Ampoule / Treatment",
+    type: "Treat",
+    keywords: ["serum", "ampoule", "concentrate", "drops", "booster", "treatment serum", "acne spot", "spot gel"]
+  },
+  {
+    step: 5,
+    name: "Eye Care",
+    type: "Target",
+    keywords: ["eye cream", "under eye", "eye gel", "eye serum", "eye balm"]
+  },
+  {
+    step: 6,
+    name: "Moisturizer / Cream / Lotion",
+    type: "Moisturize & Hydrate",
+    keywords: ["moisturizer", "moisturiser", "face cream", "cream", "lotion", "gel cream", "day cream", "night cream", "sleeping mask", "body lotion", "hydra gel", "gel moisturizer"]
+  },
+  {
+    step: 7,
+    name: "Facial Oil",
+    type: "Nourish",
+    keywords: ["facial oil", "face oil", "beauty oil", "rosehip oil", "squalane oil", "argan oil"]
+  },
+  {
+    step: 8,
+    name: "Sunscreen / SPF",
+    type: "Protect (AM)",
+    keywords: ["sunscreen", "sun screen", "spf", "sunblock", "sun gel", "uv filter", "uv shield"]
+  }
+];
+
+const detectProductStep = (product) => {
+  if (!product) return null;
+  const name = (product.name || "").toLowerCase();
+  for (const s of ROUTINE_STEPS) {
+    if (s.keywords.some((kw) => name.includes(kw))) {
+      return s;
+    }
+  }
+  return null;
+};
+
   // --- ACTIONS: TAB 2 PRODUCTS ---
   const handleCheckProducts = async () => {
     if (!selectedProductA || !selectedProductB) return;
@@ -247,53 +497,77 @@ export default function IngredientCompatibility() {
       const rawA = selectedProductA.ingredients || [];
       const rawB = selectedProductB.ingredients || [];
 
+      // Determine Routine Application Sequence (Suggestion only, not a warning)
+      const stepA = detectProductStep(selectedProductA);
+      const stepB = detectProductStep(selectedProductB);
+      let routineSuggestion = null;
+
+      if (stepA && stepB && stepA.step !== stepB.step) {
+        if (stepB.step < stepA.step) {
+          routineSuggestion = {
+            isReverse: true,
+            stepA,
+            stepB,
+            title: "Application Sequence Suggestion",
+            message: `In a standard skincare routine, ${stepB.name} is used before ${stepA.name}. We suggest applying "${selectedProductB.name}" first in Step ${stepB.step}, followed by "${selectedProductA.name}" in Step ${stepA.step} for maximum absorption.`
+          };
+        } else {
+          routineSuggestion = {
+            isReverse: false,
+            stepA,
+            stepB,
+            title: "Optimal Routine Sequence",
+            message: `Optimal application sequence: ${stepA.name} in Step ${stepA.step} is applied before ${stepB.name} in Step ${stepB.step}.`
+          };
+        }
+      }
+
       if (!rawA.length || !rawB.length) {
         setProductResult({
           compatible: true,
-          verdict: "✅ Both products are compatible (no ingredient lists to compare)",
+          verdict: "Both products are compatible (no detailed ingredient lists available to cross-analyze).",
           conflicts: [],
-          synergies: []
+          synergies: [],
+          routineSuggestion
         });
         return;
       }
 
-      const cleanIngredientName = (name) => {
-        if (typeof name !== "string") return "";
-        let clean = name.replace(/\([^)]*\)/g, ""); // Remove text inside parentheses
-        clean = clean.replace(/[+*?^${}[\]\\]/g, ""); // Remove regex special characters
-        return clean.trim();
+      // Robust extraction of base ingredients & composite terms
+      const extractIngredients = (rawList) => {
+        const extracted = [];
+        rawList.forEach((raw) => {
+          if (typeof raw !== "string") return;
+          // Clean parens and extra spaces
+          let baseClean = raw.replace(/\([^)]*\)/g, " ").replace(/[+*?^$\{}[\]\\]/g, " ").replace(/\s+/g, " ").trim();
+          if (baseClean.length >= 2) extracted.push(baseClean);
+
+          // Split composite terms on +, &, and, commas, slashes
+          const parts = raw.replace(/\([^)]*\)/g, " ").split(/[\+&,]|\s+and\s+|\//i);
+          parts.forEach((part) => {
+            let stripped = part.replace(/^\s*\d+(?:\.\d+)?%\s*/, "").replace(/[+*?^$\{}[\]\\]/g, " ").replace(/\s+/g, " ").trim();
+            if (stripped.length >= 2 && !extracted.includes(stripped)) {
+              extracted.push(stripped);
+            }
+          });
+        });
+        return [...new Set(extracted)];
       };
 
-      const cleanToRawMap = {};
-      const cleanA = [];
-      const cleanB = [];
-
-      rawA.forEach(ing => {
-        const cleaned = cleanIngredientName(ing);
-        if (cleaned) {
-          cleanA.push(cleaned);
-          cleanToRawMap[cleaned.toLowerCase()] = ing;
-        }
-      });
-
-      rawB.forEach(ing => {
-        const cleaned = cleanIngredientName(ing);
-        if (cleaned) {
-          cleanB.push(cleaned);
-          cleanToRawMap[cleaned.toLowerCase()] = ing;
-        }
-      });
+      const cleanA = extractIngredients(rawA);
+      const cleanB = extractIngredients(rawB);
 
       // Escape ingredients to prevent RegExp syntax crash on backend
-      const escapeRegex = (str) => str.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+      const escapeRegex = (str) => str.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
       const allCleanIngredients = [...new Set([...cleanA, ...cleanB])].map(escapeRegex);
 
       if (allCleanIngredients.length < 2) {
         setProductResult({
           compatible: true,
-          verdict: "✅ Both products are compatible (insufficient active ingredients to compare)",
+          verdict: "Both products are compatible (insufficient active ingredients to compare).",
           conflicts: [],
-          synergies: []
+          synergies: [],
+          routineSuggestion
         });
         return;
       }
@@ -302,90 +576,88 @@ export default function IngredientCompatibility() {
 
       if (res.data.success) {
         const rawConflicts = res.data.conflicts || [];
-        const conflicts = [];
+        const rawSynergies = res.data.synergies || [];
 
-        rawConflicts.forEach(c => {
-          const name1 = c.ingredient1.toLowerCase();
-          const name2 = c.ingredient2.toLowerCase();
-
-          // Check if one ingredient is in A and the other in B
-          const is1InA = cleanA.some(ing => ing.toLowerCase() === name1);
-          const is2InB = cleanB.some(ing => ing.toLowerCase() === name2);
-          const is2InA = cleanA.some(ing => ing.toLowerCase() === name2);
-          const is1InB = cleanB.some(ing => ing.toLowerCase() === name1);
-
-          if ((is1InA && is2InB) || (is2InA && is1InB)) {
-            const matchedIngA = is1InA
-              ? (cleanToRawMap[name1] || c.ingredient1)
-              : (cleanToRawMap[name2] || c.ingredient2);
-            const matchedIngB = is2InB
-              ? (cleanToRawMap[name2] || c.ingredient2)
-              : (cleanToRawMap[name1] || c.ingredient1);
-
-            conflicts.push({
-              pair: c.pair,
-              ingredientA: matchedIngA,
-              ingredientB: matchedIngB,
-              reason: c.reason,
-              severity: c.severity,
-              advice: c.severity === "high"
-                ? "❌ Do not use together in the same routine layer"
-                : c.severity === "medium"
-                  ? "⚠️ Use at different times of day (e.g. AM and PM)"
-                  : "ℹ️ Use with caution if your skin is sensitive"
-            });
-          }
-        });
-
-        const synergies = [];
-        const STANDARD_SYNERGIES = [
-          { pair: ["vitamin c", "sunscreen_filter"], benefit: "Vitamin C boosts UV protection from sunscreen filters by neutralizing free radicals." },
-          { pair: ["hyaluronic", "ceramide"], benefit: "Hyaluronic Acid hydrates while Ceramides lock in moisture to strengthen skin barrier." },
-          { pair: ["niacinamide", "salicylic"], benefit: "Salicylic Acid purifies pores while Niacinamide calms redness and irritation." },
-          { pair: ["retinol", "hyaluronic"], benefit: "Hyaluronic Acid offsets potential dryness and peeling caused by Retinol." }
-        ];
-
-        const matchTerm = (list, term) => {
-          const sunscreenFilters = ["sunscreen", "zinc oxide", "titanium dioxide", "avobenzone", "octocrylene", "homosalate", "octisalate", "octinoxate", "mexoryl", "tinosorb"];
-          if (term === "sunscreen_filter") {
-            return list.some(ing => sunscreenFilters.some(filter => ing.toLowerCase().includes(filter)));
-          }
-          return list.some(ing => ing.toLowerCase().includes(term));
+        const isIngredientInList = (ingName, list) => {
+          if (!ingName) return false;
+          const target = ingName.toLowerCase().replace(/\s+/g, " ").trim();
+          return list.some((item) => {
+            const it = (item || "").toLowerCase().replace(/\s+/g, " ").trim();
+            if (!it) return false;
+            return it === target || it.includes(target) || target.includes(it);
+          });
         };
 
-        STANDARD_SYNERGIES.forEach(syn => {
-          const t1 = syn.pair[0].toLowerCase();
-          const t2 = syn.pair[1].toLowerCase();
+        const conflicts = [];
+        const seenPairs = new Set();
 
-          const hasT1InA = matchTerm(cleanA, t1);
-          const hasT2InB = matchTerm(cleanB, t2);
-          const hasT2InA = matchTerm(cleanA, t2);
-          const hasT1InB = matchTerm(cleanB, t1);
+        rawConflicts.forEach((c) => {
+          const is1InA = isIngredientInList(c.ingredient1, cleanA);
+          const is2InB = isIngredientInList(c.ingredient2, cleanB);
+          const is2InA = isIngredientInList(c.ingredient2, cleanA);
+          const is1InB = isIngredientInList(c.ingredient1, cleanB);
 
-          if ((hasT1InA && hasT2InB) || (hasT2InA && hasT1InB)) {
-            synergies.push({
-              pair: syn.pair.join(" + "),
-              benefit: syn.benefit
-            });
+          if ((is1InA && is2InB) || (is2InA && is1InB)) {
+            const ingA = is1InA ? c.ingredient1 : c.ingredient2;
+            const ingB = is2InB ? c.ingredient2 : c.ingredient1;
+            const pairKey = [ingA.toLowerCase(), ingB.toLowerCase()].sort().join("|");
+
+            if (!seenPairs.has(pairKey)) {
+              seenPairs.add(pairKey);
+              conflicts.push({
+                pair: c.pair || `${ingA} + ${ingB}`,
+                ingredientA: ingA,
+                ingredientB: ingB,
+                reason: c.reason,
+                severity: c.severity || "medium",
+                advice: c.advice || (c.severity === "high"
+                  ? "❌ Do not use together in the same routine layer"
+                  : "⚠️ Use on alternate days or split into AM and PM routines")
+              });
+            }
           }
         });
 
-        const highConflicts = conflicts.filter(c => c.severity === "high");
-        const compatible = highConflicts.length === 0;
+        // Determine synergies between A and B
+        const synergies = [];
+        const seenSynPairs = new Set();
 
-        let verdict = "✅ Both products are fully compatible!";
-        if (highConflicts.length > 0) {
-          verdict = `❌ Conflict Warning: ${highConflicts.length} active conflict(s) detected. Avoid layering them together.`;
-        } else if (conflicts.length > 0) {
-          verdict = `⚠️ Warning: ${conflicts.length} caution compatibility warning(s) found. Try alternating days.`;
-        }
+        rawSynergies.forEach((s) => {
+          const is1InA = isIngredientInList(s.ingredient1, cleanA);
+          const is2InB = isIngredientInList(s.ingredient2, cleanB);
+          const is2InA = isIngredientInList(s.ingredient2, cleanA);
+          const is1InB = isIngredientInList(s.ingredient1, cleanB);
+
+          if ((is1InA && is2InB) || (is2InA && is1InB)) {
+            const ingA = is1InA ? s.ingredient1 : s.ingredient2;
+            const ingB = is2InB ? s.ingredient2 : s.ingredient1;
+            const pairKey = [ingA.toLowerCase(), ingB.toLowerCase()].sort().join("|");
+
+            if (!seenSynPairs.has(pairKey)) {
+              seenSynPairs.add(pairKey);
+              synergies.push({
+                pair: s.pair || `${ingA} + ${ingB}`,
+                ingredientA: ingA,
+                ingredientB: ingB,
+                benefit: s.benefit
+              });
+            }
+          }
+        });
+
+        const isCompatible = conflicts.length === 0;
 
         setProductResult({
-          compatible,
-          verdict,
+          compatible: isCompatible,
+          verdict: isCompatible
+            ? "Both products are fully compatible! No active chemical conflicts detected between these formulations."
+            : `⚠️ Layering Incompatibility: Detected ${conflicts.length} active chemical conflict${conflicts.length > 1 ? 's' : ''} that can trigger irritation or deactivate key actives.`,
           conflicts,
-          synergies
+          synergies,
+          routineSuggestion
         });
+      } else {
+        alert("Failed to analyze product compatibility: " + (res.data.message || "Unknown error"));
       }
     } catch (err) {
       console.error("Error checking product layering compatibility:", err);
@@ -395,7 +667,7 @@ export default function IngredientCompatibility() {
     }
   };
 
-  const handleResetProducts = () => {
+    const handleResetProducts = () => {
     setSelectedProductA(null);
     setSelectedProductB(null);
     setProductASearch("");
@@ -814,28 +1086,100 @@ export default function IngredientCompatibility() {
             <div>
               {/* Popular Products Scroll Tray */}
               <div className="mb-4 text-start">
-                <label className="fw-bold text-dark mb-1 small d-flex align-items-center gap-2">
-                  <span>💡 Quick Select Popular Products</span>
-                </label>
+                <div className="d-flex align-items-center justify-content-between mb-1 flex-wrap gap-2">
+                  <label className="fw-bold text-dark small d-flex align-items-center gap-2 m-0">
+                    <span>💡 Quick Select Popular Products</span>
+                  </label>
+                  {carouselLoadingMore ? (
+                    <span className="ic-carousel-badge ic-carousel-badge-loading">
+                      <span className="ic-pulse-dot"></span>
+                      Loading more formulas...
+                    </span>
+                  ) : carouselHasMore ? (
+                    <span className="ic-carousel-badge ic-carousel-badge-hint">
+                      Scroll for more →
+                    </span>
+                  ) : catalogProducts.length > 0 ? (
+                    <span className="ic-carousel-badge ic-carousel-badge-complete">
+                      ✓ All formulas loaded ({catalogProducts.length})
+                    </span>
+                  ) : null}
+                </div>
                 <p className="text-muted small mb-3" style={{ fontSize: "12px" }}>
-                  Tap a bestseller to assign it to Product A or Product B slot instantly without searching.
+                  Tap any product to automatically assign it to available Slot A or Slot B. If both are full, select which slot to replace.
                 </p>
 
                 {productsLoading && catalogProducts.length === 0 ? (
-                  <div className="text-center py-3">
-                    <span className="spinner-border spinner-border-sm text-dark me-2"></span>
-                    <span className="small text-muted">Loading bestsellers...</span>
+                  <div className="popular-products-scroll-wrapper">
+                    <div className="d-flex gap-3 overflow-hidden pb-2 pt-2">
+                      {[1, 2, 3, 4, 5, 6].map((n) => (
+                        <div key={n} className="popular-product-mini-card ic-skeleton-card">
+                          <div className="ic-mini-card-image-box ic-skeleton-box">
+                            <div className="ic-skeleton-shimmer"></div>
+                          </div>
+                          <div className="ic-skeleton-line ic-skeleton-title-line">
+                            <div className="ic-skeleton-shimmer"></div>
+                          </div>
+                          <div className="ic-skeleton-line ic-skeleton-brand-line">
+                            <div className="ic-skeleton-shimmer"></div>
+                          </div>
+                          <div className="ic-mini-slot-tray mt-auto">
+                            <div className="ic-skeleton-btn">
+                              <div className="ic-skeleton-shimmer"></div>
+                            </div>
+                            <div className="ic-skeleton-btn">
+                              <div className="ic-skeleton-shimmer"></div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 ) : (
                   <div className="popular-products-scroll-wrapper">
-                    <div className="d-flex gap-3 overflow-auto pb-2 pt-2 scrollbar-thin" style={{ scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}>
+                    <div
+                      className="d-flex gap-3 overflow-auto pb-2 pt-2 scrollbar-thin"
+                      style={{ scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}
+                      onScroll={handleCarouselScroll}
+                    >
                       {catalogProducts.map((p) => {
                         const imgUrl = p.variants?.[0]?.images?.[0] || p.image || "/placeholder.png";
+                        const isSelectedA = selectedProductA?._id === p._id;
+                        const isSelectedB = selectedProductB?._id === p._id;
+                        const isSelected = isSelectedA || isSelectedB;
+
                         return (
                           <div
                             key={p._id || p.id}
-                            className="popular-product-mini-card"
+                            className={`popular-product-mini-card ${isSelectedA ? "ic-card-selected-a" : ""} ${isSelectedB ? "ic-card-selected-b" : ""}`}
+                            onClick={() => handleProductCardClick(p)}
+                            role="button"
+                            tabIndex={0}
+                            title={
+                              isSelectedA
+                                ? `Slot A: ${p.name} (Click to remove)`
+                                : isSelectedB
+                                ? `Slot B: ${p.name} (Click to remove)`
+                                : `Click to add ${p.name} to comparison`
+                            }
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                handleProductCardClick(p);
+                              }
+                            }}
                           >
+                            {/* Selected Slot Badge indicator */}
+                            {isSelectedA && (
+                              <span className="ic-card-slot-badge ic-badge-slot-a">
+                                Slot A ✓
+                              </span>
+                            )}
+                            {isSelectedB && (
+                              <span className="ic-card-slot-badge ic-badge-slot-b">
+                                Slot B ✓
+                              </span>
+                            )}
+
                             <div className="ic-mini-card-image-box">
                               <img
                                 src={imgUrl}
@@ -849,33 +1193,73 @@ export default function IngredientCompatibility() {
                             <div className="ic-mini-card-brand">
                               {typeof p.brand === "string" ? p.brand : (p.brand?.name || "Joyory")}
                             </div>
-                            <div className="ic-mini-slot-tray">
-                              <button
-                                type="button"
-                                className="ic-mini-slot-btn"
-                                onClick={() => {
-                                  setSelectedProductA(p);
-                                  setProductResult(null);
-                                }}
-                                disabled={selectedProductB?._id === p._id}
-                              >
-                                + Slot A
-                              </button>
-                              <button
-                                type="button"
-                                className="ic-mini-slot-btn"
-                                onClick={() => {
-                                  setSelectedProductB(p);
-                                  setProductResult(null);
-                                }}
-                                disabled={selectedProductA?._id === p._id}
-                              >
-                                + Slot B
-                              </button>
+                            <div className="ic-mini-card-action-hint">
+                              {isSelected ? "Tap to remove" : "+ Tap to compare"}
                             </div>
                           </div>
                         );
                       })}
+
+                      {/* Loading More State: Shimmer Skeleton Card + Animated Loader Card */}
+                      {carouselLoadingMore && (
+                        <>
+                          <div className="popular-product-mini-card ic-skeleton-card">
+                            <div className="ic-mini-card-image-box ic-skeleton-box">
+                              <div className="ic-skeleton-shimmer"></div>
+                            </div>
+                            <div className="ic-skeleton-line ic-skeleton-title-line">
+                              <div className="ic-skeleton-shimmer"></div>
+                            </div>
+                            <div className="ic-skeleton-line ic-skeleton-brand-line">
+                              <div className="ic-skeleton-shimmer"></div>
+                            </div>
+                            <div className="ic-mini-slot-tray mt-auto">
+                              <div className="ic-skeleton-btn">
+                                <div className="ic-skeleton-shimmer"></div>
+                              </div>
+                              <div className="ic-skeleton-btn">
+                                <div className="ic-skeleton-shimmer"></div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="popular-product-mini-card ic-carousel-loading-card">
+                            <div className="ic-carousel-loader-halo">
+                              <div className="ic-carousel-loader-spinner"></div>
+                            </div>
+                            <div className="ic-carousel-loading-title">Loading...</div>
+                            <div className="ic-carousel-loading-subtitle">Fetching formulas</div>
+                          </div>
+                        </>
+                      )}
+
+                      {/* Interactive Load More Card (When not loading but more items exist) */}
+                      {!carouselLoadingMore && carouselHasMore && (
+                        <div
+                          className="popular-product-mini-card ic-carousel-load-more-card"
+                          onClick={() => {
+                            if (!carouselLoadingMore && carouselHasMore && carouselCursor) {
+                              fetchCarouselProducts(carouselCursor);
+                            }
+                          }}
+                          role="button"
+                          tabIndex={0}
+                          title="Click to load more skincare formulas"
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              if (!carouselLoadingMore && carouselHasMore && carouselCursor) {
+                                fetchCarouselProducts(carouselCursor);
+                              }
+                            }
+                          }}
+                        >
+                          <div className="ic-load-more-icon-circle">
+                            <FaPlus className="ic-load-more-icon" />
+                          </div>
+                          <div className="ic-load-more-title">Load More</div>
+                          <div className="ic-load-more-subtitle">Tap or scroll</div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -1098,6 +1482,56 @@ export default function IngredientCompatibility() {
                   </div>
 
                   {/* Verdict Panel */}
+                  {/* Routine Application Sequence Suggestion (Senior's Feature) */}
+                  {productResult.routineSuggestion && (
+                    <div
+                      className={`ic-routine-order-box mb-4 ${
+                        productResult.routineSuggestion.isReverse
+                          ? "ic-routine-order-suggest"
+                          : "ic-routine-order-optimal"
+                      }`}
+                    >
+                      <div className="d-flex align-items-start gap-3">
+                        <div className="ic-routine-order-icon-badge">
+                          {productResult.routineSuggestion.isReverse ? "💡" : "✓"}
+                        </div>
+                        <div className="flex-grow-1">
+                          <div className="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-1">
+                            <strong className="ic-routine-order-title">
+                              {productResult.routineSuggestion.title}
+                            </strong>
+                            <span className="ic-routine-order-tag">
+                              {productResult.routineSuggestion.isReverse
+                                ? `Suggested: ${productResult.routineSuggestion.stepB.name} → ${productResult.routineSuggestion.stepA.name}`
+                                : `Optimal: ${productResult.routineSuggestion.stepA.name} → ${productResult.routineSuggestion.stepB.name}`}
+                            </span>
+                          </div>
+                          <p className="ic-routine-order-text mb-2">
+                            {productResult.routineSuggestion.message}
+                          </p>
+                          {productResult.routineSuggestion.isReverse && (
+                            <button
+                              type="button"
+                              className="ic-routine-swap-action-btn"
+                              onClick={() => {
+                                const temp = selectedProductA;
+                                setSelectedProductA(selectedProductB);
+                                setSelectedProductB(temp);
+                                setProductResult(null);
+                                showSlotNotification(
+                                  `Swapped slots! "${selectedProductB.name}" is now in Slot A.`,
+                                  "info"
+                                );
+                              }}
+                            >
+                              ⇄ Swap Slots (Put ${productResult.routineSuggestion.stepB.name} in Slot A)
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {productResult.compatible ? (
                     <div className="ic-alert ic-alert-success mb-4">
                       <FaCheckCircle size={28} className="flex-shrink-0 mt-1" />
@@ -1373,6 +1807,132 @@ export default function IngredientCompatibility() {
           )}
         </div>
       </div>
+
+      {/* Both Slots Occupied: Graceful Resolution Modal */}
+      {slotConflictProduct && (
+        <div className="ic-slot-modal-backdrop" onClick={() => setSlotConflictProduct(null)}>
+          <div
+            className="ic-slot-modal"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="ic-slot-modal-title"
+          >
+            <div className="ic-slot-modal-header">
+              <span className="ic-slot-modal-badge">Comparison Slots Full</span>
+              <button
+                type="button"
+                className="ic-slot-modal-close"
+                onClick={() => setSlotConflictProduct(null)}
+                aria-label="Close"
+              >
+                &times;
+              </button>
+            </div>
+
+            <div className="ic-slot-modal-body">
+              <h4 id="ic-slot-modal-title" className="ic-slot-modal-title">
+                Both Slots are Currently Occupied
+              </h4>
+              <p className="ic-slot-modal-description">
+                You selected <strong>"{slotConflictProduct.name}"</strong>, but both Slot A and Slot B already have products assigned. Which slot would you like to replace?
+              </p>
+
+              <div className="ic-slot-replace-options">
+                {/* Option: Replace Slot A */}
+                <div
+                  className="ic-slot-replace-card"
+                  onClick={() => {
+                    setSelectedProductA(slotConflictProduct);
+                    setProductResult(null);
+                    setSlotConflictProduct(null);
+                    showSlotNotification(`Replaced Slot A with "${slotConflictProduct.name}".`, "success");
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      setSelectedProductA(slotConflictProduct);
+                      setProductResult(null);
+                      setSlotConflictProduct(null);
+                      showSlotNotification(`Replaced Slot A with "${slotConflictProduct.name}".`, "success");
+                    }
+                  }}
+                >
+                  <span className="ic-slot-pill ic-slot-pill-a">Slot A</span>
+                  <div className="ic-slot-replace-info">
+                    <span className="ic-slot-current-label">Currently in slot:</span>
+                    <strong className="ic-slot-current-name">{selectedProductA?.name}</strong>
+                  </div>
+                  <button type="button" className="ic-slot-action-btn">
+                    Replace Slot A →
+                  </button>
+                </div>
+
+                {/* Option: Replace Slot B */}
+                <div
+                  className="ic-slot-replace-card"
+                  onClick={() => {
+                    setSelectedProductB(slotConflictProduct);
+                    setProductResult(null);
+                    setSlotConflictProduct(null);
+                    showSlotNotification(`Replaced Slot B with "${slotConflictProduct.name}".`, "success");
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      setSelectedProductB(slotConflictProduct);
+                      setProductResult(null);
+                      setSlotConflictProduct(null);
+                      showSlotNotification(`Replaced Slot B with "${slotConflictProduct.name}".`, "success");
+                    }
+                  }}
+                >
+                  <span className="ic-slot-pill ic-slot-pill-b">Slot B</span>
+                  <div className="ic-slot-replace-info">
+                    <span className="ic-slot-current-label">Currently in slot:</span>
+                    <strong className="ic-slot-current-name">{selectedProductB?.name}</strong>
+                  </div>
+                  <button type="button" className="ic-slot-action-btn">
+                    Replace Slot B →
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="ic-slot-modal-footer">
+              <button
+                type="button"
+                className="ic-slot-cancel-btn"
+                onClick={() => setSlotConflictProduct(null)}
+              >
+                Keep Current Selection
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Feedback Toast */}
+      {slotNotification && (
+        <div className={`ic-floating-toast ic-toast-${slotNotification.type}`}>
+          <span className="ic-toast-icon">
+            {slotNotification.type === "success" && "✓"}
+            {slotNotification.type === "info" && "ℹ"}
+            {slotNotification.type === "warning" && "⚠️"}
+          </span>
+          <span className="ic-toast-text">{slotNotification.message}</span>
+          <button
+            type="button"
+            className="ic-toast-close"
+            onClick={() => setSlotNotification(null)}
+            aria-label="Dismiss notification"
+          >
+            &times;
+          </button>
+        </div>
+      )}
 
       <IngredientDetailsDrawer
         isOpen={isDrawerOpen}
