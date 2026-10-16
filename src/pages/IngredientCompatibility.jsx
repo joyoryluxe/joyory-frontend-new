@@ -111,6 +111,23 @@ export default function IngredientCompatibility() {
   const [productASearchLoading, setProductASearchLoading] = useState(false);
   const [productBSearchLoading, setProductBSearchLoading] = useState(false);
 
+  // --- SMART AUTO-SLOT ASSIGNMENT & CONFLICT HANDLING ---
+  const [slotNotification, setSlotNotification] = useState(null);
+  const [slotConflictProduct, setSlotConflictProduct] = useState(null);
+
+  const showSlotNotification = (message, type = "info") => {
+    setSlotNotification({ message, type, id: Date.now() });
+  };
+
+  useEffect(() => {
+    if (slotNotification) {
+      const timer = setTimeout(() => {
+        setSlotNotification(null);
+      }, 3500);
+      return () => clearTimeout(timer);
+    }
+  }, [slotNotification]);
+
   // --- TAB 3: OCR RAW TEXT STATE ---
   const [ocrText, setOcrText] = useState("");
   const [ocrLoading, setOcrLoading] = useState(false);
@@ -218,6 +235,52 @@ export default function IngredientCompatibility() {
       }
     }
   }, [activeTab, catalogProducts.length]);
+
+  // Handle tap / click on popular product card to automatically assign to available slot
+  const handleProductCardClick = (product) => {
+    // 1. If product is already in Slot A -> toggle off / remove
+    if (selectedProductA?._id === product._id) {
+      setSelectedProductA(null);
+      setProductResult(null);
+      showSlotNotification(`Removed "${product.name}" from Slot A.`, "info");
+      return;
+    }
+
+    // 2. If product is already in Slot B -> toggle off / remove
+    if (selectedProductB?._id === product._id) {
+      setSelectedProductB(null);
+      setProductResult(null);
+      showSlotNotification(`Removed "${product.name}" from Slot B.`, "info");
+      return;
+    }
+
+    // 3. Both slots are available -> assign to Slot A
+    if (!selectedProductA && !selectedProductB) {
+      setSelectedProductA(product);
+      setProductResult(null);
+      showSlotNotification(`Added "${product.name}" to Slot A. Select a second product for Slot B!`, "success");
+      return;
+    }
+
+    // 4. Slot A is occupied, Slot B is available -> assign to Slot B
+    if (selectedProductA && !selectedProductB) {
+      setSelectedProductB(product);
+      setProductResult(null);
+      showSlotNotification(`Added "${product.name}" to Slot B. Ready to analyze!`, "success");
+      return;
+    }
+
+    // 5. Slot B is occupied, Slot A is available -> assign to Slot A
+    if (!selectedProductA && selectedProductB) {
+      setSelectedProductA(product);
+      setProductResult(null);
+      showSlotNotification(`Added "${product.name}" to Slot A. Ready to analyze!`, "success");
+      return;
+    }
+
+    // 6. Both slots are full -> open replacement dialog for graceful handling
+    setSlotConflictProduct(product);
+  };
 
   // Horizontal scroll threshold trigger for infinite carousel
   const handleCarouselScroll = (e) => {
@@ -958,7 +1021,7 @@ export default function IngredientCompatibility() {
                   ) : null}
                 </div>
                 <p className="text-muted small mb-3" style={{ fontSize: "12px" }}>
-                  Tap a bestseller to assign it to Product A or Product B slot instantly without searching.
+                  Tap any product to automatically assign it to available Slot A or Slot B. If both are full, select which slot to replace.
                 </p>
 
                 {productsLoading && catalogProducts.length === 0 ? (
@@ -996,11 +1059,42 @@ export default function IngredientCompatibility() {
                     >
                       {catalogProducts.map((p) => {
                         const imgUrl = p.variants?.[0]?.images?.[0] || p.image || "/placeholder.png";
+                        const isSelectedA = selectedProductA?._id === p._id;
+                        const isSelectedB = selectedProductB?._id === p._id;
+                        const isSelected = isSelectedA || isSelectedB;
+
                         return (
                           <div
                             key={p._id || p.id}
-                            className="popular-product-mini-card"
+                            className={`popular-product-mini-card ${isSelectedA ? "ic-card-selected-a" : ""} ${isSelectedB ? "ic-card-selected-b" : ""}`}
+                            onClick={() => handleProductCardClick(p)}
+                            role="button"
+                            tabIndex={0}
+                            title={
+                              isSelectedA
+                                ? `Slot A: ${p.name} (Click to remove)`
+                                : isSelectedB
+                                ? `Slot B: ${p.name} (Click to remove)`
+                                : `Click to add ${p.name} to comparison`
+                            }
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                handleProductCardClick(p);
+                              }
+                            }}
                           >
+                            {/* Selected Slot Badge indicator */}
+                            {isSelectedA && (
+                              <span className="ic-card-slot-badge ic-badge-slot-a">
+                                Slot A ✓
+                              </span>
+                            )}
+                            {isSelectedB && (
+                              <span className="ic-card-slot-badge ic-badge-slot-b">
+                                Slot B ✓
+                              </span>
+                            )}
+
                             <div className="ic-mini-card-image-box">
                               <img
                                 src={imgUrl}
@@ -1014,29 +1108,8 @@ export default function IngredientCompatibility() {
                             <div className="ic-mini-card-brand">
                               {typeof p.brand === "string" ? p.brand : (p.brand?.name || "Joyory")}
                             </div>
-                            <div className="ic-mini-slot-tray">
-                              <button
-                                type="button"
-                                className="ic-mini-slot-btn"
-                                onClick={() => {
-                                  setSelectedProductA(p);
-                                  setProductResult(null);
-                                }}
-                                disabled={selectedProductB?._id === p._id}
-                              >
-                                + Slot A
-                              </button>
-                              <button
-                                type="button"
-                                className="ic-mini-slot-btn"
-                                onClick={() => {
-                                  setSelectedProductB(p);
-                                  setProductResult(null);
-                                }}
-                                disabled={selectedProductA?._id === p._id}
-                              >
-                                + Slot B
-                              </button>
+                            <div className="ic-mini-card-action-hint">
+                              {isSelected ? "Tap to remove" : "+ Tap to compare"}
                             </div>
                           </div>
                         );
@@ -1599,6 +1672,132 @@ export default function IngredientCompatibility() {
           )}
         </div>
       </div>
+
+      {/* Both Slots Occupied: Graceful Resolution Modal */}
+      {slotConflictProduct && (
+        <div className="ic-slot-modal-backdrop" onClick={() => setSlotConflictProduct(null)}>
+          <div
+            className="ic-slot-modal"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="ic-slot-modal-title"
+          >
+            <div className="ic-slot-modal-header">
+              <span className="ic-slot-modal-badge">Comparison Slots Full</span>
+              <button
+                type="button"
+                className="ic-slot-modal-close"
+                onClick={() => setSlotConflictProduct(null)}
+                aria-label="Close"
+              >
+                &times;
+              </button>
+            </div>
+
+            <div className="ic-slot-modal-body">
+              <h4 id="ic-slot-modal-title" className="ic-slot-modal-title">
+                Both Slots are Currently Occupied
+              </h4>
+              <p className="ic-slot-modal-description">
+                You selected <strong>"{slotConflictProduct.name}"</strong>, but both Slot A and Slot B already have products assigned. Which slot would you like to replace?
+              </p>
+
+              <div className="ic-slot-replace-options">
+                {/* Option: Replace Slot A */}
+                <div
+                  className="ic-slot-replace-card"
+                  onClick={() => {
+                    setSelectedProductA(slotConflictProduct);
+                    setProductResult(null);
+                    setSlotConflictProduct(null);
+                    showSlotNotification(`Replaced Slot A with "${slotConflictProduct.name}".`, "success");
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      setSelectedProductA(slotConflictProduct);
+                      setProductResult(null);
+                      setSlotConflictProduct(null);
+                      showSlotNotification(`Replaced Slot A with "${slotConflictProduct.name}".`, "success");
+                    }
+                  }}
+                >
+                  <span className="ic-slot-pill ic-slot-pill-a">Slot A</span>
+                  <div className="ic-slot-replace-info">
+                    <span className="ic-slot-current-label">Currently in slot:</span>
+                    <strong className="ic-slot-current-name">{selectedProductA?.name}</strong>
+                  </div>
+                  <button type="button" className="ic-slot-action-btn">
+                    Replace Slot A →
+                  </button>
+                </div>
+
+                {/* Option: Replace Slot B */}
+                <div
+                  className="ic-slot-replace-card"
+                  onClick={() => {
+                    setSelectedProductB(slotConflictProduct);
+                    setProductResult(null);
+                    setSlotConflictProduct(null);
+                    showSlotNotification(`Replaced Slot B with "${slotConflictProduct.name}".`, "success");
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      setSelectedProductB(slotConflictProduct);
+                      setProductResult(null);
+                      setSlotConflictProduct(null);
+                      showSlotNotification(`Replaced Slot B with "${slotConflictProduct.name}".`, "success");
+                    }
+                  }}
+                >
+                  <span className="ic-slot-pill ic-slot-pill-b">Slot B</span>
+                  <div className="ic-slot-replace-info">
+                    <span className="ic-slot-current-label">Currently in slot:</span>
+                    <strong className="ic-slot-current-name">{selectedProductB?.name}</strong>
+                  </div>
+                  <button type="button" className="ic-slot-action-btn">
+                    Replace Slot B →
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="ic-slot-modal-footer">
+              <button
+                type="button"
+                className="ic-slot-cancel-btn"
+                onClick={() => setSlotConflictProduct(null)}
+              >
+                Keep Current Selection
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Feedback Toast */}
+      {slotNotification && (
+        <div className={`ic-floating-toast ic-toast-${slotNotification.type}`}>
+          <span className="ic-toast-icon">
+            {slotNotification.type === "success" && "✓"}
+            {slotNotification.type === "info" && "ℹ"}
+            {slotNotification.type === "warning" && "⚠️"}
+          </span>
+          <span className="ic-toast-text">{slotNotification.message}</span>
+          <button
+            type="button"
+            className="ic-toast-close"
+            onClick={() => setSlotNotification(null)}
+            aria-label="Dismiss notification"
+          >
+            &times;
+          </button>
+        </div>
+      )}
 
       <IngredientDetailsDrawer
         isOpen={isDrawerOpen}
