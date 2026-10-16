@@ -1792,3 +1792,86 @@ button.ic-decoded-badge:focus-visible {
   background: #f1f5f9;
   color: var(--joyory-black);
 }
+
+
+/* =========================================================================
+   SKINCARE APPLICATION SEQUENCE / ROUTINE SUGGESTION BOX
+   ========================================================================= */
+
+.ic-routine-order-box {
+  border-radius: 16px;
+  padding: 16px 20px;
+  text-align: left;
+  transition: all 0.25s ease;
+}
+
+.ic-routine-order-suggest {
+  background: #f0f7ff;
+  border: 1px solid #bae6fd;
+}
+
+.ic-routine-order-optimal {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+}
+
+.ic-routine-order-icon-badge {
+  font-size: 20px;
+  line-height: 1;
+  padding: 8px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.ic-routine-order-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--joyory-black);
+  letter-spacing: 0.2px;
+}
+
+.ic-routine-order-tag {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: rgba(0, 119, 182, 0.1);
+  color: #0077b6;
+  letter-spacing: 0.2px;
+}
+
+.ic-routine-order-optimal .ic-routine-order-tag {
+  background: rgba(34, 197, 94, 0.15);
+  color: #15803d;
+}
+
+.ic-routine-order-text {
+  font-size: 12.5px;
+  color: #475569;
+  line-height: 1.5;
+}
+
+.ic-routine-swap-action-btn {
+  background: #0077b6;
+  color: #ffffff;
+  border: none;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.ic-routine-swap-action-btn:hover {
+  background: #023e8a;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 119, 182, 0.2);
+}

@@ -426,6 +426,69 @@ export default function IngredientCompatibility() {
     setSearchInput("");
   };
 
+// Skincare Routine Step Order Definitions
+const ROUTINE_STEPS = [
+  {
+    step: 1,
+    name: "Cleanser / Face Wash",
+    type: "Cleanse",
+    keywords: ["face wash", "cleanser", "cleansing balm", "cleansing oil", "cleansing foam", "micellar", "facial wash", "face cleanser", "facial foam", "body wash", "wash"]
+  },
+  {
+    step: 2,
+    name: "Exfoliant / Mask",
+    type: "Exfoliate & Mask",
+    keywords: ["peeling solution", "peel", "clay mask", "face mask", "scrub", "exfoliating", "sheet mask", "mud mask"]
+  },
+  {
+    step: 3,
+    name: "Toner / Mist / Essence",
+    type: "Tone & Prep",
+    keywords: ["toner", "facial mist", "mist", "essence", "prep water", "toning water", "astringent", "lotion toner"]
+  },
+  {
+    step: 4,
+    name: "Serum / Ampoule / Treatment",
+    type: "Treat",
+    keywords: ["serum", "ampoule", "concentrate", "drops", "booster", "treatment serum", "acne spot", "spot gel"]
+  },
+  {
+    step: 5,
+    name: "Eye Care",
+    type: "Target",
+    keywords: ["eye cream", "under eye", "eye gel", "eye serum", "eye balm"]
+  },
+  {
+    step: 6,
+    name: "Moisturizer / Cream / Lotion",
+    type: "Moisturize & Hydrate",
+    keywords: ["moisturizer", "moisturiser", "face cream", "cream", "lotion", "gel cream", "day cream", "night cream", "sleeping mask", "body lotion", "hydra gel", "gel moisturizer"]
+  },
+  {
+    step: 7,
+    name: "Facial Oil",
+    type: "Nourish",
+    keywords: ["facial oil", "face oil", "beauty oil", "rosehip oil", "squalane oil", "argan oil"]
+  },
+  {
+    step: 8,
+    name: "Sunscreen / SPF",
+    type: "Protect (AM)",
+    keywords: ["sunscreen", "sun screen", "spf", "sunblock", "sun gel", "uv filter", "uv shield"]
+  }
+];
+
+const detectProductStep = (product) => {
+  if (!product) return null;
+  const name = (product.name || "").toLowerCase();
+  for (const s of ROUTINE_STEPS) {
+    if (s.keywords.some((kw) => name.includes(kw))) {
+      return s;
+    }
+  }
+  return null;
+};
+
   // --- ACTIONS: TAB 2 PRODUCTS ---
   const handleCheckProducts = async () => {
     if (!selectedProductA || !selectedProductB) return;
@@ -434,53 +497,77 @@ export default function IngredientCompatibility() {
       const rawA = selectedProductA.ingredients || [];
       const rawB = selectedProductB.ingredients || [];
 
+      // Determine Routine Application Sequence (Suggestion only, not a warning)
+      const stepA = detectProductStep(selectedProductA);
+      const stepB = detectProductStep(selectedProductB);
+      let routineSuggestion = null;
+
+      if (stepA && stepB && stepA.step !== stepB.step) {
+        if (stepB.step < stepA.step) {
+          routineSuggestion = {
+            isReverse: true,
+            stepA,
+            stepB,
+            title: "Application Sequence Suggestion",
+            message: `In a standard skincare routine, ${stepB.name} is used before ${stepA.name}. We suggest applying "${selectedProductB.name}" first in Step ${stepB.step}, followed by "${selectedProductA.name}" in Step ${stepA.step} for maximum absorption.`
+          };
+        } else {
+          routineSuggestion = {
+            isReverse: false,
+            stepA,
+            stepB,
+            title: "Optimal Routine Sequence",
+            message: `Optimal application sequence: ${stepA.name} in Step ${stepA.step} is applied before ${stepB.name} in Step ${stepB.step}.`
+          };
+        }
+      }
+
       if (!rawA.length || !rawB.length) {
         setProductResult({
           compatible: true,
-          verdict: "✅ Both products are compatible (no ingredient lists to compare)",
+          verdict: "Both products are compatible (no detailed ingredient lists available to cross-analyze).",
           conflicts: [],
-          synergies: []
+          synergies: [],
+          routineSuggestion
         });
         return;
       }
 
-      const cleanIngredientName = (name) => {
-        if (typeof name !== "string") return "";
-        let clean = name.replace(/\([^)]*\)/g, ""); // Remove text inside parentheses
-        clean = clean.replace(/[+*?^${}[\]\\]/g, ""); // Remove regex special characters
-        return clean.trim();
+      // Robust extraction of base ingredients & composite terms
+      const extractIngredients = (rawList) => {
+        const extracted = [];
+        rawList.forEach((raw) => {
+          if (typeof raw !== "string") return;
+          // Clean parens and extra spaces
+          let baseClean = raw.replace(/\([^)]*\)/g, " ").replace(/[+*?^$\{}[\]\\]/g, " ").replace(/\s+/g, " ").trim();
+          if (baseClean.length >= 2) extracted.push(baseClean);
+
+          // Split composite terms on +, &, and, commas, slashes
+          const parts = raw.replace(/\([^)]*\)/g, " ").split(/[\+&,]|\s+and\s+|\//i);
+          parts.forEach((part) => {
+            let stripped = part.replace(/^\s*\d+(?:\.\d+)?%\s*/, "").replace(/[+*?^$\{}[\]\\]/g, " ").replace(/\s+/g, " ").trim();
+            if (stripped.length >= 2 && !extracted.includes(stripped)) {
+              extracted.push(stripped);
+            }
+          });
+        });
+        return [...new Set(extracted)];
       };
 
-      const cleanToRawMap = {};
-      const cleanA = [];
-      const cleanB = [];
-
-      rawA.forEach(ing => {
-        const cleaned = cleanIngredientName(ing);
-        if (cleaned) {
-          cleanA.push(cleaned);
-          cleanToRawMap[cleaned.toLowerCase()] = ing;
-        }
-      });
-
-      rawB.forEach(ing => {
-        const cleaned = cleanIngredientName(ing);
-        if (cleaned) {
-          cleanB.push(cleaned);
-          cleanToRawMap[cleaned.toLowerCase()] = ing;
-        }
-      });
+      const cleanA = extractIngredients(rawA);
+      const cleanB = extractIngredients(rawB);
 
       // Escape ingredients to prevent RegExp syntax crash on backend
-      const escapeRegex = (str) => str.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+      const escapeRegex = (str) => str.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
       const allCleanIngredients = [...new Set([...cleanA, ...cleanB])].map(escapeRegex);
 
       if (allCleanIngredients.length < 2) {
         setProductResult({
           compatible: true,
-          verdict: "✅ Both products are compatible (insufficient active ingredients to compare)",
+          verdict: "Both products are compatible (insufficient active ingredients to compare).",
           conflicts: [],
-          synergies: []
+          synergies: [],
+          routineSuggestion
         });
         return;
       }
@@ -489,90 +576,88 @@ export default function IngredientCompatibility() {
 
       if (res.data.success) {
         const rawConflicts = res.data.conflicts || [];
-        const conflicts = [];
+        const rawSynergies = res.data.synergies || [];
 
-        rawConflicts.forEach(c => {
-          const name1 = c.ingredient1.toLowerCase();
-          const name2 = c.ingredient2.toLowerCase();
-
-          // Check if one ingredient is in A and the other in B
-          const is1InA = cleanA.some(ing => ing.toLowerCase() === name1);
-          const is2InB = cleanB.some(ing => ing.toLowerCase() === name2);
-          const is2InA = cleanA.some(ing => ing.toLowerCase() === name2);
-          const is1InB = cleanB.some(ing => ing.toLowerCase() === name1);
-
-          if ((is1InA && is2InB) || (is2InA && is1InB)) {
-            const matchedIngA = is1InA
-              ? (cleanToRawMap[name1] || c.ingredient1)
-              : (cleanToRawMap[name2] || c.ingredient2);
-            const matchedIngB = is2InB
-              ? (cleanToRawMap[name2] || c.ingredient2)
-              : (cleanToRawMap[name1] || c.ingredient1);
-
-            conflicts.push({
-              pair: c.pair,
-              ingredientA: matchedIngA,
-              ingredientB: matchedIngB,
-              reason: c.reason,
-              severity: c.severity,
-              advice: c.severity === "high"
-                ? "❌ Do not use together in the same routine layer"
-                : c.severity === "medium"
-                  ? "⚠️ Use at different times of day (e.g. AM and PM)"
-                  : "ℹ️ Use with caution if your skin is sensitive"
-            });
-          }
-        });
-
-        const synergies = [];
-        const STANDARD_SYNERGIES = [
-          { pair: ["vitamin c", "sunscreen_filter"], benefit: "Vitamin C boosts UV protection from sunscreen filters by neutralizing free radicals." },
-          { pair: ["hyaluronic", "ceramide"], benefit: "Hyaluronic Acid hydrates while Ceramides lock in moisture to strengthen skin barrier." },
-          { pair: ["niacinamide", "salicylic"], benefit: "Salicylic Acid purifies pores while Niacinamide calms redness and irritation." },
-          { pair: ["retinol", "hyaluronic"], benefit: "Hyaluronic Acid offsets potential dryness and peeling caused by Retinol." }
-        ];
-
-        const matchTerm = (list, term) => {
-          const sunscreenFilters = ["sunscreen", "zinc oxide", "titanium dioxide", "avobenzone", "octocrylene", "homosalate", "octisalate", "octinoxate", "mexoryl", "tinosorb"];
-          if (term === "sunscreen_filter") {
-            return list.some(ing => sunscreenFilters.some(filter => ing.toLowerCase().includes(filter)));
-          }
-          return list.some(ing => ing.toLowerCase().includes(term));
+        const isIngredientInList = (ingName, list) => {
+          if (!ingName) return false;
+          const target = ingName.toLowerCase().replace(/\s+/g, " ").trim();
+          return list.some((item) => {
+            const it = (item || "").toLowerCase().replace(/\s+/g, " ").trim();
+            if (!it) return false;
+            return it === target || it.includes(target) || target.includes(it);
+          });
         };
 
-        STANDARD_SYNERGIES.forEach(syn => {
-          const t1 = syn.pair[0].toLowerCase();
-          const t2 = syn.pair[1].toLowerCase();
+        const conflicts = [];
+        const seenPairs = new Set();
 
-          const hasT1InA = matchTerm(cleanA, t1);
-          const hasT2InB = matchTerm(cleanB, t2);
-          const hasT2InA = matchTerm(cleanA, t2);
-          const hasT1InB = matchTerm(cleanB, t1);
+        rawConflicts.forEach((c) => {
+          const is1InA = isIngredientInList(c.ingredient1, cleanA);
+          const is2InB = isIngredientInList(c.ingredient2, cleanB);
+          const is2InA = isIngredientInList(c.ingredient2, cleanA);
+          const is1InB = isIngredientInList(c.ingredient1, cleanB);
 
-          if ((hasT1InA && hasT2InB) || (hasT2InA && hasT1InB)) {
-            synergies.push({
-              pair: syn.pair.join(" + "),
-              benefit: syn.benefit
-            });
+          if ((is1InA && is2InB) || (is2InA && is1InB)) {
+            const ingA = is1InA ? c.ingredient1 : c.ingredient2;
+            const ingB = is2InB ? c.ingredient2 : c.ingredient1;
+            const pairKey = [ingA.toLowerCase(), ingB.toLowerCase()].sort().join("|");
+
+            if (!seenPairs.has(pairKey)) {
+              seenPairs.add(pairKey);
+              conflicts.push({
+                pair: c.pair || `${ingA} + ${ingB}`,
+                ingredientA: ingA,
+                ingredientB: ingB,
+                reason: c.reason,
+                severity: c.severity || "medium",
+                advice: c.advice || (c.severity === "high"
+                  ? "❌ Do not use together in the same routine layer"
+                  : "⚠️ Use on alternate days or split into AM and PM routines")
+              });
+            }
           }
         });
 
-        const highConflicts = conflicts.filter(c => c.severity === "high");
-        const compatible = highConflicts.length === 0;
+        // Determine synergies between A and B
+        const synergies = [];
+        const seenSynPairs = new Set();
 
-        let verdict = "✅ Both products are fully compatible!";
-        if (highConflicts.length > 0) {
-          verdict = `❌ Conflict Warning: ${highConflicts.length} active conflict(s) detected. Avoid layering them together.`;
-        } else if (conflicts.length > 0) {
-          verdict = `⚠️ Warning: ${conflicts.length} caution compatibility warning(s) found. Try alternating days.`;
-        }
+        rawSynergies.forEach((s) => {
+          const is1InA = isIngredientInList(s.ingredient1, cleanA);
+          const is2InB = isIngredientInList(s.ingredient2, cleanB);
+          const is2InA = isIngredientInList(s.ingredient2, cleanA);
+          const is1InB = isIngredientInList(s.ingredient1, cleanB);
+
+          if ((is1InA && is2InB) || (is2InA && is1InB)) {
+            const ingA = is1InA ? s.ingredient1 : s.ingredient2;
+            const ingB = is2InB ? s.ingredient2 : s.ingredient1;
+            const pairKey = [ingA.toLowerCase(), ingB.toLowerCase()].sort().join("|");
+
+            if (!seenSynPairs.has(pairKey)) {
+              seenSynPairs.add(pairKey);
+              synergies.push({
+                pair: s.pair || `${ingA} + ${ingB}`,
+                ingredientA: ingA,
+                ingredientB: ingB,
+                benefit: s.benefit
+              });
+            }
+          }
+        });
+
+        const isCompatible = conflicts.length === 0;
 
         setProductResult({
-          compatible,
-          verdict,
+          compatible: isCompatible,
+          verdict: isCompatible
+            ? "Both products are fully compatible! No active chemical conflicts detected between these formulations."
+            : `⚠️ Layering Incompatibility: Detected ${conflicts.length} active chemical conflict${conflicts.length > 1 ? 's' : ''} that can trigger irritation or deactivate key actives.`,
           conflicts,
-          synergies
+          synergies,
+          routineSuggestion
         });
+      } else {
+        alert("Failed to analyze product compatibility: " + (res.data.message || "Unknown error"));
       }
     } catch (err) {
       console.error("Error checking product layering compatibility:", err);
@@ -582,7 +667,7 @@ export default function IngredientCompatibility() {
     }
   };
 
-  const handleResetProducts = () => {
+    const handleResetProducts = () => {
     setSelectedProductA(null);
     setSelectedProductB(null);
     setProductASearch("");
@@ -1397,6 +1482,56 @@ export default function IngredientCompatibility() {
                   </div>
 
                   {/* Verdict Panel */}
+                  {/* Routine Application Sequence Suggestion (Senior's Feature) */}
+                  {productResult.routineSuggestion && (
+                    <div
+                      className={`ic-routine-order-box mb-4 ${
+                        productResult.routineSuggestion.isReverse
+                          ? "ic-routine-order-suggest"
+                          : "ic-routine-order-optimal"
+                      }`}
+                    >
+                      <div className="d-flex align-items-start gap-3">
+                        <div className="ic-routine-order-icon-badge">
+                          {productResult.routineSuggestion.isReverse ? "💡" : "✓"}
+                        </div>
+                        <div className="flex-grow-1">
+                          <div className="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-1">
+                            <strong className="ic-routine-order-title">
+                              {productResult.routineSuggestion.title}
+                            </strong>
+                            <span className="ic-routine-order-tag">
+                              {productResult.routineSuggestion.isReverse
+                                ? `Suggested: ${productResult.routineSuggestion.stepB.name} → ${productResult.routineSuggestion.stepA.name}`
+                                : `Optimal: ${productResult.routineSuggestion.stepA.name} → ${productResult.routineSuggestion.stepB.name}`}
+                            </span>
+                          </div>
+                          <p className="ic-routine-order-text mb-2">
+                            {productResult.routineSuggestion.message}
+                          </p>
+                          {productResult.routineSuggestion.isReverse && (
+                            <button
+                              type="button"
+                              className="ic-routine-swap-action-btn"
+                              onClick={() => {
+                                const temp = selectedProductA;
+                                setSelectedProductA(selectedProductB);
+                                setSelectedProductB(temp);
+                                setProductResult(null);
+                                showSlotNotification(
+                                  `Swapped slots! "${selectedProductB.name}" is now in Slot A.`,
+                                  "info"
+                                );
+                              }}
+                            >
+                              ⇄ Swap Slots (Put ${productResult.routineSuggestion.stepB.name} in Slot A)
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {productResult.compatible ? (
                     <div className="ic-alert ic-alert-success mb-4">
                       <FaCheckCircle size={28} className="flex-shrink-0 mt-1" />
