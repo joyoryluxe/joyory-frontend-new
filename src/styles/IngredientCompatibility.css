@@ -1173,3 +1173,263 @@ button.ic-decoded-badge:focus-visible {
   outline: 2px solid #2563eb;
   outline-offset: 2px;
 }
+
+
+/* =========================================================================
+   SKINCARE CAROUSEL SKELETON SHIMMER & PROGRESSIVE LOADING ANIMATIONS
+   ========================================================================= */
+
+@keyframes icShimmerWave {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes icPulseDot {
+  0%, 100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 1;
+  }
+}
+
+@keyframes icSpinLoader {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes icAuraPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(0, 119, 182, 0.22);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(0, 119, 182, 0);
+    transform: scale(1.05);
+  }
+}
+
+/* Header Status Badges */
+.ic-carousel-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 11px;
+  border-radius: 20px;
+  letter-spacing: 0.2px;
+  transition: all 0.3s ease;
+}
+
+.ic-carousel-badge-loading {
+  background: #f0f7ff;
+  color: #0077b6;
+  border: 1px solid rgba(0, 119, 182, 0.25);
+  box-shadow: 0 2px 8px rgba(0, 119, 182, 0.08);
+}
+
+.ic-carousel-badge-hint {
+  background: #f8f9fa;
+  color: #6c757d;
+  border: 1px solid #e9ecef;
+}
+
+.ic-carousel-badge-complete {
+  background: #eafaf1;
+  color: #1e824c;
+  border: 1px solid #c3e6cb;
+}
+
+.ic-pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: #0077b6;
+  display: inline-block;
+  animation: icPulseDot 1.3s infinite ease-in-out;
+}
+
+/* Luxury Skeleton Shimmer Card */
+.ic-skeleton-card {
+  pointer-events: none;
+  background-color: var(--joyory-white);
+  border: 1px dashed rgba(0, 119, 182, 0.25);
+  position: relative;
+  overflow: hidden;
+  box-shadow: none !important;
+}
+
+.ic-skeleton-box {
+  background-color: #f1f5f9;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(0, 119, 182, 0.08);
+}
+
+.ic-skeleton-line {
+  background-color: #f1f5f9;
+  border-radius: 6px;
+  position: relative;
+  overflow: hidden;
+}
+
+.ic-skeleton-title-line {
+  width: 82%;
+  height: 11.5px;
+  margin: 3px auto 6px;
+}
+
+.ic-skeleton-brand-line {
+  width: 48%;
+  height: 9px;
+  margin: 0 auto 10px;
+}
+
+.ic-skeleton-btn {
+  height: 23px;
+  flex: 1 1 calc(50% - 4px);
+  min-width: 60px;
+  border-radius: 20px;
+  background-color: #f1f5f9;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(0, 119, 182, 0.08);
+}
+
+.ic-skeleton-shimmer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.75) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: icShimmerWave 1.6s infinite linear;
+}
+
+/* Stagger shimmer flow across consecutive skeleton cards */
+.ic-skeleton-card:nth-child(2) .ic-skeleton-shimmer {
+  animation-delay: 0.15s;
+}
+.ic-skeleton-card:nth-child(3) .ic-skeleton-shimmer {
+  animation-delay: 0.3s;
+}
+.ic-skeleton-card:nth-child(4) .ic-skeleton-shimmer {
+  animation-delay: 0.45s;
+}
+.ic-skeleton-card:nth-child(5) .ic-skeleton-shimmer {
+  animation-delay: 0.6s;
+}
+.ic-skeleton-card:nth-child(6) .ic-skeleton-shimmer {
+  animation-delay: 0.75s;
+}
+
+/* Dedicated Carousel Tail Loading Card */
+.ic-carousel-loading-card {
+  justify-content: center;
+  align-items: center;
+  min-height: 220px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  border: 1.5px dashed rgba(0, 119, 182, 0.35);
+  box-shadow: 0 4px 16px rgba(0, 119, 182, 0.04);
+}
+
+.ic-carousel-loader-halo {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(0, 119, 182, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+  animation: icAuraPulse 2s infinite ease-in-out;
+}
+
+.ic-carousel-loader-spinner {
+  width: 26px;
+  height: 26px;
+  border: 2.5px solid rgba(0, 119, 182, 0.2);
+  border-top-color: var(--joyory-blue);
+  border-right-color: var(--joyory-blue);
+  border-radius: 50%;
+  animation: icSpinLoader 0.75s linear infinite;
+}
+
+.ic-carousel-loading-title {
+  font-weight: 700;
+  font-size: 11.5px;
+  color: var(--joyory-black);
+  margin-bottom: 3px;
+}
+
+.ic-carousel-loading-subtitle {
+  font-size: 9.5px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* Interactive Tail Load More Card */
+.ic-carousel-load-more-card {
+  justify-content: center;
+  align-items: center;
+  min-height: 220px;
+  background: #fafbfc;
+  border: 1.5px dashed rgba(0, 119, 182, 0.3);
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.ic-carousel-load-more-card:hover {
+  background: var(--joyory-white);
+  border-color: var(--joyory-blue);
+  border-style: solid;
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 119, 182, 0.12);
+}
+
+.ic-load-more-icon-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(0, 119, 182, 0.08);
+  color: var(--joyory-blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  margin-bottom: 10px;
+  transition: all 0.3s ease;
+}
+
+.ic-carousel-load-more-card:hover .ic-load-more-icon-circle {
+  background: var(--joyory-blue);
+  color: var(--joyory-white);
+  transform: scale(1.1) rotate(90deg);
+}
+
+.ic-load-more-title {
+  font-weight: 700;
+  font-size: 11.5px;
+  color: var(--joyory-black);
+  margin-bottom: 3px;
+}
+
+.ic-load-more-subtitle {
+  font-size: 9.5px;
+  color: #64748b;
+  font-weight: 500;
+}

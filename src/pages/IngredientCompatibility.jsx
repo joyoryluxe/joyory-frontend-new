@@ -938,17 +938,54 @@ export default function IngredientCompatibility() {
             <div>
               {/* Popular Products Scroll Tray */}
               <div className="mb-4 text-start">
-                <label className="fw-bold text-dark mb-1 small d-flex align-items-center gap-2">
-                  <span>💡 Quick Select Popular Products</span>
-                </label>
+                <div className="d-flex align-items-center justify-content-between mb-1 flex-wrap gap-2">
+                  <label className="fw-bold text-dark small d-flex align-items-center gap-2 m-0">
+                    <span>💡 Quick Select Popular Products</span>
+                  </label>
+                  {carouselLoadingMore ? (
+                    <span className="ic-carousel-badge ic-carousel-badge-loading">
+                      <span className="ic-pulse-dot"></span>
+                      Loading more formulas...
+                    </span>
+                  ) : carouselHasMore ? (
+                    <span className="ic-carousel-badge ic-carousel-badge-hint">
+                      Scroll for more →
+                    </span>
+                  ) : catalogProducts.length > 0 ? (
+                    <span className="ic-carousel-badge ic-carousel-badge-complete">
+                      ✓ All formulas loaded ({catalogProducts.length})
+                    </span>
+                  ) : null}
+                </div>
                 <p className="text-muted small mb-3" style={{ fontSize: "12px" }}>
                   Tap a bestseller to assign it to Product A or Product B slot instantly without searching.
                 </p>
 
                 {productsLoading && catalogProducts.length === 0 ? (
-                  <div className="text-center py-3">
-                    <span className="spinner-border spinner-border-sm text-dark me-2"></span>
-                    <span className="small text-muted">Loading bestsellers...</span>
+                  <div className="popular-products-scroll-wrapper">
+                    <div className="d-flex gap-3 overflow-hidden pb-2 pt-2">
+                      {[1, 2, 3, 4, 5, 6].map((n) => (
+                        <div key={n} className="popular-product-mini-card ic-skeleton-card">
+                          <div className="ic-mini-card-image-box ic-skeleton-box">
+                            <div className="ic-skeleton-shimmer"></div>
+                          </div>
+                          <div className="ic-skeleton-line ic-skeleton-title-line">
+                            <div className="ic-skeleton-shimmer"></div>
+                          </div>
+                          <div className="ic-skeleton-line ic-skeleton-brand-line">
+                            <div className="ic-skeleton-shimmer"></div>
+                          </div>
+                          <div className="ic-mini-slot-tray mt-auto">
+                            <div className="ic-skeleton-btn">
+                              <div className="ic-skeleton-shimmer"></div>
+                            </div>
+                            <div className="ic-skeleton-btn">
+                              <div className="ic-skeleton-shimmer"></div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 ) : (
                   <div className="popular-products-scroll-wrapper">
@@ -1004,6 +1041,67 @@ export default function IngredientCompatibility() {
                           </div>
                         );
                       })}
+
+                      {/* Loading More State: Shimmer Skeleton Card + Animated Loader Card */}
+                      {carouselLoadingMore && (
+                        <>
+                          <div className="popular-product-mini-card ic-skeleton-card">
+                            <div className="ic-mini-card-image-box ic-skeleton-box">
+                              <div className="ic-skeleton-shimmer"></div>
+                            </div>
+                            <div className="ic-skeleton-line ic-skeleton-title-line">
+                              <div className="ic-skeleton-shimmer"></div>
+                            </div>
+                            <div className="ic-skeleton-line ic-skeleton-brand-line">
+                              <div className="ic-skeleton-shimmer"></div>
+                            </div>
+                            <div className="ic-mini-slot-tray mt-auto">
+                              <div className="ic-skeleton-btn">
+                                <div className="ic-skeleton-shimmer"></div>
+                              </div>
+                              <div className="ic-skeleton-btn">
+                                <div className="ic-skeleton-shimmer"></div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="popular-product-mini-card ic-carousel-loading-card">
+                            <div className="ic-carousel-loader-halo">
+                              <div className="ic-carousel-loader-spinner"></div>
+                            </div>
+                            <div className="ic-carousel-loading-title">Loading...</div>
+                            <div className="ic-carousel-loading-subtitle">Fetching formulas</div>
+                          </div>
+                        </>
+                      )}
+
+                      {/* Interactive Load More Card (When not loading but more items exist) */}
+                      {!carouselLoadingMore && carouselHasMore && (
+                        <div
+                          className="popular-product-mini-card ic-carousel-load-more-card"
+                          onClick={() => {
+                            if (!carouselLoadingMore && carouselHasMore && carouselCursor) {
+                              fetchCarouselProducts(carouselCursor);
+                            }
+                          }}
+                          role="button"
+                          tabIndex={0}
+                          title="Click to load more skincare formulas"
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              if (!carouselLoadingMore && carouselHasMore && carouselCursor) {
+                                fetchCarouselProducts(carouselCursor);
+                              }
+                            }
+                          }}
+                        >
+                          <div className="ic-load-more-icon-circle">
+                            <FaPlus className="ic-load-more-icon" />
+                          </div>
+                          <div className="ic-load-more-title">Load More</div>
+                          <div className="ic-load-more-subtitle">Tap or scroll</div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
