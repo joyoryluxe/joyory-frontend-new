@@ -96,6 +96,10 @@ export default function IngredientCompatibility() {
   // --- TAB 2: PRODUCTS STATE ---
   const [catalogProducts, setCatalogProducts] = useState([]);
   const [productsLoading, setProductsLoading] = useState(false);
+  
+  const [carouselCursor, setCarouselCursor] = useState(null);
+  const [carouselHasMore, setCarouselHasMore] = useState(false);
+  const [carouselLoadingMore, setCarouselLoadingMore] = useState(false);
   const [productASearch, setProductASearch] = useState("");
   const [productBSearch, setProductBSearch] = useState("");
   const [productASuggestions, setProductASuggestions] = useState([]);
