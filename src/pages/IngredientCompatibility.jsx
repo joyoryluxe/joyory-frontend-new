@@ -60,6 +60,7 @@ export default function IngredientCompatibility() {
   const [ocrText, setOcrText] = useState("");
   const [ocrLoading, setOcrLoading] = useState(false);
   const [ocrResult, setOcrResult] = useState(null);
+  const [ocrError, setOcrError] = useState(null);
 
   // --- GENERAL DRAWER STATE ---
   const [selectedIngredient, setSelectedIngredient] = useState(null);
@@ -403,17 +404,22 @@ export default function IngredientCompatibility() {
   };
 
   // --- ACTIONS: TAB 3 OCR TEXT ---
+  // --- ACTIONS: TAB 3 OCR TEXT ---
   const handleScanText = async () => {
     if (!ocrText.trim()) return;
     setOcrLoading(true);
+    setOcrError(null);
     try {
       const res = await scanIngredientText(ocrText);
-      if (res.data.success) {
+      if (res.data?.success) {
         setOcrResult(res.data);
+      } else {
+        setOcrError(res.data?.message || "Failed to analyze raw ingredient text.");
       }
     } catch (err) {
       console.error("Error scanning raw labels:", err);
-      alert("Failed to analyze raw ingredient text.");
+      const msg = err.response?.data?.message || err.message || "Failed to analyze raw ingredient text. Please check your network and try again.";
+      setOcrError(msg);
     } finally {
       setOcrLoading(false);
     }
@@ -422,6 +428,7 @@ export default function IngredientCompatibility() {
   const handleResetOCR = () => {
     setOcrText("");
     setOcrResult(null);
+    setOcrError(null);
   };
 
   // --- GENERAL DRAWER CLICK ---
@@ -1214,78 +1221,154 @@ export default function IngredientCompatibility() {
                 </button>
               </div>
 
-              {/* Results */}
-              {ocrResult && (
-                <div className="mt-4 border-top pt-4 text-start">
-                  {/* Summary Metric Banners */}
-                  <div className="row g-2 mb-3">
-                    <div className="col-6">
-                      <div className="p-2 border rounded text-center bg-light">
-                        <span className="d-block text-muted small" style={{ fontSize: "11px" }}>Total Parsed</span>
-                        <strong className="fs-5 text-dark">{ocrResult.totalIngredients}</strong>
-                      </div>
-                    </div>
-                    <div className="col-6">
-                      <div className="p-2 border rounded text-center bg-light">
-                        <span className="d-block text-muted small" style={{ fontSize: "11px" }}>Decoded Library</span>
-                        <strong className="fs-5 text-dark">{ocrResult.decodedCount}</strong>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Allergen Warning Banner */}
-                  {(ocrResult.allergenWarnings?.length > 0 || ocrResult.sensitiveWarnings?.length > 0) && (
-                    <div className="ic-alert ic-alert-danger mb-4">
-                      <FaExclamationTriangle size={28} className="flex-shrink-0 mt-1" />
-                      <div>
-                        <h5 className="fw-bold fs-6 mb-1 d-flex align-items-center gap-2">
-                          Warning: Allergen Match
-                        </h5>
-                        <ul className="ps-3 mb-0 small" style={{ color: "inherit" }}>
-                          {ocrResult.allergenWarnings.map((w, idx) => (
-                            <li key={idx} className="fw-semibold">
-                              {w.ingredient} matches your profile allergen list!
-                            </li>
-                          ))}
-                          {ocrResult.sensitiveWarnings.map((w, idx) => (
-                            <li key={idx}>
-                              {w.ingredient} is marked as skin sensitive.
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Interactive Ingredients Badges */}
+              {/* Explicit Error Display */}
+              {ocrError && (
+                <div className="alert alert-danger mt-3 d-flex align-items-center gap-2 text-start" role="alert">
+                  <FaExclamationTriangle className="flex-shrink-0" />
                   <div>
-                    <h5 className="fw-bold fs-6 mb-2">Decoded Ingredients Details:</h5>
-                    <p className="text-muted small mb-2">Click on any decoded ingredient badge to view benefits, category description, and usage tips.</p>
-                    <div className="d-flex flex-wrap gap-2">
-                      {ocrResult.ingredients?.map((ing, idx) => {
-                        let badgeClass = "ic-decoded-badge";
-                        if (ing.isAllergen) badgeClass += " ic-decoded-allergen";
-                        else if (ing.isSensitive) badgeClass += " ic-decoded-sensitive";
-                        else badgeClass += " ic-decoded-safe";
-
-                        return (
-                          <span
-                            key={idx}
-                            className={badgeClass}
-                            style={{
-                              cursor: ing.decoded ? "pointer" : "default"
-                            }}
-                            onClick={() => ing.decoded && handleIngredientClick(ing)}
-                            title={ing.decoded ? "Click to inspect details" : "Unknown ingredient"}
-                          >
-                            {ing.name} {ing.isAllergen && "⚠️"} {ing.isSensitive && "⚠️"}
-                          </span>
-                        );
-                      })}
-                    </div>
+                    <strong>Scan Notice:</strong> {ocrError}
                   </div>
                 </div>
               )}
+
+              {/* Results */}
+              {ocrResult && (() => {
+                const decodedIngredients = ocrResult.ingredients?.filter(ing => ing.status === "decoded" || (ing.status === undefined && ing.decoded)) || [];
+                const unverifiedAiIngredients = ocrResult.ingredients?.filter(ing => ing.status === "unverified_ai") || [];
+                const unrecognisedIngredients = ocrResult.ingredients?.filter(ing => ing.status === "unknown" || (!ing.decoded && ing.status !== "unverified_ai")) || [];
+
+                return (
+                  <div className="mt-4 border-top pt-4 text-start">
+                    {/* Summary Metric Banners */}
+                    <div className="row g-2 mb-3">
+                      <div className="col-4">
+                        <div className="p-2 border rounded text-center bg-light">
+                          <span className="d-block text-muted small" style={{ fontSize: "11px" }}>Total Parsed</span>
+                          <strong className="fs-5 text-dark">{ocrResult.totalIngredients}</strong>
+                        </div>
+                      </div>
+                      <div className="col-4">
+                        <div className="p-2 border rounded text-center bg-light">
+                          <span className="d-block text-muted small" style={{ fontSize: "11px" }}>Decoded Library</span>
+                          <strong className="fs-5 text-success">{ocrResult.decodedCount}</strong>
+                        </div>
+                      </div>
+                      <div className="col-4">
+                        <div className="p-2 border rounded text-center bg-light">
+                          <span className="d-block text-muted small" style={{ fontSize: "11px" }}>Unrecognised</span>
+                          <strong className="fs-5 text-muted">{unrecognisedIngredients.length + unverifiedAiIngredients.length}</strong>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Allergen Warning Banner */}
+                    {(ocrResult.allergenWarnings?.length > 0 || ocrResult.sensitiveWarnings?.length > 0) && (
+                      <div className="ic-alert ic-alert-danger mb-4">
+                        <FaExclamationTriangle size={28} className="flex-shrink-0 mt-1" />
+                        <div>
+                          <h5 className="fw-bold fs-6 mb-1 d-flex align-items-center gap-2">
+                            Warning: Allergen Match
+                          </h5>
+                          <ul className="ps-3 mb-0 small" style={{ color: "inherit" }}>
+                            {ocrResult.allergenWarnings.map((w, idx) => (
+                              <li key={idx} className="fw-semibold">
+                                {w.ingredient} matches your profile allergen list!
+                              </li>
+                            ))} 
+                            {ocrResult.sensitiveWarnings.map((w, idx) => (
+                              <li key={idx}>
+                                {w.ingredient} is marked as skin sensitive.
+                              </li>
+                            ))} 
+                          </ul>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Interactive Decoded Ingredients Badges */}
+                    {decodedIngredients.length > 0 ? (
+                      <div className="mb-4">
+                        <h5 className="fw-bold fs-6 mb-1 text-dark">Decoded Ingredients Details:</h5>
+                        <p className="text-muted small mb-2">Click on any decoded ingredient badge to view benefits, category description, and usage tips.</p>
+                        <div className="d-flex flex-wrap gap-2">
+                          {decodedIngredients.map((ing, idx) => {
+                            let badgeClass = "ic-decoded-badge";
+                            if (ing.isAllergen) badgeClass += " ic-decoded-allergen";
+                            else if (ing.isSensitive) badgeClass += " ic-decoded-sensitive";
+                            else badgeClass += " ic-decoded-safe";
+
+                            return (
+                              <button
+                                key={idx}
+                                type="button"
+                                className={badgeClass}
+                                onClick={() => handleIngredientClick(ing)}
+                                aria-label={`View clinical details for ${ing.name}`}
+                                title={`Click to inspect details for ${ing.name}`}
+                              >
+                                {ing.name} {ing.isAllergen && "⚠️"} {ing.isSensitive && "ℹ️"}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="alert alert-light border p-3 rounded mb-4 text-muted small">
+                        ℹ️ None of the submitted ingredients could be matched to verified active records in our library.
+                      </div>
+                    )}
+
+                    {/* Separate Not Recognised / Unverified Group */}
+                    {(unrecognisedIngredients.length > 0 || unverifiedAiIngredients.length > 0) && (
+                      <div className="mt-4 pt-3 border-top">
+                        <h5 className="fw-bold fs-6 mb-1 text-muted">Not Recognised / Unverified Items:</h5>
+                        <p className="text-muted small mb-3">
+                          These terms were not recognized in our curated clinical database or are pending verification. Unverified items do not carry verified safety badges.
+                        </p>
+
+                        {/* Unverified AI items */}
+                        {unverifiedAiIngredients.length > 0 && (
+                          <div className="mb-3">
+                            <span className="badge bg-warning text-dark mb-2 px-2 py-1" style={{ fontSize: "11px" }}>
+                              AI Suggestions (Pending Clinical Verification)
+                            </span>
+                            <div className="d-flex flex-wrap gap-2">
+                              {unverifiedAiIngredients.map((ing, idx) => (
+                                <span
+                                  key={`ai-${idx}`}
+                                  className="badge border bg-light text-secondary py-2 px-3 fw-normal"
+                                  style={{ cursor: "default", fontSize: "12.5px" }}
+                                  title="AI suggestion, not verified by a human cosmetic chemist"
+                                >
+                                  {ing.name} <small className="text-muted ms-1">(AI suggestion, not verified)</small>
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Completely Unrecognised items */}
+                        {unrecognisedIngredients.length > 0 && (
+                          <div>
+                            <div className="d-flex flex-wrap gap-2">
+                              {unrecognisedIngredients.map((ing, idx) => (
+                                <span
+                                  key={`unrec-${idx}`}
+                                  className="badge border bg-light text-muted py-2 px-3 fw-normal"
+                                  style={{ cursor: "default", opacity: 0.75, fontSize: "12.5px" }}
+                                  title="Not recognized in clinical library"
+                                >
+                                  {ing.name}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           )}
         </div>

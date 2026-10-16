@@ -1162,3 +1162,14 @@
     border-radius: 12px !important;
   }
 }
+
+/* Accessible button reset and focus ring for decoded ingredient badges */
+button.ic-decoded-badge {
+  font-family: inherit;
+  cursor: pointer;
+  outline: none;
+}
+button.ic-decoded-badge:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
