@@ -356,41 +356,13 @@ export default function ProductPage() {
 
     const sortedProducts = useMemo(() => {
         if (!allProducts || !Array.isArray(allProducts)) return [];
-        const getProductPrice = (prod) => {
-            const vars = Array.isArray(prod.variants) ? prod.variants : [];
-            const hasVar = vars.length > 0;
-            const displayVariant = tempSelectedVariants[prod._id] || selectedVariants[prod._id] || (hasVar ? (vars.find((v) => v.stock > 0) || vars[0]) : null);
-            return displayVariant?.displayPrice || displayVariant?.discountedPrice || prod.price || 0;
-        };
-        const getProductDiscount = (prod) => {
-            const vars = Array.isArray(prod.variants) ? prod.variants : [];
-            const hasVar = vars.length > 0;
-            const displayVariant = tempSelectedVariants[prod._id] || selectedVariants[prod._id] || (hasVar ? (vars.find((v) => v.stock > 0) || vars[0]) : null);
-            const price = displayVariant?.displayPrice || displayVariant?.discountedPrice || prod.price || 0;
-            const orig = displayVariant?.originalPrice || displayVariant?.mrp || prod.mrp || price;
-            return orig > price ? Math.round(((orig - price) / orig) * 100) : 0;
-        };
-        const getProductRating = (prod) => {
-            return prod.avgRating || prod.rating || 0;
-        };
-        const sorted = [...allProducts];
-        if (filters.sort === 'priceHighToLow') {
-            sorted.sort((a, b) => getProductPrice(b) - getProductPrice(a));
-        } else if (filters.sort === 'priceLowToHigh') {
-            sorted.sort((a, b) => getProductPrice(a) - getProductPrice(b));
-        } else if (filters.sort === 'rating') {
-            sorted.sort((a, b) => getProductRating(b) - getProductRating(a));
-        } else if (filters.sort === 'discountHighToLow') {
-            sorted.sort((a, b) => getProductDiscount(b) - getProductDiscount(a));
-        } else if (filters.sort === 'discountLowToHigh') {
-            sorted.sort((a, b) => getProductDiscount(a) - getProductDiscount(b));
-        }
-        return sorted;
-    }, [allProducts, filters.sort, selectedVariants, tempSelectedVariants]);
+        return allProducts;
+    }, [allProducts]);
 
     const { user } = useContext(UserContext);
     const { openCart, syncCartFromBackend } = useContext(CartContext);
     const loaderRef = useRef(null);
+    const fetchAbortRef = useRef(null);
 
     /* ── toast ──────────────────────────────────────────────────────────────── */
     const showToastMsg = (msg, type = "error", dur = 3000) => {
@@ -518,8 +490,8 @@ export default function ProductPage() {
             p.append("discountMin", filters.discountMin);
         }
 
-        // Do not pass sort to backend API due to cursor pagination limitation (nextCursor is null when sorting)
-        // if (filters.sort) p.append("sort", filters.sort);
+        // Pass sort to backend API for global catalog sorting
+        if (filters.sort) p.append("sort", filters.sort);
         if (cursor) p.append("cursor", cursor);
         p.append("limit", "16");
 
@@ -529,10 +501,16 @@ export default function ProductPage() {
     };
 
     const fetchProducts = async (cursor = null, reset = false) => {
+        if (reset) {
+            if (fetchAbortRef.current) {
+                fetchAbortRef.current.abort();
+            }
+            fetchAbortRef.current = new AbortController();
+        }
+
         try {
             if (reset) {
                 setLoading(true);
-                // Keep allProducts as is until fetch completes for a smoother feel
                 setNextCursor(null);
                 setHasMore(true);
             } else {
@@ -541,7 +519,10 @@ export default function ProductPage() {
 
             const { data } = await axios.get(
                 `${PRODUCT_ALL_API}?${buildQueryParams(cursor)}`,
-                { withCredentials: true }
+                {
+                    withCredentials: true,
+                    signal: reset ? fetchAbortRef.current?.signal : undefined
+                }
             );
 
             // Validation: Check if requested URL slug / filter is valid
@@ -723,6 +704,9 @@ export default function ProductPage() {
             setHasMore(pg.hasMore || false);
             setNextCursor(pg.nextCursor || null);
         } catch (e) {
+            if (axios.isCancel(e) || e.name === "CanceledError") {
+                return;
+            }
             console.error(e);
             showToastMsg("Failed to fetch products", "error");
         } finally {
