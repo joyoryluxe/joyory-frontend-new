@@ -92,10 +92,37 @@ const ProductDetail = () => {
   };
 
   useEffect(() => {
-    // Avoid double fetching if we already have the product and the slug is one of its slugs or ID
-    if (product && (product._id === slug || (product.slugs && product.slugs.includes(slug)) || product.slug === slug)) {
+    // Avoid double fetching if we already have the product and the slug is one of its slugs or ID or variant slugs
+    const isCurrentProduct =
+      product &&
+      (product._id === slug ||
+        product.slug === slug ||
+        (product.slugs && product.slugs.includes(slug)) ||
+        (product.variants && product.variants.some((v) => v.slug === slug)));
+
+    if (isCurrentProduct) {
+      // If product is already loaded and URL slug changed to a variant slug, simply sync the active variant without re-fetching
+      const matchingVariant = product.variants?.find((v) => v.slug === slug);
+      if (matchingVariant && selectedShade?.sku !== (matchingVariant.sku || matchingVariant.variantSku)) {
+        const variantData = {
+          shadeName: matchingVariant.shadeName,
+          hex: matchingVariant.hex,
+          stock: matchingVariant.stock,
+          images: matchingVariant.images || product.images || ["/placeholder.png"],
+          displayPrice: matchingVariant.displayPrice || product.price,
+          originalPrice: matchingVariant.originalPrice || product.mrp || product.price,
+          variantSku: matchingVariant.sku || matchingVariant.variantSku,
+          sku: matchingVariant.sku || matchingVariant.variantSku,
+          slug: matchingVariant.slug,
+          ...matchingVariant,
+        };
+        setSelectedShade(variantData);
+        setDisplayImages(variantData.images);
+      }
       return;
     }
+
+    let isSubscribed = true;
 
     const fetchProduct = async () => {
       try {
@@ -106,6 +133,8 @@ const ProductDetail = () => {
         }
 
         const res = await axiosInstance.get(url);
+        if (!isSubscribed) return;
+
         const data = res.data;
         if (location.state?.supportsVTO !== undefined) {
           data.supportsVTO = location.state.supportsVTO;
@@ -185,23 +214,36 @@ const ProductDetail = () => {
           setDisplayImages(data.images || ["/placeholder.png"]);
         }
       } catch (err) {
+        if (!isSubscribed) return;
         console.error("❌ Error fetching product:", err);
-        toast.error("Product not found");
-        navigate("/404");
+        // Only navigate to 404 if the server returned 404 Not Found (not on rate limit 429 or network errors)
+        if (err.response?.status === 404) {
+          toast.error("Product not found");
+          navigate("/404");
+        } else if (err.response?.status === 429) {
+          toast.error("Too many requests. Please slow down and wait a moment.");
+        }
       }
     };
 
     fetchProduct();
-  }, [slug, location.search, navigate, product]);
 
-  // Auto-rewrite URL to use product slug instead of database ID for clean SEO URLs
+    return () => {
+      isSubscribed = false;
+    };
+  }, [slug, location.search, navigate]);
+
+  // Auto-rewrite URL ONLY if the user accessed via a raw database ID (24-char hex) instead of a clean SEO slug
   useEffect(() => {
     if (product) {
-      const primarySlug = product.slugs?.[0] || product.slug;
-      if (primarySlug && slug !== primarySlug) {
-        const variantParam = getVariantFromQuery();
-        const search = variantParam ? `?variant=${variantParam}` : "";
-        navigate(`/product/${primarySlug}${search}`, { replace: true });
+      const isMongoId = /^[0-9a-fA-F]{24}$/.test(slug);
+      if (isMongoId) {
+        const primarySlug = product.slugs?.[0] || product.slug;
+        if (primarySlug) {
+          const variantParam = getVariantFromQuery();
+          const search = variantParam ? `?variant=${variantParam}` : "";
+          navigate(`/product/${primarySlug}${search}`, { replace: true });
+        }
       }
     }
   }, [product, slug, navigate]);
