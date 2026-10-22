@@ -364,8 +364,8 @@ const SEOMeta = ({ type = "home", slug = "", page = "" }) => {
           };
         } else if (slug === "makeup") {
           fallback = {
-            title: "Buy Premium Makeup & Cosmetics Online | Joyory",
-            description: "Shop high-quality makeup products online at Joyory. Find foundation, lipstick, eyeshadow, eyeliner, and cosmetics from premium brands.",
+            title: "Buy Makeup Products Online in India: Face & Lips | Joyory",
+            description: "Shop makeup products online at Joyory, from face and lip makeup to more beauty essentials. Browse the full range and find your next favourite look.",
             canonical: "https://joyory.com/category/makeup",
             image: "https://joyory.com/logo.png",
             type: "website"
@@ -373,11 +373,18 @@ const SEOMeta = ({ type = "home", slug = "", page = "" }) => {
         }
       }
 
-      const title = data.title || fallback.title;
-      const description = data.description || fallback.description;
-      const canonical = data.canonical || fallback.canonical;
-      const ogTitle = data.openGraph?.title || title;
-      const ogDescription = data.openGraph?.description || description;
+      let title = data.title || fallback.title;
+      let description = data.description || fallback.description;
+      let canonical = data.canonical || fallback.canonical;
+
+      if (type === "category" && slug?.toLowerCase() === "makeup") {
+        title = "Buy Makeup Products Online in India: Face & Lips | Joyory";
+        description = "Shop makeup products online at Joyory, from face and lip makeup to more beauty essentials. Browse the full range and find your next favourite look.";
+        canonical = "https://joyory.com/category/makeup";
+      }
+
+      const ogTitle = (type === "category" && slug?.toLowerCase() === "makeup") ? title : (data.openGraph?.title || title);
+      const ogDescription = (type === "category" && slug?.toLowerCase() === "makeup") ? description : (data.openGraph?.description || description);
       const ogImage = data.openGraph?.image || fallback.image;
       const ogType = data.openGraph?.type || fallback.type;
 
@@ -407,10 +414,47 @@ const SEOMeta = ({ type = "home", slug = "", page = "" }) => {
       updateOrCreateMeta("name", "robots", "index, follow");
 
       // 7. JSON-LD Structured Data
-      if (data.jsonLd) {
-        injectJsonLd(data.jsonLd);
-      } else if (fallback.jsonLd) {
-        injectJsonLd(fallback.jsonLd);
+      let finalJsonLd = data.jsonLd || fallback.jsonLd;
+      if (type === "category" && slug?.toLowerCase() === "makeup") {
+        const makeupItemList = {
+          "@context": "https://schema.org",
+          "@type": "ItemList",
+          "name": "Shop Makeup Products Online",
+          "description": "Shop Joyory's collection of makeup essentials including face makeup, eye makeup, and lip makeup.",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Makeup for Every Look and Skin Tone",
+              "description": "Explore Joyory's makeup collection for every occasion, from everyday looks to special events. Discover your essentials in our face makeup range.",
+              "url": "https://joyory.com/category/makeup/face"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "Eye Makeup to Define Your Look",
+              "description": "Add definition and colour with eye makeup, whether you want a natural daytime look or something more dramatic for the evening.",
+              "url": "https://joyory.com/category/makeup/eyes"
+            },
+            {
+              "@type": "ListItem",
+              "position": 3,
+              "name": "Lip Makeup to Match Your Look",
+              "description": "Complete your look with lip makeup in a shade that suits your skin tone, from soft everyday colours to something bolder.",
+              "url": "https://joyory.com/category/makeup/lips"
+            }
+          ]
+        };
+
+        if (Array.isArray(finalJsonLd)) {
+          finalJsonLd = [...finalJsonLd.filter(item => item["@type"] !== "ItemList"), makeupItemList];
+        } else {
+          finalJsonLd = [makeupItemList];
+        }
+      }
+
+      if (finalJsonLd) {
+        injectJsonLd(finalJsonLd);
       }
     };
 

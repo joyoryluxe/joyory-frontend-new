@@ -1600,7 +1600,7 @@ const Header = ({ hideCategories = false }) => {
                       <div
                         className="header-user-dropdown-item"
                         onClick={() => {
-                          navigate("/Signup");
+                          navigate("/signup");
                           setUserDropdown(false);
                         }}
                       >

@@ -1,6 +1,6 @@
 // CategoryLandingPage.jsx
 import React, { useState, useEffect, useContext, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import {
     FaHeart,
@@ -250,6 +250,30 @@ const OutOfStockPopup = ({ isOpen, onClose, productName }) => {
       `}</style>
         </div>
     );
+};
+
+const getMakeupSubCategoryData = (sub) => {
+    const slugLower = sub?.slug?.toLowerCase() || "";
+    const nameLower = sub?.name?.toLowerCase() || "";
+    if (slugLower.includes("face") || nameLower.includes("face")) {
+        return {
+            title: "Makeup for Every Look and Skin Tone",
+            altText: "Makeup for Every Look and Skin Tone - Explore Joyory's makeup collection for every occasion, from everyday looks to special events. Discover your essentials in our face makeup range."
+        };
+    }
+    if (slugLower.includes("eye") || nameLower.includes("eye")) {
+        return {
+            title: "Eye Makeup to Define Your Look",
+            altText: "Eye Makeup to Define Your Look - Add definition and colour with eye makeup, whether you want a natural daytime look or something more dramatic for the evening."
+        };
+    }
+    if (slugLower.includes("lip") || nameLower.includes("lip")) {
+        return {
+            title: "Lip Makeup to Match Your Look",
+            altText: "Lip Makeup to Match Your Look - Complete your look with lip makeup in a shade that suits your skin tone, from soft everyday colours to something bolder."
+        };
+    }
+    return null;
 };
 
 export default function CategoryLandingPage() {
@@ -1141,30 +1165,52 @@ export default function CategoryLandingPage() {
                 {subCategories?.length > 0 && (
                     <section className="mb padding-left-right-sub-category">
                         <div className="mt-3 d-flex justify-content-between align-items-center">
-                            <h2 className="top-categories-title mb-3 page-title-main-name fw-normal">
-                                {subCategoriesTitle || "Top Categories"}
-                            </h2>
+                            {effectiveSlug?.toLowerCase() === "makeup" ? (
+                                <h1 className="top-categories-title mb-3 page-title-main-name fw-normal">
+                                    Shop Makeup Products Online
+                                </h1>
+                            ) : (
+                                <h2 className="top-categories-title mb-3 page-title-main-name fw-normal">
+                                    {subCategoriesTitle || "Top Categories"}
+                                </h2>
+                            )}
                         </div>
                         <SectionSlider slidesPerView={3} spaceBetween={10}>
                             {subCategories.map((sub) => (
                                 <SwiperSlide key={sub._id}>
-                                    <div
-                                        className="border-0 top-cat-card cursor-pointer mt-1"
-                                        onClick={() => navigate(`/category/${slug}/${sub.slug}`)}
-                                    >
-                                        {sub.thumbnailImage?.[0] && (
-                                            <img
-                                                src={sub.thumbnailImage[0]}
-                                                alt={sub.name}
-                                                className="top-cat-img top-category-image img-fluid"
-                                            />
-                                        )}
-                                        <div className="top-cat-body text-center">
-                                            <h5 className="top-cat-title mb-0 mt-3 font-weightss top-category-name-font text-start">
-                                                {sub.name}
-                                            </h5>
-                                        </div>
-                                    </div>
+                                    {(() => {
+                                        const isMakeup = effectiveSlug?.toLowerCase() === "makeup";
+                                        const makeupData = isMakeup ? getMakeupSubCategoryData(sub) : null;
+                                        const imgAlt = makeupData ? makeupData.altText : sub.name;
+                                        const imgTitle = makeupData ? makeupData.title : sub.name;
+
+                                        return (
+                                            <div
+                                                className="border-0 top-cat-card cursor-pointer mt-1"
+                                                onClick={() => navigate(`/category/${slug}/${sub.slug}`)}
+                                            >
+                                                {sub.thumbnailImage?.[0] && (
+                                                    <img
+                                                        src={sub.thumbnailImage[0]}
+                                                        alt={imgAlt}
+                                                        title={imgTitle}
+                                                        className="top-cat-img top-category-image img-fluid"
+                                                    />
+                                                )}
+                                                <div className="top-cat-body text-start">
+                                                    {makeupData ? (
+                                                        <h3 className="top-cat-title top-cat-seo-title mb-0 mt-3 font-weightss top-category-name-font text-start">
+                                                            {makeupData.title}
+                                                        </h3>
+                                                    ) : (
+                                                        <h5 className="top-cat-title mb-0 mt-3 font-weightss top-category-name-font text-start">
+                                                            {sub.name}
+                                                        </h5>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    })()}
                                 </SwiperSlide>
                             ))}
                         </SectionSlider>
@@ -1933,6 +1979,8 @@ export default function CategoryLandingPage() {
         </>
     );
 }
+
+
 
 
 

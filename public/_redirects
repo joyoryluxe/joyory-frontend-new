@@ -9,5 +9,13 @@
 /sitemap-products-:page.xml   https://beauty.joyory.com/sitemap-products-:page.xml   200
 /robots.txt                   /robots.txt                  200
 
+# ─── 301 Permanent Redirects (SEO) ──────────────────────────────────────────
+/Signup                                     /signup                                     301
+/categories/skin-moisturizer                /category/skin/skin-moisturizer             301
+/Products/category/skin-mask                /category/skin/skin-mask                    301
+/products/category/skin-mask                /category/skin/skin-mask                    301
+/categories/eyes                            /category/makeup/eyes                       301
+/categories/skin-serums-and-essences-serum  /category/skin/skin-serums-and-essences     301
+
 # ─── React SPA Routing ───────────────────────────────────────────────────────
 /*                            /index.html                                           200

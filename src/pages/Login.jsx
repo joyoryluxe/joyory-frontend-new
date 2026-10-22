@@ -607,7 +607,7 @@ const Login = () => {
                 )}
               </button>
 
-              <Link to="/Signup" className="mt-4 text-center text-decoration-none text-white">Don’t have an account? Register </Link>
+              <Link to="/signup" className="mt-4 text-center text-decoration-none text-white">Don’t have an account? Register </Link>
 
             </form>
 
