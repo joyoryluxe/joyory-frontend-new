@@ -6,6 +6,22 @@
   RewriteCond %{HTTP_HOST} ^www\.joyory\.com$ [NC]
   RewriteRule ^ https://joyory.com%{REQUEST_URI} [R=301,L]
 
+  # ─── 301 Permanent Redirects (SEO) ──────────────────────────────────────────
+  # 1. /Signup -> /signup (Case-sensitive match avoids loop on /signup)
+  RewriteRule ^/?Signup/?$ https://joyory.com/signup [R=301,L]
+
+  # 2. /categories/skin-moisturizer -> /category/skin/skin-moisturizer
+  RewriteRule ^/?categories/skin-moisturizer/?$ https://joyory.com/category/skin/skin-moisturizer [R=301,L,NC]
+
+  # 3. /Products/category/skin-mask -> /category/skin/skin-mask
+  RewriteRule ^/?(Products|products)/category/skin-mask/?$ https://joyory.com/category/skin/skin-mask [R=301,L,NC]
+
+  # 4. /categories/eyes -> /category/makeup/eyes
+  RewriteRule ^/?categories/eyes/?$ https://joyory.com/category/makeup/eyes [R=301,L,NC]
+
+  # 5. /categories/skin-serums-and-essences-serum -> /category/skin/skin-serums-and-essences
+  RewriteRule ^/?categories/skin-serums-and-essences-serum/?$ https://joyory.com/category/skin/skin-serums-and-essences [R=301,L,NC]
+
   # ─── Static Files, Sitemaps & Robots ────────────────────────────────────────
   # If the requested file or directory exists locally, serve it directly
   RewriteCond %{REQUEST_FILENAME} -f [OR]

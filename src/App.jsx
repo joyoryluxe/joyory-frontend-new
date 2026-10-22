@@ -198,6 +198,14 @@ function App() {
               <Route path="/verifyotp" element={<VerifyOtp />} />
               <Route path="/topcategories" element={<TopCategories />} />
 
+              {/* 301 Permanent Redirects (Client-side Navigation Fallback) */}
+              <Route path="/Signup" element={<Navigate to="/signup" replace />} />
+              <Route path="/categories/skin-moisturizer" element={<Navigate to="/category/skin/skin-moisturizer" replace />} />
+              <Route path="/Products/category/skin-mask" element={<Navigate to="/category/skin/skin-mask" replace />} />
+              <Route path="/products/category/skin-mask" element={<Navigate to="/category/skin/skin-mask" replace />} />
+              <Route path="/categories/eyes" element={<Navigate to="/category/makeup/eyes" replace />} />
+              <Route path="/categories/skin-serums-and-essences-serum" element={<Navigate to="/category/skin/skin-serums-and-essences" replace />} />
+
               {/* Category & Product Routes */}
               <Route path="/category/*" element={<ProductPage />} />
               <Route path="/Products/category" element={<ProductPage />} />
