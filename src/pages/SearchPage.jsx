@@ -1042,8 +1042,27 @@ const SearchPage = () => {
       const normTerm = normalizeText(searchTerm);
 
       if (normName === normTerm) return 3000;
+
+      // Check variant composite titles (e.g. "Hydrating Barrier Repair Duo - 200 ML")
+      const vars = Array.isArray(prod.variants) ? prod.variants : [];
+      const hasExactVariantMatch = vars.some(v => {
+        const shade = normalizeText(v.shadeName || v.name || v.size || "");
+        if (!shade) return false;
+        const comp1 = `${normName} ${shade}`.trim();
+        const comp2 = `${normBrand} ${normName} ${shade}`.trim();
+        return comp1 === normTerm || comp2 === normTerm || comp1.includes(normTerm) || normTerm.includes(comp1);
+      });
+      if (hasExactVariantMatch) return 3000;
+
+      // Check slug match
+      const querySlug = normTerm.replace(/\s+/g, '-');
+      if (Array.isArray(prod.slugs) && prod.slugs.some(s => s && s.toLowerCase().includes(querySlug))) {
+        return 3000;
+      }
+
       if (normName.includes(normTerm)) return 2000;
-      if (`${normBrand} ${normName}`.includes(normTerm)) return 1500;
+      if (normTerm.includes(normName) && normName.length >= 4) return 2000;
+      if (`${normBrand} ${normName}`.includes(normTerm) || normTerm.includes(`${normBrand} ${normName}`)) return 1800;
 
       const words = normTerm.split(/\s+/).filter(Boolean);
       if (words.length === 0) return 0;
