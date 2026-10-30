@@ -130,9 +130,9 @@ const AiBeautyLab = () => {
   const handleQuizClick = () => {
     window.scrollTo(0, 0);
     if (!user || user.guest) {
-      navigate("/login", { state: { from: "/foryoulanding" } });
+      navigate("/login", { state: { from: "/foryoulanding?mode=quiz" } });
     } else {
-      navigate("/foryoulanding");
+      navigate("/foryoulanding?mode=quiz");
     }
   };
 

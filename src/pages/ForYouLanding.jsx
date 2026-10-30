@@ -1581,10 +1581,20 @@ export default function Foryoulanding() {
                     setHasCompletedQuiz(false);
                     setView('home');
                 } else {
-                    // Quiz completed → show recommendations
+                    // Quiz completed
                     setHasCompletedQuiz(true);
                     setProfileData(json.data);
-                    setView('recommendations');
+
+                    // If user navigated directly asking for quiz/profile, keep home view and open side panel
+                    const searchParams = new URLSearchParams(location.search);
+                    if (searchParams.get('mode') === 'quiz') {
+                        setView('home');
+                        setIsPanelOpen(true);
+                        setShowProfile(true);
+                        setShowQuizContent(false);
+                    } else {
+                        setView('recommendations');
+                    }
                 }
             } catch (e) {
                 console.error('Error checking quiz completion:', e);
