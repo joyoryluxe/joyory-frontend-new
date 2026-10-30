@@ -58,7 +58,7 @@ const AboutUs = () => {
       icon: <Sparkles size={28} />,
       title: "Smart Beauty Quiz",
       text: "Decode your skin concerns and goals through an intelligent questionnaire for custom advice.",
-      link: "/foryoulanding",
+      link: "/foryoulanding?mode=quiz",
       actionText: "Take Quiz",
     },
     {
@@ -93,8 +93,9 @@ const AboutUs = () => {
       icon: <HeartHandshake size={28} />,
       title: "AI Beauty Concierge",
       text: "Chat 24/7 with our trained beauty assistant for instant routine and product suggestions.",
-      link: "/Chatbot",
+      link: "#",
       actionText: "Chat Now",
+      isChatbot: true,
     },
   ];
 
@@ -190,21 +191,64 @@ const AboutUs = () => {
             className={`story-right ${storyVisible ? "anim-fade-left" : ""
               }`}
           >
-            {featureCards.map((item, index) => (
-              <Link
-                to={item.link}
-                className="story-card"
-                key={index}
-                aria-label={`Explore ${item.title}`}
-              >
-                <div className="icon-wrapper">{item.icon}</div>
-                <h3>{item.title}</h3>
-                <p>{item.text}</p>
-                <span className="story-card-link">
-                  {item.actionText} <ArrowRight size={14} className="story-card-arrow" />
-                </span>
-              </Link>
-            ))}
+            {featureCards.map((item, index) => {
+              if (item.isChatbot) {
+                return (
+                  <div
+                    key={index}
+                    role="button"
+                    tabIndex={0}
+                    className="story-card"
+                    aria-label={`Open ${item.title}`}
+                    style={{ cursor: "pointer" }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      // Trigger the global Joyory Beauty Concierge chat widget on the current page
+                      if (window.JoyoryBeautyConcierge?.open) {
+                        window.JoyoryBeautyConcierge.open();
+                      } else {
+                        document.getElementById("beauty-concierge-fab")?.click();
+                      }
+                      window.dispatchEvent(new CustomEvent("open-beauty-concierge"));
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        if (window.JoyoryBeautyConcierge?.open) {
+                          window.JoyoryBeautyConcierge.open();
+                        } else {
+                          document.getElementById("beauty-concierge-fab")?.click();
+                        }
+                        window.dispatchEvent(new CustomEvent("open-beauty-concierge"));
+                      }
+                    }}
+                  >
+                    <div className="icon-wrapper">{item.icon}</div>
+                    <h3>{item.title}</h3>
+                    <p>{item.text}</p>
+                    <span className="story-card-link">
+                      {item.actionText} <ArrowRight size={14} className="story-card-arrow" />
+                    </span>
+                  </div>
+                );
+              }
+
+              return (
+                <Link
+                  to={item.link}
+                  className="story-card"
+                  key={index}
+                  aria-label={`Explore ${item.title}`}
+                >
+                  <div className="icon-wrapper">{item.icon}</div>
+                  <h3>{item.title}</h3>
+                  <p>{item.text}</p>
+                  <span className="story-card-link">
+                    {item.actionText} <ArrowRight size={14} className="story-card-arrow" />
+                  </span>
+                </Link>
+              );
+            })}
           </div>
         </section>
 
