@@ -997,6 +997,164 @@ const CartPage = () => {
   const [showConfirm, setShowConfirm] = useState(false);
   const [itemToRemove, setItemToRemove] = useState(null);
 
+  // Multi-item removal state
+  const [selectedCartItemIds, setSelectedCartItemIds] = useState([]);
+  const [showMultipleConfirm, setShowMultipleConfirm] = useState(false);
+  const [isRemovingMultiple, setIsRemovingMultiple] = useState(false);
+  const [movingMultipleToWishlist, setMovingMultipleToWishlist] = useState(false);
+  const selectAllCheckboxRef = useRef(null);
+
+  // Sync indeterminate state of "Select All" checkbox
+  useEffect(() => {
+    if (!selectAllCheckboxRef.current || !cartData?.cart) return;
+    const totalItems = cartData.cart.length;
+    const selectedCount = selectedCartItemIds.length;
+    selectAllCheckboxRef.current.indeterminate = selectedCount > 0 && selectedCount < totalItems;
+  }, [selectedCartItemIds, cartData?.cart]);
+
+  // Remove stale IDs if cart changes
+  useEffect(() => {
+    if (!cartData?.cart) return;
+    const currentIds = new Set(cartData.cart.map(i => i.cartItemId));
+    setSelectedCartItemIds(prev => prev.filter(id => currentIds.has(id)));
+  }, [cartData?.cart]);
+
+  const handleToggleSelectItem = (cartItemId) => {
+    setSelectedCartItemIds(prev =>
+      prev.includes(cartItemId)
+        ? prev.filter(id => id !== cartItemId)
+        : [...prev, cartItemId]
+    );
+  };
+
+  const handleToggleSelectAll = () => {
+    if (!cartData?.cart?.length) return;
+    if (selectedCartItemIds.length === cartData.cart.length) {
+      setSelectedCartItemIds([]);
+    } else {
+      setSelectedCartItemIds(cartData.cart.map(i => i.cartItemId));
+    }
+  };
+
+  const handleOpenMultipleConfirm = () => {
+    if (!selectedCartItemIds.length) return;
+    setShowMultipleConfirm(true);
+  };
+
+  const handleCloseMultipleConfirm = () => {
+    if (isRemovingMultiple || movingMultipleToWishlist) return;
+    setShowMultipleConfirm(false);
+  };
+
+  const handleConfirmRemoveMultiple = async () => {
+    if (!selectedCartItemIds.length || !cartData?.cart?.length) return;
+    setIsRemovingMultiple(true);
+    setShowPointsConfetti(false);
+    setCouponMessage("");
+
+    const itemsToRemove = cartData.cart.filter(item => selectedCartItemIds.includes(item.cartItemId));
+    const count = itemsToRemove.length;
+
+    try {
+      const payload = {
+        items: itemsToRemove.map(item => ({
+          productId: item.productId,
+          variantSku: item.selectedVariant?.sku || null
+        }))
+      };
+
+      const res = await fetch(`${API_BASE}/remove-multiple`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to remove selected items");
+      }
+
+      // Sync local guest cart if guest
+      const isGuest = !user || user.guest;
+      if (isGuest) {
+        try {
+          const guestCart = JSON.parse(localStorage.getItem("guestCart") || "[]");
+          const removedIds = new Set(selectedCartItemIds);
+          const updated = guestCart.filter(item => {
+            const key = item.cartItemId || `${item.productId}-${item.selectedVariant?.sku || "default"}`;
+            return !removedIds.has(key);
+          });
+          localStorage.setItem("guestCart", JSON.stringify(updated));
+        } catch (_) {}
+      }
+
+      setSelectedCartItemIds([]);
+      setShowMultipleConfirm(false);
+
+      sessionStorage.setItem("cartPendingToast", JSON.stringify({
+        message: `${count} item${count > 1 ? "s" : ""} removed from cart.`,
+        type: "success"
+      }));
+
+      window.location.reload();
+
+    } catch (err) {
+      console.error("Error removing multiple items:", err);
+      toast.error("Failed to remove items from cart. Please try again.");
+    } finally {
+      setIsRemovingMultiple(false);
+    }
+  };
+
+  const handleMoveMultipleToWishlist = async () => {
+    if (!selectedCartItemIds.length || !cartData?.cart?.length) return;
+    setShowPointsConfetti(false);
+    setCouponMessage("");
+    setMovingMultipleToWishlist(true);
+
+    const itemsToMove = cartData.cart.filter(item => selectedCartItemIds.includes(item.cartItemId));
+    const count = itemsToMove.length;
+
+    try {
+      if (user && !user.guest) {
+        for (const it of itemsToMove) {
+          try {
+            await fetch(`https://beauty.joyory.com/api/user/cart/${it.productId}/move-to-wishlist`, {
+              method: "POST",
+              credentials: "include",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ sku: it.selectedVariant?.sku || null }),
+            });
+          } catch (e) {
+            console.warn("Error moving single item to wishlist:", e);
+          }
+        }
+      } else {
+        localStorage.setItem("pendingCartAction", JSON.stringify({
+          type: "move-multiple-to-wishlist",
+          items: itemsToMove.map(i => ({ productId: i.productId, sku: i.selectedVariant?.sku || null }))
+        }));
+        setShowMultipleConfirm(false);
+        toast.info("Please login to move items to your wishlist");
+        navigate("/login", { state: { from: "/cartpage" } });
+        return;
+      }
+
+      setSelectedCartItemIds([]);
+      setShowMultipleConfirm(false);
+      sessionStorage.setItem("cartPendingToast", JSON.stringify({
+        message: `${count} item${count > 1 ? "s" : ""} moved to wishlist.`,
+        type: "success"
+      }));
+      window.location.reload();
+    } catch (err) {
+      console.error("Error moving items to wishlist:", err);
+      toast.error("Failed to move items to wishlist.");
+    } finally {
+      setMovingMultipleToWishlist(false);
+    }
+  };
+
   const handleShowConfirm = (item) => { setItemToRemove(item); setShowConfirm(true); };
   const handleCloseConfirm = () => { setShowConfirm(false); setItemToRemove(null); };
   const handleConfirmRemove = () => {
@@ -1767,16 +1925,72 @@ const CartPage = () => {
 
           {/* ── Left column: cart items + freebies + recommendations ── */}
           <div className="col-xxl-8 col-12">
+            {/* ── Multi-select batch actions toolbar ── */}
+            {cartData.cart.length > 0 && (
+              <div className="cart-selection-toolbar d-flex align-items-center justify-content-between mb-3">
+                <div className="d-flex align-items-center gap-2">
+                  <label className="joyory-checkbox-container m-0 d-flex align-items-center gap-2" style={{ cursor: "pointer" }}>
+                    <input
+                      type="checkbox"
+                      ref={selectAllCheckboxRef}
+                      checked={selectedCartItemIds.length === cartData.cart.length && cartData.cart.length > 0}
+                      onChange={handleToggleSelectAll}
+                      aria-label="Select all cart items"
+                    />
+                    <span className="joyory-checkbox-checkmark"></span>
+                    <span className="fw-semibold text-dark page-title-main-name" style={{ fontSize: "14px" }}>
+                      Select All ({cartData.cart.length})
+                    </span>
+                  </label>
+                  {selectedCartItemIds.length > 0 && (
+                    <span className="badge bg-light text-muted border fw-normal d-none d-sm-inline-block" style={{ fontSize: "12px" }}>
+                      {selectedCartItemIds.length} selected
+                    </span>
+                  )}
+                </div>
+
+                {selectedCartItemIds.length > 0 && (
+                  <button
+                    type="button"
+                    className="cart-remove-selected-btn"
+                    onClick={handleOpenMultipleConfirm}
+                    disabled={isRemovingMultiple}
+                    title="Remove selected items"
+                  >
+                    <i className="bi bi-trash3"></i>
+                    <span>Remove Selected ({selectedCartItemIds.length})</span>
+                  </button>
+                )}
+              </div>
+            )}
+
             <ul className="list-group">
               {cartData.cart.map((item) => {
                 const variant = item.selectedVariant || {};
                 const shadeName = variant.shadeName || variant.name;
                 const shadeHex = variant.hex;
+                const isSelected = selectedCartItemIds.includes(item.cartItemId);
                 return (
-                  <li key={item.cartItemId} className="list-group-item d-flex justify-content-between align-items-end border-black">
-                    <div className="d-flex align-items-center gap-2" style={{ cursor: "pointer" }} onClick={() => navigate(`/product/${getCleanProductSlug(item)}`)}>
-                      <img src={item.image} alt={item.name} style={{ width: "80px", height: "80px", objectFit: "cover", borderRadius: "8px" }} />
-                      <div className="w-75">
+                  <li key={item.cartItemId} className={`list-group-item d-flex justify-content-between align-items-end border-black ${isSelected ? 'cart-item-selected' : ''}`}>
+                    <div className="d-flex align-items-center gap-2 flex-grow-1" style={{ cursor: "pointer", minWidth: 0 }} onClick={() => navigate(`/product/${getCleanProductSlug(item)}`)}>
+                      {/* Checkbox wrapper */}
+                      <div
+                        className="cart-item-checkbox-wrapper pe-1 flex-shrink-0"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <label className="joyory-checkbox-container m-0" style={{ cursor: "pointer" }}>
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => handleToggleSelectItem(item.cartItemId)}
+                            aria-label={`Select ${item.name}`}
+                          />
+                          <span className="joyory-checkbox-checkmark"></span>
+                        </label>
+                      </div>
+
+                      <img src={item.image} alt={item.name} style={{ width: "80px", height: "80px", objectFit: "cover", borderRadius: "8px", flexShrink: 0 }} />
+                      <div className="w-75 flex-grow-1" style={{ minWidth: 0 }}>
                         <strong className="page-title-main-name">
                           {(() => {
                             // const variantText = shadeName ? shadeName.trim() : "";
@@ -2189,6 +2403,84 @@ const CartPage = () => {
             disabled={movingToWishlist}
           >
             {movingToWishlist ? "Moving..." : "Move to Wishlist"}
+          </button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Confirm Multiple Items Removal Modal */}
+      <Modal
+        show={showMultipleConfirm}
+        onHide={handleCloseMultipleConfirm}
+        centered
+        backdrop={isRemovingMultiple || movingMultipleToWishlist ? "static" : true}
+      >
+        <Modal.Header style={{ position: 'relative' }}>
+          <Modal.Title className="page-title-main-name">
+            Remove {selectedCartItemIds.length} item{selectedCartItemIds.length > 1 ? "s" : ""} from cart?
+          </Modal.Title>
+          <button
+            type="button"
+            onClick={handleCloseMultipleConfirm}
+            disabled={isRemovingMultiple || movingMultipleToWishlist}
+            style={{
+              position: 'absolute',
+              right: '20px',
+              top: '12px',
+              background: 'none',
+              border: 'none',
+              fontSize: '28px',
+              color: '#000',
+              cursor: 'pointer',
+              lineHeight: '1',
+              padding: '0',
+              opacity: '0.8',
+              transition: 'opacity 0.2s'
+            }}
+            onMouseOver={(e) => e.currentTarget.style.opacity = '1'}
+            onMouseOut={(e) => e.currentTarget.style.opacity = '0.8'}
+            className="removel-cross-btn"
+            aria-label="Close"
+          >
+            &times;
+          </button>
+        </Modal.Header>
+        <Modal.Body className="page-title-main-name">
+          <p className="mb-2">Are you sure you want to remove the {selectedCartItemIds.length} selected item{selectedCartItemIds.length > 1 ? "s" : ""} from your cart?</p>
+          <div className="selected-items-preview mt-2 p-2 bg-light rounded-3" style={{ maxHeight: "180px", overflowY: "auto", border: "1px solid #e9ecef" }}>
+            {(cartData?.cart || [])
+              .filter(item => selectedCartItemIds.includes(item.cartItemId))
+              .map(item => (
+                <div key={item.cartItemId} className="d-flex align-items-center gap-2 py-2 border-bottom" style={{ fontSize: "13px" }}>
+                  <img src={item.image} alt={item.name} style={{ width: "36px", height: "36px", objectFit: "cover", borderRadius: "6px", flexShrink: 0 }} />
+                  <div className="text-truncate flex-grow-1" style={{ minWidth: 0 }}>
+                    <div className="fw-semibold text-truncate">{item.name}</div>
+                    {item.selectedVariant?.shadeName && (
+                      <span className="text-muted" style={{ fontSize: "11px" }}>Variant: {item.selectedVariant.shadeName}</span>
+                    )}
+                  </div>
+                  <div className="fw-bold flex-shrink-0">₹{item.subTotal.toFixed(2)}</div>
+                </div>
+              ))}
+          </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <button
+            className="modal-footer-btn"
+            onClick={handleConfirmRemoveMultiple}
+            disabled={isRemovingMultiple || movingMultipleToWishlist}
+            style={{
+              borderColor: "#dc3545",
+              color: "#dc3545"
+            }}
+          >
+            {isRemovingMultiple ? "Removing..." : "Remove"}
+          </button>
+          <button
+            className="modal-footer-btn"
+            onClick={handleMoveMultipleToWishlist}
+            disabled={isRemovingMultiple || movingMultipleToWishlist}
+          >
+            {movingMultipleToWishlist ? "Moving..." : "Move to Wishlist"}
           </button>
         </Modal.Footer>
       </Modal>

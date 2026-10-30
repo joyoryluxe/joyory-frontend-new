@@ -1321,3 +1321,159 @@
         padding: 12px !important;
     }
 }
+
+/* ─── Joyory Luxury Cosmetic Checkbox & Bulk Selection Styles ─── */
+.joyory-checkbox-container {
+    display: inline-flex;
+    align-items: center;
+    position: relative;
+    user-select: none;
+    cursor: pointer;
+    margin: 0;
+    padding: 2px;
+}
+
+/* Hide native checkbox visually while preserving accessibility */
+.joyory-checkbox-container input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+/* Luxury rounded square checkmark box */
+.joyory-checkbox-checkmark {
+    position: relative;
+    display: inline-block;
+    height: 20px;
+    width: 20px;
+    background-color: #ffffff;
+    border: 1.5px solid #1c1c1e;
+    border-radius: 6px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+/* Hover state */
+.joyory-checkbox-container:hover input ~ .joyory-checkbox-checkmark {
+    border-color: #000000;
+    background-color: #fdfbfb;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+}
+
+/* Checked state: Joyory brand dark slate with white checkmark */
+.joyory-checkbox-container input:checked ~ .joyory-checkbox-checkmark {
+    background-color: #1c1c1e;
+    border-color: #1c1c1e;
+}
+
+/* Checkmark tick */
+.joyory-checkbox-checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+    left: 6px;
+    top: 2px;
+    width: 5px;
+    height: 10px;
+    border: solid #ffffff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.joyory-checkbox-container input:checked ~ .joyory-checkbox-checkmark:after {
+    display: block;
+}
+
+/* Indeterminate state (dash icon for partial selection) */
+.joyory-checkbox-container input:indeterminate ~ .joyory-checkbox-checkmark {
+    background-color: #1c1c1e;
+    border-color: #1c1c1e;
+}
+
+.joyory-checkbox-container input:indeterminate ~ .joyory-checkbox-checkmark:after {
+    display: block;
+    left: 4px;
+    top: 8px;
+    width: 10px;
+    height: 2px;
+    background-color: #ffffff;
+    border: none;
+    transform: none;
+}
+
+/* Keyboard accessibility focus */
+.joyory-checkbox-container input:focus-visible ~ .joyory-checkbox-checkmark {
+    outline: 2px solid #e11d48;
+    outline-offset: 2px;
+}
+
+/* Cart Item Checkbox Wrapper */
+.cart-item-checkbox-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+/* Selected item card highlight (soft, premium cosmetic highlight) */
+.list-group-item.cart-item-selected {
+    background-color: #fffafa !important;
+    border-color: #1c1c1e !important;
+    box-shadow: 0 2px 8px rgba(225, 29, 72, 0.05) !important;
+}
+
+/* Cart Selection Toolbar */
+.cart-selection-toolbar {
+    background: #ffffff;
+    border: 1px solid #e5e5ea;
+    border-radius: 12px;
+    padding: 10px 16px;
+    transition: all 0.25s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.cart-selection-toolbar:hover {
+    border-color: #d1d1d6;
+}
+
+/* Remove Selected Button */
+.cart-remove-selected-btn {
+    background-color: #fff5f5 !important;
+    color: #e11d48 !important;
+    border: 1px solid #fecdd3 !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    padding: 6px 16px !important;
+    border-radius: 20px !important;
+    transition: all 0.2s ease !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+}
+
+.cart-remove-selected-btn:hover:not(:disabled) {
+    background-color: #e11d48 !important;
+    color: #ffffff !important;
+    border-color: #e11d48 !important;
+    box-shadow: 0 2px 8px rgba(225, 29, 72, 0.25) !important;
+}
+
+.cart-remove-selected-btn:disabled {
+    opacity: 0.6 !important;
+    cursor: not-allowed !important;
+}
+
+@media (max-width: 576px) {
+    .cart-selection-toolbar {
+        padding: 8px 12px;
+    }
+    .cart-remove-selected-btn {
+        padding: 5px 12px !important;
+        font-size: 12px !important;
+    }
+    .cart-item-checkbox-wrapper {
+        padding-right: 0 !important;
+    }
+}
