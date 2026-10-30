@@ -341,6 +341,51 @@ const CartProvider = ({ children }) => {
     }
   };
 
+  // ✅ REMOVE MULTIPLE ITEMS
+  const removeMultipleItemsFromCart = async (items) => {
+    try {
+      if (!Array.isArray(items) || items.length === 0) return;
+
+      const itemKeysToRemove = new Set(
+        items.map(i => i.cartItemId || `${i.productId}-${i.variantSku || 'default'}`)
+      );
+
+      // Optimistic update
+      setCartItems((prev) =>
+        prev.filter((item) => {
+          const key = item.cartItemId || `${item.productId}-${item.selectedVariant?.sku || 'default'}`;
+          return !itemKeysToRemove.has(key);
+        })
+      );
+
+      const hasToken = document.cookie.includes('token=');
+      if (hasToken) {
+        await axios.post(
+          'https://beauty.joyory.com/api/user/cart/remove-multiple',
+          {
+            items: items.map(i => ({
+              productId: i.productId,
+              variantSku: i.variantSku || i.selectedVariant?.sku || null
+            }))
+          },
+          { withCredentials: true }
+        );
+        await syncCartFromBackend();
+      } else {
+        const guestCart = getGuestCart();
+        const updated = guestCart.filter((item) => {
+          const key = item.cartItemId || `${item.productId}-${item.selectedVariant?.sku || 'default'}`;
+          return !itemKeysToRemove.has(key);
+        });
+        saveGuestCart(updated);
+        await syncCartFromBackend();
+      }
+    } catch (err) {
+      console.error('Error removing multiple cart items:', err);
+      await syncCartFromBackend();
+    }
+  };
+
   // ✅ REMOVE ITEM (Smooth without full-page reloads!)
   const removeItemFromCart = async (cartItemId, productId, variantSku) => {
     try {
@@ -405,6 +450,7 @@ const CartProvider = ({ children }) => {
         addToCart,
         updateItemQuantity,
         removeItemFromCart,
+        removeMultipleItemsFromCart,
         syncCartFromBackend,
         getGuestCartItems,
         clearGuestCart,
