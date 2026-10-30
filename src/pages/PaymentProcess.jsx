@@ -139,13 +139,14 @@ const PaymentProcess = () => {
     setActiveTab(methodKey);
     if (!orderId) return;
     try {
+      const normalizedMethod = (methodKey === "card" || methodKey === "upi") ? "ONLINE" : methodKey.toUpperCase();
       await fetch(SET_PAYMENT_METHOD_API, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
           orderId,
-          paymentMethod: methodKey.toUpperCase(),
+          paymentMethod: normalizedMethod,
         }),
       });
     } catch (err) {
@@ -162,6 +163,10 @@ const PaymentProcess = () => {
       );
       return;
     }
+    if (!orderId) {
+      showAlert("Order ID is missing. Please return to your cart.", "Order Error", "error");
+      return;
+    }
     try {
       setIsProcessing(true);
       const cleanAddress = {
@@ -173,6 +178,18 @@ const PaymentProcess = () => {
         state: selectedAddress?.state || "",
         pincode: String(selectedAddress?.pincode || "").trim(),
       };
+
+      // Ensure payment method is updated to COD on backend
+      await fetch(SET_PAYMENT_METHOD_API, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          orderId,
+          paymentMethod: "COD",
+        }),
+      }).catch(console.warn);
+
       const payload = {
         orderId,
         orderType: "cod",
@@ -186,7 +203,7 @@ const PaymentProcess = () => {
         body: JSON.stringify(payload),
       });
       const codData = await codRes.json();
-      if (!codRes.ok || !codData.success) throw new Error("COD failed.");
+      if (!codRes.ok || !codData.success) throw new Error(codData?.message || "COD failed.");
 
       const confirmRes = await fetch(COD_CONFIRM_API, {
         method: "POST",
@@ -196,7 +213,7 @@ const PaymentProcess = () => {
       });
       const confirmData = await confirmRes.json();
       if (!confirmRes.ok || !confirmData.success)
-        throw new Error("COD confirmation failed.");
+        throw new Error(confirmData?.message || "COD confirmation failed.");
 
       navigate(`/ordersuccess/${orderId}`, {
         replace: true,

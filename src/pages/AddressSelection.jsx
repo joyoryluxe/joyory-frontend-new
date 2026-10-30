@@ -305,6 +305,7 @@ const AddressSelection = () => {
       setProcessingMessage("Preparing your order...");
 
       const payload = {
+        shippingAddress: selectedAddress,
         discountCode: priceDetails?.appliedCoupon?.code || null,
         pointsToUse: priceDetails?.pointsUsed || priceDetails?.referralPointsUsed || 0,
         giftCardCode: priceDetails?.giftCard?.code || null,
