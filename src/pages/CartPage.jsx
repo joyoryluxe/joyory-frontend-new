@@ -1282,7 +1282,7 @@ const CartPage = () => {
         const discounts = discountPercent > 0 ? [{ type: "Discount", amount: originalPrice - price, note: `${discountPercent}% Off` }] : [];
         return {
           cartItemId: item._id || `${item.product}-${variant.sku || "default"}`,
-          productId: item.product || item.productId,
+          productId: (typeof item.product === 'object' && item.product?._id) ? String(item.product._id) : String(item.product || item.productId),
           productSlug: item.slug || (item.product && typeof item.product === 'object' ? item.product.slugs?.[0] || item.product.slug : null) || null,
           name: item.name || "Unnamed Product",
           image: variant.image || "/placeholder.png",

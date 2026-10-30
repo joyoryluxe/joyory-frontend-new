@@ -310,7 +310,7 @@ const CartProvider = ({ children }) => {
       // Optimistic update
       setCartItems((prev) =>
         prev.map((item) =>
-          item.cartItemId === cartItemId || (item.productId === productId && (!variantSku || item.selectedVariant?.sku === variantSku))
+          item.cartItemId === cartItemId || (item.productId === productId && (!variantSku || String(item.selectedVariant?.sku || '').trim().toLowerCase() === String(variantSku || '').trim().toLowerCase()))
             ? { ...item, quantity: newQty }
             : item
         )
@@ -328,7 +328,7 @@ const CartProvider = ({ children }) => {
       } else {
         const guestCart = getGuestCart();
         const updated = guestCart.map((item) =>
-          item.productId === productId && (!variantSku || item.selectedVariant?.sku === variantSku)
+          item.productId === productId && (!variantSku || String(item.selectedVariant?.sku || '').trim().toLowerCase() === String(variantSku || '').trim().toLowerCase())
             ? { ...item, quantity: newQty }
             : item
         );
@@ -393,7 +393,7 @@ const CartProvider = ({ children }) => {
       setCartItems((prev) =>
         prev.filter(
           (item) =>
-            !(item.cartItemId === cartItemId || (item.productId === productId && (!variantSku || item.selectedVariant?.sku === variantSku)))
+            !(item.cartItemId === cartItemId || (item.productId === productId && (!variantSku || String(item.selectedVariant?.sku || '').trim().toLowerCase() === String(variantSku || '').trim().toLowerCase())))
         )
       );
 
@@ -408,7 +408,7 @@ const CartProvider = ({ children }) => {
         const guestCart = getGuestCart();
         const updated = guestCart.filter(
           (item) =>
-            !(item.productId === productId && (!variantSku || item.selectedVariant?.sku === variantSku))
+            !(item.productId === productId && (!variantSku || String(item.selectedVariant?.sku || '').trim().toLowerCase() === String(variantSku || '').trim().toLowerCase()))
         );
         saveGuestCart(updated);
         await syncCartFromBackend();
