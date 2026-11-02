@@ -837,7 +837,7 @@ export default function CategoryLandingPage() {
                                     item={prod}
                                     displayVariant={displayVariant}
                                     showOutOfStock={showOutOfStock}
-                                    isCurrentVariantOutOfStock={isCurrentVariantOutOfStock}
+                                    isCurrentVariantOutOfStock={currentVariantOutOfStock}
                                     showSelectVariantButton={showSelectVariantButton}
                                     isAdding={isAdding}
                                     handleAddToCart={handleAddToCart}

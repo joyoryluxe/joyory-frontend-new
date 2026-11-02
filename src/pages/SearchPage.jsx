@@ -1526,7 +1526,7 @@ const SearchPage = () => {
                   item={prod}
                   displayVariant={displayVariant}
                   showOutOfStock={showOutOfStock}
-                  isCurrentVariantOutOfStock={isCurrentVariantOutOfStock}
+                  isCurrentVariantOutOfStock={currentVariantOutOfStock}
                   showSelectVariantButton={showSelectVariantButton}
                   isAdding={isAdding}
                   handleAddToCart={handleAddToCart}

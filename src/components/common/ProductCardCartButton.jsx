@@ -22,9 +22,14 @@ const ProductCardCartButton = ({
 
   if (!item) return null;
 
-  const currentProdId = String(item._id || item.id || "");
-  const allVariants = Array.isArray(item.variants) ? item.variants : [];
+  const currentProdId = String(item._id || item.id || item.product?._id || item.product || "");
+  const allVariants = Array.isArray(item.variants)
+    ? item.variants
+    : Array.isArray(item.product?.variants)
+    ? item.product.variants
+    : [];
   const singleSku = allVariants.length === 1 ? allVariants[0]?.sku : (displayVariant?.sku || null);
+  const prodName = item.name || item.product?.name || "Product";
 
   // If product has multiple variants, variant selection is required unless caller explicitly says otherwise.
   // Requirement: "remember some items we have button of select varient they should not be affected"
@@ -44,7 +49,7 @@ const ProductCardCartButton = ({
             onClick={(e) => {
               e.stopPropagation();
               if (openVariantOverlay) {
-                openVariantOverlay(item._id, "all", e);
+                openVariantOverlay(currentProdId, "all", e);
               }
             }}
             style={{
@@ -60,7 +65,7 @@ const ProductCardCartButton = ({
   }
 
   // 2. If completely or currently out of stock
-  const isOutOfStock = showOutOfStock || isCurrentVariantOutOfStock;
+  const isOutOfStock = Boolean(showOutOfStock || isCurrentVariantOutOfStock);
   if (isOutOfStock) {
     return (
       <div className={wrapperClassName}>
@@ -71,7 +76,7 @@ const ProductCardCartButton = ({
             onClick={(e) => {
               e.stopPropagation();
               if (handleOutOfStockClick) {
-                handleOutOfStockClick(item.name);
+                handleOutOfStockClick(prodName);
               }
             }}
             style={{
@@ -104,7 +109,7 @@ const ProductCardCartButton = ({
   // 4. If product is in cart -> Render "- 1 +" quantity manipulation box!
   if (cartItem && (Number(cartItem.quantity) || 0) > 0) {
     const currentQty = Number(cartItem.quantity) || 1;
-    const maxStock = displayVariant?.stock ?? item.stock ?? 6;
+    const maxStock = displayVariant?.stock ?? item.stock ?? item.product?.stock ?? 6;
     const isMaxReached = currentQty >= Math.min(6, maxStock);
 
     const handleDecrement = async (e) => {

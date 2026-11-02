@@ -438,7 +438,7 @@ function ProductCard({ product, navigate, location }) {
                             item={product}
                             displayVariant={displayVariant}
                             showOutOfStock={showOutOfStock}
-                            isCurrentVariantOutOfStock={isCurrentVariantOutOfStock}
+                            isCurrentVariantOutOfStock={outOfStock}
                             showSelectVariantButton={showSelectVariantBtn}
                             isAdding={addingToCart}
                             handleAddToCart={() => handleAddToCart()}

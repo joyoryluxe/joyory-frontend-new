@@ -444,7 +444,7 @@ const RecoProductCard = ({ product, navigate, user, onAddToCartSuccess }) => {
               item={product}
               displayVariant={displayVariant}
               showOutOfStock={showOutOfStock}
-              isCurrentVariantOutOfStock={isCurrentVariantOutOfStock}
+              isCurrentVariantOutOfStock={outOfStock}
               showSelectVariantButton={showSelectVariantBtn}
               isAdding={addingToCart}
               handleAddToCart={() => handleAddToCart()}

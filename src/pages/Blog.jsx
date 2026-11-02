@@ -974,7 +974,7 @@ const Blog = () => {
                                   item={item}
                                   displayVariant={displayVariant}
                                   showOutOfStock={showOutOfStock}
-                                  isCurrentVariantOutOfStock={isCurrentVariantOutOfStock}
+                                  isCurrentVariantOutOfStock={outOfStock}
                                   showSelectVariantButton={showSelectVariantButton}
                                   isAdding={isAdding}
                                   handleAddToCart={handleAddToCart}
