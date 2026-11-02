@@ -1,3 +1,4 @@
+import ProductCardCartButton from "../components/common/ProductCardCartButton";
 import React, { useState, useEffect, useContext, useRef, useCallback, useMemo } from "react";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { FaStar, FaHeart, FaRegHeart, FaChevronDown, FaTimes, FaCheck } from "react-icons/fa";
@@ -690,53 +691,17 @@ export default function VtoProducts() {
                                 )}
 
                                 {/* Cart Button */}
-                                <div className="cart-section">
-                                    <div className="d-flex align-items-center justify-content-between">
-                                        <button
-                                            className={`btn w-100 page-title-main-name addtocartbuttton d-flex align-items-center justify-content-center gap-2 ${showOutOfStock
-                                                ? "btn-secondary"
-                                                : isAdding
-                                                    ? ""
-                                                    : "btn-outline-dark"
-                                                }`}
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                if (showOutOfStock) {
-                                                    handleOutOfStockClick(prod.name);
-                                                } else if (showSelectVariantButton) {
-                                                    openVariantOverlay(prod._id, "all", e);
-                                                } else {
-                                                    handleAddToCart(prod);
-                                                }
-                                            }}
-                                            disabled={buttonDisabled && !showOutOfStock}
-                                            style={{
-                                                transition: "background-color 0.3s ease, color 0.3s ease",
-                                                opacity: showOutOfStock ? 0.8 : 1,
-                                                cursor: showOutOfStock ? 'pointer' : (buttonDisabled ? 'not-allowed' : 'pointer'),
-                                            }}
-                                        >
-                                            {isAdding ? (
-                                                <>
-                                                    <span className="spinner-border spinner-border-sm me-2" role="status"></span>
-                                                    Adding...
-                                                </>
-                                            ) : showOutOfStock ? (
-                                                <>
-                                                    <FaTimes style={{ fontSize: '14px' }} />
-                                                    Out of Stock
-                                                </>
-                                            ) : (
-                                                <>
-                                                    {btnText}
-                                                    {!buttonDisabled && !isAdding && !showSelectVariantButton && (
-                                                        <img src={Bag} alt="Bag" className="img-fluid ms-1" style={{ marginTop: '-3px', height: "20px" }} />
-                                                    )}
-                                                </>
-                                            )}
-                                        </button>
-                                    </div>
-                                </div>
+                                <ProductCardCartButton
+                                item={prod}
+                                displayVariant={displayVariant}
+                                showOutOfStock={showOutOfStock}
+                                isCurrentVariantOutOfStock={isCurrentVariantOutOfStock}
+                                showSelectVariantButton={showSelectVariantButton}
+                                isAdding={isAdding}
+                                handleAddToCart={handleAddToCart}
+                                handleOutOfStockClick={handleOutOfStockClick}
+                                openVariantOverlay={openVariantOverlay}
+                            />
                             </div>
                         </div>
                     </div>

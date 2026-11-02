@@ -1,3 +1,4 @@
+import ProductCardCartButton from "../../common/ProductCardCartButton";
 import React, { useEffect, useState, useCallback, useContext } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination, Navigation } from "swiper/modules";
@@ -1044,55 +1045,17 @@ const BestSellers = () => {
                                                     )}
 
                                                     {/* Add to Cart / Select Variant / Out of Stock Button */}
-                                                    <div className="cart-section">
-                                                        <div className="d-flex align-items-center justify-content-between">
-                                                            <button
-
-                                                                className={`btn w-100 page-title-main-name addtocartbuttton d-flex align-items-center justify-content-center gap-2  ${showOutOfStock
-                                                                    ? "btn-secondary"
-                                                                    : isAdding
-                                                                        ? ""
-                                                                        : "btn-outline-dark"
-                                                                    }`}
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    if (showOutOfStock) {
-                                                                        handleOutOfStockClick(item.name);
-                                                                    } else if (showSelectVariantButton) {
-                                                                        openVariantOverlay(item._id, "all", e);
-                                                                    } else {
-                                                                        handleAddToCart(item);
-                                                                    }
-                                                                }}
-                                                                disabled={buttonDisabled && !showOutOfStock}
-                                                                style={{
-                                                                    transition: "background-color 0.3s ease, color 0.3s ease",
-
-                                                                    opacity: showOutOfStock ? 0.8 : 1,
-                                                                    cursor: showOutOfStock ? 'pointer' : (buttonDisabled ? 'not-allowed' : 'pointer'),
-                                                                }}
-                                                            >
-                                                                {isAdding ? (
-                                                                    <>
-                                                                        <span className="spinner-border spinner-border-sm me-2" role="status"></span>
-                                                                        Adding...
-                                                                    </>
-                                                                ) : showOutOfStock ? (
-                                                                    <>
-                                                                        <FaTimes style={{ fontSize: '14px' }} />
-                                                                        Out of Stock
-                                                                    </>
-                                                                ) : (
-                                                                    <>
-                                                                        {buttonText}
-                                                                        {!buttonDisabled && !isAdding && !showSelectVariantButton && (
-                                                                            <img src={bagIcon} className="img-fluid ms-1" style={{ marginTop: '-3px', height: "20px" }} alt="Bag-icon" />
-                                                                        )}
-                                                                    </>
-                                                                )}
-                                                            </button>
-                                                        </div>
-                                                    </div>
+                                                    <ProductCardCartButton
+                                                        item={item}
+                                                        displayVariant={displayVariant}
+                                                        showOutOfStock={showOutOfStock}
+                                                        isCurrentVariantOutOfStock={isCurrentVariantOutOfStock}
+                                                        showSelectVariantButton={showSelectVariantButton}
+                                                        isAdding={isAdding}
+                                                        handleAddToCart={handleAddToCart}
+                                                        handleOutOfStockClick={handleOutOfStockClick}
+                                                        openVariantOverlay={openVariantOverlay}
+                                                    />
                                                 </div>
                                             </div>
                                         </div>

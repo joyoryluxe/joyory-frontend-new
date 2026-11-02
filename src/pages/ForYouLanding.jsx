@@ -1,3 +1,4 @@
+import ProductCardCartButton from "../components/common/ProductCardCartButton";
 import { useState, useEffect, useContext, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -433,53 +434,17 @@ function ProductCard({ product, navigate, location }) {
                         )}
 
                         {/* Add to Cart / Select Variant / Out of Stock Button */}
-                        <div className="cart-section">
-                            <div className="d-flex align-items-center justify-content-between">
-                                <button
-                                    className={`btn w-100 page-title-main-name addtocartbuttton d-flex align-items-center justify-content-center gap-2 ${showOutOfStock
-                                        ? "btn-secondary"
-                                        : addingToCart
-                                            ? ""
-                                            : "btn-outline-dark"
-                                        }`}
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        if (showOutOfStock) {
-                                            handleOutOfStockClick(pName);
-                                        } else if (showSelectVariantBtn) {
-                                            setShowVariantOverlay(true);
-                                        } else {
-                                            handleAddToCart();
-                                        }
-                                    }}
-                                    disabled={buttonDisabled && !showOutOfStock}
-                                    style={{
-                                        transition: "background-color 0.3s ease, color 0.3s ease",
-                                        opacity: showOutOfStock ? 0.8 : 1,
-                                        cursor: showOutOfStock ? 'pointer' : (buttonDisabled ? 'not-allowed' : 'pointer'),
-                                    }}
-                                >
-                                    {addingToCart ? (
-                                        <>
-                                            <span className="spinner-border spinner-border-sm me-2" />
-                                            Adding...
-                                        </>
-                                    ) : showOutOfStock ? (
-                                        <>
-                                            <FaTimes style={{ fontSize: '14px' }} />
-                                            Out of Stock
-                                        </>
-                                    ) : (
-                                        <>
-                                            {buttonText}
-                                            {!buttonDisabled && !addingToCart && !showSelectVariantBtn && (
-                                                <img src={bagIcon} className="img-fluid ms-1" style={{ marginTop: '-3px', height: "20px" }} alt="Bag-icon" />
-                                            )}
-                                        </>
-                                    )}
-                                </button>
-                            </div>
-                        </div>
+                        <ProductCardCartButton
+                            item={product}
+                            displayVariant={displayVariant}
+                            showOutOfStock={showOutOfStock}
+                            isCurrentVariantOutOfStock={isCurrentVariantOutOfStock}
+                            showSelectVariantButton={showSelectVariantBtn}
+                            isAdding={addingToCart}
+                            handleAddToCart={() => handleAddToCart()}
+                            handleOutOfStockClick={() => handleOutOfStockClick(pName)}
+                            openVariantOverlay={() => setShowVariantOverlay(true)}
+                          />
                     </div>
                 </div>
             </div>
