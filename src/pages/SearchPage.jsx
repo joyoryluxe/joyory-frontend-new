@@ -634,7 +634,7 @@ const SearchPage = () => {
         setTotalCount(cached.totalCount || cached.products.length);
         setCursor(cached.cursor || null);
         setHasMore(cached.hasMore ?? false);
-        if (cached.filterData && !filterData) setFilterData(cached.filterData);
+        if (cached.filterData && (!filterData || reset)) setFilterData(cached.filterData);
         if (cached.trendingCategories && (!trendingCategories || trendingCategories.length === 0)) {
           setTrendingCategories(cached.trendingCategories);
         }
@@ -682,7 +682,7 @@ const SearchPage = () => {
       if (response.data?.titleMessage) {
         titleMsg = response.data.titleMessage;
       }
-      if (response.data?.filters && !filterData) {
+      if (response.data?.filters && (!filterData || reset)) {
         setFilterData(response.data.filters);
       }
       if (response.data?.trendingCategories && (!trendingCategories || trendingCategories.length === 0)) {
@@ -1060,7 +1060,11 @@ const SearchPage = () => {
         return 3000;
       }
 
-      if (normName.includes(normTerm)) return 2000;
+      // Compact comparison for hyphens/spaces (e.g. "de-tan" vs "detan", "sun-screen" vs "sunscreen")
+      const compactName = normName.replace(/\s+/g, '');
+      const compactTerm = normTerm.replace(/\s+/g, '');
+
+      if (normName.includes(normTerm) || (compactTerm.length >= 4 && compactName.includes(compactTerm))) return 2000;
       if (normTerm.includes(normName) && normName.length >= 4) return 2000;
       if (`${normBrand} ${normName}`.includes(normTerm) || normTerm.includes(`${normBrand} ${normName}`)) return 1800;
 
@@ -1072,8 +1076,17 @@ const SearchPage = () => {
       const searchableStr = getSearchableString(prod);
 
       words.forEach(word => {
-        if (normName.includes(word)) nameMatches++;
-        if (normBrand.includes(word) || normCategory.includes(word) || searchableStr.includes(word)) brandCatMatches++;
+        const compactWord = word.replace(/\s+/g, '');
+        const escapeRegExp = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const wRegex = new RegExp(`\\b${escapeRegExp(word)}\\b`, 'i');
+        const compactRegex = (compactWord === 'detan' || compactWord === 'detanning')
+          ? /\bde[- ]?tan(ning|ned|s)?\b/i
+          : wRegex;
+
+        if (compactRegex.test(normName) || normName.includes(word)) nameMatches++;
+        if (compactRegex.test(normBrand) || compactRegex.test(normCategory) || compactRegex.test(searchableStr)) {
+          brandCatMatches++;
+        }
       });
 
       if (nameMatches === 0 && brandCatMatches === 0) return 0;
