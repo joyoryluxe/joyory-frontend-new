@@ -1,3 +1,4 @@
+import ProductCardCartButton from "../components/common/ProductCardCartButton";
 import React, { useState, useEffect, useCallback, useContext } from 'react';
 import { BrowserRouter, Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
 import { Spinner, Container, Row, Col } from 'react-bootstrap';
@@ -969,39 +970,18 @@ const Blog = () => {
                   )}
 
                                 {/* Add to Cart / Select Variant Button */}
-                                <div className="cart-section">
-                                  <div className="d-flex align-items-center justify-content-between">
-                                    <button
-                                      className={`w-100 btn-add-cart`}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        if (showSelectVariantButton) {
-                                          openVariantOverlay(item._id, "all", e);
-                                        } else {
-                                          handleAddToCart(item);
-                                        }
-                                      }}
-                                      disabled={buttonDisabled}
-                                      style={{
-                                        transition: "background-color 0.3s ease, color 0.3s ease",
-                                      }}
-                                    >
-                                      {isAdding ? (
-                                        <>
-                                          <span className="spinner-border spinner-border-sm me-2" role="status"></span>
-                                          Adding...
-                                        </>
-                                      ) : (
-                                        <>
-                                          {buttonText}
-                                          {!buttonDisabled && !isAdding && !showSelectVariantButton && (
-                                            <img src={bagIcon} className="img-fluid ms-1" style={{ marginTop: '-3px', height: "20px" }} alt="Bag-icon" />
-                                          )}
-                                        </>
-                                      )}
-                                    </button>
-                                  </div>
-                                </div>
+                                <ProductCardCartButton
+                                  item={item}
+                                  displayVariant={displayVariant}
+                                  showOutOfStock={showOutOfStock}
+                                  isCurrentVariantOutOfStock={outOfStock}
+                                  showSelectVariantButton={showSelectVariantButton}
+                                  isAdding={isAdding}
+                                  handleAddToCart={handleAddToCart}
+                                  handleOutOfStockClick={handleOutOfStockClick}
+                                  openVariantOverlay={openVariantOverlay}
+                                  buttonClassName="w-100 btn-add-cart"
+                                />
                               </div>
                             </div>
                           </div>

@@ -1,0 +1,100 @@
+/* ==========================================================================
+   Product Card Quantity Stepper ("- 1 +" box when item is in cart)
+   ========================================================================== */
+.cart-section .card-qty-stepper,
+.card-qty-stepper {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    height: 60px !important;
+    background-color: #ffffff !important;
+    border: 1.5px solid #000000 !important;
+    border-radius: 0 0 20px 20px !important;
+    padding: 0 16px !important;
+    box-sizing: border-box !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+    transition: all 0.2s ease !important;
+    position: relative !important;
+    z-index: 2 !important;
+}
+
+.cart-section .card-qty-stepper button.card-qty-btn,
+.card-qty-stepper button.card-qty-btn {
+    background-color: transparent !important;
+    color: #000000 !important;
+    border: none !important;
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    cursor: pointer !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    transition: background-color 0.15s ease, color 0.15s ease, transform 0.1s ease !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.cart-section .card-qty-stepper button.card-qty-btn:hover:not(:disabled),
+.card-qty-stepper button.card-qty-btn:hover:not(:disabled) {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+}
+
+.cart-section .card-qty-stepper button.card-qty-btn:active:not(:disabled),
+.card-qty-stepper button.card-qty-btn:active:not(:disabled) {
+    transform: scale(0.92) !important;
+}
+
+.cart-section .card-qty-stepper button.card-qty-btn:disabled,
+.card-qty-stepper button.card-qty-btn:disabled {
+    opacity: 0.3 !important;
+    cursor: not-allowed !important;
+    background-color: transparent !important;
+    color: #999999 !important;
+}
+
+.cart-section .card-qty-stepper .card-qty-val,
+.card-qty-stepper .card-qty-val {
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    color: #000000 !important;
+    letter-spacing: 0.5px !important;
+    min-width: 32px !important;
+    text-align: center !important;
+    user-select: none !important;
+    line-height: 1 !important;
+}
+
+/* Mobile responsive styles */
+@media (max-width: 767px) {
+    .cart-section .card-qty-stepper,
+    .card-qty-stepper {
+        height: 32px !important;
+        border-radius: 0 0 16px 16px !important;
+        padding: 0 6px !important;
+        border-width: 1px !important;
+    }
+
+    .cart-section .card-qty-stepper button.card-qty-btn,
+    .card-qty-stepper button.card-qty-btn {
+        width: 24px !important;
+        height: 24px !important;
+        min-width: 24px !important;
+        font-size: 13px !important;
+    }
+
+    .cart-section .card-qty-stepper .card-qty-val,
+    .card-qty-stepper .card-qty-val {
+        font-size: 13px !important;
+        min-width: 20px !important;
+    }
+}
+
