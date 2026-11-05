@@ -71,24 +71,7 @@ const CartProvider = ({ children }) => {
   };
 
   const syncCartFromBackend = async () => {
-    // If user is guest and local guest cart is empty, immediately set empty cart state
-    // without making an unnecessary network request on initial page load
-    if (!user) {
-      const guestCart = getGuestCart();
-      if (!guestCart || guestCart.length === 0) {
-        setCartItems([]);
-        setCartCount(0);
-        setCartSummary({
-          bagMrp: 0,
-          bagDiscount: 0,
-          totalSavings: 0,
-          shipping: 0,
-          payable: 0,
-          grandTotal: 0,
-        });
-        return;
-      }
-    }
+    
     try {
       const queryParams = new URLSearchParams();
       queryParams.append("t", Date.now().toString());
@@ -334,16 +317,14 @@ const CartProvider = ({ children }) => {
         )
       );
 
-      // Check if logged in vs guest
-      const hasToken = document.cookie.includes("token=");
-      if (hasToken) {
+      // Try backend first (works for both logged-in and guest sessions via cookies)
+      try {
         await axios.put(
           "https://beauty.joyory.com/api/user/cart/update",
           { productId, variantSku: variantSku || null, quantity: newQty },
           { withCredentials: true }
         );
-        await syncCartFromBackend();
-      } else {
+      } catch (backendErr) {
         const guestCart = getGuestCart();
         const updated = guestCart.map((item) =>
           item.productId === productId && (!variantSku || String(item.selectedVariant?.sku || '').trim().toLowerCase() === String(variantSku || '').trim().toLowerCase())
@@ -351,8 +332,8 @@ const CartProvider = ({ children }) => {
             : item
         );
         saveGuestCart(updated);
-        await syncCartFromBackend();
       }
+      await syncCartFromBackend();
     } catch (err) {
       console.error("Error updating cart quantity:", err);
       await syncCartFromBackend();
@@ -376,8 +357,7 @@ const CartProvider = ({ children }) => {
         })
       );
 
-      const hasToken = document.cookie.includes('token=');
-      if (hasToken) {
+      try {
         await axios.post(
           'https://beauty.joyory.com/api/user/cart/remove-multiple',
           {
@@ -388,16 +368,15 @@ const CartProvider = ({ children }) => {
           },
           { withCredentials: true }
         );
-        await syncCartFromBackend();
-      } else {
+      } catch (backendErr) {
         const guestCart = getGuestCart();
         const updated = guestCart.filter((item) => {
           const key = item.cartItemId || `${item.productId}-${item.selectedVariant?.sku || 'default'}`;
           return !itemKeysToRemove.has(key);
         });
         saveGuestCart(updated);
-        await syncCartFromBackend();
       }
+      await syncCartFromBackend();
     } catch (err) {
       console.error('Error removing multiple cart items:', err);
       await syncCartFromBackend();
@@ -415,22 +394,20 @@ const CartProvider = ({ children }) => {
         )
       );
 
-      const hasToken = document.cookie.includes("token=");
-      if (hasToken) {
+      try {
         const url = variantSku
           ? `https://beauty.joyory.com/api/user/cart/remove/${productId}?variantSku=${encodeURIComponent(variantSku)}`
           : `https://beauty.joyory.com/api/user/cart/remove/${productId}`;
         await axios.delete(url, { withCredentials: true });
-        await syncCartFromBackend();
-      } else {
+      } catch (backendErr) {
         const guestCart = getGuestCart();
         const updated = guestCart.filter(
           (item) =>
             !(item.productId === productId && (!variantSku || String(item.selectedVariant?.sku || '').trim().toLowerCase() === String(variantSku || '').trim().toLowerCase()))
         );
         saveGuestCart(updated);
-        await syncCartFromBackend();
       }
+      await syncCartFromBackend();
     } catch (err) {
       console.error("Error removing cart item:", err);
       await syncCartFromBackend();
