@@ -64,9 +64,13 @@ const Myorders = () => {
   };
 
   const isOrderCancelled = (order) => {
-    return order?.status?.toLowerCase() === "cancelled" ||
+    return Boolean(
+      order?.isCancelled === true ||
+      order?.status?.toLowerCase() === "cancelled" ||
       order?.orderStatus?.toLowerCase() === "cancelled" ||
-      order?.shipments?.some(s => s.status?.toLowerCase() === "cancelled");
+      order?.cancellation?.status?.toLowerCase() === "cancelled" ||
+      order?.shipments?.some(s => s.status?.toLowerCase() === "cancelled")
+    );
   };
 
   const getStatusIcon = (status) => {
@@ -227,30 +231,35 @@ const Myorders = () => {
                 </div>
 
                 {/* Shipments */}
-                {order.shipments && order.shipments.map((shipment) => (
-                  <div
-                    key={shipment.shipment_id || `shipment-${Math.random()}`}
-                    className="shipment-wrapper border-bottom p-3 clickable-shipment"
-                    onClick={() => handleOrderClick(order, shipment.shipment_id, shipment)}
-                  >
-                    <div className="shipment-meta d-lg-flex justify-content-between align-items-center mb-3">
-                      <div className="d-flex align-items-center">
-                        <span className="shipment-badge bg-dark text-white px-2 py-1 rounded small me-2">
-                          {shipment.label}
-                        </span>
-                        <span className="text-muted small">
-                          {shipment.shipment_id ? (
-                            <>ID: {shipment.shipment_id}</>
-                          ) : (
-                            <span className="text-warning">Shipment Pending</span>
-                          )}
-                        </span>
+                {order.shipments && order.shipments.map((shipment) => {
+                  const orderCancelled = isOrderCancelled(order);
+                  const shipmentCancelled = isShipmentCancelled(shipment);
+                  const effectiveShipmentStatus = (orderCancelled || shipmentCancelled) ? "Cancelled" : (shipment.status || order.orderStatus || "Pending");
+
+                  return (
+                    <div
+                      key={shipment.shipment_id || `shipment-${Math.random()}`}
+                      className="shipment-wrapper border-bottom p-3 clickable-shipment"
+                      onClick={() => handleOrderClick(order, shipment.shipment_id, shipment)}
+                    >
+                      <div className="shipment-meta d-lg-flex justify-content-between align-items-center mb-3">
+                        <div className="d-flex align-items-center">
+                          <span className="shipment-badge bg-dark text-white px-2 py-1 rounded small me-2">
+                            {shipment.label}
+                          </span>
+                          <span className="text-muted small">
+                            {shipment.shipment_id ? (
+                              <>ID: {shipment.shipment_id}</>
+                            ) : (
+                              <span className="text-warning">Shipment Pending</span>
+                            )}
+                          </span>
+                        </div>
+                        <div className={`status-pill status-${effectiveShipmentStatus.toLowerCase()} d-flex align-items-center gap-2 fw-bold mt-lg-0`}>
+                          {getStatusIcon(effectiveShipmentStatus)}
+                          {effectiveShipmentStatus}
+                        </div>
                       </div>
-                      <div className={`status-pill status-${shipment.status?.toLowerCase() || 'pending'} d-flex align-items-center gap-2 fw-bold mt-lg-0`}>
-                        {getStatusIcon(shipment.status)}
-                        {shipment.status || "Pending"}
-                      </div>
-                    </div>
 
                     {/* Products */}
                     <div className="shipment-products-list">
@@ -277,7 +286,8 @@ const Myorders = () => {
                       ))}
                     </div>
                   </div>
-                ))}
+                  );
+                })}
 
                 {/* Footer */}
                 <div className="order-footer p-3 bg-white d-flex justify-content-between align-items-center position-sticky bottom-0">

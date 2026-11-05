@@ -896,10 +896,11 @@ const CancelOrder = () => {
   const orderIdToUse = order?._id || orderId;
 
   // Use order.amount for calculations
-  const subtotal = order?.amount?.subtotal || 0;
+  const rawAmount = typeof order?.amount === "number" ? order?.amount : (order?.amount?.grandTotal || 0);
+  const subtotal = order?.amount?.subtotal || rawAmount;
   const discount = order?.amount?.discount || 0;
   const shippingCharge = order?.amount?.shipping || 0;
-  const grandTotal = order?.amount?.grandTotal || 0;
+  const grandTotal = rawAmount;
 
   // ✅ Clear order success data from sessionStorage on mount
   useEffect(() => {
@@ -922,22 +923,29 @@ const CancelOrder = () => {
           }
 
           // Fetch from API
-          const response = await fetch(
+          const endpoints = [
             `https://beauty.joyory.com/api/user/orders/${orderId}`,
-            {
-              method: "GET",
-              credentials: "include",
-              headers: {
-                "Content-Type": "application/json",
-              },
-            }
-          );
-
-          if (response.ok) {
-            const data = await response.json();
-            if (data.success && data.order) {
-              setOrder(data.order);
-              sessionStorage.setItem(`cancelledOrder_${orderId}`, JSON.stringify(data.order));
+            `https://beauty.joyory.com/api/user/cart/orders/${orderId}`,
+            `https://beauty.joyory.com/api/user/cart/tracking/${orderId}`
+          ];
+          for (const ep of endpoints) {
+            try {
+              const res = await fetch(ep, {
+                method: "GET",
+                credentials: "include",
+                headers: { "Content-Type": "application/json" }
+              });
+              if (res.ok) {
+                const data = await res.json();
+                const fetchedOrder = data.order || (data._id ? data : null);
+                if (fetchedOrder) {
+                  setOrder(fetchedOrder);
+                  sessionStorage.setItem(`cancelledOrder_${orderId}`, JSON.stringify(fetchedOrder));
+                  break;
+                }
+              }
+            } catch (epErr) {
+              // Try next endpoint
             }
           }
         } catch (err) {
