@@ -333,6 +333,19 @@ const OrderDetails = () => {
 
   /* ---------- GET EFFECTIVE STATUS (Priority: Return > Shipment) ---------- */
   const getEffectiveStatus = () => {
+    if (
+      shipmentData?.isCancelled ||
+      shipmentData?.orderInfo?.isCancelled ||
+      shipmentData?.orderInfo?.orderStatus?.toLowerCase() === "cancelled" ||
+      shipmentData?.shipmentStatus?.toLowerCase() === "cancelled"
+    ) {
+      return {
+        status: "Cancelled",
+        statusLabel: "Cancelled",
+        type: "shipment"
+      };
+    }
+
     const activeReturn = shipmentData?.activeReturn;
     const returns = shipmentData?.returns || [];
 
