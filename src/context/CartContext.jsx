@@ -71,6 +71,24 @@ const CartProvider = ({ children }) => {
   };
 
   const syncCartFromBackend = async () => {
+    // If user is guest and local guest cart is empty, immediately set empty cart state
+    // without making an unnecessary network request on initial page load
+    if (!user) {
+      const guestCart = getGuestCart();
+      if (!guestCart || guestCart.length === 0) {
+        setCartItems([]);
+        setCartCount(0);
+        setCartSummary({
+          bagMrp: 0,
+          bagDiscount: 0,
+          totalSavings: 0,
+          shipping: 0,
+          payable: 0,
+          grandTotal: 0,
+        });
+        return;
+      }
+    }
     try {
       const queryParams = new URLSearchParams();
       queryParams.append("t", Date.now().toString());
