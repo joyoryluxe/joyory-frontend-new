@@ -1199,7 +1199,7 @@ const Header = ({ hideCategories = false }) => {
         <div className="d-flex justify-content-between margin-padding-header align-items-center">
           {/* Logo */}
           <Link to="/" className="logo" onClick={handleLogoClick}>
-            <img src={logo} className="ps-sm-0 ps-4 ms-sm-0" alt="JOYORY" />
+            <img src={logo} className="header-logo-img" alt="JOYORY" />
           </Link>
 
           {/* Desktop Search with Click-Outside Close */}

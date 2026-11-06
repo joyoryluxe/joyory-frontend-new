@@ -680,7 +680,7 @@ const HeaderCategories = () => {
           setIsHoverDisabled(false);
         }}
       >
-        <div className="container-fluid d-flex align-items-center justify-content-evenly">
+        <div className="container-fluid d-flex align-items-center justify-content-between category-outer-wrapper">
 
           {/* Dynamic Categories */}
           {categories.map((cat) => (
