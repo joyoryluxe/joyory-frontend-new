@@ -513,7 +513,7 @@ const Mobileheaderview = ({
       <header className="header d-block">
         <div className="d-flex justify-content-between margin-padding-header align-items-center">
           <Link to="/" className="logo" onClick={handleLogoClick}>
-            <img src={logo} className="ps-sm-0 ps-4 ms-sm-0" alt="JOYORY Logo" />
+            <img src={logo} className="header-logo-img" alt="JOYORY Logo" />
           </Link>
 
           <div className="menu-toggle" onClick={() => setMenuOpen(true)}>
