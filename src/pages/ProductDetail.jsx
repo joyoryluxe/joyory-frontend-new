@@ -91,56 +91,24 @@ const ProductDetail = () => {
     }
   };
 
-  useEffect(() => {
-    // Avoid double fetching if we already have the product and the slug is one of its slugs or ID or variant slugs
-    const isCurrentProduct =
-      product &&
-      (product._id === slug ||
-        product.slug === slug ||
-        (product.slugs && product.slugs.includes(slug)) ||
-        (product.variants && product.variants.some((v) => v.slug === slug)));
-
-    if (isCurrentProduct) {
-      // If product is already loaded and URL slug changed to a variant slug, simply sync the active variant without re-fetching
-      const matchingVariant = product.variants?.find((v) => v.slug === slug);
-      if (matchingVariant && selectedShade?.sku !== (matchingVariant.sku || matchingVariant.variantSku)) {
-        const variantData = {
-          shadeName: matchingVariant.shadeName,
-          hex: matchingVariant.hex,
-          stock: matchingVariant.stock,
-          images: matchingVariant.images || product.images || ["/placeholder.png"],
-          displayPrice: matchingVariant.displayPrice || product.price,
-          originalPrice: matchingVariant.originalPrice || product.mrp || product.price,
-          variantSku: matchingVariant.sku || matchingVariant.variantSku,
-          sku: matchingVariant.sku || matchingVariant.variantSku,
-          slug: matchingVariant.slug,
-          ...matchingVariant,
-        };
-        setSelectedShade(variantData);
-        setDisplayImages(variantData.images);
+    const fetchProduct = async (silent = false) => {
+    try {
+      let url = `/api/user/products/${slug}`;
+      const variantParam = getVariantFromQuery();
+      if (variantParam) {
+        url += `?variant=${variantParam}`;
       }
-      return;
-    }
 
-    let isSubscribed = true;
+      const res = await axiosInstance.get(url);
+      const data = res.data;
+      if (!data) return;
 
-    const fetchProduct = async () => {
-      try {
-        let url = `/api/user/products/${slug}`;
-        const variantParam = getVariantFromQuery();
-        if (variantParam) {
-          url += `?variant=${variantParam}`;
-        }
+      if (location.state?.supportsVTO !== undefined) {
+        data.supportsVTO = location.state.supportsVTO;
+      }
+      setProduct(data);
 
-        const res = await axiosInstance.get(url);
-        if (!isSubscribed) return;
-
-        const data = res.data;
-        if (location.state?.supportsVTO !== undefined) {
-          data.supportsVTO = location.state.supportsVTO;
-        }
-        setProduct(data);
-
+      if (!silent) {
         // Track ViewContent in Meta Pixel
         if (window.fbq) {
           window.fbq('track', 'ViewContent', {
@@ -167,71 +135,125 @@ const ProductDetail = () => {
             },
           });
         }
+      }
 
-        const isVariantSlug =
-          data.selectedVariant && data.selectedVariant.slug === slug;
+      const isVariantSlug =
+        data.selectedVariant && data.selectedVariant.slug === slug;
 
-        const variantsList = data.variants || [];
-        let defaultVariant = null;
+      const variantsList = data.variants || [];
 
-        if (isVariantSlug && data.selectedVariant) {
-          defaultVariant = data.selectedVariant;
-        } else if (variantParam) {
-          defaultVariant =
-            variantsList.find(
-              (v) =>
-                v.sku === variantParam || v.variantSku === variantParam
-            ) || variantsList[0];
-        } else {
-          defaultVariant =
-            variantsList.find((v) => v.stock > 0) || variantsList[0];
+      // Update selectedShade with fresh variant stock / data
+      setSelectedShade((prevSelected) => {
+        let targetVariant = null;
+
+        if (prevSelected) {
+          targetVariant = variantsList.find(
+            (v) => (v.sku && (v.sku === prevSelected.sku || v.variantSku === prevSelected.sku)) ||
+                   (v.slug && v.slug === prevSelected.slug)
+          );
         }
 
-        if (defaultVariant) {
+        if (!targetVariant) {
+          if (isVariantSlug && data.selectedVariant) {
+            targetVariant = data.selectedVariant;
+          } else if (variantParam) {
+            targetVariant =
+              variantsList.find(
+                (v) => v.sku === variantParam || v.variantSku === variantParam
+              ) || variantsList[0];
+          } else {
+            targetVariant =
+              variantsList.find((v) => v.stock > 0) || variantsList[0];
+          }
+        }
+
+        if (targetVariant) {
           const variantData = {
-            shadeName: defaultVariant.shadeName,
-            hex: defaultVariant.hex,
-            stock: defaultVariant.stock,
-            images: defaultVariant.images || data.images || ["/placeholder.png"],
-            displayPrice: defaultVariant.displayPrice,
-            originalPrice: defaultVariant.originalPrice,
-            variantSku: defaultVariant.sku || defaultVariant.variantSku,
-            sku: defaultVariant.sku || defaultVariant.variantSku,
-            slug: defaultVariant.slug,
-            ...defaultVariant,
+            shadeName: targetVariant.shadeName,
+            hex: targetVariant.hex,
+            stock: targetVariant.stock,
+            images: targetVariant.images || data.images || ["/placeholder.png"],
+            displayPrice: targetVariant.displayPrice,
+            originalPrice: targetVariant.originalPrice,
+            variantSku: targetVariant.sku || targetVariant.variantSku,
+            sku: targetVariant.sku || targetVariant.variantSku,
+            slug: targetVariant.slug,
+            ...targetVariant,
           };
-
-          setSelectedShade(variantData);
           setDisplayImages(variantData.images);
+          return variantData;
+        }
 
-          setNewReview((prev) => ({
-            ...prev,
-            variantSku: variantData.sku,
-            shadeName: variantData.shadeName,
-          }));
-        } else {
-          setSelectedShade(null);
-          setDisplayImages(data.images || ["/placeholder.png"]);
-        }
-      } catch (err) {
-        if (!isSubscribed) return;
-        console.error("❌ Error fetching product:", err);
-        // Only navigate to 404 if the server returned 404 Not Found (not on rate limit 429 or network errors)
-        if (err.response?.status === 404) {
-          toast.error("Product not found");
-          navigate("/404");
-        } else if (err.response?.status === 429) {
-          toast.error("Too many requests. Please slow down and wait a moment.");
-        }
+        return prevSelected;
+      });
+    } catch (err) {
+      if (silent) return;
+      console.error("❌ Error fetching product:", err);
+      if (err.response?.status === 404) {
+        toast.error("Product not found");
+        navigate("/404");
+      } else if (err.response?.status === 429) {
+        toast.error("Too many requests. Please slow down and wait a moment.");
+      }
+    }
+  };
+
+  useEffect(() => {
+    // Avoid double fetching if we already have the product and the slug is one of its slugs or ID or variant slugs
+    const isCurrentProduct =
+      product &&
+      (product._id === slug ||
+        product.slug === slug ||
+        (product.slugs && product.slugs.includes(slug)) ||
+        (product.variants && product.variants.some((v) => v.slug === slug)));
+
+    if (isCurrentProduct) {
+      // If product is already loaded and URL slug changed to a variant slug, simply sync the active variant immediately
+      const matchingVariant = product.variants?.find((v) => v.slug === slug);
+      if (matchingVariant && selectedShade?.sku !== (matchingVariant.sku || matchingVariant.variantSku)) {
+        const variantData = {
+          shadeName: matchingVariant.shadeName,
+          hex: matchingVariant.hex,
+          stock: matchingVariant.stock,
+          images: matchingVariant.images || product.images || ["/placeholder.png"],
+          displayPrice: matchingVariant.displayPrice || product.price,
+          originalPrice: matchingVariant.originalPrice || product.mrp || product.price,
+          variantSku: matchingVariant.sku || matchingVariant.variantSku,
+          sku: matchingVariant.sku || matchingVariant.variantSku,
+          slug: matchingVariant.slug,
+          ...matchingVariant,
+        };
+        setSelectedShade(variantData);
+        setDisplayImages(variantData.images);
+      }
+      // Silently refresh product stock in background to guarantee real-time accuracy
+      fetchProduct(true);
+      return;
+    }
+
+    fetchProduct(false);
+  }, [slug, location.search, navigate]);
+
+  // Live stock synchronization on tab focus (instant refresh when returning to tab from Admin panel)
+  useEffect(() => {
+    let focusTimer = null;
+    const handleTabFocus = () => {
+      if (document.visibilityState === "visible" && slug) {
+        clearTimeout(focusTimer);
+        focusTimer = setTimeout(() => {
+          fetchProduct(true);
+        }, 150);
       }
     };
 
-    fetchProduct();
-
+    window.addEventListener("focus", handleTabFocus);
+    document.addEventListener("visibilitychange", handleTabFocus);
     return () => {
-      isSubscribed = false;
+      clearTimeout(focusTimer);
+      window.removeEventListener("focus", handleTabFocus);
+      document.removeEventListener("visibilitychange", handleTabFocus);
     };
-  }, [slug, location.search, navigate]);
+  }, [slug]);
 
   // Auto-rewrite URL ONLY if the user accessed via a raw database ID (24-char hex) instead of a clean SEO slug
   useEffect(() => {
