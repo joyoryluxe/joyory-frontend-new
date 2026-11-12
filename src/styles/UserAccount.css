@@ -591,6 +591,8 @@
 }
 
 .adress-buttons .ua-save {
+    background-color: #1f6f8b !important;
+    color: #FFF !important;
     width: 150px !important;
     margin-top: 20px;
     margin-left: 0;
@@ -598,8 +600,9 @@
 }
 
 .adress-buttons .delete-button {
-    background-color: #1f6f8b !important;
-    color: #FFF !important;
+    background-color: #f5f7f8 !important;
+    color: inherit !important;
+    border: 1px solid rgba(0, 0, 0, 0.08);
     width: 150px !important;
     margin-top: 20px;
 }
@@ -762,6 +765,8 @@
 }
 
 .adress-buttons .ua-save {
+    background-color: #1f6f8b !important;
+    color: #FFF !important;
     width: 250px;
     margin-top: 20px;
     margin-left: 0;
@@ -769,8 +774,9 @@
 }
 
 .adress-buttons .delete-button {
-    background-color: #1f6f8b !important;
-    color: #FFF !important;
+    background-color: #f5f7f8 !important;
+    color: inherit !important;
+    border: 1px solid rgba(0, 0, 0, 0.08);
     width: 250px;
     margin-top: 20px;
 }

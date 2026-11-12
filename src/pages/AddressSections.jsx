@@ -7,11 +7,19 @@ const AddressSections = ({
   handleSaveAddress,
   handleDeleteAddress,
   handleAddNewAddress,
+  handleCancelNewAddress,
 }) => {
   const [editingIndex, setEditingIndex] = useState(null); // Track which address is being edited
+  const [savingIndex, setSavingIndex] = useState(null);
 
   const toggleEdit = (index) => {
     setEditingIndex(editingIndex === index ? null : index);
+  };
+
+  const onAddNewClick = () => {
+    const newIndex = addresses.length;
+    handleAddNewAddress();
+    setEditingIndex(newIndex);
   };
 
   return (
@@ -19,10 +27,10 @@ const AddressSections = ({
       <h4 className="ua-subtitle mt-4 page-title-main-name">Addresses</h4>
 
       {addresses.map((addr, i) => {
-        const isEditing = editingIndex === i;
+        const isEditing = editingIndex === i || !addr._id;
 
         return (
-          <div key={i} className="ua-address-row mb-4">
+          <div key={addr._id || `new-${i}`} className="ua-address-row mb-4">
             <div className="row">
               <div className="col-lg-6 page-title-main-name">
                 <input
@@ -105,24 +113,44 @@ const AddressSections = ({
                   <button
                     type="button"
                     className="ua-btn ua-save"
-                    onClick={() => {
-                      handleSaveAddress(i);
-                      setEditingIndex(null); // Exit edit mode after save
+                    disabled={savingIndex === i}
+                    onClick={async () => {
+                      setSavingIndex(i);
+                      try {
+                        const saved = await handleSaveAddress(i);
+                        if (saved !== false) {
+                          setEditingIndex(null); // Exit edit mode after save
+                        }
+                      } finally {
+                        setSavingIndex(null);
+                      }
                     }}
                   >
-                    Save
+                    {savingIndex === i ? "Saving..." : "Save"}
                   </button>
-                  <button
-                    type="button"
-                    className="ua-btn delete-button ua-delete ms-2"
-                    onClick={() => handleDeleteAddress(i)}
-                  >
-                    Delete
-                  </button>
+                  {addr._id && (
+                    <button
+                      type="button"
+                      className="ua-btn delete-button ua-delete ms-2"
+                      onClick={async () => {
+                        const deleted = await handleDeleteAddress(i);
+                        if (deleted !== false) {
+                          setEditingIndex(null);
+                        }
+                      }}
+                    >
+                      Delete
+                    </button>
+                  )}
                   <button
                     type="button"
                     className="ua-btn ms-2"
-                    onClick={() => setEditingIndex(null)}
+                    onClick={() => {
+                      if (!addr._id && handleCancelNewAddress) {
+                        handleCancelNewAddress(i);
+                      }
+                      setEditingIndex(null);
+                    }}
                   >
                     Cancel
                   </button>
@@ -146,7 +174,7 @@ const AddressSections = ({
         <button 
           type="button" 
           className="ua-btn" 
-          onClick={handleAddNewAddress}
+          onClick={onAddNewClick}
         >
           + Add New Address
         </button>
