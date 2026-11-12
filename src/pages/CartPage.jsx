@@ -975,16 +975,26 @@ const CartPage = () => {
     );
   }, [cartData?.cart]);
 
-  // Selected cart items list
-  const selectedCartItems = useMemo(() => {
-    if (!cartData?.cart) return [];
-    const selectedSet = new Set(selectedCartItemIds);
-    return cartData.cart.filter(item => selectedSet.has(item.cartItemId));
-  }, [cartData?.cart, selectedCartItemIds]);
+  // Last in-stock item added to cart
+  const lastAddedSelectableItem = useMemo(() => {
+    if (!selectableItems.length) return null;
+    return selectableItems[selectableItems.length - 1];
+  }, [selectableItems]);
 
-  // Sync selected IDs when cart loads: default all in-stock items selected
+  // Selected cart items list (falls back to last added item if user has selected nothing)
+  const selectedCartItems = useMemo(() => {
+    if (!cartData?.cart?.length) return [];
+    const selectedSet = new Set(selectedCartItemIds);
+    const matched = cartData.cart.filter(item => selectedSet.has(item.cartItemId));
+    if (matched.length > 0) return matched;
+    // Fallback: if user has selected nothing, the last item he has added to cart will be by default selected
+    if (lastAddedSelectableItem) return [lastAddedSelectableItem];
+    return [];
+  }, [cartData?.cart, selectedCartItemIds, lastAddedSelectableItem]);
+
+  // Sync selected IDs when cart loads: default the last item added to cart
   useEffect(() => {
-    if (!cartData?.cart) return;
+    if (!cartData?.cart?.length) return;
     const currentItems = cartData.cart;
     const currentInStockIds = new Set(
       currentItems
@@ -992,20 +1002,37 @@ const CartPage = () => {
         .map(i => i.cartItemId)
     );
 
+    const lastItem = [...currentItems]
+      .reverse()
+      .find(i => i.stockStatus !== 'out_of_stock' && i.canCheckout !== false);
+
     setSelectedCartItemIds(prev => {
       if (!initializedSelectionRef.current) {
         initializedSelectionRef.current = true;
         prevCartItemIdsRef.current = new Set(currentItems.map(i => i.cartItemId));
-        return Array.from(currentInStockIds);
+        // By default: last item added to cart is selected
+        return lastItem ? [lastItem.cartItemId] : [];
       }
-      // If new items were added into cart after initial load, select new in-stock items
-      const newInStockIds = currentItems
-        .filter(i => !prevCartItemIdsRef.current.has(i.cartItemId) && currentInStockIds.has(i.cartItemId))
-        .map(i => i.cartItemId);
+
+      // If new items were added into cart after initial load, include the newly added item
+      const newInStock = currentItems.filter(
+        i => !prevCartItemIdsRef.current.has(i.cartItemId) && currentInStockIds.has(i.cartItemId)
+      );
 
       prevCartItemIdsRef.current = new Set(currentItems.map(i => i.cartItemId));
+
+      if (newInStock.length > 0) {
+        const newIds = newInStock.map(i => i.cartItemId);
+        const kept = prev.filter(id => currentInStockIds.has(id));
+        return Array.from(new Set([...kept, ...newIds]));
+      }
+
       const kept = prev.filter(id => currentInStockIds.has(id));
-      return Array.from(new Set([...kept, ...newInStockIds]));
+      if (kept.length === 0 && lastItem) {
+        // If user has selected nothing, default to the last item added to cart
+        return [lastItem.cartItemId];
+      }
+      return kept;
     });
   }, [cartData?.cart]);
 
@@ -1013,23 +1040,42 @@ const CartPage = () => {
   useEffect(() => {
     if (!selectAllCheckboxRef.current) return;
     const totalSelectable = selectableItems.length;
-    const selectedCount = selectedCartItemIds.length;
+    const selectedCount = selectedCartItems.length;
     selectAllCheckboxRef.current.indeterminate =
       selectedCount > 0 && selectedCount < totalSelectable;
-  }, [selectedCartItemIds, selectableItems.length]);
+  }, [selectedCartItems.length, selectableItems.length]);
 
   const handleToggleSelectItem = (cartItemId) => {
-    setSelectedCartItemIds(prev =>
-      prev.includes(cartItemId)
-        ? prev.filter(id => id !== cartItemId)
-        : [...prev, cartItemId]
-    );
+    setSelectedCartItemIds(prev => {
+      const currentSelected = prev.length > 0
+        ? prev
+        : (lastAddedSelectableItem ? [lastAddedSelectableItem.cartItemId] : []);
+
+      const isCurrentlySelected = currentSelected.includes(cartItemId);
+      if (isCurrentlySelected) {
+        const next = currentSelected.filter(id => id !== cartItemId);
+        if (next.length === 0) {
+          // If user has selected nothing, the last item added to cart will be by default selected
+          toast.info("By default, the last item added to cart remains selected.", { toastId: "default-last-item", autoClose: 2000 });
+          return lastAddedSelectableItem ? [lastAddedSelectableItem.cartItemId] : [];
+        }
+        return next;
+      } else {
+        return [...currentSelected, cartItemId];
+      }
+    });
   };
 
   const handleToggleSelectAll = () => {
     if (!selectableItems.length) return;
-    if (selectedCartItemIds.length === selectableItems.length) {
-      setSelectedCartItemIds([]);
+    if (selectedCartItems.length === selectableItems.length) {
+      // If user deselects all, by default the last item added to cart will be selected
+      if (lastAddedSelectableItem) {
+        setSelectedCartItemIds([lastAddedSelectableItem.cartItemId]);
+        toast.info("By default, the last item added to cart remains selected.", { toastId: "default-last-item", autoClose: 2000 });
+      } else {
+        setSelectedCartItemIds([]);
+      }
     } else {
       setSelectedCartItemIds(selectableItems.map(i => i.cartItemId));
     }
@@ -1614,7 +1660,8 @@ const CartPage = () => {
 
 
   const handleProceed = async () => {
-    if (selectedCartItemIds.length === 0) {
+    const effectiveItemIds = selectedCartItems.map(i => i.cartItemId);
+    if (effectiveItemIds.length === 0) {
       alert("Please select at least one item to proceed to checkout.");
       return;
     }
@@ -1650,7 +1697,7 @@ const CartPage = () => {
         taxableAmount: summaryPricing.taxableAmount || 0,
         gstAmount: summaryPricing.gstAmount || 0,
         gstRate: summaryPricing.gstRate || "0%",
-        selectedCartItemIds: selectedCartItemIds,
+        selectedCartItemIds: effectiveItemIds,
       };
 
       const res = await fetch(INITIATE_ORDER_API, {
@@ -1959,7 +2006,7 @@ const CartPage = () => {
                     <input
                       type="checkbox"
                       ref={selectAllCheckboxRef}
-                      checked={selectedCartItemIds.length === selectableItems.length && selectableItems.length > 0}
+                      checked={selectedCartItems.length === selectableItems.length && selectableItems.length > 0}
                       disabled={selectableItems.length === 0}
                       onChange={handleToggleSelectAll}
                       aria-label="Select all cart items for checkout"
@@ -1970,14 +2017,14 @@ const CartPage = () => {
                     </span>
                   </label>
                   <span className="text-muted page-title-main-name d-none d-sm-inline" style={{ fontSize: "13px" }}>
-                    {selectedCartItemIds.length} of {cartData.cart.length} item{cartData.cart.length > 1 ? "s" : ""} selected for checkout
+                    {selectedCartItems.length} of {cartData.cart.length} item{cartData.cart.length > 1 ? "s" : ""} selected for checkout
                   </span>
                 </div>
 
                 <div className="d-flex align-items-center gap-2">
                   <span className="text-muted page-title-main-name small d-none d-md-inline">Selected:</span>
                   <span className="fw-bold text-dark page-title-main-name" style={{ fontSize: "14px" }}>
-                    {selectedCartItemIds.length} item{selectedCartItemIds.length === 1 ? "" : "s"} (₹{summaryPricing.subTotal.toFixed(2)})
+                    {selectedCartItems.length} item{selectedCartItems.length === 1 ? "" : "s"} (₹{summaryPricing.subTotal.toFixed(2)})
                   </span>
                 </div>
               </div>
@@ -1989,7 +2036,7 @@ const CartPage = () => {
                 const shadeName = variant.shadeName || variant.name;
                 const shadeHex = variant.hex;
                 const isOutOfStock = item.stockStatus === "out_of_stock" || item.canCheckout === false;
-                const isSelected = !isOutOfStock && selectedCartItemIds.includes(item.cartItemId);
+                const isSelected = !isOutOfStock && selectedCartItems.some(si => si.cartItemId === item.cartItemId);
                 return (
                   <li key={item.cartItemId} className={`list-group-item d-flex justify-content-between align-items-end border-black ${isSelected ? 'cart-item-selected' : ''} ${isOutOfStock ? 'cart-item-out-of-stock opacity-75' : ''}`}>
                     <div className="d-flex align-items-center gap-2 flex-grow-1" style={{ cursor: "pointer", minWidth: 0 }} onClick={() => navigate(`/product/${getCleanProductSlug(item)}`)}>
