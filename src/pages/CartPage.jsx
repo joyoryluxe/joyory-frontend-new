@@ -1024,7 +1024,9 @@ const CartPage = () => {
       const payload = {
         items: itemsToRemove.map(item => ({
           productId: item.productId,
-          variantSku: item.selectedVariant?.sku || null
+          variantSku: item.selectedVariant?.sku || null,
+          cartItemId: item.cartItemId,
+          cartId: item.cartItemId,
         }))
       };
 
@@ -1125,7 +1127,7 @@ const CartPage = () => {
   const handleConfirmRemove = () => {
     setShowPointsConfetti(false);
     setCouponMessage("");
-    if (itemToRemove) handleRemoveByProductId(itemToRemove.productId, itemToRemove.selectedVariant?.sku || null);
+    if (itemToRemove) handleRemoveByProductId(itemToRemove.productId, itemToRemove.selectedVariant?.sku || null, itemToRemove.cartItemId);
     handleCloseConfirm();
   };
 
@@ -1410,7 +1412,14 @@ const CartPage = () => {
       const res = await fetch(`${API_BASE}/update`, {
         method: "PUT", credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId: item.productId, variantSku: item.selectedVariant?.sku || null, quantity: newQty, discount: appliedCoupon }),
+        body: JSON.stringify({
+          productId: item.productId,
+          variantSku: item.selectedVariant?.sku || null,
+          quantity: newQty,
+          discount: appliedCoupon,
+          cartItemId: item.cartItemId,
+          cartId: item.cartItemId,
+        }),
       });
       if (!res.ok) throw new Error("Failed to update quantity");
       sessionStorage.setItem("cartPendingToast", JSON.stringify({ message: "Cart updated successfully!", type: "success" }));
@@ -1423,14 +1432,16 @@ const CartPage = () => {
   };
 
   // ── remove item ─────────────────────────────────────────────────────────────
-  const handleRemoveByProductId = async (productId, variantSku = null) => {
+  const handleRemoveByProductId = async (productId, variantSku = null, cartItemId = null) => {
     if (!productId) return;
     setShowPointsConfetti(false);
     setCouponMessage("");
     try {
-      const appliedCoupon = cartData?.appliedCoupon?.code || null;
-      const url = variantSku
-        ? `${API_BASE}/remove/${productId}?variantSku=${encodeURIComponent(variantSku)}`
+      const params = new URLSearchParams();
+      if (variantSku) params.append("variantSku", variantSku);
+      if (cartItemId) params.append("cartItemId", cartItemId);
+      const url = params.toString()
+        ? `${API_BASE}/remove/${productId}?${params.toString()}`
         : `${API_BASE}/remove/${productId}`;
       const res = await fetch(url, { method: "DELETE", credentials: "include" });
       if (!res.ok) throw new Error("Server failed to remove item");
