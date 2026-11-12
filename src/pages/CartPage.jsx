@@ -962,27 +962,61 @@ const CartPage = () => {
   const [showConfirm, setShowConfirm] = useState(false);
   const [itemToRemove, setItemToRemove] = useState(null);
 
-  // Multi-item removal state
+  // Selective checkout state (select items to pay for)
   const [selectedCartItemIds, setSelectedCartItemIds] = useState([]);
-  const [showMultipleConfirm, setShowMultipleConfirm] = useState(false);
-  const [isRemovingMultiple, setIsRemovingMultiple] = useState(false);
-  const [movingMultipleToWishlist, setMovingMultipleToWishlist] = useState(false);
   const selectAllCheckboxRef = useRef(null);
+  const initializedSelectionRef = useRef(false);
+  const prevCartItemIdsRef = useRef(new Set());
+
+  // In-stock / selectable items (out of stock items cannot be checked for checkout)
+  const selectableItems = useMemo(() => {
+    return (cartData?.cart || []).filter(
+      item => item.stockStatus !== "out_of_stock" && item.canCheckout !== false
+    );
+  }, [cartData?.cart]);
+
+  // Selected cart items list
+  const selectedCartItems = useMemo(() => {
+    if (!cartData?.cart) return [];
+    const selectedSet = new Set(selectedCartItemIds);
+    return cartData.cart.filter(item => selectedSet.has(item.cartItemId));
+  }, [cartData?.cart, selectedCartItemIds]);
+
+  // Sync selected IDs when cart loads: default all in-stock items selected
+  useEffect(() => {
+    if (!cartData?.cart) return;
+    const currentItems = cartData.cart;
+    const currentInStockIds = new Set(
+      currentItems
+        .filter(i => i.stockStatus !== 'out_of_stock' && i.canCheckout !== false)
+        .map(i => i.cartItemId)
+    );
+
+    setSelectedCartItemIds(prev => {
+      if (!initializedSelectionRef.current) {
+        initializedSelectionRef.current = true;
+        prevCartItemIdsRef.current = new Set(currentItems.map(i => i.cartItemId));
+        return Array.from(currentInStockIds);
+      }
+      // If new items were added into cart after initial load, select new in-stock items
+      const newInStockIds = currentItems
+        .filter(i => !prevCartItemIdsRef.current.has(i.cartItemId) && currentInStockIds.has(i.cartItemId))
+        .map(i => i.cartItemId);
+
+      prevCartItemIdsRef.current = new Set(currentItems.map(i => i.cartItemId));
+      const kept = prev.filter(id => currentInStockIds.has(id));
+      return Array.from(new Set([...kept, ...newInStockIds]));
+    });
+  }, [cartData?.cart]);
 
   // Sync indeterminate state of "Select All" checkbox
   useEffect(() => {
-    if (!selectAllCheckboxRef.current || !cartData?.cart) return;
-    const totalItems = cartData.cart.length;
+    if (!selectAllCheckboxRef.current) return;
+    const totalSelectable = selectableItems.length;
     const selectedCount = selectedCartItemIds.length;
-    selectAllCheckboxRef.current.indeterminate = selectedCount > 0 && selectedCount < totalItems;
-  }, [selectedCartItemIds, cartData?.cart]);
-
-  // Remove stale IDs if cart changes
-  useEffect(() => {
-    if (!cartData?.cart) return;
-    const currentIds = new Set(cartData.cart.map(i => i.cartItemId));
-    setSelectedCartItemIds(prev => prev.filter(id => currentIds.has(id)));
-  }, [cartData?.cart]);
+    selectAllCheckboxRef.current.indeterminate =
+      selectedCount > 0 && selectedCount < totalSelectable;
+  }, [selectedCartItemIds, selectableItems.length]);
 
   const handleToggleSelectItem = (cartItemId) => {
     setSelectedCartItemIds(prev =>
@@ -993,134 +1027,135 @@ const CartPage = () => {
   };
 
   const handleToggleSelectAll = () => {
-    if (!cartData?.cart?.length) return;
-    if (selectedCartItemIds.length === cartData.cart.length) {
+    if (!selectableItems.length) return;
+    if (selectedCartItemIds.length === selectableItems.length) {
       setSelectedCartItemIds([]);
     } else {
-      setSelectedCartItemIds(cartData.cart.map(i => i.cartItemId));
+      setSelectedCartItemIds(selectableItems.map(i => i.cartItemId));
     }
   };
 
-  const handleOpenMultipleConfirm = () => {
-    if (!selectedCartItemIds.length) return;
-    setShowMultipleConfirm(true);
-  };
+  // Check if any SELECTED item has stock issues
+  const selectedStockOffender = useMemo(() => {
+    return selectedCartItems.find((i) => !i.canCheckout || i.stockStatus === "out_of_stock");
+  }, [selectedCartItems]);
 
-  const handleCloseMultipleConfirm = () => {
-    if (isRemovingMultiple || movingMultipleToWishlist) return;
-    setShowMultipleConfirm(false);
-  };
-
-  const handleConfirmRemoveMultiple = async () => {
-    if (!selectedCartItemIds.length || !cartData?.cart?.length) return;
-    setIsRemovingMultiple(true);
-    setShowPointsConfetti(false);
-    setCouponMessage("");
-
-    const itemsToRemove = cartData.cart.filter(item => selectedCartItemIds.includes(item.cartItemId));
-    const count = itemsToRemove.length;
-
-    try {
-      const payload = {
-        items: itemsToRemove.map(item => ({
-          productId: item.productId,
-          variantSku: item.selectedVariant?.sku || null,
-          cartItemId: item.cartItemId,
-          cartId: item.cartItemId,
-        }))
+  // Dynamic real-time pricing strictly for selected items
+  const summaryPricing = useMemo(() => {
+    if (!cartData) {
+      return {
+        bagMrp: 0,
+        bagDiscount: 0,
+        subTotal: 0,
+        shipping: 0,
+        couponDiscount: 0,
+        pointsDiscount: 0,
+        taxableAmount: 0,
+        gstRate: "0%",
+        gstAmount: 0,
+        payable: 0,
+        totalSavings: 0,
+        itemCount: 0,
+        shippingMessage: "",
       };
-
-      const res = await fetch(`${API_BASE}/remove-multiple`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-
-      if (!res.ok) {
-        throw new Error("Failed to remove selected items");
-      }
-
-      // Sync local guest cart if guest
-      const isGuest = !user || user.guest;
-      if (isGuest) {
-        try {
-          const guestCart = JSON.parse(localStorage.getItem("guestCart") || "[]");
-          const removedIds = new Set(selectedCartItemIds);
-          const updated = guestCart.filter(item => {
-            const key = item.cartItemId || `${item.productId}-${item.selectedVariant?.sku || "default"}`;
-            return !removedIds.has(key);
-          });
-          localStorage.setItem("guestCart", JSON.stringify(updated));
-        } catch (_) {}
-      }
-
-      setSelectedCartItemIds([]);
-      setShowMultipleConfirm(false);
-
-      sessionStorage.setItem("cartPendingToast", JSON.stringify({
-        message: `${count} item${count > 1 ? "s" : ""} removed from cart.`,
-        type: "success"
-      }));
-
-      window.location.reload();
-
-    } catch (err) {
-      console.error("Error removing multiple items:", err);
-      toast.error("Failed to remove items from cart. Please try again.");
-    } finally {
-      setIsRemovingMultiple(false);
     }
-  };
 
-  const handleMoveMultipleToWishlist = async () => {
-    if (!selectedCartItemIds.length || !cartData?.cart?.length) return;
-    setShowPointsConfetti(false);
-    setCouponMessage("");
-    setMovingMultipleToWishlist(true);
+    if (selectedCartItems.length === 0) {
+      return {
+        bagMrp: 0,
+        bagDiscount: 0,
+        subTotal: 0,
+        shipping: 0,
+        couponDiscount: 0,
+        pointsDiscount: 0,
+        taxableAmount: 0,
+        gstRate: cartData.gstRate || "0%",
+        gstAmount: 0,
+        payable: 0,
+        totalSavings: 0,
+        itemCount: 0,
+        shippingMessage: "",
+      };
+    }
 
-    const itemsToMove = cartData.cart.filter(item => selectedCartItemIds.includes(item.cartItemId));
-    const count = itemsToMove.length;
+    const isAllSelected = selectedCartItems.length === cartData.cart.length;
 
-    try {
-      if (user && !user.guest) {
-        for (const it of itemsToMove) {
-          try {
-            await fetch(`https://beauty.joyory.com/api/user/cart/${it.productId}/move-to-wishlist`, {
-              method: "POST",
-              credentials: "include",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ sku: it.selectedVariant?.sku || null }),
-            });
-          } catch (e) {
-            console.warn("Error moving single item to wishlist:", e);
-          }
-        }
+    let bagMrp = 0;
+    let subTotal = 0;
+
+    for (const item of selectedCartItems) {
+      const orig = item.selectedVariant?.originalPrice || item.price;
+      const mrp = (orig && orig > item.price) ? orig : item.price;
+      bagMrp += mrp * item.quantity;
+      subTotal += item.subTotal;
+    }
+
+    const bagDiscount = Math.max(0, bagMrp - subTotal);
+
+    let shipping = 0;
+    if (subTotal > 0 && subTotal < 499) {
+      shipping = cartData.shipping > 0 ? cartData.shipping : 70;
+    } else {
+      shipping = 0;
+    }
+
+    let couponDiscount = 0;
+    if (cartData.couponDiscount > 0) {
+      if (isAllSelected) {
+        couponDiscount = cartData.couponDiscount;
       } else {
-        localStorage.setItem("pendingCartAction", JSON.stringify({
-          type: "move-multiple-to-wishlist",
-          items: itemsToMove.map(i => ({ productId: i.productId, sku: i.selectedVariant?.sku || null }))
-        }));
-        setShowMultipleConfirm(false);
-        toast.info("Please login to move items to your wishlist");
-        navigate("/login", { state: { from: "/cartpage" } });
-        return;
+        const totalCartSubtotal = cartData.cart.reduce((sum, i) => sum + i.subTotal, 0);
+        if (totalCartSubtotal > 0) {
+          const ratio = subTotal / totalCartSubtotal;
+          couponDiscount = Math.min(subTotal, Math.round(cartData.couponDiscount * ratio * 100) / 100);
+        }
       }
-
-      setSelectedCartItemIds([]);
-      setShowMultipleConfirm(false);
-      sessionStorage.setItem("cartPendingToast", JSON.stringify({
-        message: `${count} item${count > 1 ? "s" : ""} moved to wishlist.`,
-        type: "success"
-      }));
-      window.location.reload();
-    } catch (err) {
-      console.error("Error moving items to wishlist:", err);
-      toast.error("Failed to move items to wishlist.");
-    } finally {
-      setMovingMultipleToWishlist(false);
     }
-  };
+
+    let pointsDiscount = 0;
+    if (usePoints && cartData.wallet?.pointsDiscount > 0) {
+      if (isAllSelected) {
+        pointsDiscount = cartData.wallet.pointsDiscount;
+      } else {
+        const totalCartSubtotal = cartData.cart.reduce((sum, i) => sum + i.subTotal, 0);
+        if (totalCartSubtotal > 0) {
+          const ratio = subTotal / totalCartSubtotal;
+          pointsDiscount = Math.min(subTotal - couponDiscount, Math.round(cartData.wallet.pointsDiscount * ratio * 100) / 100);
+        }
+      }
+    }
+
+    const gstRateStr = cartData.gstRate || "0%";
+    const gstPct = parseFloat(gstRateStr) || 0;
+    const baseAfterDiscount = Math.max(0, subTotal - couponDiscount - pointsDiscount);
+
+    let gstAmount = 0;
+    let taxableAmount = baseAfterDiscount;
+    if (gstPct > 0) {
+      gstAmount = Math.round((baseAfterDiscount * (gstPct / 100)) * 100) / 100;
+    }
+
+    const payable = Math.max(0, Math.round((taxableAmount + gstAmount + shipping) * 100) / 100);
+    const totalSavings = (bagDiscount + couponDiscount + pointsDiscount);
+
+    return {
+      bagMrp: isAllSelected && cartData.bagMrp ? cartData.bagMrp : bagMrp,
+      bagDiscount: isAllSelected && cartData.bagDiscount !== undefined ? cartData.bagDiscount : bagDiscount,
+      subTotal,
+      shipping: isAllSelected ? cartData.shipping : shipping,
+      couponDiscount: isAllSelected ? cartData.couponDiscount : couponDiscount,
+      pointsDiscount: isAllSelected ? (cartData.wallet?.pointsDiscount || 0) : pointsDiscount,
+      taxableAmount: isAllSelected ? cartData.taxableAmount : taxableAmount,
+      gstRate: gstRateStr,
+      gstAmount: isAllSelected ? cartData.gstAmount : gstAmount,
+      gstMessage: cartData.gstMessage,
+      payable: isAllSelected ? cartData.payable : payable,
+      totalSavings: isAllSelected ? cartData.totalSavings : totalSavings,
+      savingsMessage: totalSavings > 0 ? `You will save ₹${totalSavings.toFixed(2)} on this order` : "",
+      itemCount: selectedCartItems.reduce((sum, i) => sum + i.quantity, 0),
+      shippingMessage: shipping === 0 ? "Free shipping on your order!" : `Add ₹${(499 - subTotal).toFixed(0)} more for Free Shipping`,
+    };
+  }, [cartData, selectedCartItems, usePoints]);
 
   const handleShowConfirm = (item) => { setItemToRemove(item); setShowConfirm(true); };
   const handleCloseConfirm = () => { setShowConfirm(false); setItemToRemove(null); };
@@ -1579,6 +1614,16 @@ const CartPage = () => {
 
 
   const handleProceed = async () => {
+    if (selectedCartItemIds.length === 0) {
+      alert("Please select at least one item to proceed to checkout.");
+      return;
+    }
+
+    if (selectedStockOffender) {
+      alert(`Cannot checkout: ${selectedStockOffender.name} is out of stock. Please deselect it to proceed.`);
+      return;
+    }
+
     try {
       setInitiating(true);
 
@@ -1598,13 +1643,14 @@ const CartPage = () => {
 
       const body = {
         discountCode: cartData?.appliedCoupon?.code || null,
-        pointsToUse: cartData?.wallet?.pointsUsed || 0,
+        pointsToUse: summaryPricing.pointsDiscount > 0 ? (cartData?.wallet?.pointsUsed || 0) : 0,
         giftCardCode: cartData?.giftCardApplied?.code || null,
         giftCardPin: cartData?.giftCardApplied?.pin || null,
         giftCardAmount: cartData?.giftCardApplied?.amount || 0,
-        taxableAmount: cartData?.taxableAmount || 0,
-        gstAmount: cartData?.gstAmount || 0,
-        gstRate: cartData?.gstRate || "0%",
+        taxableAmount: summaryPricing.taxableAmount || 0,
+        gstAmount: summaryPricing.gstAmount || 0,
+        gstRate: summaryPricing.gstRate || "0%",
+        selectedCartItemIds: selectedCartItemIds,
       };
 
       const res = await fetch(INITIATE_ORDER_API, {
@@ -1619,7 +1665,8 @@ const CartPage = () => {
           setTimeout(() => navigate("/login"), 1200);
           return;
         }
-        throw new Error("Failed to initiate order");
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(errJson.message || "Failed to initiate order");
       }
 
       const orderData = await res.json();
@@ -1629,24 +1676,25 @@ const CartPage = () => {
         navigate("/AddressSelection", {
           state: {
             orderId: orderData.orderId,
-            cartItems: cartData.cart,
+            selectedCartItemIds: selectedCartItemIds,
+            cartItems: selectedCartItems,
             priceDetails: {
-              bagMrp: cartData.bagMrp,
-              bagDiscount: cartData.bagDiscount,
-              autoDiscount: cartData.autoDiscount,
-              couponDiscount: cartData.couponDiscount,
-              pointsDiscount: cartData?.wallet?.pointsDiscount || 0,
-              pointsUsed: cartData?.wallet?.pointsUsed || 0,
-              referralPointsUsed: cartData?.wallet?.pointsUsed || 0,
-              shipping: cartData.shipping,
-              taxableAmount: cartData.taxableAmount,
-              gstRate: cartData.gstRate,
-              gstAmount: cartData.gstAmount,
-              gstMessage: cartData.gstMessage,
-              payable: cartData.payable,
+              bagMrp: summaryPricing.bagMrp,
+              bagDiscount: summaryPricing.bagDiscount,
+              autoDiscount: cartData.autoDiscount || 0,
+              couponDiscount: summaryPricing.couponDiscount,
+              pointsDiscount: summaryPricing.pointsDiscount,
+              pointsUsed: summaryPricing.pointsDiscount > 0 ? (cartData?.wallet?.pointsUsed || 0) : 0,
+              referralPointsUsed: summaryPricing.pointsDiscount > 0 ? (cartData?.wallet?.pointsUsed || 0) : 0,
+              shipping: summaryPricing.shipping,
+              taxableAmount: summaryPricing.taxableAmount,
+              gstRate: summaryPricing.gstRate,
+              gstAmount: summaryPricing.gstAmount,
+              gstMessage: summaryPricing.gstMessage,
+              payable: summaryPricing.payable,
               appliedCoupon: cartData.appliedCoupon,
-              totalSavings: cartData.totalSavings,
-              savingsMessage: cartData.savingsMessage,
+              totalSavings: summaryPricing.totalSavings,
+              savingsMessage: summaryPricing.savingsMessage,
             },
           },
         });
@@ -1903,42 +1951,35 @@ const CartPage = () => {
 
           {/* ── Left column: cart items + freebies + recommendations ── */}
           <div className="col-xxl-8 col-12">
-            {/* ── Multi-select batch actions toolbar ── */}
+            {/* ── Selective checkout toolbar ── */}
             {cartData.cart.length > 0 && (
               <div className="cart-selection-toolbar d-flex align-items-center justify-content-between mb-3">
-                <div className="d-flex align-items-center gap-2">
-                  <label className="joyory-checkbox-container m-0 d-flex align-items-center gap-2" style={{ cursor: "pointer" }}>
+                <div className="d-flex align-items-center gap-3">
+                  <label className={`joyory-checkbox-container m-0 d-flex align-items-center gap-2 ${selectableItems.length === 0 ? 'disabled' : ''}`} style={{ cursor: selectableItems.length > 0 ? "pointer" : "not-allowed" }}>
                     <input
                       type="checkbox"
                       ref={selectAllCheckboxRef}
-                      checked={selectedCartItemIds.length === cartData.cart.length && cartData.cart.length > 0}
+                      checked={selectedCartItemIds.length === selectableItems.length && selectableItems.length > 0}
+                      disabled={selectableItems.length === 0}
                       onChange={handleToggleSelectAll}
-                      aria-label="Select all cart items"
+                      aria-label="Select all cart items for checkout"
                     />
                     <span className="joyory-checkbox-checkmark"></span>
                     <span className="fw-semibold text-dark page-title-main-name" style={{ fontSize: "14px" }}>
-                      Select All ({cartData.cart.length})
+                      Select All ({selectableItems.length})
                     </span>
                   </label>
-                  {selectedCartItemIds.length > 0 && (
-                    <span className="badge bg-light text-muted border fw-normal d-none d-sm-inline-block" style={{ fontSize: "12px" }}>
-                      {selectedCartItemIds.length} selected
-                    </span>
-                  )}
+                  <span className="text-muted page-title-main-name d-none d-sm-inline" style={{ fontSize: "13px" }}>
+                    {selectedCartItemIds.length} of {cartData.cart.length} item{cartData.cart.length > 1 ? "s" : ""} selected for checkout
+                  </span>
                 </div>
 
-                {selectedCartItemIds.length > 0 && (
-                  <button
-                    type="button"
-                    className="cart-remove-selected-btn"
-                    onClick={handleOpenMultipleConfirm}
-                    disabled={isRemovingMultiple}
-                    title="Remove selected items"
-                  >
-                    <i className="bi bi-trash3"></i>
-                    <span>Remove Selected ({selectedCartItemIds.length})</span>
-                  </button>
-                )}
+                <div className="d-flex align-items-center gap-2">
+                  <span className="text-muted page-title-main-name small d-none d-md-inline">Selected:</span>
+                  <span className="fw-bold text-dark page-title-main-name" style={{ fontSize: "14px" }}>
+                    {selectedCartItemIds.length} item{selectedCartItemIds.length === 1 ? "" : "s"} (₹{summaryPricing.subTotal.toFixed(2)})
+                  </span>
+                </div>
               </div>
             )}
 
@@ -1947,21 +1988,23 @@ const CartPage = () => {
                 const variant = item.selectedVariant || {};
                 const shadeName = variant.shadeName || variant.name;
                 const shadeHex = variant.hex;
-                const isSelected = selectedCartItemIds.includes(item.cartItemId);
+                const isOutOfStock = item.stockStatus === "out_of_stock" || item.canCheckout === false;
+                const isSelected = !isOutOfStock && selectedCartItemIds.includes(item.cartItemId);
                 return (
-                  <li key={item.cartItemId} className={`list-group-item d-flex justify-content-between align-items-end border-black ${isSelected ? 'cart-item-selected' : ''}`}>
+                  <li key={item.cartItemId} className={`list-group-item d-flex justify-content-between align-items-end border-black ${isSelected ? 'cart-item-selected' : ''} ${isOutOfStock ? 'cart-item-out-of-stock opacity-75' : ''}`}>
                     <div className="d-flex align-items-center gap-2 flex-grow-1" style={{ cursor: "pointer", minWidth: 0 }} onClick={() => navigate(`/product/${getCleanProductSlug(item)}`)}>
                       {/* Checkbox wrapper */}
                       <div
                         className="cart-item-checkbox-wrapper pe-1 flex-shrink-0"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        <label className="joyory-checkbox-container m-0" style={{ cursor: "pointer" }}>
+                        <label className={`joyory-checkbox-container m-0 ${isOutOfStock ? 'disabled' : ''}`} style={{ cursor: isOutOfStock ? "not-allowed" : "pointer" }}>
                           <input
                             type="checkbox"
                             checked={isSelected}
-                            onChange={() => handleToggleSelectItem(item.cartItemId)}
-                            aria-label={`Select ${item.name}`}
+                            disabled={isOutOfStock}
+                            onChange={() => !isOutOfStock && handleToggleSelectItem(item.cartItemId)}
+                            aria-label={`Select ${item.name} for checkout`}
                           />
                           <span className="joyory-checkbox-checkmark"></span>
                         </label>
@@ -1970,14 +2013,10 @@ const CartPage = () => {
                       <img src={item.image} alt={item.name} style={{ width: "80px", height: "80px", objectFit: "cover", borderRadius: "8px", flexShrink: 0 }} />
                       <div className="w-75 flex-grow-1" style={{ minWidth: 0 }}>
                         <strong className="page-title-main-name">
-                          {(() => {
-                            // const variantText = shadeName ? shadeName.trim() : "";
-                            // return variantText && variantText.toUpperCase() !== "DEFAULT" ? `${item.name} - ${shadeName}` : item.name;
-                            return item.name;
-                          })()}
+                          {item.name}
                         </strong>
                         {item.brand && <div className="text-muted small page-title-main-name">{item.brand}</div>}
-                        {item.stockStatus !== "in_stock" && (
+                        {isOutOfStock && (
                           <div className="small text-danger fw-semibold page-title-main-name">{item.stockMessage || "Out of stock"}</div>
                         )}
                         <div className="small d-flex align-items-center page-title-main-name">
@@ -2165,47 +2204,47 @@ const CartPage = () => {
               <div className="mb-3 page-title-main-name">
                 <div className="d-flex justify-content-between mb-1 margin-left-right-repert">
                   <span className="page-title-main-name">Bag MRP :</span>
-                  <span className="page-title-main-name">₹{cartData.bagMrp?.toFixed(2) || "0.00"}</span>
+                  <span className="page-title-main-name">₹{summaryPricing.bagMrp?.toFixed(2) || "0.00"}</span>
                 </div>
-                {cartData.bagDiscount > 0 && (
+                {summaryPricing.bagDiscount > 0 && (
                   <div className="d-flex justify-content-between mb-1 text-success margin-left-right-repert">
                     <span className="page-title-main-name text-black">Bag Discount :</span>
-                    <span className="page-title-main-name">-₹{cartData.bagDiscount?.toFixed(2) || "0.00"}</span>
+                    <span className="page-title-main-name">-₹{summaryPricing.bagDiscount?.toFixed(2) || "0.00"}</span>
                   </div>
                 )}
                 <div className="d-flex justify-content-between mb-1 shipping-margin-left-right">
                   <div className="d-block">
                     <span className="page-title-main-name">Shipping :</span>
-                    {cartData.shippingMessage && (
+                    {summaryPricing.shippingMessage && (
                       <div className="shipping-promo-message mb-2 page-title-main-name">
-                        <i className="bi bi-truck me-1"></i>{cartData.shippingMessage}
+                        <i className="bi bi-truck me-1"></i>{summaryPricing.shippingMessage}
                       </div>
                     )}
                   </div>
-                  <span className={cartData.shipping === 0 ? "text-success" : ""}>
-                    {cartData.shipping === 0 ? "Free" : `₹${cartData.shipping?.toFixed(2) || "0.00"}`}
+                  <span className={summaryPricing.shipping === 0 ? "text-success" : ""}>
+                    {summaryPricing.shipping === 0 ? "Free" : `₹${summaryPricing.shipping?.toFixed(2) || "0.00"}`}
                   </span>
                 </div>
-                {cartData.couponDiscount > 0 && (
+                {summaryPricing.couponDiscount > 0 && (
                   <div className="d-flex justify-content-between mb-1 text-success margin-left-right-repert pb-2 page-title-main-name">
                     <span>Coupon Discount:</span>
-                    <span>-₹{cartData.couponDiscount?.toFixed(2) || "0.00"}</span>
+                    <span>-₹{summaryPricing.couponDiscount?.toFixed(2) || "0.00"}</span>
                   </div>
                 )}
 
                 <hr className="border-color-blacks" />
                 <div className="d-flex justify-content-between mb-1 pt-2 margin-left-right-repert">
                   <span className="font-weight-in-tablable-amount page-title-main-name">Taxable Amount :</span>
-                  <span className="fw-semibold page-title-main-name">₹{cartData.taxableAmount?.toFixed(2) || "0.00"}</span>
+                  <span className="fw-semibold page-title-main-name">₹{summaryPricing.taxableAmount?.toFixed(2) || "0.00"}</span>
                 </div>
                 <div className="d-flex justify-content-between mb-1 margin-left-right-repert page-title-main-name">
-                  <span className="page-title-main-name">GST ({cartData.gstRate})</span>
-                  <span className="page-title-main-name">+₹{cartData.gstAmount?.toFixed(2) || "0.00"}</span>
+                  <span className="page-title-main-name">GST ({summaryPricing.gstRate})</span>
+                  <span className="page-title-main-name">+₹{summaryPricing.gstAmount?.toFixed(2) || "0.00"}</span>
                 </div>
-                {usePoints && cartData.wallet?.pointsDiscount > 0 && (
+                {usePoints && summaryPricing.pointsDiscount > 0 && (
                   <div className="d-flex justify-content-between mb-1 text-success margin-left-right-repert pb-2 page-title-main-name">
                     <span>Points Discount:</span>
-                    <span>-₹{cartData.wallet.pointsDiscount.toFixed(2)}</span>
+                    <span>-₹{summaryPricing.pointsDiscount.toFixed(2)}</span>
                   </div>
                 )}
                 {/* {cartData.gstMessage && (
@@ -2216,13 +2255,13 @@ const CartPage = () => {
                 <hr className="border-color-blacks" />
                 <div className="d-flex justify-content-between mb-3 pt-2 margin-left-right-repert align-items-center">
                   <span className="fw-semibold fs-6 page-title-main-name">Total Payable :</span>
-                  <span className="fw-bold text-primary fs-5 page-title-main-name text-black">₹{cartData.payable?.toFixed(2) || "0.00"}</span>
+                  <span className="fw-bold text-primary fs-5 page-title-main-name text-black">₹{summaryPricing.payable?.toFixed(2) || "0.00"}</span>
                 </div>
                 <hr className="border-color-blacks" />
-                {cartData.savingsMessage && (
+                {summaryPricing.savingsMessage && (
                   <div className="py-2 small margin-left-right-repert page-title-main-name">
                     {/* <i className="bi bi-coin me-1"></i> */}
-                    {cartData.savingsMessage}
+                    {summaryPricing.savingsMessage}
                   </div>
                 )}
               </div>
@@ -2239,21 +2278,23 @@ const CartPage = () => {
                 </div>
               )}
 
-              {stockError && (
+              {selectedStockOffender && (
                 <Alert variant="warning" className="mb-2">
-                  <strong>{(cartData.cart || []).find((i) => !i.canCheckout)?.name || "Item"}</strong>{" – "}{stockError}
+                  <strong>{selectedStockOffender.name || "Item"}</strong>{" – "}{selectedStockOffender.stockMessage || "Item is out of stock. Please deselect it to proceed."}
                 </Alert>
               )}
 
               <button
                 className="page-title-main-name bg-black text-white checkout-button w-100 mt-3 py-2 fw-bold"
                 onClick={handleProceed}
-                disabled={initiating || !!stockError}
+                disabled={initiating || selectedCartItemIds.length === 0 || !!selectedStockOffender}
               >
                 {initiating ? (
                   <><span className="spinner-border spinner-border-sm me-2" role="status"></span>Processing...</>
+                ) : selectedCartItemIds.length === 0 ? (
+                  <>Select items to checkout</>
                 ) : (
-                  <><i className="bi bi-lock-fill me-2"></i>Proceed to Checkout (₹{cartData.payable?.toFixed(2)})</>
+                  <><i className="bi bi-lock-fill me-2"></i>Proceed to Checkout (₹{summaryPricing.payable?.toFixed(2)})</>
                 )}
               </button>
             </div>
@@ -2377,83 +2418,7 @@ const CartPage = () => {
         </Modal.Footer>
       </Modal>
 
-      {/* Confirm Multiple Items Removal Modal */}
-      <Modal
-        show={showMultipleConfirm}
-        onHide={handleCloseMultipleConfirm}
-        centered
-        backdrop={isRemovingMultiple || movingMultipleToWishlist ? "static" : true}
-      >
-        <Modal.Header style={{ position: 'relative' }}>
-          <Modal.Title className="page-title-main-name">
-            Remove {selectedCartItemIds.length} item{selectedCartItemIds.length > 1 ? "s" : ""} from cart?
-          </Modal.Title>
-          <button
-            type="button"
-            onClick={handleCloseMultipleConfirm}
-            disabled={isRemovingMultiple || movingMultipleToWishlist}
-            style={{
-              position: 'absolute',
-              right: '20px',
-              top: '12px',
-              background: 'none',
-              border: 'none',
-              fontSize: '28px',
-              color: '#000',
-              cursor: 'pointer',
-              lineHeight: '1',
-              padding: '0',
-              opacity: '0.8',
-              transition: 'opacity 0.2s'
-            }}
-            onMouseOver={(e) => e.currentTarget.style.opacity = '1'}
-            onMouseOut={(e) => e.currentTarget.style.opacity = '0.8'}
-            className="removel-cross-btn"
-            aria-label="Close"
-          >
-            &times;
-          </button>
-        </Modal.Header>
-        <Modal.Body className="page-title-main-name">
-          <p className="mb-2">Are you sure you want to remove the {selectedCartItemIds.length} selected item{selectedCartItemIds.length > 1 ? "s" : ""} from your cart?</p>
-          <div className="selected-items-preview mt-2 p-2 bg-light rounded-3" style={{ maxHeight: "180px", overflowY: "auto", border: "1px solid #e9ecef" }}>
-            {(cartData?.cart || [])
-              .filter(item => selectedCartItemIds.includes(item.cartItemId))
-              .map(item => (
-                <div key={item.cartItemId} className="d-flex align-items-center gap-2 py-2 border-bottom" style={{ fontSize: "13px" }}>
-                  <img src={item.image} alt={item.name} style={{ width: "36px", height: "36px", objectFit: "cover", borderRadius: "6px", flexShrink: 0 }} />
-                  <div className="text-truncate flex-grow-1" style={{ minWidth: 0 }}>
-                    <div className="fw-semibold text-truncate">{item.name}</div>
-                    {item.selectedVariant?.shadeName && (
-                      <span className="text-muted" style={{ fontSize: "11px" }}>Variant: {item.selectedVariant.shadeName}</span>
-                    )}
-                  </div>
-                  <div className="fw-bold flex-shrink-0">₹{item.subTotal.toFixed(2)}</div>
-                </div>
-              ))}
-          </div>
-        </Modal.Body>
-        <Modal.Footer>
-          <button
-            className="modal-footer-btn"
-            onClick={handleConfirmRemoveMultiple}
-            disabled={isRemovingMultiple || movingMultipleToWishlist}
-            style={{
-              borderColor: "#dc3545",
-              color: "#dc3545"
-            }}
-          >
-            {isRemovingMultiple ? "Removing..." : "Remove"}
-          </button>
-          <button
-            className="modal-footer-btn"
-            onClick={handleMoveMultipleToWishlist}
-            disabled={isRemovingMultiple || movingMultipleToWishlist}
-          >
-            {movingMultipleToWishlist ? "Moving..." : "Move to Wishlist"}
-          </button>
-        </Modal.Footer>
-      </Modal>
+
 
       {/* Celebratory Confetti Burst */}
       <ConfettiBurst active={showPointsConfetti || (couponMessageColor === "success" && couponMessage.includes("applied successfully"))} />

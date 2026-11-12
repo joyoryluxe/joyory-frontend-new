@@ -1403,6 +1403,19 @@
     transform: none;
 }
 
+/* Disabled state for out of stock */
+.joyory-checkbox-container input:disabled ~ .joyory-checkbox-checkmark {
+    background-color: #f2f2f7;
+    border-color: #d1d1d6;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.joyory-checkbox-container.disabled {
+    cursor: not-allowed !important;
+    opacity: 0.6;
+}
+
 /* Keyboard accessibility focus */
 .joyory-checkbox-container input:focus-visible ~ .joyory-checkbox-checkmark {
     outline: 2px solid #e11d48;
