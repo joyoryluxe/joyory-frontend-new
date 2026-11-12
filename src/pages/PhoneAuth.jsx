@@ -26,7 +26,7 @@ const PhoneAuth = () => {
   const redirectUrl = searchParams.get("redirectUrl") || location.state?.from || "/";
   const { loginUser } = useContext(UserContext);
 
-  // Flow steps: "phone" | "otp" | "profile" | "email_otp"
+  // Flow steps: "phone" | "otp" | "profile"
   const [step, setStep] = useState("phone");
   const [loading, setLoading] = useState(false);
 
@@ -50,11 +50,6 @@ const PhoneAuth = () => {
   });
   const [referralApplied, setReferralApplied] = useState(false);
   const [emailConflict, setEmailConflict] = useState(null); // { maskedPhone, email }
-
-  // Step 4: Email OTP input
-  const [emailOtpDigits, setEmailOtpDigits] = useState(["", "", "", ""]);
-  const emailOtpInputsRef = useRef([]);
-  const [emailResendTimer, setEmailResendTimer] = useState(0);
 
   // Animated header text taglines
   const animatedTexts = [
@@ -93,19 +88,6 @@ const PhoneAuth = () => {
     }
     return () => clearInterval(interval);
   }, [resendTimer]);
-
-  // Email OTP timer countdown handler
-  useEffect(() => {
-    let interval = null;
-    if (emailResendTimer > 0) {
-      interval = setInterval(() => {
-        setEmailResendTimer((prev) => prev - 1);
-      }, 1000);
-    } else {
-      clearInterval(interval);
-    }
-    return () => clearInterval(interval);
-  }, [emailResendTimer]);
 
   // Handler to send Phone OTP (Step 1)
   const handleSendOtp = async (e) => {
@@ -188,31 +170,6 @@ const PhoneAuth = () => {
     otpInputsRef.current[3]?.focus();
   };
 
-  // Email OTP digit inputs handling
-  const handleEmailOtpDigitChange = (index, value) => {
-    if (isNaN(value)) return;
-    const newDigits = [...emailOtpDigits];
-    newDigits[index] = value.substring(value.length - 1);
-    setEmailOtpDigits(newDigits);
-    if (value && index < 3) {
-      emailOtpInputsRef.current[index + 1]?.focus();
-    }
-  };
-
-  const handleEmailOtpKeyDown = (index, e) => {
-    if (e.key === "Backspace" && !emailOtpDigits[index] && index > 0) {
-      emailOtpInputsRef.current[index - 1]?.focus();
-    }
-  };
-
-  const handleEmailOtpPaste = (e) => {
-    e.preventDefault();
-    const pasteData = e.clipboardData.getData("text").trim();
-    if (!/^\d{4}$/.test(pasteData)) return;
-    const digits = pasteData.split("");
-    setEmailOtpDigits(digits);
-    emailOtpInputsRef.current[3]?.focus();
-  };
 
   // Handler to verify Phone OTP (Step 2)
   const handleVerifyOtp = async (e) => {
@@ -279,10 +236,10 @@ const PhoneAuth = () => {
     toast.info("Referral code removed.");
   };
 
-  // Step 3 -> Request Email Verification OTP
-  const handleRequestEmailOtp = async (e) => {
+  // Step 3 -> Complete Profile & Direct Login
+  const handleCompleteProfile = async (e) => {
     if (e) e.preventDefault();
-    const { firstName, lastName, email } = profileData;
+    const { firstName, lastName, email, gender, dob, referralCode } = profileData;
 
     if (!firstName.trim() || !lastName.trim()) {
       toast.error("Please enter both First Name and Last Name.");
@@ -290,76 +247,6 @@ const PhoneAuth = () => {
     }
     if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       toast.error("Please enter a valid email address.");
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setEmailConflict(null);
-
-      const res = await axiosInstance.post("/api/user/otp/email/send", {
-        email: email.trim().toLowerCase(),
-        name: `${firstName.trim()} ${lastName.trim()}`
-      });
-
-      if (res.data?.success) {
-        toast.success(res.data.message || "Verification code sent to your email!");
-        setStep("email_otp");
-        setEmailResendTimer(30);
-        setEmailOtpDigits(["", "", "", ""]);
-        setTimeout(() => {
-          if (emailOtpInputsRef.current[0]) emailOtpInputsRef.current[0].focus();
-        }, 100);
-      } else {
-        toast.error(res.data?.message || "Failed to send verification code.");
-      }
-    } catch (err) {
-      console.error("Error requesting email verification code:", err);
-      const errData = err.response?.data;
-      if (err.response?.status === 409 || errData?.code === "EMAIL_ALREADY_EXISTS") {
-        setEmailConflict({
-          maskedPhone: errData?.maskedPhone || null,
-          email: email.trim()
-        });
-      } else {
-        toast.error(errData?.message || "Server error sending email verification code. Please try again.");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Resend Email OTP
-  const handleResendEmailOtp = async () => {
-    if (emailResendTimer > 0) return;
-    try {
-      setLoading(true);
-      const { firstName, lastName, email } = profileData;
-      const res = await axiosInstance.post("/api/user/otp/email/send", {
-        email: email.trim().toLowerCase(),
-        name: `${firstName.trim()} ${lastName.trim()}`
-      });
-      if (res.data?.success) {
-        toast.success("A new verification code has been sent to your email.");
-        setEmailResendTimer(30);
-        setEmailOtpDigits(["", "", "", ""]);
-        if (emailOtpInputsRef.current[0]) emailOtpInputsRef.current[0].focus();
-      }
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to resend verification code.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Step 4 -> Verify Email OTP & Complete Profile
-  const handleCompleteProfile = async (e) => {
-    if (e) e.preventDefault();
-    const { firstName, lastName, email, gender, dob, referralCode } = profileData;
-    const emailOtp = emailOtpDigits.join("");
-
-    if (emailOtp.length !== 4) {
-      toast.error("Please enter the 4-digit email verification code.");
       return;
     }
 
@@ -374,6 +261,7 @@ const PhoneAuth = () => {
 
     try {
       setLoading(true);
+      setEmailConflict(null);
       const code = referralCode.trim().toUpperCase();
       const isFromPromoParam = Boolean(searchParams.get("promo") || searchParams.get("promoCode"));
       const isHexReferral = /^[0-9A-F]{8}$/.test(code);
@@ -382,7 +270,6 @@ const PhoneAuth = () => {
       const payload = {
         name: fullName,
         email: email.trim().toLowerCase(),
-        emailOtp,
         gender: gender || undefined,
         dob: formattedDob,
         referralCode: (code && isUserReferral) ? code : undefined,
@@ -412,7 +299,6 @@ const PhoneAuth = () => {
           maskedPhone: errData?.maskedPhone || null,
           email: email.trim()
         });
-        setStep("profile");
       } else {
         toast.error(errData?.message || "Server error completing profile. Please try again.");
       }
@@ -651,7 +537,7 @@ const PhoneAuth = () => {
                   </div>
                 )}
 
-                <form onSubmit={handleRequestEmailOtp} className="profile-form-grid">
+                <form onSubmit={handleCompleteProfile} className="profile-form-grid">
                   <div className="profile-name-row">
                     <div className="profile-field-group">
                       <label className="profile-label profile-label-required">First Name</label>
@@ -770,82 +656,10 @@ const PhoneAuth = () => {
                   >
                     {loading ? (
                       <>
-                        <span className="spinner-inline" /> Verifying Email...
+                        <span className="spinner-inline" /> Saving Profile...
                       </>
                     ) : (
-                      "Continue & Verify Email"
-                    )}
-                  </button>
-                </form>
-              </motion.div>
-            )}
-
-            {step === "email_otp" && (
-              <motion.div
-                key="email-otp-step"
-                variants={animationVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-              >
-                <h2 className="phone-auth-title">Verify Email</h2>
-                <p className="otp-subtitle-sec">
-                  4-digit code sent to <span className="email-otp-highlight">{profileData.email}</span>
-                  <button className="email-edit-btn" onClick={() => setStep("profile")}>
-                    Edit Email
-                  </button>
-                </p>
-
-                <form onSubmit={handleCompleteProfile}>
-                  <div className="otp-inputs-row">
-                    {emailOtpDigits.map((digit, idx) => (
-                      <input
-                        key={idx}
-                        ref={(el) => (emailOtpInputsRef.current[idx] = el)}
-                        type="text"
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        autoComplete="one-time-code"
-                        maxLength={1}
-                        className="otp-digit-field"
-                        value={digit}
-                        onChange={(e) => handleEmailOtpDigitChange(idx, e.target.value)}
-                        onKeyDown={(e) => handleEmailOtpKeyDown(idx, e)}
-                        onPaste={idx === 0 ? handleEmailOtpPaste : undefined}
-                        disabled={loading}
-                        autoFocus={idx === 0}
-                      />
-                    ))}
-                  </div>
-
-                  <div className="otp-timer-row">
-                    {emailResendTimer > 0 ? (
-                      <div>
-                        Resend Code in <span className="otp-timer-count">00:{emailResendTimer < 10 ? `0${emailResendTimer}` : emailResendTimer}</span>
-                      </div>
-                    ) : (
-                      <button
-                        type="button"
-                        className="otp-resend-btn"
-                        onClick={handleResendEmailOtp}
-                        disabled={loading}
-                      >
-                        Resend Code
-                      </button>
-                    )}
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="phone-auth-submit-btn"
-                    disabled={loading || emailOtpDigits.some((d) => d === "")}
-                  >
-                    {loading ? (
-                      <>
-                        <span className="spinner-inline" /> Completing Profile...
-                      </>
-                    ) : (
-                      "Verify & Go to Dashboard"
+                      "Complete Profile & Go to Dashboard"
                     )}
                   </button>
                 </form>
