@@ -1202,8 +1202,10 @@ const CartPage = () => {
 
       const finalDiscount = discountCode !== null
         ? discountCode
-        : (localStorage.getItem("appliedCoupon") || "");
-      queryParams.append("discount", finalDiscount);
+        : "";
+      if (finalDiscount) {
+        queryParams.append("discount", finalDiscount);
+      }
 
       let finalPoints = 0;
       if (pointsVal !== null) {
@@ -2049,15 +2051,7 @@ const CartPage = () => {
           {/* ── Right column: Order Summary (unchanged) ── */}
           <div className="col-xxl-4 col-12 mt-4 mt-lg-0">
             <div className="border-color-width">
-              <div className="d-flex justify-content-between align-items-center mt-3 mb-3">
-                <div className="fw-600 ms-3 fs-5 page-title-main-name">Coupons & Bank Offers</div>
-                <i className="bi bi-chevron-right margin-left-right" onClick={() => setShowCouponModal(true)} style={{ cursor: "pointer" }}></i>
-              </div>
-              <hr className="border-color-blacks" />
-
-
-
-              <h5 className="ms-3 fs-5 fw-600 page-title-main-name">Order Summary</h5>
+              <h5 className="ms-3 fs-5 fw-600 page-title-main-name mt-3">Order Summary</h5>
               <hr className="border-color-blacks" />
 
               {/* Reward Points Widget */}
@@ -2449,108 +2443,6 @@ const CartPage = () => {
           </button>
         </Modal.Footer>
       </Modal>
-
-      {/* Coupon Modal */}
-      <div className={`modal fade ${showCouponModal ? "show d-block" : ""}`} tabIndex="-1" role="dialog" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
-        <div className="modal-dialog modal-lg modal-dialog-centered page-title-main-name" role="document">
-          <div className="modal-content border-0 rounded-0">
-            <div className="modal-header border-bottom py-3 px-4">
-              <h5 className="modal-title fw-normal" style={{ color: "#444" }}>Apply Coupon</h5>
-              <button type="button" className="btn-close shadow-none mb-0" onClick={() => setShowCouponModal(false)} aria-label="Close">
-                <FaTimes />
-              </button>
-            </div>
-            <div className="modal-body p-4 bg-light">
-              <ul className="nav nav-tabs border-0 mb-4 justify-content-center">
-                <li className="nav-item">
-                  <button className={`nav-link border-0 shadow-none ${activeCouponTab === "available" ? "active border-bottom border-dark text-dark fw-bold" : "text-muted"}`} onClick={() => setActiveCouponTab("available")}>Available</button>
-                </li>
-                <li className="nav-item">
-                  <button className={`nav-link border-0 shadow-none ${activeCouponTab === "inapplicable" ? "active border-bottom border-dark text-dark fw-bold" : "text-muted"}`} onClick={() => setActiveCouponTab("inapplicable")}>Not Applicable</button>
-                </li>
-              </ul>
-              <div className="row row-cols-1 row-cols-md-2 g-3">
-                {(activeCouponTab === "available" ? cartData.applicableCoupons : cartData.inapplicableCoupons)?.map((c) => (
-                  <div className="col-lg-6 col-md-12" key={c._id || c.code}>
-                    <div className={`coupon-ticket shadow-sm ${activeCouponTab === "inapplicable" ? "opacity-75" : ""}`}>
-                      <div className="ticket-sidebar">
-                        <div className="ticket-notch"></div>
-                        <span className="ticket-code-rotated">{c.code}</span>
-                      </div>
-                      <div className="ticket-body">
-                        <div className="d-flex justify-content-between align-items-center mb-2">
-                          <h6 className="mb-1 fw-bold text-secondary page-title-main-name">{c.label || "Offer"}</h6>
-                          {activeCouponTab === "available" && (
-                            (() => {
-                              const isAlreadyApplied = cartData?.appliedCoupon?.code && cartData.appliedCoupon.code.trim().toLowerCase() === c.code.trim().toLowerCase();
-                              return (
-                                <button
-                                  className="page-title-main-name border-0 bg-transparent btn-link text-decoration-none p-0 ticket-apply-btn d-flex align-items-center gap-2"
-                                  onClick={() => {
-                                    if (isAlreadyApplied) {
-                                      setCouponMessage("Coupon already applied!");
-                                      setCouponMessageColor("warning");
-                                      return;
-                                    }
-                                    handleCouponSubmit(c.code);
-                                  }}
-                                  disabled={applyingCoupon}
-                                  style={isAlreadyApplied ? { color: "#28a745", fontWeight: "bold" } : {}}
-                                >
-                                  {applyingCoupon ? (
-                                    <>
-                                      <span className="spinner-border spinner-border-sm"></span>
-                                      Applying...
-                                    </>
-                                  ) : isAlreadyApplied ? (
-                                    "Applied"
-                                  ) : (
-                                    "Apply"
-                                  )}
-                                  {showApplyAnimation && (
-                                    <div
-                                      style={{
-                                        position: "fixed",
-                                        top: 0,
-                                        left: 0,
-                                        width: "100%",
-                                        height: "100%",
-                                        // background: "rgba(255,255,255,0.95)",
-                                        zIndex: 9999,
-                                        display: "flex",
-                                        justifyContent: "center",
-                                        alignItems: "center",
-                                        flexDirection: "column"
-                                      }}
-                                    >
-                                      <img
-                                        src={applyGif}   // ⚠️ put your gif in public folder
-                                        style={{ width: "20%", marginBottom: "10px" }}
-                                      />
-                                      {/* <p className="page-title-main-name text-muted">
-                                        Applying your coupon...
-                                      </p> */}
-                                    </div>
-                                  )}
-                                </button>
-                              );
-                            })()
-                          )}
-                        </div>
-                        <p className="ticket-desc mb-2 text-muted page-title-main-name">{c.description || "Enjoy discount on your order"}</p>
-                        <div className="ticket-divider"></div>
-                        <small className="ticket-footer text-muted page-title-main-name" style={{ cursor: "pointer", textDecoration: "underline" }} onClick={() => handleShowDiscountProducts(c)}>
-                          Valid on select products
-                        </small>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Celebratory Confetti Burst */}
       <ConfettiBurst active={showPointsConfetti || (couponMessageColor === "success" && couponMessage.includes("applied successfully"))} />
