@@ -315,6 +315,7 @@ const AddressSelection = () => {
         taxableAmount: priceDetails?.taxableAmount || 0,
         gstAmount: priceDetails?.gstAmount || 0,
         gstRate: priceDetails?.gstRate || "0%",
+        selectedCartItemIds: location.state?.selectedCartItemIds || (cartData || []).map(i => i.cartItemId || i._id),
       };
 
       console.log("📦 Sending Initiate Order Payload:", payload);
@@ -373,6 +374,7 @@ const AddressSelection = () => {
             orderId,
             selectedAddress,
             cartItems: cartData,
+            selectedCartItemIds: location.state?.selectedCartItemIds || (cartData || []).map(i => i.cartItemId || i._id),
             priceDetails: {
               ...priceDetails,
               taxableAmount: priceDetails?.taxableAmount || 0,

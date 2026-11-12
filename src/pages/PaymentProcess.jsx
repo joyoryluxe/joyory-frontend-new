@@ -152,6 +152,30 @@ const PaymentProcess = () => {
   const selectedAddress = location.state?.selectedAddress;
   const initialPriceDetails = location.state?.priceDetails || {};
 
+  // Clean up ordered items from guest cart on successful purchase
+  const cleanUpOrderedCartItems = () => {
+    try {
+      const guestCartRaw = localStorage.getItem("guestCart");
+      if (guestCartRaw) {
+        const guestCart = JSON.parse(guestCartRaw);
+        const orderedProdIds = new Set((cartItems || []).map(i => String(i.productId || i._id)));
+        const orderedSkus = new Set((cartItems || []).map(i => i.selectedVariant?.sku || i.variant?.sku).filter(Boolean));
+        const updated = guestCart.filter(item => {
+          const pid = String(item.productId || item._id);
+          const sku = item.selectedVariant?.sku || item.variant?.sku;
+          if (orderedProdIds.has(pid)) {
+            if (sku && orderedSkus.size > 0) {
+              return !orderedSkus.has(sku);
+            }
+            return false;
+          }
+          return true;
+        });
+        localStorage.setItem("guestCart", JSON.stringify(updated));
+      }
+    } catch (_) {}
+  };
+
   const [livePriceDetails, setLivePriceDetails] = useState({
     bagMrp: initialPriceDetails.bagMrp || 0,
     bagDiscount: initialPriceDetails.bagDiscount || 0,
@@ -529,6 +553,8 @@ const PaymentProcess = () => {
       if (!confirmRes.ok || !confirmData.success)
         throw new Error(confirmData?.message || "COD confirmation failed.");
 
+      cleanUpOrderedCartItems();
+
       navigate(`/ordersuccess/${orderId}`, {
         replace: true,
         state: {
@@ -630,6 +656,8 @@ const PaymentProcess = () => {
           if (!verifyRes.ok || !verifyData.success)
             return showAlert("Payment verification failed.", "Payment Verification", "error");
 
+          cleanUpOrderedCartItems();
+
           navigate(`/ordersuccess/${orderId}`, {
             replace: true,
             state: {
@@ -712,6 +740,8 @@ const PaymentProcess = () => {
       if (!res.ok || !data.success)
         throw new Error(data.message || "Wallet payment failed.");
 
+      cleanUpOrderedCartItems();
+
       navigate(`/ordersuccess/${orderId}`, {
         replace: true,
         state: {
@@ -778,6 +808,8 @@ const PaymentProcess = () => {
 
       if (!res.ok || !data.success)
         throw new Error(data.message || "Gift Card payment failed.");
+
+      cleanUpOrderedCartItems();
 
       navigate(`/ordersuccess/${orderId}`, {
         replace: true,
