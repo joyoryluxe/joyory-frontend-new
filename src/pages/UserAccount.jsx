@@ -341,9 +341,9 @@ const Useraccount = () => {
 
   // Address Handlers (passed to AddressSections)
   const handleAddressChange = (index, field, value) => {
-    const newAddrs = [...addresses];
-    newAddrs[index][field] = value;
-    setAddresses(newAddrs);
+    setAddresses((prev) =>
+      prev.map((addr, i) => (i === index ? { ...addr, [field]: value } : addr))
+    );
   };
 
   const handleAddNewAddress = () => {
@@ -353,20 +353,40 @@ const Useraccount = () => {
     ]);
   };
 
+  const handleCancelNewAddress = (index) => {
+    setAddresses((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const fetchLatestAddresses = async () => {
+    const res = await fetch(API_BASE, { credentials: "include" });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return Array.isArray(data?.addresses) ? data.addresses : [];
+  };
+
   const handleSaveAddress = async (index) => {
     const addr = addresses[index];
+    const payload = {
+      name: (addr.name || "").trim(),
+      addressLine1: (addr.addressLine1 || "").trim(),
+      city: (addr.city || "").trim(),
+      state: (addr.state || "").trim(),
+      pincode: (addr.pincode || "").trim(),
+      phone: (addr.phone || "").trim(),
+      email: (addr.email || "").trim(),
+    };
+
     try {
-      let res, data;
+      let res;
       if (!addr._id) {
         res = await fetch(`${API_BASE}/address`, {
           method: "POST",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(addr),
+          body: JSON.stringify(payload),
         });
       } else {
-        const { _id, ...payload } = addr;
-        res = await fetch(`${API_BASE}/address/${_id}`, {
+        res = await fetch(`${API_BASE}/address/${addr._id}`, {
           method: "PATCH",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
@@ -375,15 +395,38 @@ const Useraccount = () => {
       }
 
       if (!res.ok) throw new Error(await readError(res));
-      data = await res.json();
+      const data = await res.json();
 
-      const updatedAddrs = [...addresses];
-      updatedAddrs[index] = data;
-      setAddresses(updatedAddrs);
+      const otherUnsaved = addresses.filter((a, i) => i !== index && !a._id);
+
+      if (Array.isArray(data?.addresses)) {
+        setAddresses([...data.addresses, ...otherUnsaved]);
+      } else if (data?.address && typeof data.address === "object" && data.address._id) {
+        setAddresses((prev) =>
+          prev.map((item, i) => (i === index ? data.address : item))
+        );
+      } else if (data?._id && (data.addressLine1 || data.name)) {
+        const { message: _msg, ...cleanSaved } = data;
+        setAddresses((prev) =>
+          prev.map((item, i) => (i === index ? cleanSaved : item))
+        );
+      } else {
+        const latestAddresses = await fetchLatestAddresses();
+        if (latestAddresses) {
+          setAddresses([...latestAddresses, ...otherUnsaved]);
+        } else {
+          setAddresses((prev) =>
+            prev.map((item, i) => (i === index ? { ...item, ...payload } : item))
+          );
+        }
+      }
+
       alert("Address saved successfully ✅");
+      return true;
     } catch (err) {
       console.error("Address save error:", err);
       alert("Failed to save address: " + err.message);
+      return false;
     }
   };
 
@@ -399,9 +442,11 @@ const Useraccount = () => {
       }
       setAddresses((prev) => prev.filter((_, i) => i !== index));
       alert("Address deleted successfully ✅");
+      return true;
     } catch (err) {
       console.error("Delete address error:", err);
       alert("Failed to delete address: " + err.message);
+      return false;
     }
   };
 
@@ -669,6 +714,7 @@ const Useraccount = () => {
               handleSaveAddress={handleSaveAddress}
               handleDeleteAddress={handleDeleteAddress}
               handleAddNewAddress={handleAddNewAddress}
+              handleCancelNewAddress={handleCancelNewAddress}
             />
 
             <div className="ua-danger mt-4">
