@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { Modal, Button, Form, Alert, Spinner, Badge, Dropdown } from "react-bootstrap";
+import { CartContext } from "../context/CartContext";
 import "../styles/OrderSuccess.css";
 
 /* -------------------- Success Popup -------------------- */
@@ -262,6 +263,7 @@ const OrderSuccess = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { orderId } = useParams();
+  const { syncCartFromBackend } = useContext(CartContext) || {};
 
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -361,6 +363,9 @@ const OrderSuccess = () => {
 
   useEffect(() => {
     fetchOrderDetails();
+    if (typeof syncCartFromBackend === "function") {
+      syncCartFromBackend();
+    }
 
     window.handleCancelSuccess = (data) => {
       const orderIdToRedirect = data.order?._id || data.order?.orderId || orderId;
