@@ -952,6 +952,7 @@ const CartPage = () => {
     return 0;
   });
   const [showPointsConfetti, setShowPointsConfetti] = useState(false);
+  const [showPointsRules, setShowPointsRules] = useState(false);
   const cartCallRef = useRef(0);
 
   // Recommendations
@@ -1159,16 +1160,21 @@ const CartPage = () => {
     }
 
     let pointsDiscount = 0;
-    if (usePoints && cartData.wallet?.pointsDiscount > 0) {
-      if (isAllSelected) {
-        pointsDiscount = cartData.wallet.pointsDiscount;
+    const isSelectionEligibleForPoints = subTotal >= 499;
+    if (usePoints && isSelectionEligibleForPoints && (cartData.wallet?.rewardPoints > 0 || cartData.wallet?.pointsDiscount > 0)) {
+      const pointsRate = cartData.wallet?.pointsRate || 0.1;
+      const availablePoints = cartData.wallet?.rewardPoints || 0;
+      const availablePointsValue = Number((availablePoints * pointsRate).toFixed(2));
+      // Cap at 50% of selected subtotal (real money rule)
+      const max50Percent = Math.round((subTotal * 0.5) * 100) / 100;
+      const maxAllowed = Math.min(availablePointsValue, max50Percent, Math.max(0, subTotal - couponDiscount));
+
+      if (isAllSelected && cartData.wallet?.pointsDiscount > 0) {
+        pointsDiscount = Math.min(cartData.wallet.pointsDiscount, maxAllowed);
       } else {
-        const totalCartSubtotal = cartData.cart.reduce((sum, i) => sum + i.subTotal, 0);
-        if (totalCartSubtotal > 0) {
-          const ratio = subTotal / totalCartSubtotal;
-          pointsDiscount = Math.min(subTotal - couponDiscount, Math.round(cartData.wallet.pointsDiscount * ratio * 100) / 100);
-        }
+        pointsDiscount = maxAllowed;
       }
+      pointsDiscount = Math.round(pointsDiscount * 100) / 100;
     }
 
     const gstRateStr = cartData.gstRate || "0%";
@@ -1190,7 +1196,7 @@ const CartPage = () => {
       subTotal,
       shipping: isAllSelected ? cartData.shipping : shipping,
       couponDiscount: isAllSelected ? cartData.couponDiscount : couponDiscount,
-      pointsDiscount: isAllSelected ? (cartData.wallet?.pointsDiscount || 0) : pointsDiscount,
+      pointsDiscount: pointsDiscount,
       taxableAmount: isAllSelected ? cartData.taxableAmount : taxableAmount,
       gstRate: gstRateStr,
       gstAmount: isAllSelected ? cartData.gstAmount : gstAmount,
@@ -1353,11 +1359,20 @@ const CartPage = () => {
         ...data.wallet,
         pointsValue: data.wallet.pointsValue !== undefined && data.wallet.pointsValue !== null
           ? Number(data.wallet.pointsValue)
-          : ((Number(data.wallet.rewardPoints) || 0) * 0.1),
+          : ((Number(data.wallet.rewardPoints) || 0) * (data.wallet.pointsRate || 0.1)),
         pointsDiscount: data.wallet.pointsDiscount !== undefined && data.wallet.pointsDiscount !== null
           ? Number(data.wallet.pointsDiscount)
-          : ((Number(data.wallet.pointsUsed) || 0) * 0.1),
-      } : null;
+          : ((Number(data.wallet.pointsUsed) || 0) * (data.wallet.pointsRate || 0.1)),
+      } : {
+        rewardPoints: 0,
+        pointsValue: 0,
+        canUsePoints: false,
+        pointsUsed: 0,
+        pointsDiscount: 0,
+        pointsMessage: "",
+        pointsRate: 0.1,
+        isGuest: !user || user.guest,
+      };
 
       setCartData({
         cart: normalizedCart,
@@ -1446,6 +1461,16 @@ const CartPage = () => {
             savingsMessage: "",
             grandTotal: totalAmount,
             shippingMessage: "",
+            wallet: {
+              rewardPoints: 0,
+              pointsValue: 0,
+              canUsePoints: false,
+              pointsUsed: 0,
+              pointsDiscount: 0,
+              pointsMessage: "",
+              pointsRate: 0.1,
+              isGuest: true,
+            },
           });
           setStockError("");
         } catch (localErr) {
@@ -1690,7 +1715,7 @@ const CartPage = () => {
 
       const body = {
         discountCode: cartData?.appliedCoupon?.code || null,
-        pointsToUse: summaryPricing.pointsDiscount > 0 ? (cartData?.wallet?.pointsUsed || 0) : 0,
+        pointsToUse: summaryPricing.pointsDiscount > 0 ? (cartData?.wallet?.pointsUsed || Math.round(summaryPricing.pointsDiscount / (cartData?.wallet?.pointsRate || 0.1))) : 0,
         giftCardCode: cartData?.giftCardApplied?.code || null,
         giftCardPin: cartData?.giftCardApplied?.pin || null,
         giftCardAmount: cartData?.giftCardApplied?.amount || 0,
@@ -1731,8 +1756,8 @@ const CartPage = () => {
               autoDiscount: cartData.autoDiscount || 0,
               couponDiscount: summaryPricing.couponDiscount,
               pointsDiscount: summaryPricing.pointsDiscount,
-              pointsUsed: summaryPricing.pointsDiscount > 0 ? (cartData?.wallet?.pointsUsed || 0) : 0,
-              referralPointsUsed: summaryPricing.pointsDiscount > 0 ? (cartData?.wallet?.pointsUsed || 0) : 0,
+              pointsUsed: summaryPricing.pointsDiscount > 0 ? (cartData?.wallet?.pointsUsed || Math.round(summaryPricing.pointsDiscount / (cartData?.wallet?.pointsRate || 0.1))) : 0,
+              referralPointsUsed: summaryPricing.pointsDiscount > 0 ? (cartData?.wallet?.pointsUsed || Math.round(summaryPricing.pointsDiscount / (cartData?.wallet?.pointsRate || 0.1))) : 0,
               shipping: summaryPricing.shipping,
               taxableAmount: summaryPricing.taxableAmount,
               gstRate: summaryPricing.gstRate,
@@ -2145,107 +2170,178 @@ const CartPage = () => {
             )}
           </div>
 
-          {/* ── Right column: Order Summary (unchanged) ── */}
+          {/* ── Right column: Joy Points & Order Summary ── */}
           <div className="col-xxl-4 col-12 mt-4 mt-lg-0">
             <div className="border-color-width">
-              <h5 className="ms-3 fs-5 fw-600 page-title-main-name mt-3">Order Summary</h5>
-              <hr className="border-color-blacks" />
+              {/* ── Use Joy Points Widget (Joyory Reward Points) ── */}
+              <div className="reward-points-card">
+                <div className="reward-points-header">
+                  <div className="reward-points-title m-0">
+                    <div className="reward-points-icon-wrapper">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="gold-coin-svg">
+                        <circle cx="12" cy="12" r="10" fill="url(#goldGradient)" stroke="#D4AF37" strokeWidth="1.5" />
+                        <circle cx="12" cy="12" r="7" fill="none" stroke="#F3E5C8" strokeWidth="1" strokeDasharray="3 2" />
+                        <path d="M12 7.5 L13.35 10.65 L16.8 11.15 L14.3 13.6 L14.9 17.05 L12 15.4 L9.1 17.05 L9.7 13.6 L7.2 11.15 L10.65 10.65 Z" fill="#8A6D1C" />
+                        <defs>
+                          <linearGradient id="goldGradient" x1="4" y1="4" x2="20" y2="20" gradientUnits="userSpaceOnUse">
+                            <stop offset="0%" stopColor="#FFE082" />
+                            <stop offset="50%" stopColor="#FFB300" />
+                            <stop offset="100%" stopColor="#FFA000" />
+                          </linearGradient>
+                        </defs>
+                      </svg>
+                    </div>
+                    <div>
+                      <div className="d-flex align-items-center gap-2">
+                        <span className="reward-points-title-text fw-bold">Use Joy Points</span>
+                        <span className="badge bg-warning text-dark px-2 py-0" style={{ fontSize: "10px", fontWeight: "600" }}>10 pts = ₹1</span>
+                      </div>
+                      <small className="text-muted d-block" style={{ fontSize: "11px" }}>Joyory Reward Points</small>
+                    </div>
+                  </div>
 
-              {/* Reward Points Widget */}
-              {cartData.wallet && cartData.wallet.rewardPoints > 0 && (
-                <>
-                  <div className="reward-points-card">
-                    <div className="reward-points-header">
-                      <label htmlFor="useRewardPointsCheckbox" className="reward-points-title m-0" style={{ cursor: (cartData.wallet.canUsePoints || (cartData.wallet.pointsUsed > 0)) ? "pointer" : "not-allowed" }}>
-                        <div className="reward-points-icon-wrapper">
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="gold-coin-svg">
-                            <circle cx="12" cy="12" r="10" fill="url(#goldGradient)" stroke="#D4AF37" strokeWidth="1.5" />
-                            <circle cx="12" cy="12" r="7" fill="none" stroke="#F3E5C8" strokeWidth="1" strokeDasharray="3 2" />
-                            <path d="M12 7.5 L13.35 10.65 L16.8 11.15 L14.3 13.6 L14.9 17.05 L12 15.4 L9.1 17.05 L9.7 13.6 L7.2 11.15 L10.65 10.65 Z" fill="#8A6D1C" />
-                            <defs>
-                              <linearGradient id="goldGradient" x1="4" y1="4" x2="20" y2="20" gradientUnits="userSpaceOnUse">
-                                <stop offset="0%" stopColor="#FFE082" />
-                                <stop offset="50%" stopColor="#FFB300" />
-                                <stop offset="100%" stopColor="#FFA000" />
-                              </linearGradient>
-                            </defs>
-                          </svg>
-                        </div>
-                        <span className="reward-points-title-text">Joyory Reward Points</span>
-                      </label>
-                      <div className="reward-points-toggle-wrapper">
-                        <div className="form-check form-switch m-0" title={(!cartData.wallet.canUsePoints && !(cartData.wallet.pointsUsed > 0)) ? "Reward points can only be used on orders ₹499 and above." : ""}>
-                          <input
-                            className="form-check-input reward-switch-input"
-                            type="checkbox"
-                            id="useRewardPointsCheckbox"
-                            checked={usePoints}
-                            disabled={!cartData.wallet.canUsePoints && !(cartData.wallet.pointsUsed > 0)}
-                            onChange={async (e) => {
-                              const checked = e.target.checked;
-                              localStorage.setItem("useRewardPoints", checked ? "true" : "false");
-                              setUsePoints(checked);
+                  {/* Toggle Switch (Only for logged-in users with points) */}
+                  {user && !user.guest && (cartData?.wallet?.rewardPoints || 0) > 0 && (
+                    <div className="reward-points-toggle-wrapper">
+                      <div
+                        className="form-check form-switch m-0"
+                        title={
+                          summaryPricing.subTotal < 499
+                            ? `Joy Points can only be used on orders ₹499 and above. Add ₹${Math.max(0, 499 - summaryPricing.subTotal).toFixed(0)} more to unlock.`
+                            : "Redeem Joy Points"
+                        }
+                      >
+                        <input
+                          className="form-check-input reward-switch-input"
+                          type="checkbox"
+                          id="useRewardPointsCheckbox"
+                          checked={usePoints && summaryPricing.subTotal >= 499}
+                          disabled={summaryPricing.subTotal < 499}
+                          onChange={async (e) => {
+                            const checked = e.target.checked;
+                            localStorage.setItem("useRewardPoints", checked ? "true" : "false");
+                            setUsePoints(checked);
 
+                            const pointsToUse = checked ? (cartData?.wallet?.rewardPoints || 99999999) : 0;
+                            setPointsToUseState(pointsToUse);
+
+                            if (checked) {
+                              localStorage.setItem("rewardPointsAmount", String(pointsToUse));
+                              setShowPointsConfetti(true);
+                              setTimeout(() => setShowPointsConfetti(false), 4000);
+                            } else {
+                              localStorage.removeItem("rewardPointsAmount");
+                              setShowPointsConfetti(false);
+                            }
+
+                            try {
                               const savedCoupon = localStorage.getItem("appliedCoupon");
-                              const pointsToUse = checked ? cartData.wallet.rewardPoints : 0;
-                              setPointsToUseState(pointsToUse);
-
-                              if (checked) {
-                                localStorage.setItem("rewardPointsAmount", String(pointsToUse));
-                                localStorage.setItem("showPointsConfetti", "true");
-                              } else {
-                                localStorage.removeItem("rewardPointsAmount");
-                                localStorage.removeItem("showPointsConfetti");
-                              }
-
-                              try {
-                                await fetchCart(savedCoupon, true, pointsToUse);
-                                await syncCartFromBackend();
-                              } catch (err) {
-                                console.error("Error updating cart points:", err);
-                              }
-
-                              window.location.reload();
-                            }}
-                          />
-                        </div>
+                              await fetchCart(savedCoupon, true, pointsToUse);
+                              await syncCartFromBackend();
+                            } catch (err) {
+                              console.error("Error updating cart points:", err);
+                            }
+                          }}
+                        />
                       </div>
                     </div>
+                  )}
+                </div>
 
-                    <div className="reward-points-body mt-3">
+                <div className="reward-points-body mt-3">
+                  {/* Case 1: Guest / Unauthenticated */}
+                  {(!user || user.guest) ? (
+                    <div className="guest-points-box text-start">
+                      <p className="mb-2 text-muted" style={{ fontSize: "12px", lineHeight: "1.4" }}>
+                        Have Joy Points? Log in to view your points balance and redeem them on orders <strong>₹499 & above</strong>.
+                      </p>
+                      <button
+                        type="button"
+                        className="btn btn-outline-dark btn-sm py-1 px-3 fw-semibold"
+                        style={{ fontSize: "12px", borderRadius: "6px" }}
+                        onClick={() => navigate("/login", { state: { from: "/cartpage" } })}
+                      >
+                        Log In to Use Points
+                      </button>
+                      <div className="mt-2 text-success" style={{ fontSize: "11px", fontWeight: "500" }}>
+                        ✨ Earn Joy Points equal to your order value after purchase!
+                      </div>
+                    </div>
+                  ) : (
+                    /* Case 2: Logged-in User */
+                    <>
                       <div className="reward-points-balance-info d-flex align-items-center justify-content-between">
                         <span className="reward-points-label">Available Balance</span>
                         <div className="reward-points-badge">
-                          <span className="reward-points-count">{cartData.wallet.rewardPoints}</span>
+                          <span className="reward-points-count">{cartData?.wallet?.rewardPoints || 0}</span>
                           <span className="reward-points-unit">pts</span>
                         </div>
                       </div>
 
-                      <div className="reward-points-value-info mt-2">
+                      <div className="reward-points-value-info mt-1">
                         <span className="reward-points-value-text">
-                          Worth <strong className="reward-points-value-amount">₹{cartData.wallet.pointsValue.toFixed(2)}</strong>
+                          Worth <strong className="reward-points-value-amount">₹{(cartData?.wallet?.pointsValue || 0).toFixed(2)}</strong>
                         </span>
                       </div>
 
-                      {!cartData.wallet.canUsePoints ? (
+                      {/* Warnings / Messages */}
+                      {(cartData?.wallet?.rewardPoints || 0) <= 0 ? (
+                        <div className="reward-points-message msg-info mt-2 p-2 rounded text-start" style={{ fontSize: "12px" }}>
+                          ℹ️ You have 0 Joy Points. You'll earn ~<strong>{Math.floor(summaryPricing.payable || 0)} Joy Points</strong> on this order!
+                        </div>
+                      ) : summaryPricing.subTotal < 499 ? (
                         <div className="reward-points-warning mt-3 d-flex align-items-start gap-2">
                           <span className="warning-icon">⚠️</span>
                           <span className="warning-text">
-                            {cartData.wallet.pointsMessage || "Reward points can only be used on orders ₹499 and above."}
+                            Joy Points can only be used on orders ₹499 and above. Add ₹<strong>{Math.max(0, 499 - summaryPricing.subTotal).toFixed(0)}</strong> more to redeem!
                           </span>
                         </div>
+                      ) : usePoints && summaryPricing.pointsDiscount > 0 ? (
+                        <div className="reward-points-message msg-success mt-3 p-2 rounded text-center fw-semibold">
+                          🎉 Applied ₹{summaryPricing.pointsDiscount.toFixed(2)} from your Joy Points! (Max 50% order discount allowed)
+                        </div>
                       ) : (
-                        usePoints && (cartData.wallet.pointsDiscount > 0 || cartData.wallet.pointsValue > 0) && (
-                          <div className="reward-points-message msg-success mt-3 p-2 rounded text-center fw-semibold">
-                            🎉 Applied ₹{(cartData.wallet.pointsDiscount || cartData.wallet.pointsValue || 0).toFixed(2)} from your points! Add more items to your cart to unlock even more point savings.
-                          </div>
-                        )
+                        <div className="text-muted mt-2" style={{ fontSize: "11px" }}>
+                          👉 Turn on the toggle switch above to apply your Joy Points discount.
+                        </div>
                       )}
-                    </div>
+
+                      {/* Earning Preview */}
+                      {summaryPricing.payable > 0 && (
+                        <div className="points-earning-row mt-2 d-flex align-items-center justify-content-between">
+                          <span>✨ Earning on this order:</span>
+                          <span className="text-success fw-bold">+{Math.floor(summaryPricing.payable)} Joy Points</span>
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  {/* Rules Accordion / Dropdown */}
+                  <div className="mt-2 text-end">
+                    <button
+                      type="button"
+                      className="points-rules-btn"
+                      onClick={() => setShowPointsRules(!showPointsRules)}
+                    >
+                      {showPointsRules ? "Hide rules ▲" : "Joy Points Rules ▼"}
+                    </button>
                   </div>
-                  <hr className="border-color-blacks" />
-                </>
-              )}
+
+                  {showPointsRules && (
+                    <div className="points-rules-box mt-2">
+                      <div className="fw-semibold text-dark mb-1">Joy Points Rules & Benefits:</div>
+                      <div>• <strong>10 Joy Points = ₹1</strong> (1 pt = ₹0.10 discount).</div>
+                      <div>• Redeemable on orders of <strong>₹499 and above</strong>.</div>
+                      <div>• Points can cover up to <strong>50%</strong> of the order value (you pay min 50% real money).</div>
+                      <div>• <strong>Cashback:</strong> Get Joy Points equal to what you spend (up to 20% cashback) credited to your wallet!</div>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <hr className="border-color-blacks" />
+
+              <h5 className="ms-3 fs-5 fw-600 page-title-main-name mt-3">Order Summary</h5>
+              <hr className="border-color-blacks" />
 
 
               <div className="mb-3 page-title-main-name">
