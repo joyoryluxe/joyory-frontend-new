@@ -1,10 +1,11 @@
 // PaymentProcess.jsx – Luxury Beauty Checkout with Coupons & COD Rules
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Modal } from "react-bootstrap";
 import Header from "../components/common/Header";
 import Footer from "../components/common/Footer";
+import { CartContext } from "../context/CartContext";
 import "../styles/PaymentProcess.css";
 import creditcard from "../assets/creditcard.svg";
 import BhimUPI from "../assets/BhimUPI.svg";
@@ -147,13 +148,14 @@ const PaymentProcess = () => {
     if (cb) cb();
   };
 
+  const { syncCartFromBackend } = useContext(CartContext) || {};
   const orderId = location.state?.orderId;
   const cartItems = location.state?.cartItems || [];
   const selectedAddress = location.state?.selectedAddress;
   const initialPriceDetails = location.state?.priceDetails || {};
 
-  // Clean up ordered items from guest cart on successful purchase
-  const cleanUpOrderedCartItems = () => {
+  // Clean up ordered items from guest cart & context on successful purchase
+  const cleanUpOrderedCartItems = async () => {
     try {
       const guestCartRaw = localStorage.getItem("guestCart");
       if (guestCartRaw) {
@@ -172,6 +174,18 @@ const PaymentProcess = () => {
           return true;
         });
         localStorage.setItem("guestCart", JSON.stringify(updated));
+      }
+      localStorage.removeItem("appliedCoupon");
+      localStorage.removeItem("useRewardPoints");
+      localStorage.removeItem("rewardPointsAmount");
+      sessionStorage.removeItem("appliedCoupon");
+      sessionStorage.removeItem("useRewardPoints");
+      sessionStorage.removeItem("rewardPointsAmount");
+      sessionStorage.removeItem("selectedCartItemIds");
+      localStorage.removeItem("selectedCartItemIds");
+
+      if (typeof syncCartFromBackend === "function") {
+        await syncCartFromBackend();
       }
     } catch (_) {}
   };
@@ -553,7 +567,7 @@ const PaymentProcess = () => {
       if (!confirmRes.ok || !confirmData.success)
         throw new Error(confirmData?.message || "COD confirmation failed.");
 
-      cleanUpOrderedCartItems();
+      await cleanUpOrderedCartItems();
 
       navigate(`/ordersuccess/${orderId}`, {
         replace: true,
@@ -656,7 +670,7 @@ const PaymentProcess = () => {
           if (!verifyRes.ok || !verifyData.success)
             return showAlert("Payment verification failed.", "Payment Verification", "error");
 
-          cleanUpOrderedCartItems();
+          await cleanUpOrderedCartItems();
 
           navigate(`/ordersuccess/${orderId}`, {
             replace: true,
@@ -740,7 +754,7 @@ const PaymentProcess = () => {
       if (!res.ok || !data.success)
         throw new Error(data.message || "Wallet payment failed.");
 
-      cleanUpOrderedCartItems();
+      await cleanUpOrderedCartItems();
 
       navigate(`/ordersuccess/${orderId}`, {
         replace: true,
@@ -809,7 +823,7 @@ const PaymentProcess = () => {
       if (!res.ok || !data.success)
         throw new Error(data.message || "Gift Card payment failed.");
 
-      cleanUpOrderedCartItems();
+      await cleanUpOrderedCartItems();
 
       navigate(`/ordersuccess/${orderId}`, {
         replace: true,
