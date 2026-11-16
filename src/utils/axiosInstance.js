@@ -33,12 +33,29 @@ const axiosInstance = axios.create({
   },
 });
 
-// Interceptor – no forced redirect
+// Interceptor – notify session expiry and handle unauthorized requests
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      console.warn("Unauthorized: handled locally (guest mode fallback).");
+      const data = error.response?.data;
+      const isExpired = Boolean(
+        data?.sessionExpired ||
+        (typeof data?.message === "string" && data.message.toLowerCase().includes("expired")) ||
+        (typeof data?.error === "string" && data.error.toLowerCase().includes("expired"))
+      );
+
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("joyory:session-expired", {
+            detail: {
+              sessionExpired: isExpired,
+              message: data?.message || "Session expired. Please log in again.",
+            },
+          })
+        );
+      }
+      console.warn("Unauthorized: session expired or token invalid, notified auth state.", error.response?.data);
     }
     return Promise.reject(error);
   }
