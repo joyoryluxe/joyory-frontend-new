@@ -12,8 +12,11 @@ import {
   FaTruck,
   FaTimesCircle,
   FaClock,
-  FaChevronRight
+  FaChevronRight,
+  FaHeadset
 } from "react-icons/fa";
+import { Sparkles } from "lucide-react";
+import OrderAssistantModal from "../components/common/OrderAssistantModal";
 
 const ORDERS_API = "https://beauty.joyory.com/api/user/cart/orders";
 
@@ -31,6 +34,7 @@ const Myorders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedHelpOrder, setSelectedHelpOrder] = useState(null);
 
   useEffect(() => {
     fetchOrders();
@@ -224,9 +228,24 @@ const Myorders = () => {
                     <p className="order-id-label mb-0 text-muted small text-uppercase fw-bold">Order ID</p>
                     <p className="order-id-value mb-0 fw-normal">{order.orderId}</p>
                   </div>
-                  <div className="text-end">
-                    <p className="order-date-label mb-0 text-muted small text-uppercase fw-bold">Placed On</p>
-                    <p className="order-date-value mb-0">{formatDate(order.date)}</p>
+                  <div className="d-flex align-items-center gap-2">
+                    <div className="text-end">
+                      <p className="order-date-label mb-0 text-muted small text-uppercase fw-bold">Placed On</p>
+                      <p className="order-date-value mb-0">{formatDate(order.date)}</p>
+                    </div>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-light border d-flex align-items-center gap-1 rounded-pill px-2 py-1 ms-1"
+                      style={{ fontSize: "0.75rem", fontWeight: 600, color: "#1e293b" }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedHelpOrder(order);
+                      }}
+                      title="Need help with this order?"
+                    >
+                      <Sparkles size={12} className="text-warning" />
+                      <span>Help</span>
+                    </button>
                   </div>
                 </div>
 
@@ -295,20 +314,43 @@ const Myorders = () => {
                     <span className="text-muted small">Total Amount: </span>
                     <span className="fw-bold text-dark">₹{order.amount}</span>
                   </div>
-                  {(!order.shipments || order.shipments.length === 0) && (
+                  <div className="d-flex align-items-center gap-2">
                     <button
-                      className="btn btn-sm btn-outline-dark fw-bold"
-                      onClick={() => handleViewDetails(order)}
+                      type="button"
+                      className="btn btn-sm btn-outline-dark d-flex align-items-center gap-1 rounded-pill px-3 py-1"
+                      style={{ fontSize: "0.82rem", fontWeight: 600 }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedHelpOrder(order);
+                      }}
+                      title="Need help with this order?"
                     >
-                      View Details
+                      <Sparkles size={13} className="text-warning" />
+                      <span>Need Help?</span>
                     </button>
-                  )}
+                    {(!order.shipments || order.shipments.length === 0) && (
+                      <button
+                        className="btn btn-sm btn-outline-dark fw-bold"
+                        onClick={() => handleViewDetails(order)}
+                      >
+                        View Details
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             ))
           )}
         </div>
       </div>
+
+      {/* AI Order Assistant Modal / Drawer */}
+      <OrderAssistantModal
+        isOpen={Boolean(selectedHelpOrder)}
+        onClose={() => setSelectedHelpOrder(null)}
+        order={selectedHelpOrder}
+      />
+
       <Footer />
     </>
   );
