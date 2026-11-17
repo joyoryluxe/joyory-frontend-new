@@ -260,6 +260,24 @@ const parseFiltersFromSearchParams = (searchParams) => {
     return initialFilters;
 };
 
+const PAGE_SIZE = 20;
+
+const getPaginationNumbers = (current, total) => {
+    if (total <= 7) {
+        return Array.from({ length: total }, (_, i) => i + 1);
+    }
+    const pages = [1];
+    if (current > 3) pages.push("...");
+    const start = Math.max(2, current - 1);
+    const end = Math.min(total - 1, current + 1);
+    for (let i = start; i <= end; i++) {
+        pages.push(i);
+    }
+    if (current < total - 2) pages.push("...");
+    pages.push(total);
+    return pages;
+};
+
 export default function ProductPage() {
     const params = useParams();
     const slug = params.filter || params.slug || params["*"];
@@ -282,6 +300,14 @@ export default function ProductPage() {
     /* ── state ──────────────────────────────────────────────────────────────── */
     const [allProducts, setAllProducts] = useState([]);
     const [totalCount, setTotalCount] = useState(0);
+    const [activePage, setActivePage] = useState(() => {
+        const initialP = parseInt(searchParams.get("page"), 10);
+        return initialP > 0 ? initialP : 1;
+    });
+    const targetPageScrollRef = useRef(null);
+    const totalPages = useMemo(() => {
+        return Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+    }, [totalCount]);
     const [pageTitle, setPageTitle] = useState("Products");
     const [bannerImages, setBannerImages] = useState([]); // 🔥 Changed to array
     const swiperRef = useRef(null); // 🔥 Added for Swiper
@@ -535,7 +561,7 @@ export default function ProductPage() {
         // Pass sort to backend API for global catalog sorting
         if (filters.sort) p.append("sort", filters.sort);
         if (cursor) p.append("cursor", cursor);
-        p.append("limit", "16");
+        p.append("limit", String(PAGE_SIZE));
 
         const queryString = p.toString();
         console.log("API Query →", `${PRODUCT_ALL_API}?${queryString}`);
@@ -555,6 +581,9 @@ export default function ProductPage() {
                 setLoading(true);
                 setNextCursor(null);
                 setHasMore(true);
+                if (!targetPageScrollRef.current) {
+                    setActivePage(1);
+                }
             } else {
                 setLoadingMore(true);
             }
@@ -910,6 +939,91 @@ export default function ProductPage() {
         return () => el && obs.unobserve(el);
     }, [loadMore, hasMore, loadingMore, loading, allProducts.length]);
 
+    /* ── pagination section navigation & scroll sync ────────────────────────── */
+    const scrollToPageSection = useCallback((pNum) => {
+        const targetEl = document.getElementById(`page-section-${pNum}`);
+        if (targetEl) {
+            const yOffset = -140;
+            const y = targetEl.getBoundingClientRect().top + window.pageYOffset + yOffset;
+            window.scrollTo({ top: Math.max(0, y), behavior: "smooth" });
+            setActivePage(pNum);
+            const url = new URL(window.location.href);
+            if (pNum === 1) url.searchParams.delete("page");
+            else url.searchParams.set("page", pNum);
+            window.history.replaceState({}, "", url.toString());
+            return true;
+        }
+        return false;
+    }, []);
+
+    const handlePaginationClick = useCallback((pNum, e) => {
+        if (e) e.preventDefault();
+        const scrolled = scrollToPageSection(pNum);
+        if (!scrolled) {
+            targetPageScrollRef.current = pNum;
+            if (hasMore && !loadingMore && nextCursor) {
+                fetchProducts(nextCursor, false);
+            }
+        }
+    }, [scrollToPageSection, hasMore, loadingMore, nextCursor]);
+
+    useEffect(() => {
+        if (targetPageScrollRef.current) {
+            const targetP = targetPageScrollRef.current;
+            const targetEl = document.getElementById(`page-section-${targetP}`);
+            if (targetEl) {
+                scrollToPageSection(targetP);
+                targetPageScrollRef.current = null;
+            } else if (hasMore && !loadingMore && nextCursor) {
+                fetchProducts(nextCursor, false);
+            } else {
+                targetPageScrollRef.current = null;
+            }
+        }
+    }, [allProducts, hasMore, loadingMore, nextCursor, scrollToPageSection]);
+
+    // Dynamic Page Section Detection on Scroll
+    useEffect(() => {
+        let ticking = false;
+        const handleScroll = () => {
+            if (!ticking) {
+                window.requestAnimationFrame(() => {
+                    const sections = document.querySelectorAll("[data-page-section]");
+                    if (sections && sections.length > 0) {
+                        let current = 1;
+                        const threshold = 220;
+                        sections.forEach((sec) => {
+                            const rect = sec.getBoundingClientRect();
+                            if (rect.top <= threshold) {
+                                const p = parseInt(sec.getAttribute("data-page-section"), 10);
+                                if (p) current = p;
+                            }
+                        });
+
+                        setActivePage((prev) => {
+                            if (prev !== current) {
+                                const url = new URL(window.location.href);
+                                if (current === 1) {
+                                    url.searchParams.delete("page");
+                                } else {
+                                    url.searchParams.set("page", current);
+                                }
+                                window.history.replaceState({}, "", url.toString());
+                                return current;
+                            }
+                            return prev;
+                        });
+                    }
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        };
+
+        window.addEventListener("scroll", handleScroll, { passive: true });
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, [allProducts.length]);
+
     /* ── cart ───────────────────────────────────────────────────────────────── */
     const handleAddToCart = async (prod, forceVariant = null) => {
         setAddingToCart((p) => ({ ...p, [prod._id]: true }));
@@ -961,7 +1075,7 @@ export default function ProductPage() {
     };
 
     /* ── product card ───────────────────────────────────────────────────────── */
-    const renderProductCard = (prod) => {
+    const renderProductCard = (prod, index = 0) => {
         const vars = Array.isArray(prod.variants) ? prod.variants : [];
         const hasVar = vars.length > 0;
 
@@ -996,8 +1110,17 @@ export default function ProductPage() {
         else if (showSelectVariantButton) btnText = "Select Variant";
         else if (currentVariantOutOfStock) btnText = "Out of Stock";
 
+        const pageNumber = Math.floor(index / PAGE_SIZE) + 1;
+        const isPageStart = index % PAGE_SIZE === 0;
+
         return (
-            <div key={prod._id} className="col-6 col-md-4 col-lg-4 position-relative page-title-main-name">
+            <div
+                key={prod._id}
+                id={isPageStart ? `page-section-${pageNumber}` : undefined}
+                data-page-section={isPageStart ? pageNumber : undefined}
+                data-page-num={pageNumber}
+                className="col-6 col-md-4 col-lg-4 position-relative page-title-main-name"
+            >
                 <div className="foryou-card-wrapper">
                     <div className="foryou-card">
                         {/* Product Image with Overlays */}
@@ -1848,7 +1971,7 @@ export default function ProductPage() {
                                 </div>
                             )}
                             {sortedProducts.length > 0
-                                ? sortedProducts.map(renderProductCard)
+                                ? sortedProducts.map((prod, idx) => renderProductCard(prod, idx))
                                 : loading
                                     ? (
                                         // NEW Loading state when no products yet
@@ -1878,32 +2001,48 @@ export default function ProductPage() {
                             </div>
                         )}
 
-                        {/* Crawlable Pagination links for search engines & accessibility */}
-                        {totalCount > 12 && (
-                            <nav className="crawlable-pagination-bar" aria-label="Product page pagination">
-                                {Array.from({ length: Math.min(Math.ceil(totalCount / 12), 8) }, (_, i) => i + 1).map((pNum) => {
+                        {/* Crawlable Pagination links for search engines & smooth in-page navigation */}
+                        {totalPages > 1 && (
+                            <nav className="crawlable-pagination-bar" aria-label="Product catalog pagination">
+                                {activePage > 1 && (
+                                    <a
+                                        href={activePage === 2 ? location.pathname : `${location.pathname}?page=${activePage - 1}`}
+                                        className="crawlable-page-nav-btn crawlable-page-prev"
+                                        aria-label="Previous Page"
+                                        onClick={(e) => handlePaginationClick(activePage - 1, e)}
+                                    >
+                                        &larr; Prev
+                                    </a>
+                                )}
+                                {getPaginationNumbers(activePage, totalPages).map((pItem, idx) => {
+                                    if (pItem === "...") {
+                                        return <span key={`ellipsis-${idx}`} className="crawlable-page-ellipsis">…</span>;
+                                    }
+                                    const pNum = Number(pItem);
                                     const pageHref = pNum === 1 ? location.pathname : `${location.pathname}?page=${pNum}`;
-                                    const isCurrentPage = (parseInt(searchParams.get("page")) || 1) === pNum;
+                                    const isActive = activePage === pNum;
                                     return (
                                         <a
                                             key={pNum}
                                             href={pageHref}
-                                            className={`crawlable-page-link ${isCurrentPage ? "active" : ""}`}
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                setSearchParams(prev => {
-                                                    const next = new URLSearchParams(prev);
-                                                    if (pNum === 1) next.delete("page");
-                                                    else next.set("page", pNum);
-                                                    return next;
-                                                });
-                                                window.scrollTo({ top: 300, behavior: "smooth" });
-                                            }}
+                                            className={`crawlable-page-link ${isActive ? "active" : ""}`}
+                                            aria-current={isActive ? "page" : undefined}
+                                            onClick={(e) => handlePaginationClick(pNum, e)}
                                         >
                                             {pNum}
                                         </a>
                                     );
                                 })}
+                                {activePage < totalPages && (
+                                    <a
+                                        href={`${location.pathname}?page=${activePage + 1}`}
+                                        className="crawlable-page-nav-btn crawlable-page-next"
+                                        aria-label="Next Page"
+                                        onClick={(e) => handlePaginationClick(activePage + 1, e)}
+                                    >
+                                        Next &rarr;
+                                    </a>
+                                )}
                             </nav>
                         )}
                     </div>

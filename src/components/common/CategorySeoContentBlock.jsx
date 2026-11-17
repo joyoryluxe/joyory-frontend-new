@@ -196,23 +196,25 @@ export const CategorySeoContentBlock = ({ categoryType }) => {
               {faqs.map((faq, idx) => {
                 const isOpen = openFaqs[idx] ?? idx === 0;
                 return (
-                  <div key={idx} className="category-faq-item">
+                  <div key={idx} className={`category-faq-item ${isOpen ? "open" : ""}`}>
                     <button
                       type="button"
-                      className="category-faq-question"
+                      className={`category-faq-question ${isOpen ? "active" : ""}`}
                       onClick={() => toggleFaq(idx)}
                       aria-expanded={isOpen}
                     >
                       <span>{faq.q}</span>
-                      <span className="category-faq-icon">
-                        {isOpen ? <FaChevronUp /> : <FaChevronDown />}
+                      <span className={`category-faq-icon ${isOpen ? "open" : ""}`}>
+                        <FaChevronDown />
                       </span>
                     </button>
-                    {isOpen && (
-                      <div className="category-faq-answer">
-                        <p className="mb-0">{faq.a}</p>
+                    <div className={`category-faq-answer-wrap ${isOpen ? "open" : ""}`}>
+                      <div className="category-faq-answer-inner">
+                        <div className="category-faq-answer">
+                          <p className="mb-0">{faq.a}</p>
+                        </div>
                       </div>
-                    )}
+                    </div>
                   </div>
                 );
               })}
@@ -411,23 +413,25 @@ export const CategorySeoContentBlock = ({ categoryType }) => {
               {faqs.map((faq, idx) => {
                 const isOpen = openFaqs[idx] ?? idx === 0;
                 return (
-                  <div key={idx} className="category-faq-item">
+                  <div key={idx} className={`category-faq-item ${isOpen ? "open" : ""}`}>
                     <button
                       type="button"
-                      className="category-faq-question"
+                      className={`category-faq-question ${isOpen ? "active" : ""}`}
                       onClick={() => toggleFaq(idx)}
                       aria-expanded={isOpen}
                     >
                       <span>{faq.q}</span>
-                      <span className="category-faq-icon">
-                        {isOpen ? <FaChevronUp /> : <FaChevronDown />}
+                      <span className={`category-faq-icon ${isOpen ? "open" : ""}`}>
+                        <FaChevronDown />
                       </span>
                     </button>
-                    {isOpen && (
-                      <div className="category-faq-answer">
-                        <p className="mb-0">{faq.a}</p>
+                    <div className={`category-faq-answer-wrap ${isOpen ? "open" : ""}`}>
+                      <div className="category-faq-answer-inner">
+                        <div className="category-faq-answer">
+                          <p className="mb-0">{faq.a}</p>
+                        </div>
                       </div>
-                    )}
+                    </div>
                   </div>
                 );
               })}
