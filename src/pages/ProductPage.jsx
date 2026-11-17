@@ -304,7 +304,6 @@ export default function ProductPage() {
         const initialP = parseInt(searchParams.get("page"), 10);
         return initialP > 0 ? initialP : 1;
     });
-    const targetPageScrollRef = useRef(null);
     const totalPages = useMemo(() => {
         return Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
     }, [totalCount]);
@@ -514,7 +513,7 @@ export default function ProductPage() {
     };
 
     /* ── fetch products ─────────────────────────────────────────────────────── */
-    const buildQueryParams = (cursor = null) => {
+    const buildQueryParams = (cursor = null, customLimit = null) => {
         const p = new URLSearchParams();
         const path = location.pathname.toLowerCase();
 
@@ -561,7 +560,7 @@ export default function ProductPage() {
         // Pass sort to backend API for global catalog sorting
         if (filters.sort) p.append("sort", filters.sort);
         if (cursor) p.append("cursor", cursor);
-        p.append("limit", String(PAGE_SIZE));
+        p.append("limit", String(customLimit || PAGE_SIZE));
 
         const queryString = p.toString();
         console.log("API Query →", `${PRODUCT_ALL_API}?${queryString}`);
@@ -577,19 +576,20 @@ export default function ProductPage() {
         }
 
         try {
+            const requestedPage = reset ? (parseInt(searchParams.get("page"), 10) || 1) : 1;
+            const customLimit = (reset && requestedPage > 1) ? requestedPage * PAGE_SIZE : null;
+
             if (reset) {
                 setLoading(true);
                 setNextCursor(null);
                 setHasMore(true);
-                if (!targetPageScrollRef.current) {
-                    setActivePage(1);
-                }
+                setActivePage(requestedPage);
             } else {
                 setLoadingMore(true);
             }
 
             const { data } = await axios.get(
-                `${PRODUCT_ALL_API}?${buildQueryParams(cursor)}`,
+                `${PRODUCT_ALL_API}?${buildQueryParams(cursor, customLimit)}`,
                 {
                     withCredentials: true,
                     signal: reset ? fetchAbortRef.current?.signal : undefined
@@ -758,13 +758,15 @@ export default function ProductPage() {
             const prods = data.products || [];
             const pg = data.pagination || {};
 
-            if (data.titleMessage) {
+            if (data.titleMessage && (pg.hasMore || prods.length >= PAGE_SIZE)) {
                 const match = data.titleMessage.match(/\d+/);
                 if (match) {
                     setTotalCount(parseInt(match[0], 10));
                 } else {
                     setTotalCount((prev) => reset ? prods.length : prev + prods.length);
                 }
+            } else if (data.totalProducts && (pg.hasMore || prods.length >= PAGE_SIZE)) {
+                setTotalCount(Number(data.totalProducts));
             } else {
                 setTotalCount((prev) => reset ? prods.length : prev + prods.length);
             }
@@ -774,6 +776,10 @@ export default function ProductPage() {
 
             setHasMore(pg.hasMore || false);
             setNextCursor(pg.nextCursor || null);
+
+            if (reset && requestedPage > 1) {
+                scrollToPageSection(requestedPage, true);
+            }
         } catch (e) {
             if (axios.isCancel(e) || e.name === "CanceledError") {
                 return;
@@ -815,9 +821,11 @@ export default function ProductPage() {
         if (filters.minRating) newParams.set('minRating', filters.minRating);
         if (filters.sort !== 'recent') newParams.set('sort', filters.sort);
 
-        // Preserve search queries
+        // Preserve search queries and crawlable page parameter
         const q = searchParams.get("q") || searchParams.get("search");
         if (q) newParams.set("q", q);
+        const pageP = searchParams.get("page");
+        if (pageP && Number(pageP) > 1) newParams.set("page", pageP);
 
         const currentQuery = searchParams.toString();
         const newQuery = newParams.toString();
@@ -932,7 +940,7 @@ export default function ProductPage() {
                     loadMore();
                 }
             },
-            { root: null, rootMargin: "0px", threshold: 0.1 }
+            { root: null, rootMargin: "350px", threshold: 0.1 }
         );
         const el = loaderRef.current;
         if (el) obs.observe(el);
@@ -940,61 +948,138 @@ export default function ProductPage() {
     }, [loadMore, hasMore, loadingMore, loading, allProducts.length]);
 
     /* ── pagination section navigation & scroll sync ────────────────────────── */
-    const scrollToPageSection = useCallback((pNum) => {
-        const targetEl = document.getElementById(`page-section-${pNum}`);
-        if (targetEl) {
-            const yOffset = -140;
-            const y = targetEl.getBoundingClientRect().top + window.pageYOffset + yOffset;
-            window.scrollTo({ top: Math.max(0, y), behavior: "smooth" });
-            setActivePage(pNum);
-            const url = new URL(window.location.href);
-            if (pNum === 1) url.searchParams.delete("page");
-            else url.searchParams.set("page", pNum);
-            window.history.replaceState({}, "", url.toString());
-            return true;
+    const isProgrammaticScrollRef = useRef(false);
+    const isNavigatingPageRef = useRef(false);
+
+    const scrollToPageSection = useCallback((pNum, retry = true) => {
+        let attempts = 0;
+        const maxAttempts = retry ? 25 : 1;
+
+        const tryScroll = () => {
+            const targetEl = document.getElementById(`page-section-${pNum}`);
+            if (targetEl) {
+                isProgrammaticScrollRef.current = true;
+                const headerOffset = 130;
+                const elementPosition = targetEl.getBoundingClientRect().top + window.pageYOffset;
+                const offsetPosition = Math.max(0, elementPosition - headerOffset);
+
+                window.scrollTo({
+                    top: offsetPosition,
+                    behavior: "smooth"
+                });
+
+                setActivePage(pNum);
+
+                const url = new URL(window.location.href);
+                if (pNum === 1) {
+                    url.searchParams.delete("page");
+                } else {
+                    url.searchParams.set("page", pNum);
+                }
+                window.history.replaceState({}, "", url.toString());
+
+                setTimeout(() => {
+                    isProgrammaticScrollRef.current = false;
+                }, 1000);
+                return true;
+            } else if (attempts < maxAttempts) {
+                attempts++;
+                setTimeout(tryScroll, 100);
+                return false;
+            }
+            return false;
+        };
+
+        const foundImmediate = document.getElementById(`page-section-${pNum}`);
+        if (foundImmediate) {
+            return tryScroll();
+        } else if (retry) {
+            tryScroll();
+            return false;
         }
         return false;
     }, []);
 
-    const handlePaginationClick = useCallback((pNum, e) => {
-        if (e) e.preventDefault();
-        const scrolled = scrollToPageSection(pNum);
-        if (!scrolled) {
-            targetPageScrollRef.current = pNum;
-            if (hasMore && !loadingMore && nextCursor) {
-                fetchProducts(nextCursor, false);
-            }
+    const goToPage = useCallback(async (pNum, e) => {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
         }
-    }, [scrollToPageSection, hasMore, loadingMore, nextCursor]);
 
-    useEffect(() => {
-        if (targetPageScrollRef.current) {
-            const targetP = targetPageScrollRef.current;
-            const targetEl = document.getElementById(`page-section-${targetP}`);
-            if (targetEl) {
-                scrollToPageSection(targetP);
-                targetPageScrollRef.current = null;
-            } else if (hasMore && !loadingMore && nextCursor) {
-                fetchProducts(nextCursor, false);
-            } else {
-                targetPageScrollRef.current = null;
-            }
+        // 1. If already rendered in DOM, scroll right to it immediately
+        if (scrollToPageSection(pNum, false)) {
+            return;
         }
-    }, [allProducts, hasMore, loadingMore, nextCursor, scrollToPageSection]);
+
+        // 2. Prevent concurrent fetching
+        if (isNavigatingPageRef.current) return;
+        isNavigatingPageRef.current = true;
+        setLoadingMore(true);
+
+        try {
+            const minNeeded = (pNum - 1) * PAGE_SIZE + 1;
+            let currentProducts = [...allProducts];
+            let currentCursor = nextCursor;
+            let currentHasMore = hasMore;
+
+            while (currentProducts.length < minNeeded && currentHasMore && currentCursor) {
+                const queryStr = buildQueryParams(currentCursor);
+                const { data } = await axios.get(`${PRODUCT_ALL_API}?${queryStr}`, { withCredentials: true });
+                const newProds = data.products || [];
+                const pg = data.pagination || {};
+
+                if (newProds.length === 0) break;
+
+                currentProducts = [...currentProducts, ...newProds];
+                currentHasMore = pg.hasMore || false;
+                currentCursor = pg.nextCursor || null;
+
+                setAllProducts(currentProducts);
+                setHasMore(currentHasMore);
+                setNextCursor(currentCursor);
+            }
+
+            // Once new products are fetched and committed, scroll to the section with polling retry
+            scrollToPageSection(pNum, true);
+        } catch (err) {
+            console.error("Failed to load products for page:", pNum, err);
+            showToastMsg(`Failed to load page ${pNum}`, "error");
+        } finally {
+            setLoadingMore(false);
+            isNavigatingPageRef.current = false;
+        }
+    }, [scrollToPageSection, allProducts, nextCursor, hasMore, buildQueryParams]);
 
     // Dynamic Page Section Detection on Scroll
     useEffect(() => {
         let ticking = false;
         const handleScroll = () => {
+            if (isProgrammaticScrollRef.current) return;
             if (!ticking) {
                 window.requestAnimationFrame(() => {
+                    // If scrolled near top of page, always reset to page 1
+                    if (window.pageYOffset < 150) {
+                        setActivePage((prev) => {
+                            if (prev !== 1) {
+                                const url = new URL(window.location.href);
+                                url.searchParams.delete("page");
+                                window.history.replaceState({}, "", url.toString());
+                                return 1;
+                            }
+                            return prev;
+                        });
+                        ticking = false;
+                        return;
+                    }
+
                     const sections = document.querySelectorAll("[data-page-section]");
                     if (sections && sections.length > 0) {
                         let current = 1;
-                        const threshold = 220;
+                        // Focus line: 300px from top of viewport (below sticky header)
+                        const triggerOffset = 300;
                         sections.forEach((sec) => {
                             const rect = sec.getBoundingClientRect();
-                            if (rect.top <= threshold) {
+                            if (rect.top <= triggerOffset) {
                                 const p = parseInt(sec.getAttribute("data-page-section"), 10);
                                 if (p) current = p;
                             }
@@ -1022,7 +1107,7 @@ export default function ProductPage() {
 
         window.addEventListener("scroll", handleScroll, { passive: true });
         return () => window.removeEventListener("scroll", handleScroll);
-    }, [allProducts.length]);
+    }, []);
 
     /* ── cart ───────────────────────────────────────────────────────────────── */
     const handleAddToCart = async (prod, forceVariant = null) => {
@@ -1111,13 +1196,10 @@ export default function ProductPage() {
         else if (currentVariantOutOfStock) btnText = "Out of Stock";
 
         const pageNumber = Math.floor(index / PAGE_SIZE) + 1;
-        const isPageStart = index % PAGE_SIZE === 0;
 
         return (
             <div
                 key={prod._id}
-                id={isPageStart ? `page-section-${pageNumber}` : undefined}
-                data-page-section={isPageStart ? pageNumber : undefined}
                 data-page-num={pageNumber}
                 className="col-6 col-md-4 col-lg-4 position-relative page-title-main-name"
             >
@@ -1856,6 +1938,8 @@ export default function ProductPage() {
                     )}
 
                     <div className="col-12 col-lg-9">
+                        {/* Anchor for Page 1 */}
+                        <div id="page-section-1" data-page-section="1" style={{ position: "relative", top: "-10px", height: 0, width: "100%", padding: 0, margin: 0 }} />
                         <div className="mb-3 d-flex justify-content-between align-items-center">
                             <span className="text-muted page-title-main-name d-lg-block d-none mt-3">
                                 Showing {totalCount} products
@@ -1971,7 +2055,31 @@ export default function ProductPage() {
                                 </div>
                             )}
                             {sortedProducts.length > 0
-                                ? sortedProducts.map((prod, idx) => renderProductCard(prod, idx))
+                                ? sortedProducts.map((prod, idx) => {
+                                    const pageNum = Math.floor(idx / PAGE_SIZE) + 1;
+                                    const isNewPageBoundary = idx > 0 && idx % PAGE_SIZE === 0;
+
+                                    return (
+                                        <React.Fragment key={prod._id ? `prod-card-${prod._id}` : `prod-idx-${idx}`}>
+                                            {isNewPageBoundary && (
+                                                <div
+                                                    id={`page-section-${pageNum}`}
+                                                    data-page-section={pageNum}
+                                                    className="col-12 page-section-divider"
+                                                >
+                                                    <div className="page-section-divider-inner">
+                                                        <span className="page-section-divider-line"></span>
+                                                        <span className="page-section-badge">
+                                                            Page {pageNum}
+                                                        </span>
+                                                        <span className="page-section-divider-line"></span>
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {renderProductCard(prod, idx)}
+                                        </React.Fragment>
+                                    );
+                                })
                                 : loading
                                     ? (
                                         // NEW Loading state when no products yet
@@ -2009,7 +2117,7 @@ export default function ProductPage() {
                                         href={activePage === 2 ? location.pathname : `${location.pathname}?page=${activePage - 1}`}
                                         className="crawlable-page-nav-btn crawlable-page-prev"
                                         aria-label="Previous Page"
-                                        onClick={(e) => handlePaginationClick(activePage - 1, e)}
+                                        onClick={(e) => goToPage(activePage - 1, e)}
                                     >
                                         &larr; Prev
                                     </a>
@@ -2027,7 +2135,7 @@ export default function ProductPage() {
                                             href={pageHref}
                                             className={`crawlable-page-link ${isActive ? "active" : ""}`}
                                             aria-current={isActive ? "page" : undefined}
-                                            onClick={(e) => handlePaginationClick(pNum, e)}
+                                            onClick={(e) => goToPage(pNum, e)}
                                         >
                                             {pNum}
                                         </a>
@@ -2038,7 +2146,7 @@ export default function ProductPage() {
                                         href={`${location.pathname}?page=${activePage + 1}`}
                                         className="crawlable-page-nav-btn crawlable-page-next"
                                         aria-label="Next Page"
-                                        onClick={(e) => handlePaginationClick(activePage + 1, e)}
+                                        onClick={(e) => goToPage(activePage + 1, e)}
                                     >
                                         Next &rarr;
                                     </a>
