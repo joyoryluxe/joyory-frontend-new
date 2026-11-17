@@ -491,6 +491,15 @@ const SEOMeta = ({ type = "home", slug = "", page = "" }) => {
 
 
     const fetchSEO = async () => {
+      // Guard: do not send request if type requires a slug but slug is empty
+      if (type !== "home" && (!slug || !slug.trim())) {
+        if (isMounted) {
+          const fallback = FALLBACKS[type] || FALLBACKS.home;
+          applyMetadata(fallback);
+        }
+        return;
+      }
+
       try {
         const response = await axiosInstance.get("/api/seo", {
           params: { type, slug, page }

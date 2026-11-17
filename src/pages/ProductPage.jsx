@@ -306,13 +306,18 @@ export default function ProductPage() {
     }, [activeCategorySlug, trendingCategories, filterData]);
 
     const isFaceCategory = useMemo(() => {
-        const p = location.pathname.toLowerCase();
-        return p.includes("/category/makeup/face") || p.includes("/category/face") || effectiveSlug === "face";
+        const p = location.pathname.toLowerCase().replace(/\/+$/, "");
+        return p === "/category/makeup/face" || p === "/category/face" || effectiveSlug === "face";
     }, [location.pathname, effectiveSlug]);
 
     const isLipsCategory = useMemo(() => {
+        const p = location.pathname.toLowerCase().replace(/\/+$/, "");
+        return p === "/category/makeup/lips" || p === "/category/lips" || effectiveSlug === "lips";
+    }, [location.pathname, effectiveSlug]);
+
+    const isLipsSection = useMemo(() => {
         const p = location.pathname.toLowerCase();
-        return p.includes("/category/makeup/lips") || p.includes("/category/lips") || effectiveSlug === "lips";
+        return p.includes("/category/makeup/lips") || p.includes("/category/lips") || effectiveSlug === "lips" || (effectiveSlug && effectiveSlug.startsWith("lips-"));
     }, [location.pathname, effectiveSlug]);
 
     const seoSlug = useMemo(() => {
@@ -323,7 +328,7 @@ export default function ProductPage() {
 
     const displayedTrendingCategories = useMemo(() => {
         if (!trendingCategories || trendingCategories.length === 0) return [];
-        if (isLipsCategory) {
+        if (isLipsSection) {
             return [...trendingCategories].sort((a, b) => {
                 const aName = (a.name || "").toLowerCase();
                 const bName = (b.name || "").toLowerCase();
@@ -337,7 +342,7 @@ export default function ProductPage() {
             });
         }
         return trendingCategories;
-    }, [trendingCategories, isLipsCategory]);
+    }, [trendingCategories, isLipsSection]);
 
     const [selectedVariants, setSelectedVariants] = useState({});
     const [tempSelectedVariants, setTempSelectedVariants] = useState({});
