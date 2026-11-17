@@ -353,6 +353,10 @@ const SEOMeta = ({ type = "home", slug = "", page = "" }) => {
       let fallback = FALLBACKS[type] || FALLBACKS.home;
 
       // Check category pages for custom skincare and makeup metadata
+      const lowerSlug = (slug || "").toLowerCase().trim();
+      const isFaceCategory = lowerSlug === "face" || lowerSlug === "makeup/face";
+      const isLipsCategory = lowerSlug === "lips" || lowerSlug === "makeup/lips";
+
       if (type === "category") {
         if (slug === "skincare" || slug === "skin") {
           fallback = {
@@ -370,6 +374,22 @@ const SEOMeta = ({ type = "home", slug = "", page = "" }) => {
             image: "https://joyory.com/logo.png",
             type: "website"
           };
+        } else if (isFaceCategory) {
+          fallback = {
+            title: "Buy Face Makeup Online in India | Foundation, Blush & More",
+            description: "Shop face makeup online in India at Joyory: foundation, compact, blush, bronzer, concealer, contour, highlighter & primer from top beauty brands. Order now.",
+            canonical: "https://joyory.com/category/makeup/face",
+            image: "https://joyory.com/logo.png",
+            type: "website"
+          };
+        } else if (isLipsCategory) {
+          fallback = {
+            title: "Buy Lipsticks, Lip Gloss & Lip Care Online | Joyory",
+            description: "Shop lipsticks, lip gloss, lip liners, lip balms, lip oils & lip stains from top brands like Pilgrim, Dot & Key, Swiss Beauty. Prices from ₹229. Shop now.",
+            canonical: "https://joyory.com/category/makeup/lips",
+            image: "https://joyory.com/logo.png",
+            type: "website"
+          };
         }
       }
 
@@ -377,14 +397,25 @@ const SEOMeta = ({ type = "home", slug = "", page = "" }) => {
       let description = data.description || fallback.description;
       let canonical = data.canonical || fallback.canonical;
 
-      if (type === "category" && slug?.toLowerCase() === "makeup") {
-        title = "Buy Makeup Products Online in India: Face & Lips | Joyory";
-        description = "Shop makeup products online at Joyory, from face and lip makeup to more beauty essentials. Browse the full range and find your next favourite look.";
-        canonical = "https://joyory.com/category/makeup";
+      if (type === "category") {
+        if (lowerSlug === "makeup") {
+          title = "Buy Makeup Products Online in India: Face & Lips | Joyory";
+          description = "Shop makeup products online at Joyory, from face and lip makeup to more beauty essentials. Browse the full range and find your next favourite look.";
+          canonical = "https://joyory.com/category/makeup";
+        } else if (isFaceCategory) {
+          title = "Buy Face Makeup Online in India | Foundation, Blush & More";
+          description = "Shop face makeup online in India at Joyory: foundation, compact, blush, bronzer, concealer, contour, highlighter & primer from top beauty brands. Order now.";
+          canonical = "https://joyory.com/category/makeup/face";
+        } else if (isLipsCategory) {
+          title = "Buy Lipsticks, Lip Gloss & Lip Care Online | Joyory";
+          description = "Shop lipsticks, lip gloss, lip liners, lip balms, lip oils & lip stains from top brands like Pilgrim, Dot & Key, Swiss Beauty. Prices from ₹229. Shop now.";
+          canonical = "https://joyory.com/category/makeup/lips";
+        }
       }
 
-      const ogTitle = (type === "category" && slug?.toLowerCase() === "makeup") ? title : (data.openGraph?.title || title);
-      const ogDescription = (type === "category" && slug?.toLowerCase() === "makeup") ? description : (data.openGraph?.description || description);
+      const isCustomMeta = type === "category" && (lowerSlug === "makeup" || isFaceCategory || isLipsCategory);
+      const ogTitle = isCustomMeta ? title : (data.openGraph?.title || title);
+      const ogDescription = isCustomMeta ? description : (data.openGraph?.description || description);
       const ogImage = data.openGraph?.image || fallback.image;
       const ogType = data.openGraph?.type || fallback.type;
 

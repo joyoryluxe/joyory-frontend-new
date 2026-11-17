@@ -1,16 +1,18 @@
 import ProductCardCartButton from "../components/common/ProductCardCartButton";
 /* ProductPage – Unified API & Full Feature Edition with Multi-Filter Support */
 import React, { useState, useEffect, useContext, useRef, useCallback, useMemo } from "react";
-import { useParams, useNavigate, useLocation, useSearchParams } from "react-router-dom";
+import { useParams, useNavigate, useLocation, useSearchParams, Link } from "react-router-dom";
 import { FaStar, FaHeart, FaRegHeart, FaChevronDown, FaTimes, FaCheck } from "react-icons/fa";
 import Header from "../components/common/Header";
 import SEOMeta from "../components/common/SEOMeta";
+import CategorySeoContentBlock from "../components/common/CategorySeoContentBlock";
 import Footer from "../components/common/Footer";
 import { CartContext } from "../context/CartContext";
 import { UserContext } from "../context/UserContext.jsx";
 import BrandFilter from "../components/common/BrandFilter";
 import "../styles/ProductPage.css";
 import "../styles/BestSellers.css";
+import "../styles/CategorySeoContentBlock.css";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -302,6 +304,40 @@ export default function ProductPage() {
             || filterData?.categories?.find((c) => c.slug === activeCategorySlug || c._id === activeCategorySlug);
         return found ? found.name : "";
     }, [activeCategorySlug, trendingCategories, filterData]);
+
+    const isFaceCategory = useMemo(() => {
+        const p = location.pathname.toLowerCase();
+        return p.includes("/category/makeup/face") || p.includes("/category/face") || effectiveSlug === "face";
+    }, [location.pathname, effectiveSlug]);
+
+    const isLipsCategory = useMemo(() => {
+        const p = location.pathname.toLowerCase();
+        return p.includes("/category/makeup/lips") || p.includes("/category/lips") || effectiveSlug === "lips";
+    }, [location.pathname, effectiveSlug]);
+
+    const seoSlug = useMemo(() => {
+        if (isFaceCategory) return "makeup/face";
+        if (isLipsCategory) return "makeup/lips";
+        return effectiveSlug;
+    }, [isFaceCategory, isLipsCategory, effectiveSlug]);
+
+    const displayedTrendingCategories = useMemo(() => {
+        if (!trendingCategories || trendingCategories.length === 0) return [];
+        if (isLipsCategory) {
+            return [...trendingCategories].sort((a, b) => {
+                const aName = (a.name || "").toLowerCase();
+                const bName = (b.name || "").toLowerCase();
+                if (aName === "lipstick") return -1;
+                if (bName === "lipstick") return 1;
+                if (aName === "liquid lipstick") return -1;
+                if (bName === "liquid lipstick") return 1;
+                if (aName === "lip stain") return -1;
+                if (bName === "lip stain") return 1;
+                return 0;
+            });
+        }
+        return trendingCategories;
+    }, [trendingCategories, isLipsCategory]);
 
     const [selectedVariants, setSelectedVariants] = useState({});
     const [tempSelectedVariants, setTempSelectedVariants] = useState({});
@@ -973,7 +1009,7 @@ export default function ProductPage() {
                         >
                             <img
                                 src={img}
-                                alt={prod.name}
+                                alt={`${getBrandName(prod) ? getBrandName(prod) + " " : ""}${prod.name}${displayVariant?.variantName || displayVariant?.shadeName || displayVariant?.size ? " " + (displayVariant.variantName || displayVariant.shadeName || displayVariant.size) : ""}`}
                                 className="foryou-img img-fluid"
                                 style={{
                                     opacity: showOutOfStock ? 0.6 : 1,
@@ -1075,25 +1111,40 @@ export default function ProductPage() {
                                     {getBrandName(prod)}
                                 </div>
 
-                                {/* Product Name */}<div className="product-card-title-wrap"><h6
+                                {/* Product Name */}<div className="product-card-title-wrap"><h3
                                     className="foryou-name m-0 p-0"
-                                    onClick={() => {
-                                        if (showOutOfStock) {
-                                            handleOutOfStockClick(prod.name);
-                                        } else {
-                                            navigate(`/product/${slugPr}`);
-                                        }
-                                    }}
                                     style={{
-                                        cursor: 'pointer',
-                                        opacity: showOutOfStock ? 0.6 : 1,
+                                        fontSize: "inherit",
+                                        fontWeight: "inherit",
+                                        lineHeight: "inherit",
+                                        margin: 0,
+                                        padding: 0
                                     }}
                                 >
-                                    {(() => {
-                                        const varName = displayVariant ? getVariantDisplayText(displayVariant) : "";
-                                        return varName && varName.toUpperCase() !== "DEFAULT" ? `${prod.name} - ${varName}` : prod.name;
-                                    })()}
-                                </h6></div>{showOutOfStock && (
+                                    <a
+                                        href={`/product/${slugPr}`}
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            if (showOutOfStock) {
+                                                handleOutOfStockClick(prod.name);
+                                            } else {
+                                                navigate(`/product/${slugPr}`);
+                                            }
+                                        }}
+                                        style={{
+                                            color: "inherit",
+                                            textDecoration: "none",
+                                            cursor: "pointer",
+                                            opacity: showOutOfStock ? 0.6 : 1,
+                                            display: "block"
+                                        }}
+                                    >
+                                        {(() => {
+                                            const varName = displayVariant ? getVariantDisplayText(displayVariant) : "";
+                                            return varName && varName.toUpperCase() !== "DEFAULT" ? `${prod.name} - ${varName}` : prod.name;
+                                        })()}
+                                    </a>
+                                </h3></div>{showOutOfStock && (
                                     <div className="mt-2 mb-2">
                                         <span
                                             style={{
@@ -1373,8 +1424,29 @@ export default function ProductPage() {
     /* ── render ─────────────────────────────────────────────────────────────── */
     return (
         <>
-            <SEOMeta type="category" slug={effectiveSlug} />
+            <SEOMeta type="category" slug={seoSlug} />
             <Header />
+
+            {/* Breadcrumb nav (above banner) */}
+            {(isFaceCategory || isLipsCategory) && (
+                <div className="container-lg pt-3 pb-1">
+                    <nav className="category-breadcrumb-nav" aria-label="breadcrumb">
+                        <ol className="category-breadcrumb-list">
+                            <li className="category-breadcrumb-item">
+                                <Link to="/">Home</Link>
+                            </li>
+                            <li className="category-breadcrumb-separator">&gt;</li>
+                            <li className="category-breadcrumb-item">
+                                <Link to="/category/makeup">Makeup</Link>
+                            </li>
+                            <li className="category-breadcrumb-separator">&gt;</li>
+                            <li className="category-breadcrumb-item active" aria-current="page">
+                                {isFaceCategory ? "Face" : "Lips"}
+                            </li>
+                        </ol>
+                    </nav>
+                </div>
+            )}
 
             {/* 🔥 UPDATED: HERO BANNER REPLACED WITH SWIPER SLIDER 🔥 */}
             {bannerImages?.length > 0 &&
@@ -1435,8 +1507,26 @@ export default function ProductPage() {
                 <div className="non-hero-spacer" />
             )}
 
+            {/* Category SEO H1 & Intro block */}
+            {isFaceCategory && (
+                <div className="container-lg mt-4 mb-2 text-center category-seo-header-block">
+                    <h1 className="category-seo-h1">Face Makeup Online in India</h1>
+                    <p className="category-intro-text max-w-xl mx-auto" style={{ maxWidth: '780px', margin: '0 auto', fontSize: '14px', color: '#555' }}>
+                        Buy Face Makeup Online in India - Shop foundation, concealer, compact powder, blush, highlighter, and primer at Joyory. Curated formulas suited for Indian skin tones, weather, and undertones.
+                    </p>
+                </div>
+            )}
+            {isLipsCategory && (
+                <div className="container-lg mt-4 mb-2 text-center category-seo-header-block">
+                    <h1 className="category-seo-h1">Lipsticks, Lip Gloss &amp; Lip Care Online</h1>
+                    <p className="category-intro-text max-w-xl mx-auto" style={{ maxWidth: '780px', margin: '0 auto', fontSize: '14px', color: '#555' }}>
+                        Explore lipsticks, lip gloss, lip liners, lip balms, lip oils and lip stains at Joyory. Find your favourite finish from matte to high-shine, formulated for all Indian skin tones.
+                    </p>
+                </div>
+            )}
+
             {/* Trending Categories */}
-            {trendingCategories.length > 0 && (
+            {displayedTrendingCategories.length > 0 && (
                 <div className="container-lg mt-4 mb-4">
                     <h2 className="text-center" style={{ marginBottom: "30px", textAlign: "center" }}>Top Categories</h2>
                     <div
@@ -1446,7 +1536,7 @@ export default function ProductPage() {
                             scrollbarWidth: "none"
                         }}
                     >
-                        {trendingCategories.map((cat) => {
+                        {displayedTrendingCategories.map((cat) => {
                             const isActive = (filters.categoryIds || []).includes(cat._id) ||
                                 (filters.categoryIds || []).includes(cat.slug) ||
                                 ((filters.categoryIds || []).length === 0 && activeCategorySlug === cat.slug);
@@ -1782,6 +1872,35 @@ export default function ProductPage() {
                                 <p className="text-muted">🎉 You've reached the end! No more products to show.</p>
                             </div>
                         )}
+
+                        {/* Crawlable Pagination links for search engines & accessibility */}
+                        {totalCount > 12 && (
+                            <nav className="crawlable-pagination-bar" aria-label="Product page pagination">
+                                {Array.from({ length: Math.min(Math.ceil(totalCount / 12), 8) }, (_, i) => i + 1).map((pNum) => {
+                                    const pageHref = pNum === 1 ? location.pathname : `${location.pathname}?page=${pNum}`;
+                                    const isCurrentPage = (parseInt(searchParams.get("page")) || 1) === pNum;
+                                    return (
+                                        <a
+                                            key={pNum}
+                                            href={pageHref}
+                                            className={`crawlable-page-link ${isCurrentPage ? "active" : ""}`}
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                setSearchParams(prev => {
+                                                    const next = new URLSearchParams(prev);
+                                                    if (pNum === 1) next.delete("page");
+                                                    else next.set("page", pNum);
+                                                    return next;
+                                                });
+                                                window.scrollTo({ top: 300, behavior: "smooth" });
+                                            }}
+                                        >
+                                            {pNum}
+                                        </a>
+                                    );
+                                })}
+                            </nav>
+                        )}
                     </div>
                 </div>
             </div>
@@ -1984,6 +2103,11 @@ export default function ProductPage() {
                 );
             })()}
             {/* ===================== END MOBILE BOTTOM SHEET DRAWER ===================== */}
+
+            {/* Category Rich SEO Content & FAQ Block */}
+            {(isFaceCategory || isLipsCategory) && (
+                <CategorySeoContentBlock categoryType={isFaceCategory ? "face" : "lips"} />
+            )}
 
             <Footer />
         </>
