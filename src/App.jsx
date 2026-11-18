@@ -205,6 +205,10 @@ function App() {
               <Route path="/products/category/skin-mask" element={<Navigate to="/category/skin/skin-mask" replace />} />
               <Route path="/categories/eyes" element={<Navigate to="/category/makeup/eyes" replace />} />
               <Route path="/categories/skin-serums-and-essences-serum" element={<Navigate to="/category/skin/skin-serums-and-essences" replace />} />
+              <Route path="/category/face" element={<Navigate to="/category/makeup/face" replace />} />
+              <Route path="/category/lips" element={<Navigate to="/category/makeup/lips" replace />} />
+              <Route path="/categories/face" element={<Navigate to="/category/makeup/face" replace />} />
+              <Route path="/categories/lips" element={<Navigate to="/category/makeup/lips" replace />} />
 
               {/* Category & Product Routes */}
               <Route path="/category/*" element={<ProductPage />} />
