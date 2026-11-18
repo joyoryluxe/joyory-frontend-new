@@ -787,8 +787,10 @@ export default function ProductPage() {
             console.error(e);
             showToastMsg("Failed to fetch products", "error");
         } finally {
-            setLoading(false);
-            setLoadingMore(false);
+            if (!fetchAbortRef.current?.signal?.aborted) {
+                setLoading(false);
+                setLoadingMore(false);
+            }
         }
     };
 
@@ -951,23 +953,48 @@ export default function ProductPage() {
     const isProgrammaticScrollRef = useRef(false);
     const isNavigatingPageRef = useRef(false);
 
+    // Helpers to support scrolling across window, documentElement, or document.body (Joyory's layout container)
+    const getAppScrollTop = () => {
+        return (
+            (document.body && document.body.scrollTop) ||
+            (document.documentElement && document.documentElement.scrollTop) ||
+            window.pageYOffset ||
+            window.scrollY ||
+            0
+        );
+    };
+
+    const scrollAppTo = (y, behavior = "smooth") => {
+        const targetY = Math.max(0, Math.round(y));
+        try {
+            if (document.body) {
+                document.body.scrollTo({ top: targetY, behavior });
+            }
+        } catch (e) {}
+        try {
+            if (document.documentElement) {
+                document.documentElement.scrollTo({ top: targetY, behavior });
+            }
+        } catch (e) {}
+        try {
+            window.scrollTo({ top: targetY, behavior });
+        } catch (e) {}
+    };
+
     const scrollToPageSection = useCallback((pNum, retry = true) => {
         let attempts = 0;
-        const maxAttempts = retry ? 25 : 1;
+        const maxAttempts = retry ? 30 : 1;
 
         const tryScroll = () => {
             const targetEl = document.getElementById(`page-section-${pNum}`);
             if (targetEl) {
                 isProgrammaticScrollRef.current = true;
                 const headerOffset = 130;
-                const elementPosition = targetEl.getBoundingClientRect().top + window.pageYOffset;
-                const offsetPosition = Math.max(0, elementPosition - headerOffset);
+                const currentScroll = getAppScrollTop();
+                const elementPosition = targetEl.getBoundingClientRect().top + currentScroll;
+                const offsetPosition = Math.max(0, Math.round(elementPosition - headerOffset));
 
-                window.scrollTo({
-                    top: offsetPosition,
-                    behavior: "smooth"
-                });
-
+                scrollAppTo(offsetPosition, "smooth");
                 setActivePage(pNum);
 
                 const url = new URL(window.location.href);
@@ -978,9 +1005,22 @@ export default function ProductPage() {
                 }
                 window.history.replaceState({}, "", url.toString());
 
+                // Readjust after 500ms in case images loading displaced the section position
+                setTimeout(() => {
+                    const elCheck = document.getElementById(`page-section-${pNum}`);
+                    if (elCheck) {
+                        const topCheck = elCheck.getBoundingClientRect().top;
+                        if (Math.abs(topCheck - 130) > 60) {
+                            const newScroll = getAppScrollTop();
+                            const adjustedY = Math.max(0, Math.round(topCheck + newScroll - 130));
+                            scrollAppTo(adjustedY, "smooth");
+                        }
+                    }
+                }, 500);
+
                 setTimeout(() => {
                     isProgrammaticScrollRef.current = false;
-                }, 1000);
+                }, 1200);
                 return true;
             } else if (attempts < maxAttempts) {
                 attempts++;
@@ -1057,8 +1097,10 @@ export default function ProductPage() {
             if (isProgrammaticScrollRef.current) return;
             if (!ticking) {
                 window.requestAnimationFrame(() => {
+                    const currentScroll = getAppScrollTop();
+
                     // If scrolled near top of page, always reset to page 1
-                    if (window.pageYOffset < 150) {
+                    if (currentScroll < 150) {
                         setActivePage((prev) => {
                             if (prev !== 1) {
                                 const url = new URL(window.location.href);
@@ -1075,8 +1117,8 @@ export default function ProductPage() {
                     const sections = document.querySelectorAll("[data-page-section]");
                     if (sections && sections.length > 0) {
                         let current = 1;
-                        // Focus line: 300px from top of viewport (below sticky header)
-                        const triggerOffset = 300;
+                        // Focus line: 260px from top of viewport (below sticky header)
+                        const triggerOffset = 260;
                         sections.forEach((sec) => {
                             const rect = sec.getBoundingClientRect();
                             if (rect.top <= triggerOffset) {
@@ -1105,8 +1147,19 @@ export default function ProductPage() {
             }
         };
 
-        window.addEventListener("scroll", handleScroll, { passive: true });
-        return () => window.removeEventListener("scroll", handleScroll);
+        window.addEventListener("scroll", handleScroll, { passive: true, capture: true });
+        document.addEventListener("scroll", handleScroll, { passive: true, capture: true });
+        if (document.body) {
+            document.body.addEventListener("scroll", handleScroll, { passive: true });
+        }
+
+        return () => {
+            window.removeEventListener("scroll", handleScroll, { capture: true });
+            document.removeEventListener("scroll", handleScroll, { capture: true });
+            if (document.body) {
+                document.body.removeEventListener("scroll", handleScroll);
+            }
+        };
     }, []);
 
     /* ── cart ───────────────────────────────────────────────────────────────── */
@@ -1942,7 +1995,7 @@ export default function ProductPage() {
                         <div id="page-section-1" data-page-section="1" style={{ position: "relative", top: "-10px", height: 0, width: "100%", padding: 0, margin: 0 }} />
                         <div className="mb-3 d-flex justify-content-between align-items-center">
                             <span className="text-muted page-title-main-name d-lg-block d-none mt-3">
-                                Showing {totalCount} products
+                                {(loading || !filterData) && totalCount === 0 ? "Loading products..." : `Showing ${totalCount} products`}
                             </span>
                             {/* Desktop Sort Dropdown */}
                             <div className="d-none d-lg-flex align-items-center position-relative mt-3" style={{ gap: '6px' }}>
@@ -2080,9 +2133,9 @@ export default function ProductPage() {
                                         </React.Fragment>
                                     );
                                 })
-                                : loading
+                                : (loading || loadingMore || !filterData)
                                     ? (
-                                        // NEW Loading state when no products yet
+                                        // Loading animation while products / filters are being fetched
                                         <div className="col-12 text-center py-5">
                                             <DotLottieReact className='foryoulanding-css'
                                                 src="https://lottie.host/73673e65-df58-41a5-87e7-b837c5d00fe8/dJVGVbJuYJ.lottie"
@@ -2090,7 +2143,7 @@ export default function ProductPage() {
                                                 autoplay
                                                 style={{ width: '200px', height: '200px', margin: '0 auto' }}
                                             />
-                                            <p className="text-muted">Loading products...</p>
+                                            <p className="text-muted mt-2">Loading products...</p>
                                         </div>
                                     )
                                     : <div className="col-12 text-center py-5"><h4>No products found</h4><p className="text-muted">Try adjusting your filters.</p></div>
