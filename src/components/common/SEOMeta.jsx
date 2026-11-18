@@ -181,7 +181,6 @@
 
 import { useEffect } from "react";
 import axiosInstance from "../../utils/axiosInstance";
-import { getBlogSeoMeta, getBlogBySlug } from "../../data/blogSeoData";
 
 // Fallback metadata for robustness
 const FALLBACKS = {
@@ -239,13 +238,6 @@ const FALLBACKS = {
     canonical: "https://joyory.com/blog",
     image: "https://joyory.com/logo.png",
     type: "website"
-  },
-  blog: {
-    title: "Joyory Beauty Blog - Makeup & Skincare Tips",
-    description: "Discover expert skincare advice, makeup tips, foundation matching guides, and beauty tutorials on the Joyory Blog.",
-    canonical: "https://joyory.com/blog",
-    image: "https://joyory.com/logo.png",
-    type: "article"
   },
   vtoproducts: {
     title: "Virtual Try-On Products | Try Makeup Online | Joyory",
@@ -379,17 +371,6 @@ const SEOMeta = ({ type = "home", slug = "", page = "" }) => {
             type: "website"
           };
         }
-      } else if (type === "blog" && slug) {
-        const blogMeta = getBlogSeoMeta(slug);
-        if (blogMeta) {
-          fallback = {
-            title: blogMeta.title,
-            description: blogMeta.description,
-            canonical: blogMeta.canonical,
-            image: blogMeta.image || "https://joyory.com/logo.png",
-            type: "article"
-          };
-        }
       }
 
       let title = data.title || fallback.title;
@@ -472,32 +453,6 @@ const SEOMeta = ({ type = "home", slug = "", page = "" }) => {
         }
       }
 
-      // Inject FAQ schema for blogs if FAQs exist
-      if (type === "blog" && slug) {
-        const blogMeta = getBlogSeoMeta(slug);
-        if (blogMeta?.faqs && blogMeta.faqs.length > 0) {
-          const faqSchema = {
-            "@context": "https://schema.org",
-            "@type": "FAQPage",
-            "mainEntity": blogMeta.faqs.map(f => ({
-              "@type": "Question",
-              "name": f.question,
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": f.answer
-              }
-            }))
-          };
-          if (Array.isArray(finalJsonLd)) {
-            finalJsonLd = [...finalJsonLd.filter(item => item["@type"] !== "FAQPage"), faqSchema];
-          } else if (finalJsonLd) {
-            finalJsonLd = [finalJsonLd, faqSchema];
-          } else {
-            finalJsonLd = [faqSchema];
-          }
-        }
-      }
-
       if (finalJsonLd) {
         injectJsonLd(finalJsonLd);
       }
@@ -516,19 +471,7 @@ const SEOMeta = ({ type = "home", slug = "", page = "" }) => {
         console.error("Error fetching SEO metadata:", err);
         // Fall back gracefully to preset values
         if (isMounted) {
-          let fallback = FALLBACKS[type] || FALLBACKS.home;
-          if (type === "blog" && slug) {
-            const blogMeta = getBlogSeoMeta(slug);
-            if (blogMeta) {
-              fallback = {
-                title: blogMeta.title,
-                description: blogMeta.description,
-                canonical: blogMeta.canonical,
-                image: blogMeta.image || "https://joyory.com/logo.png",
-                type: "article"
-              };
-            }
-          }
+          const fallback = FALLBACKS[type] || FALLBACKS.home;
           applyMetadata(fallback);
         }
       }
