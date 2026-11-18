@@ -758,17 +758,22 @@ export default function ProductPage() {
             const prods = data.products || [];
             const pg = data.pagination || {};
 
-            if (data.titleMessage && (pg.hasMore || prods.length >= PAGE_SIZE)) {
+            let detectedTotal = null;
+            if (data.totalProducts != null && !isNaN(Number(data.totalProducts))) {
+                detectedTotal = Number(data.totalProducts);
+            } else if (pg.totalProducts != null && !isNaN(Number(pg.totalProducts))) {
+                detectedTotal = Number(pg.totalProducts);
+            } else if (data.titleMessage) {
                 const match = data.titleMessage.match(/\d+/);
                 if (match) {
-                    setTotalCount(parseInt(match[0], 10));
-                } else {
-                    setTotalCount((prev) => reset ? prods.length : prev + prods.length);
+                    detectedTotal = parseInt(match[0], 10);
                 }
-            } else if (data.totalProducts && (pg.hasMore || prods.length >= PAGE_SIZE)) {
-                setTotalCount(Number(data.totalProducts));
+            }
+
+            if (detectedTotal !== null && detectedTotal >= 0) {
+                setTotalCount(detectedTotal);
             } else {
-                setTotalCount((prev) => reset ? prods.length : prev + prods.length);
+                setTotalCount((prev) => (reset ? prods.length : prev + prods.length));
             }
 
             if (reset) setAllProducts(prods);
