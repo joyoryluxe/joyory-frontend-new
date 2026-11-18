@@ -1,18 +1,16 @@
 import ProductCardCartButton from "../components/common/ProductCardCartButton";
 /* ProductPage – Unified API & Full Feature Edition with Multi-Filter Support */
 import React, { useState, useEffect, useContext, useRef, useCallback, useMemo } from "react";
-import { useParams, useNavigate, useLocation, useSearchParams, Link } from "react-router-dom";
+import { useParams, useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { FaStar, FaHeart, FaRegHeart, FaChevronDown, FaTimes, FaCheck } from "react-icons/fa";
 import Header from "../components/common/Header";
 import SEOMeta from "../components/common/SEOMeta";
-import CategorySeoContentBlock from "../components/common/CategorySeoContentBlock";
 import Footer from "../components/common/Footer";
 import { CartContext } from "../context/CartContext";
 import { UserContext } from "../context/UserContext.jsx";
 import BrandFilter from "../components/common/BrandFilter";
 import "../styles/ProductPage.css";
 import "../styles/BestSellers.css";
-import "../styles/CategorySeoContentBlock.css";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -260,24 +258,6 @@ const parseFiltersFromSearchParams = (searchParams) => {
     return initialFilters;
 };
 
-const PAGE_SIZE = 20;
-
-const getPaginationNumbers = (current, total) => {
-    if (total <= 7) {
-        return Array.from({ length: total }, (_, i) => i + 1);
-    }
-    const pages = [1];
-    if (current > 3) pages.push("...");
-    const start = Math.max(2, current - 1);
-    const end = Math.min(total - 1, current + 1);
-    for (let i = start; i <= end; i++) {
-        pages.push(i);
-    }
-    if (current < total - 2) pages.push("...");
-    pages.push(total);
-    return pages;
-};
-
 export default function ProductPage() {
     const params = useParams();
     const slug = params.filter || params.slug || params["*"];
@@ -300,13 +280,6 @@ export default function ProductPage() {
     /* ── state ──────────────────────────────────────────────────────────────── */
     const [allProducts, setAllProducts] = useState([]);
     const [totalCount, setTotalCount] = useState(0);
-    const [activePage, setActivePage] = useState(() => {
-        const initialP = parseInt(searchParams.get("page"), 10);
-        return initialP > 0 ? initialP : 1;
-    });
-    const totalPages = useMemo(() => {
-        return Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
-    }, [totalCount]);
     const [pageTitle, setPageTitle] = useState("Products");
     const [bannerImages, setBannerImages] = useState([]); // 🔥 Changed to array
     const swiperRef = useRef(null); // 🔥 Added for Swiper
@@ -329,45 +302,6 @@ export default function ProductPage() {
             || filterData?.categories?.find((c) => c.slug === activeCategorySlug || c._id === activeCategorySlug);
         return found ? found.name : "";
     }, [activeCategorySlug, trendingCategories, filterData]);
-
-    const isFaceCategory = useMemo(() => {
-        const p = location.pathname.toLowerCase().replace(/\/+$/, "");
-        return p === "/category/makeup/face" || p === "/category/face" || effectiveSlug === "face";
-    }, [location.pathname, effectiveSlug]);
-
-    const isLipsCategory = useMemo(() => {
-        const p = location.pathname.toLowerCase().replace(/\/+$/, "");
-        return p === "/category/makeup/lips" || p === "/category/lips" || effectiveSlug === "lips";
-    }, [location.pathname, effectiveSlug]);
-
-    const isLipsSection = useMemo(() => {
-        const p = location.pathname.toLowerCase();
-        return p.includes("/category/makeup/lips") || p.includes("/category/lips") || effectiveSlug === "lips" || (effectiveSlug && effectiveSlug.startsWith("lips-"));
-    }, [location.pathname, effectiveSlug]);
-
-    const seoSlug = useMemo(() => {
-        if (isFaceCategory) return "makeup/face";
-        if (isLipsCategory) return "makeup/lips";
-        return effectiveSlug;
-    }, [isFaceCategory, isLipsCategory, effectiveSlug]);
-
-    const displayedTrendingCategories = useMemo(() => {
-        if (!trendingCategories || trendingCategories.length === 0) return [];
-        if (isLipsSection) {
-            return [...trendingCategories].sort((a, b) => {
-                const aName = (a.name || "").toLowerCase();
-                const bName = (b.name || "").toLowerCase();
-                if (aName === "lipstick") return -1;
-                if (bName === "lipstick") return 1;
-                if (aName === "liquid lipstick") return -1;
-                if (bName === "liquid lipstick") return 1;
-                if (aName === "lip stain") return -1;
-                if (bName === "lip stain") return 1;
-                return 0;
-            });
-        }
-        return trendingCategories;
-    }, [trendingCategories, isLipsSection]);
 
     const [selectedVariants, setSelectedVariants] = useState({});
     const [tempSelectedVariants, setTempSelectedVariants] = useState({});
@@ -513,7 +447,7 @@ export default function ProductPage() {
     };
 
     /* ── fetch products ─────────────────────────────────────────────────────── */
-    const buildQueryParams = (cursor = null, customLimit = null) => {
+    const buildQueryParams = (cursor = null) => {
         const p = new URLSearchParams();
         const path = location.pathname.toLowerCase();
 
@@ -560,7 +494,7 @@ export default function ProductPage() {
         // Pass sort to backend API for global catalog sorting
         if (filters.sort) p.append("sort", filters.sort);
         if (cursor) p.append("cursor", cursor);
-        p.append("limit", String(customLimit || PAGE_SIZE));
+        p.append("limit", "16");
 
         const queryString = p.toString();
         console.log("API Query →", `${PRODUCT_ALL_API}?${queryString}`);
@@ -576,20 +510,16 @@ export default function ProductPage() {
         }
 
         try {
-            const requestedPage = reset ? (parseInt(searchParams.get("page"), 10) || 1) : 1;
-            const customLimit = (reset && requestedPage > 1) ? requestedPage * PAGE_SIZE : null;
-
             if (reset) {
                 setLoading(true);
                 setNextCursor(null);
                 setHasMore(true);
-                setActivePage(requestedPage);
             } else {
                 setLoadingMore(true);
             }
 
             const { data } = await axios.get(
-                `${PRODUCT_ALL_API}?${buildQueryParams(cursor, customLimit)}`,
+                `${PRODUCT_ALL_API}?${buildQueryParams(cursor)}`,
                 {
                     withCredentials: true,
                     signal: reset ? fetchAbortRef.current?.signal : undefined
@@ -758,22 +688,15 @@ export default function ProductPage() {
             const prods = data.products || [];
             const pg = data.pagination || {};
 
-            let detectedTotal = null;
-            if (data.totalProducts != null && !isNaN(Number(data.totalProducts))) {
-                detectedTotal = Number(data.totalProducts);
-            } else if (pg.totalProducts != null && !isNaN(Number(pg.totalProducts))) {
-                detectedTotal = Number(pg.totalProducts);
-            } else if (data.titleMessage) {
+            if (data.titleMessage) {
                 const match = data.titleMessage.match(/\d+/);
                 if (match) {
-                    detectedTotal = parseInt(match[0], 10);
+                    setTotalCount(parseInt(match[0], 10));
+                } else {
+                    setTotalCount((prev) => reset ? prods.length : prev + prods.length);
                 }
-            }
-
-            if (detectedTotal !== null && detectedTotal >= 0) {
-                setTotalCount(detectedTotal);
             } else {
-                setTotalCount((prev) => (reset ? prods.length : prev + prods.length));
+                setTotalCount((prev) => reset ? prods.length : prev + prods.length);
             }
 
             if (reset) setAllProducts(prods);
@@ -781,10 +704,6 @@ export default function ProductPage() {
 
             setHasMore(pg.hasMore || false);
             setNextCursor(pg.nextCursor || null);
-
-            if (reset && requestedPage > 1) {
-                scrollToPageSection(requestedPage, true);
-            }
         } catch (e) {
             if (axios.isCancel(e) || e.name === "CanceledError") {
                 return;
@@ -792,10 +711,8 @@ export default function ProductPage() {
             console.error(e);
             showToastMsg("Failed to fetch products", "error");
         } finally {
-            if (!fetchAbortRef.current?.signal?.aborted) {
-                setLoading(false);
-                setLoadingMore(false);
-            }
+            setLoading(false);
+            setLoadingMore(false);
         }
     };
 
@@ -828,11 +745,9 @@ export default function ProductPage() {
         if (filters.minRating) newParams.set('minRating', filters.minRating);
         if (filters.sort !== 'recent') newParams.set('sort', filters.sort);
 
-        // Preserve search queries and crawlable page parameter
+        // Preserve search queries
         const q = searchParams.get("q") || searchParams.get("search");
         if (q) newParams.set("q", q);
-        const pageP = searchParams.get("page");
-        if (pageP && Number(pageP) > 1) newParams.set("page", pageP);
 
         const currentQuery = searchParams.toString();
         const newQuery = newParams.toString();
@@ -947,225 +862,12 @@ export default function ProductPage() {
                     loadMore();
                 }
             },
-            { root: null, rootMargin: "350px", threshold: 0.1 }
+            { root: null, rootMargin: "0px", threshold: 0.1 }
         );
         const el = loaderRef.current;
         if (el) obs.observe(el);
         return () => el && obs.unobserve(el);
     }, [loadMore, hasMore, loadingMore, loading, allProducts.length]);
-
-    /* ── pagination section navigation & scroll sync ────────────────────────── */
-    const isProgrammaticScrollRef = useRef(false);
-    const isNavigatingPageRef = useRef(false);
-
-    // Helpers to support scrolling across window, documentElement, or document.body (Joyory's layout container)
-    const getAppScrollTop = () => {
-        return (
-            (document.body && document.body.scrollTop) ||
-            (document.documentElement && document.documentElement.scrollTop) ||
-            window.pageYOffset ||
-            window.scrollY ||
-            0
-        );
-    };
-
-    const scrollAppTo = (y, behavior = "smooth") => {
-        const targetY = Math.max(0, Math.round(y));
-        try {
-            if (document.body) {
-                document.body.scrollTo({ top: targetY, behavior });
-            }
-        } catch (e) {}
-        try {
-            if (document.documentElement) {
-                document.documentElement.scrollTo({ top: targetY, behavior });
-            }
-        } catch (e) {}
-        try {
-            window.scrollTo({ top: targetY, behavior });
-        } catch (e) {}
-    };
-
-    const scrollToPageSection = useCallback((pNum, retry = true) => {
-        let attempts = 0;
-        const maxAttempts = retry ? 30 : 1;
-
-        const tryScroll = () => {
-            const targetEl = document.getElementById(`page-section-${pNum}`);
-            if (targetEl) {
-                isProgrammaticScrollRef.current = true;
-                const headerOffset = 130;
-                const currentScroll = getAppScrollTop();
-                const elementPosition = targetEl.getBoundingClientRect().top + currentScroll;
-                const offsetPosition = Math.max(0, Math.round(elementPosition - headerOffset));
-
-                scrollAppTo(offsetPosition, "smooth");
-                setActivePage(pNum);
-
-                const url = new URL(window.location.href);
-                if (pNum === 1) {
-                    url.searchParams.delete("page");
-                } else {
-                    url.searchParams.set("page", pNum);
-                }
-                window.history.replaceState({}, "", url.toString());
-
-                // Readjust after 500ms in case images loading displaced the section position
-                setTimeout(() => {
-                    const elCheck = document.getElementById(`page-section-${pNum}`);
-                    if (elCheck) {
-                        const topCheck = elCheck.getBoundingClientRect().top;
-                        if (Math.abs(topCheck - 130) > 60) {
-                            const newScroll = getAppScrollTop();
-                            const adjustedY = Math.max(0, Math.round(topCheck + newScroll - 130));
-                            scrollAppTo(adjustedY, "smooth");
-                        }
-                    }
-                }, 500);
-
-                setTimeout(() => {
-                    isProgrammaticScrollRef.current = false;
-                }, 1200);
-                return true;
-            } else if (attempts < maxAttempts) {
-                attempts++;
-                setTimeout(tryScroll, 100);
-                return false;
-            }
-            return false;
-        };
-
-        const foundImmediate = document.getElementById(`page-section-${pNum}`);
-        if (foundImmediate) {
-            return tryScroll();
-        } else if (retry) {
-            tryScroll();
-            return false;
-        }
-        return false;
-    }, []);
-
-    const goToPage = useCallback(async (pNum, e) => {
-        if (e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-
-        // 1. If already rendered in DOM, scroll right to it immediately
-        if (scrollToPageSection(pNum, false)) {
-            return;
-        }
-
-        // 2. Prevent concurrent fetching
-        if (isNavigatingPageRef.current) return;
-        isNavigatingPageRef.current = true;
-        setLoadingMore(true);
-
-        try {
-            const minNeeded = (pNum - 1) * PAGE_SIZE + 1;
-            let currentProducts = [...allProducts];
-            let currentCursor = nextCursor;
-            let currentHasMore = hasMore;
-
-            while (currentProducts.length < minNeeded && currentHasMore && currentCursor) {
-                const queryStr = buildQueryParams(currentCursor);
-                const { data } = await axios.get(`${PRODUCT_ALL_API}?${queryStr}`, { withCredentials: true });
-                const newProds = data.products || [];
-                const pg = data.pagination || {};
-
-                if (newProds.length === 0) break;
-
-                currentProducts = [...currentProducts, ...newProds];
-                currentHasMore = pg.hasMore || false;
-                currentCursor = pg.nextCursor || null;
-
-                setAllProducts(currentProducts);
-                setHasMore(currentHasMore);
-                setNextCursor(currentCursor);
-            }
-
-            // Once new products are fetched and committed, scroll to the section with polling retry
-            scrollToPageSection(pNum, true);
-        } catch (err) {
-            console.error("Failed to load products for page:", pNum, err);
-            showToastMsg(`Failed to load page ${pNum}`, "error");
-        } finally {
-            setLoadingMore(false);
-            isNavigatingPageRef.current = false;
-        }
-    }, [scrollToPageSection, allProducts, nextCursor, hasMore, buildQueryParams]);
-
-    // Dynamic Page Section Detection on Scroll
-    useEffect(() => {
-        let ticking = false;
-        const handleScroll = () => {
-            if (isProgrammaticScrollRef.current) return;
-            if (!ticking) {
-                window.requestAnimationFrame(() => {
-                    const currentScroll = getAppScrollTop();
-
-                    // If scrolled near top of page, always reset to page 1
-                    if (currentScroll < 150) {
-                        setActivePage((prev) => {
-                            if (prev !== 1) {
-                                const url = new URL(window.location.href);
-                                url.searchParams.delete("page");
-                                window.history.replaceState({}, "", url.toString());
-                                return 1;
-                            }
-                            return prev;
-                        });
-                        ticking = false;
-                        return;
-                    }
-
-                    const sections = document.querySelectorAll("[data-page-section]");
-                    if (sections && sections.length > 0) {
-                        let current = 1;
-                        // Focus line: 260px from top of viewport (below sticky header)
-                        const triggerOffset = 260;
-                        sections.forEach((sec) => {
-                            const rect = sec.getBoundingClientRect();
-                            if (rect.top <= triggerOffset) {
-                                const p = parseInt(sec.getAttribute("data-page-section"), 10);
-                                if (p) current = p;
-                            }
-                        });
-
-                        setActivePage((prev) => {
-                            if (prev !== current) {
-                                const url = new URL(window.location.href);
-                                if (current === 1) {
-                                    url.searchParams.delete("page");
-                                } else {
-                                    url.searchParams.set("page", current);
-                                }
-                                window.history.replaceState({}, "", url.toString());
-                                return current;
-                            }
-                            return prev;
-                        });
-                    }
-                    ticking = false;
-                });
-                ticking = true;
-            }
-        };
-
-        window.addEventListener("scroll", handleScroll, { passive: true, capture: true });
-        document.addEventListener("scroll", handleScroll, { passive: true, capture: true });
-        if (document.body) {
-            document.body.addEventListener("scroll", handleScroll, { passive: true });
-        }
-
-        return () => {
-            window.removeEventListener("scroll", handleScroll, { capture: true });
-            document.removeEventListener("scroll", handleScroll, { capture: true });
-            if (document.body) {
-                document.body.removeEventListener("scroll", handleScroll);
-            }
-        };
-    }, []);
 
     /* ── cart ───────────────────────────────────────────────────────────────── */
     const handleAddToCart = async (prod, forceVariant = null) => {
@@ -1218,7 +920,7 @@ export default function ProductPage() {
     };
 
     /* ── product card ───────────────────────────────────────────────────────── */
-    const renderProductCard = (prod, index = 0) => {
+    const renderProductCard = (prod) => {
         const vars = Array.isArray(prod.variants) ? prod.variants : [];
         const hasVar = vars.length > 0;
 
@@ -1253,14 +955,8 @@ export default function ProductPage() {
         else if (showSelectVariantButton) btnText = "Select Variant";
         else if (currentVariantOutOfStock) btnText = "Out of Stock";
 
-        const pageNumber = Math.floor(index / PAGE_SIZE) + 1;
-
         return (
-            <div
-                key={prod._id}
-                data-page-num={pageNumber}
-                className="col-6 col-md-4 col-lg-4 position-relative page-title-main-name"
-            >
+            <div key={prod._id} className="col-6 col-md-4 col-lg-4 position-relative page-title-main-name">
                 <div className="foryou-card-wrapper">
                     <div className="foryou-card">
                         {/* Product Image with Overlays */}
@@ -1277,7 +973,7 @@ export default function ProductPage() {
                         >
                             <img
                                 src={img}
-                                alt={`${getBrandName(prod) ? getBrandName(prod) + " " : ""}${prod.name}${displayVariant?.variantName || displayVariant?.shadeName || displayVariant?.size ? " " + (displayVariant.variantName || displayVariant.shadeName || displayVariant.size) : ""}`}
+                                alt={prod.name}
                                 className="foryou-img img-fluid"
                                 style={{
                                     opacity: showOutOfStock ? 0.6 : 1,
@@ -1379,40 +1075,25 @@ export default function ProductPage() {
                                     {getBrandName(prod)}
                                 </div>
 
-                                {/* Product Name */}<div className="product-card-title-wrap"><h3
+                                {/* Product Name */}<div className="product-card-title-wrap"><h6
                                     className="foryou-name m-0 p-0"
+                                    onClick={() => {
+                                        if (showOutOfStock) {
+                                            handleOutOfStockClick(prod.name);
+                                        } else {
+                                            navigate(`/product/${slugPr}`);
+                                        }
+                                    }}
                                     style={{
-                                        fontSize: "inherit",
-                                        fontWeight: "inherit",
-                                        lineHeight: "inherit",
-                                        margin: 0,
-                                        padding: 0
+                                        cursor: 'pointer',
+                                        opacity: showOutOfStock ? 0.6 : 1,
                                     }}
                                 >
-                                    <a
-                                        href={`/product/${slugPr}`}
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            if (showOutOfStock) {
-                                                handleOutOfStockClick(prod.name);
-                                            } else {
-                                                navigate(`/product/${slugPr}`);
-                                            }
-                                        }}
-                                        style={{
-                                            color: "inherit",
-                                            textDecoration: "none",
-                                            cursor: "pointer",
-                                            opacity: showOutOfStock ? 0.6 : 1,
-                                            display: "block"
-                                        }}
-                                    >
-                                        {(() => {
-                                            const varName = displayVariant ? getVariantDisplayText(displayVariant) : "";
-                                            return varName && varName.toUpperCase() !== "DEFAULT" ? `${prod.name} - ${varName}` : prod.name;
-                                        })()}
-                                    </a>
-                                </h3></div>{showOutOfStock && (
+                                    {(() => {
+                                        const varName = displayVariant ? getVariantDisplayText(displayVariant) : "";
+                                        return varName && varName.toUpperCase() !== "DEFAULT" ? `${prod.name} - ${varName}` : prod.name;
+                                    })()}
+                                </h6></div>{showOutOfStock && (
                                     <div className="mt-2 mb-2">
                                         <span
                                             style={{
@@ -1692,29 +1373,8 @@ export default function ProductPage() {
     /* ── render ─────────────────────────────────────────────────────────────── */
     return (
         <>
-            <SEOMeta type="category" slug={seoSlug} />
+            <SEOMeta type="category" slug={effectiveSlug} />
             <Header />
-
-            {/* Breadcrumb nav (above banner) */}
-            {(isFaceCategory || isLipsCategory) && (
-                <div className="container-lg pt-3 pb-1">
-                    <nav className="category-breadcrumb-nav" aria-label="breadcrumb">
-                        <ol className="category-breadcrumb-list">
-                            <li className="category-breadcrumb-item">
-                                <Link to="/">Home</Link>
-                            </li>
-                            <li className="category-breadcrumb-separator">&gt;</li>
-                            <li className="category-breadcrumb-item">
-                                <Link to="/category/makeup">Makeup</Link>
-                            </li>
-                            <li className="category-breadcrumb-separator">&gt;</li>
-                            <li className="category-breadcrumb-item active" aria-current="page">
-                                {isFaceCategory ? "Face" : "Lips"}
-                            </li>
-                        </ol>
-                    </nav>
-                </div>
-            )}
 
             {/* 🔥 UPDATED: HERO BANNER REPLACED WITH SWIPER SLIDER 🔥 */}
             {bannerImages?.length > 0 &&
@@ -1775,26 +1435,8 @@ export default function ProductPage() {
                 <div className="non-hero-spacer" />
             )}
 
-            {/* Category SEO H1 & Intro block */}
-            {isFaceCategory && (
-                <div className="container-lg mt-4 mb-2 text-center category-seo-header-block">
-                    <h1 className="category-seo-h1">Face Makeup Online in India</h1>
-                    <p className="category-intro-text max-w-xl mx-auto" style={{ maxWidth: '780px', margin: '0 auto', fontSize: '14px', color: '#555' }}>
-                        Buy Face Makeup Online in India - Shop foundation, concealer, compact powder, blush, highlighter, and primer at Joyory. Curated formulas suited for Indian skin tones, weather, and undertones.
-                    </p>
-                </div>
-            )}
-            {isLipsCategory && (
-                <div className="container-lg mt-4 mb-2 text-center category-seo-header-block">
-                    <h1 className="category-seo-h1">Lipsticks, Lip Gloss &amp; Lip Care Online</h1>
-                    <p className="category-intro-text max-w-xl mx-auto" style={{ maxWidth: '780px', margin: '0 auto', fontSize: '14px', color: '#555' }}>
-                        Explore lipsticks, lip gloss, lip liners, lip balms, lip oils and lip stains at Joyory. Find your favourite finish from matte to high-shine, formulated for all Indian skin tones.
-                    </p>
-                </div>
-            )}
-
             {/* Trending Categories */}
-            {displayedTrendingCategories.length > 0 && (
+            {trendingCategories.length > 0 && (
                 <div className="container-lg mt-4 mb-4">
                     <h2 className="text-center" style={{ marginBottom: "30px", textAlign: "center" }}>Top Categories</h2>
                     <div
@@ -1804,7 +1446,7 @@ export default function ProductPage() {
                             scrollbarWidth: "none"
                         }}
                     >
-                        {displayedTrendingCategories.map((cat) => {
+                        {trendingCategories.map((cat) => {
                             const isActive = (filters.categoryIds || []).includes(cat._id) ||
                                 (filters.categoryIds || []).includes(cat.slug) ||
                                 ((filters.categoryIds || []).length === 0 && activeCategorySlug === cat.slug);
@@ -1996,11 +1638,9 @@ export default function ProductPage() {
                     )}
 
                     <div className="col-12 col-lg-9">
-                        {/* Anchor for Page 1 */}
-                        <div id="page-section-1" data-page-section="1" style={{ position: "relative", top: "-10px", height: 0, width: "100%", padding: 0, margin: 0 }} />
                         <div className="mb-3 d-flex justify-content-between align-items-center">
                             <span className="text-muted page-title-main-name d-lg-block d-none mt-3">
-                                {(loading || !filterData) && totalCount === 0 ? "Loading products..." : `Showing ${totalCount} products`}
+                                Showing {totalCount} products
                             </span>
                             {/* Desktop Sort Dropdown */}
                             <div className="d-none d-lg-flex align-items-center position-relative mt-3" style={{ gap: '6px' }}>
@@ -2113,34 +1753,10 @@ export default function ProductPage() {
                                 </div>
                             )}
                             {sortedProducts.length > 0
-                                ? sortedProducts.map((prod, idx) => {
-                                    const pageNum = Math.floor(idx / PAGE_SIZE) + 1;
-                                    const isNewPageBoundary = idx > 0 && idx % PAGE_SIZE === 0;
-
-                                    return (
-                                        <React.Fragment key={prod._id ? `prod-card-${prod._id}` : `prod-idx-${idx}`}>
-                                            {isNewPageBoundary && (
-                                                <div
-                                                    id={`page-section-${pageNum}`}
-                                                    data-page-section={pageNum}
-                                                    className="col-12 page-section-divider"
-                                                >
-                                                    <div className="page-section-divider-inner">
-                                                        <span className="page-section-divider-line"></span>
-                                                        <span className="page-section-badge">
-                                                            Page {pageNum}
-                                                        </span>
-                                                        <span className="page-section-divider-line"></span>
-                                                    </div>
-                                                </div>
-                                            )}
-                                            {renderProductCard(prod, idx)}
-                                        </React.Fragment>
-                                    );
-                                })
-                                : (loading || loadingMore || !filterData)
+                                ? sortedProducts.map(renderProductCard)
+                                : loading
                                     ? (
-                                        // Loading animation while products / filters are being fetched
+                                        // NEW Loading state when no products yet
                                         <div className="col-12 text-center py-5">
                                             <DotLottieReact className='foryoulanding-css'
                                                 src="https://lottie.host/73673e65-df58-41a5-87e7-b837c5d00fe8/dJVGVbJuYJ.lottie"
@@ -2148,7 +1764,7 @@ export default function ProductPage() {
                                                 autoplay
                                                 style={{ width: '200px', height: '200px', margin: '0 auto' }}
                                             />
-                                            <p className="text-muted mt-2">Loading products...</p>
+                                            <p className="text-muted">Loading products...</p>
                                         </div>
                                     )
                                     : <div className="col-12 text-center py-5"><h4>No products found</h4><p className="text-muted">Try adjusting your filters.</p></div>
@@ -2165,51 +1781,6 @@ export default function ProductPage() {
                             <div className="text-center mt-4 py-4 border-top">
                                 <p className="text-muted">🎉 You've reached the end! No more products to show.</p>
                             </div>
-                        )}
-
-                        {/* Crawlable Pagination links for search engines & smooth in-page navigation */}
-                        {totalPages > 1 && (
-                            <nav className="crawlable-pagination-bar" aria-label="Product catalog pagination">
-                                {activePage > 1 && (
-                                    <a
-                                        href={activePage === 2 ? location.pathname : `${location.pathname}?page=${activePage - 1}`}
-                                        className="crawlable-page-nav-btn crawlable-page-prev"
-                                        aria-label="Previous Page"
-                                        onClick={(e) => goToPage(activePage - 1, e)}
-                                    >
-                                        &larr; Prev
-                                    </a>
-                                )}
-                                {getPaginationNumbers(activePage, totalPages).map((pItem, idx) => {
-                                    if (pItem === "...") {
-                                        return <span key={`ellipsis-${idx}`} className="crawlable-page-ellipsis">…</span>;
-                                    }
-                                    const pNum = Number(pItem);
-                                    const pageHref = pNum === 1 ? location.pathname : `${location.pathname}?page=${pNum}`;
-                                    const isActive = activePage === pNum;
-                                    return (
-                                        <a
-                                            key={pNum}
-                                            href={pageHref}
-                                            className={`crawlable-page-link ${isActive ? "active" : ""}`}
-                                            aria-current={isActive ? "page" : undefined}
-                                            onClick={(e) => goToPage(pNum, e)}
-                                        >
-                                            {pNum}
-                                        </a>
-                                    );
-                                })}
-                                {activePage < totalPages && (
-                                    <a
-                                        href={`${location.pathname}?page=${activePage + 1}`}
-                                        className="crawlable-page-nav-btn crawlable-page-next"
-                                        aria-label="Next Page"
-                                        onClick={(e) => goToPage(activePage + 1, e)}
-                                    >
-                                        Next &rarr;
-                                    </a>
-                                )}
-                            </nav>
                         )}
                     </div>
                 </div>
@@ -2413,11 +1984,6 @@ export default function ProductPage() {
                 );
             })()}
             {/* ===================== END MOBILE BOTTOM SHEET DRAWER ===================== */}
-
-            {/* Category Rich SEO Content & FAQ Block */}
-            {(isFaceCategory || isLipsCategory) && (
-                <CategorySeoContentBlock categoryType={isFaceCategory ? "face" : "lips"} />
-            )}
 
             <Footer />
         </>
