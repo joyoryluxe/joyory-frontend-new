@@ -3,7 +3,7 @@ const path = require('path');
 
 async function updateBlogs() {
   const { default: mongoose } = await import('../../backend/node_modules/mongoose/index.js');
-  const uri = 'mongodb+srv://joyoryluxe:Joyory123@joyoryluxe.4rnfwin.mongodb.net/joyory';
+  const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/joyory';
   
   console.log('Connecting to MongoDB...');
   await mongoose.connect(uri, { serverSelectionTimeoutMS: 10000 });

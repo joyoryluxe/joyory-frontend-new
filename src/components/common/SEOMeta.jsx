@@ -404,14 +404,6 @@ const SEOMeta = ({ type = "home", slug = "", page = "" }) => {
 
       const ogTitle = (type === "category" && slug?.toLowerCase() === "makeup") ? title : (data.openGraph?.title || title);
       const ogDescription = (type === "category" && slug?.toLowerCase() === "makeup") ? description : (data.openGraph?.description || description);
-      if (type === "category" && slug?.toLowerCase() === "makeup") {
-        title = "Buy Makeup Products Online in India: Face & Lips | Joyory";
-        description = "Shop makeup products online at Joyory, from face and lip makeup to more beauty essentials. Browse the full range and find your next favourite look.";
-        canonical = "https://joyory.com/category/makeup";
-      }
-
-      const ogTitle = (type === "category" && slug?.toLowerCase() === "makeup") ? title : (data.openGraph?.title || title);
-      const ogDescription = (type === "category" && slug?.toLowerCase() === "makeup") ? description : (data.openGraph?.description || description);
       const ogImage = data.openGraph?.image || fallback.image;
       const ogType = data.openGraph?.type || fallback.type;
 

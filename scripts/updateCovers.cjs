@@ -1,6 +1,6 @@
 async function updateCovers() {
   const { default: mongoose } = await import('../../backend/node_modules/mongoose/index.js');
-  const uri = 'mongodb+srv://joyoryluxe:Joyory123@joyoryluxe.4rnfwin.mongodb.net/joyory';
+  const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/joyory';
   await mongoose.connect(uri);
   const defaultMakeupImage = 'https://res.cloudinary.com/dekngswix/image/upload/v1774588062/blogs/vkj1ajgikmjqi03na3t5.png';
   const res = await mongoose.connection.db.collection('blogs').updateMany(
