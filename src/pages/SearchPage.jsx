@@ -571,8 +571,6 @@ const SearchPage = () => {
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [cursor, setCursor] = useState(null);
   const [hasMore, setHasMore] = useState(true);
-  const cursorRef = useRef(null);
-  const hasMoreRef = useRef(true);
 
   // ==================== FILTER STATES ====================
   const [filterData, setFilterData] = useState(null);
@@ -745,8 +743,8 @@ const SearchPage = () => {
     try {
       const minNeeded = (pNum - 1) * PAGE_SIZE + 1;
       let currentProducts = [...allProducts];
-      let currentCursor = cursorRef.current;
-      let currentHasMore = hasMoreRef.current;
+      let currentCursor = cursor;
+      let currentHasMore = hasMore;
 
       while (currentProducts.length < minNeeded && currentHasMore && currentCursor) {
         const queryStr = buildQueryParams(currentCursor);
@@ -763,8 +761,6 @@ const SearchPage = () => {
         currentHasMore = pg.hasMore || false;
         currentCursor = pg.nextCursor || null;
 
-        cursorRef.current = currentCursor;
-        hasMoreRef.current = currentHasMore;
         setAllProducts(currentProducts);
         setHasMore(currentHasMore);
         setCursor(currentCursor);
@@ -778,7 +774,7 @@ const SearchPage = () => {
       setIsFetchingMore(false);
       isNavigatingPageRef.current = false;
     }
-  }, [scrollToPageSection, allProducts, buildQueryParams]);
+  }, [scrollToPageSection, allProducts, cursor, hasMore, buildQueryParams]);
 
   const fetchProducts = useCallback(async (currentCursor = null, reset = false) => {
     const cacheKey = getSearchCacheKey(searchTerm, filters);
@@ -792,9 +788,7 @@ const SearchPage = () => {
         setAllProducts(cached.products);
         setTotalCount(cached.totalCount || cached.products.length);
         setCursor(cached.cursor || null);
-        cursorRef.current = cached.cursor || null;
         setHasMore(cached.hasMore ?? false);
-        hasMoreRef.current = cached.hasMore ?? false;
         if (cached.filterData && (!filterData || reset)) setFilterData(cached.filterData);
         if (cached.trendingCategories && (!trendingCategories || trendingCategories.length === 0)) {
           setTrendingCategories(cached.trendingCategories);
@@ -817,18 +811,14 @@ const SearchPage = () => {
       } else {
         setIsLoading(true);
         setCursor(null);
-        cursorRef.current = null;
         setHasMore(true);
-        hasMoreRef.current = true;
         setActivePage(requestedPage);
       }
     } else {
       if (reset) {
         setIsLoading(true);
         setCursor(null);
-        cursorRef.current = null;
         setHasMore(true);
-        hasMoreRef.current = true;
         setActivePage(requestedPage);
       } else {
         setIsFetchingMore(true);
@@ -899,8 +889,6 @@ const SearchPage = () => {
 
       const nextCursor = pagination.nextCursor || null;
       const nextHasMore = pagination.hasMore || false;
-      cursorRef.current = nextCursor;
-      hasMoreRef.current = nextHasMore;
       setHasMore(nextHasMore);
       setCursor(nextCursor);
 
