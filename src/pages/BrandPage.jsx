@@ -26,7 +26,6 @@ import BrandFilter from "../components/common/BrandFilter";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import "../styles/BrandPage.css";
 import "../styles/BestSellers.css";
-import "../styles/CrawlablePagination.css";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination, Navigation } from "swiper/modules";
 import { ToastContainer, toast } from "react-toastify";
@@ -69,24 +68,6 @@ const getBrandName = (p) => {
   return "Unknown Brand";
 };
 
-const PAGE_SIZE = 20;
-
-const getPaginationNumbers = (current, total) => {
-  if (total <= 7) {
-    return Array.from({ length: total }, (_, i) => i + 1);
-  }
-  const pages = [1];
-  if (current > 3) pages.push("...");
-  const start = Math.max(2, current - 1);
-  const end = Math.min(total - 1, current + 1);
-  for (let i = start; i <= end; i++) {
-    pages.push(i);
-  }
-  if (current < total - 2) pages.push("...");
-  pages.push(total);
-  return pages;
-};
-
 export default function BrandPage() {
   const { brandSlug } = useParams();
   const navigate = useNavigate();
@@ -99,15 +80,6 @@ export default function BrandPage() {
   /* ── state ──────────────────────────────────────────────────────────────── */
   const [allProducts, setAllProducts] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
-  const [activePage, setActivePage] = useState(() => {
-    const initialP = parseInt(searchParams.get("page"), 10);
-    return initialP > 0 ? initialP : 1;
-  });
-  const totalPages = useMemo(() => {
-    return Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
-  }, [totalCount]);
-  const isProgrammaticScrollRef = useRef(false);
-  const isNavigatingPageRef = useRef(false);
   const [pageTitle, setPageTitle] = useState("Products");
   const [bannerImages, setBannerImages] = useState([]);
 
@@ -419,7 +391,7 @@ export default function BrandPage() {
   };
 
   /* ── fetch products ─────────────────────────────────────────────────────── */
-  const buildQueryParams = (cursor = null, customLimit = null) => {
+  const buildQueryParams = (cursor = null) => {
     const p = new URLSearchParams();
     if (brandSlug) p.append("brandIds", brandSlug);
 
@@ -444,147 +416,77 @@ export default function BrandPage() {
     // Do not pass sort to backend API due to cursor pagination limitation (nextCursor is null when sorting)
     // if (filters.sort) p.append("sort", filters.sort);
     if (cursor) p.append("cursor", cursor);
-    p.append("limit", String(customLimit || PAGE_SIZE));
+    p.append("limit", "9");
 
     const queryString = p.toString();
     console.log("BrandPage API Query →", `${PRODUCT_ALL_API}?${queryString}`);
     return queryString;
   };
 
-  const getAppScrollTop = () => {
-    const bodyTop = document.body ? document.body.scrollTop : 0;
-    const docTop = document.documentElement ? document.documentElement.scrollTop : 0;
-    const winTop = window.pageYOffset || 0;
-    return Math.max(bodyTop, docTop, winTop);
-  };
+  // const fetchProducts = async (cursor = null, reset = false) => {
+  //   try {
+  //     if (reset) {
+  //       setLoading(true);
+  //       setAllProducts([]);           // cleared on full reload
+  //       setNextCursor(null);
+  //       setHasMore(true);
+  //     } else {
+  //       setLoadingMore(true);
+  //     }
 
-  const scrollAppTo = (y, behavior = "smooth") => {
-    const targetY = Math.max(0, Math.round(y));
-    try {
-      if (document.body) {
-        document.body.scrollTo({ top: targetY, behavior });
-      }
-    } catch (e) {}
-    try {
-      if (document.documentElement) {
-        document.documentElement.scrollTo({ top: targetY, behavior });
-      }
-    } catch (e) {}
-    try {
-      window.scrollTo({ top: targetY, behavior });
-    } catch (e) {}
-  };
+  //     const { data } = await axios.get(
+  //       `${PRODUCT_ALL_API}?${buildQueryParams(cursor)}`,
+  //       { withCredentials: true }
+  //     );
 
-  const scrollToPageSection = useCallback((pNum, retry = true) => {
-    let attempts = 0;
-    const maxAttempts = retry ? 30 : 1;
+  //     if (data.titleMessage) setPageTitle(data.titleMessage);
+  //     else if (data.brand?.name) setPageTitle(data.brand.name);
+  //     else if (data.category?.name) setPageTitle(data.category.name);
 
-    const tryScroll = () => {
-      const targetEl = document.getElementById(`page-section-${pNum}`);
-      if (targetEl) {
-        isProgrammaticScrollRef.current = true;
-        const headerOffset = 130;
-        const currentScroll = getAppScrollTop();
-        const elementPosition = targetEl.getBoundingClientRect().top + currentScroll;
-        const offsetPosition = Math.max(0, Math.round(elementPosition - headerOffset));
+  //     // Banner extraction
+  //     if (data.bannerImage && Array.isArray(data.bannerImage)) {
+  //       setBannerImages(data.bannerImage);
+  //     } else if (data.brand?.banner) {
+  //       setBannerImages([data.brand.banner]);
+  //     } else if (data.category?.bannerImage) {
+  //       setBannerImages([data.category.bannerImage]);
+  //     } else {
+  //       setBannerImages([]);
+  //     }
 
-        scrollAppTo(offsetPosition, "smooth");
-        setActivePage(pNum);
+  //     if (data.trendingCategories && Array.isArray(data.trendingCategories)) {
+  //       setTrendingCategories(data.trendingCategories);
+  //       if (activeCategorySlug && !activeCategoryName) {
+  //         const found = data.trendingCategories.find((c) => c.slug === activeCategorySlug);
+  //         if (found) setActiveCategoryName(found.name);
+  //       }
+  //     } else {
+  //       setTrendingCategories([]);
+  //     }
 
-        const url = new URL(window.location.href);
-        if (pNum === 1) {
-          url.searchParams.delete("page");
-        } else {
-          url.searchParams.set("page", pNum);
-        }
-        window.history.replaceState({}, "", url.toString());
+  //     if (reset && data.filters) {
+  //       setFilterData(data.filters);
+  //     }
 
-        setTimeout(() => {
-          const elCheck = document.getElementById(`page-section-${pNum}`);
-          if (elCheck) {
-            const topCheck = elCheck.getBoundingClientRect().top;
-            if (Math.abs(topCheck - 130) > 60) {
-              const newScroll = getAppScrollTop();
-              const adjustedY = Math.max(0, Math.round(topCheck + newScroll - 130));
-              scrollAppTo(adjustedY, "smooth");
-            }
-          }
-        }, 500);
+  //     const prods = Array.isArray(data.products) ? data.products : [];
+  //     const pg = data.pagination || {};
 
-        setTimeout(() => {
-          isProgrammaticScrollRef.current = false;
-        }, 1200);
-        return true;
-      } else if (attempts < maxAttempts) {
-        attempts++;
-        setTimeout(tryScroll, 100);
-        return false;
-      }
-      return false;
-    };
+  //     if (reset) setAllProducts(prods);
+  //     else setAllProducts((prev) => [...prev, ...prods]);
 
-    const foundImmediate = document.getElementById(`page-section-${pNum}`);
-    if (foundImmediate) {
-      return tryScroll();
-    } else if (retry) {
-      tryScroll();
-      return false;
-    }
-    return false;
-  }, []);
-
-  const goToPage = useCallback(async (pNum, e) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-
-    if (scrollToPageSection(pNum, false)) {
-      return;
-    }
-
-    if (isNavigatingPageRef.current) return;
-    isNavigatingPageRef.current = true;
-    setLoadingMore(true);
-
-    try {
-      const minNeeded = (pNum - 1) * PAGE_SIZE + 1;
-      let currentProducts = [...allProducts];
-      let currentCursor = nextCursor;
-      let currentHasMore = hasMore;
-
-      while (currentProducts.length < minNeeded && currentHasMore && currentCursor) {
-        const queryStr = buildQueryParams(currentCursor);
-        const { data } = await axios.get(`${PRODUCT_ALL_API}?${queryStr}`, { withCredentials: true });
-        const newProds = Array.isArray(data.products) ? data.products : [];
-        const pg = data.pagination || {};
-
-        if (newProds.length === 0) break;
-
-        currentProducts = [...currentProducts, ...newProds];
-        currentHasMore = pg.hasMore || false;
-        currentCursor = pg.nextCursor || null;
-
-        setAllProducts(currentProducts);
-        setHasMore(currentHasMore);
-        setNextCursor(currentCursor);
-      }
-
-      scrollToPageSection(pNum, true);
-    } catch (err) {
-      console.error("Failed to load products for page:", pNum, err);
-      showToastMsg(`Failed to load page ${pNum}`, "error");
-    } finally {
-      setLoadingMore(false);
-      isNavigatingPageRef.current = false;
-    }
-  }, [scrollToPageSection, allProducts, nextCursor, hasMore, buildQueryParams]);
+  //     setHasMore(pg.hasMore || false);
+  //     setNextCursor(pg.nextCursor || null);
+  //   } catch (e) {
+  //     console.error(e);
+  //     showToastMsg("Failed to fetch products", "error");
+  //   } finally {
+  //     setLoading(false);
+  //     setLoadingMore(false);
+  //   }
+  // };
 
   const fetchProducts = async (cursor = null, reset = false, clearProducts = false) => {
     try {
-      const requestedPage = reset ? (parseInt(searchParams.get("page"), 10) || 1) : 1;
-      const customLimit = (reset && requestedPage > 1) ? requestedPage * PAGE_SIZE : null;
-
       if (reset) {
         setLoading(true);
         if (clearProducts) {
@@ -592,13 +494,12 @@ export default function BrandPage() {
         }
         setNextCursor(null);
         setHasMore(true);
-        setActivePage(requestedPage);
       } else {
         setLoadingMore(true);
       }
 
       const { data } = await axios.get(
-        `${PRODUCT_ALL_API}?${buildQueryParams(cursor, customLimit)}`,
+        `${PRODUCT_ALL_API}?${buildQueryParams(cursor)}`,
         { withCredentials: true },
       );
 
@@ -635,18 +536,24 @@ export default function BrandPage() {
       else if (data.category?.name) setPageTitle(data.category.name);
 
       if (clearProducts) {
+        /*** FIXED BANNER HANDLING - Handles nested array ***/
         let banners = [];
 
         if (data.bannerImage) {
+          // Case 1: Backend returns [[{url}, {url}]] → flatten it
           if (Array.isArray(data.bannerImage)) {
             if (Array.isArray(data.bannerImage[0])) {
-              banners = data.bannerImage[0];
+              banners = data.bannerImage[0]; // Flatten nested array
             } else {
-              banners = data.bannerImage;
+              banners = data.bannerImage; // Normal array
             }
-          } else if (typeof data.bannerImage === "string") {
+          }
+          // Case 2: Single string
+          else if (typeof data.bannerImage === "string") {
             banners = [{ url: data.bannerImage }];
-          } else if (data.bannerImage.url) {
+          }
+          // Case 3: Single object
+          else if (data.bannerImage.url) {
             banners = [data.bannerImage];
           }
         } else if (data.brand?.banner) {
@@ -657,8 +564,11 @@ export default function BrandPage() {
             : [{ url: data.category.bannerImage }];
         }
 
+        console.log("✅ Final banners set to state:", banners); // For debugging
+
         setBannerImages(banners);
 
+        // Trending Categories
         if (data.trendingCategories && Array.isArray(data.trendingCategories)) {
           setTrendingCategories(data.trendingCategories);
         } else {
@@ -676,30 +586,19 @@ export default function BrandPage() {
       if (reset) setAllProducts(prods);
       else setAllProducts((prev) => [...prev, ...prods]);
 
-      let detectedTotal = null;
-      if (data.totalProducts != null && !isNaN(Number(data.totalProducts))) {
-        detectedTotal = Number(data.totalProducts);
-      } else if (pg.totalProducts != null && !isNaN(Number(pg.totalProducts))) {
-        detectedTotal = Number(pg.totalProducts);
-      } else if (data.titleMessage) {
+      if (data.titleMessage) {
         const match = data.titleMessage.match(/\d+/);
         if (match) {
-          detectedTotal = parseInt(match[0], 10);
+          setTotalCount(parseInt(match[0], 10));
+        } else {
+          setTotalCount((prev) => reset ? prods.length : prev + prods.length);
         }
-      }
-
-      if (detectedTotal !== null && detectedTotal >= 0) {
-        setTotalCount(detectedTotal);
       } else {
-        setTotalCount((prev) => (reset ? prods.length : prev + prods.length));
+        setTotalCount((prev) => reset ? prods.length : prev + prods.length);
       }
 
       setHasMore(pg.hasMore || false);
       setNextCursor(pg.nextCursor || null);
-
-      if (reset && requestedPage > 1) {
-        scrollToPageSection(requestedPage, true);
-      }
     } catch (e) {
       console.error("Fetch products error:", e);
       showToastMsg("Failed to fetch products", "error");
@@ -722,17 +621,21 @@ export default function BrandPage() {
     setFilters((prev) => ({ ...prev, categoryIds: [] }));
   }, []);
 
-  // Force scroll to top when navigating to this page (unless requestedPage > 1)
+
+
+
+
+  // Force scroll to top when navigating to this page
   useEffect(() => {
-    const pageParam = searchParams.get("page");
-    if (!pageParam || Number(pageParam) <= 1) {
-      window.scrollTo({
-        top: 0,
-        left: 0,
-        behavior: "instant",
-      });
-    }
-  }, [brandSlug]);
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: "instant",   // or "smooth" if you prefer
+    });
+  }, [brandSlug]);   // Re-run when brand changes
+
+
+
 
   /* ── URL Sync (like ProductPage) ──────────────────────────────────────── */
   useEffect(() => {
@@ -759,85 +662,11 @@ export default function BrandPage() {
     if (filters.minRating) newParams.set("minRating", filters.minRating);
     if (filters.sort !== "recent") newParams.set("sort", filters.sort);
 
-    // Preserve crawlable page parameter
-    const pageP = searchParams.get("page");
-    if (pageP && Number(pageP) > 1) newParams.set("page", pageP);
-
     const newQuery = newParams.toString();
     if (newQuery !== searchParams.toString()) {
       setSearchParams(newParams, { replace: true });
     }
   }, [filters, setSearchParams, searchParams]);
-
-  // Dynamic Page Section Detection on Scroll
-  useEffect(() => {
-    let ticking = false;
-    const handleScroll = () => {
-      if (isProgrammaticScrollRef.current) return;
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          const currentScroll = getAppScrollTop();
-
-          if (currentScroll < 150) {
-            setActivePage((prev) => {
-              if (prev !== 1) {
-                const url = new URL(window.location.href);
-                url.searchParams.delete("page");
-                window.history.replaceState({}, "", url.toString());
-                return 1;
-              }
-              return prev;
-            });
-            ticking = false;
-            return;
-          }
-
-          const sections = document.querySelectorAll("[data-page-section]");
-          if (sections && sections.length > 0) {
-            let current = 1;
-            const triggerOffset = 260;
-            sections.forEach((sec) => {
-              const rect = sec.getBoundingClientRect();
-              if (rect.top <= triggerOffset) {
-                const p = parseInt(sec.getAttribute("data-page-section"), 10);
-                if (p) current = p;
-              }
-            });
-
-            setActivePage((prev) => {
-              if (prev !== current) {
-                const url = new URL(window.location.href);
-                if (current === 1) {
-                  url.searchParams.delete("page");
-                } else {
-                  url.searchParams.set("page", current);
-                }
-                window.history.replaceState({}, "", url.toString());
-                return current;
-              }
-              return prev;
-            });
-          }
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true, capture: true });
-    document.addEventListener("scroll", handleScroll, { passive: true, capture: true });
-    if (document.body) {
-      document.body.addEventListener("scroll", handleScroll, { passive: true });
-    }
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll, { capture: true });
-      document.removeEventListener("scroll", handleScroll, { capture: true });
-      if (document.body) {
-        document.body.removeEventListener("scroll", handleScroll);
-      }
-    };
-  }, []);
 
   /* ── infinite scroll ────────────────────────────────────────────────────── */
   const loadMore = useCallback(() => {
@@ -1799,11 +1628,8 @@ export default function BrandPage() {
           <div className="col-12 col-lg-9">
             <div className="mb-3 d-flex justify-content-between align-items-center">
               <span className="text-muted page-title-main-name mt-lg-3">
-                {(loading || !filterData) && totalCount === 0
-                  ? "Loading products..."
-                  : totalCount > 0
-                  ? `Showing ${totalCount} products`
-                  : "No products found"}
+                {totalCount > 0 ? `Showing ${totalCount} products` : "No products found"}
+                {/* {hasMore && " (Scroll for more)"} */}
               </span>
               <div className="d-flex align-items-center gap-3">
                 {/* {isAnyFilterActive && (
@@ -1903,32 +1729,8 @@ export default function BrandPage() {
                 </div>
               )}
               {sortedProducts.length > 0 ? (
-                Array.from({ length: Math.ceil(sortedProducts.length / PAGE_SIZE) }).map((_, pageIdx) => {
-                  const pNum = pageIdx + 1;
-                  const start = pageIdx * PAGE_SIZE;
-                  const pageChunk = sortedProducts.slice(start, start + PAGE_SIZE);
-                  return (
-                    <React.Fragment key={`brand-page-chunk-${pNum}`}>
-                      {pNum > 1 && (
-                        <div className="col-12 page-section-divider">
-                          <div className="page-section-divider-inner">
-                            <div className="page-section-divider-line"></div>
-                            <span className="page-section-badge">Page {pNum}</span>
-                            <div className="page-section-divider-line"></div>
-                          </div>
-                        </div>
-                      )}
-                      <div
-                        id={`page-section-${pNum}`}
-                        data-page-section={pNum}
-                        className="col-12 p-0 row m-0 w-100"
-                      >
-                        {pageChunk.map(renderProductCard)}
-                      </div>
-                    </React.Fragment>
-                  );
-                })
-              ) : (loading || loadingMore || !filterData) ? (
+                sortedProducts.map(renderProductCard)
+              ) : loading ? (
                 <div className="col-12 text-center py-5">
                   <DotLottieReact
                     src="https://lottie.host/73673e65-df58-41a5-87e7-b837c5d00fe8/dJVGVbJuYJ.lottie"
@@ -1950,19 +1752,11 @@ export default function BrandPage() {
               )}
             </div>
 
-            <div ref={loaderRef} style={{ minHeight: "20px", margin: "15px 0" }}>
-              {loadingMore && (
-                <div className="col-12 text-center py-3">
-                  <DotLottieReact
-                    src="https://lottie.host/73673e65-df58-41a5-87e7-b837c5d00fe8/dJVGVbJuYJ.lottie"
-                    loop
-                    autoplay
-                    style={{ width: "120px", height: "120px", margin: "0 auto" }}
-                  />
-                  <p className="text-muted" style={{ fontSize: "14px" }}>Loading more products...</p>
-                </div>
-              )}
-            </div>
+            {loadingMore && (
+              <Loader text="Loading more products..." height={100} />
+            )}
+
+            <div ref={loaderRef} style={{ height: 20, marginTop: 20 }} />
 
             {!hasMore && allProducts.length > 0 && (
               <div className="text-center mt-4 py-4 border-top">
@@ -1970,51 +1764,6 @@ export default function BrandPage() {
                   🎉 You've reached the end! No more products to show.
                 </p>
               </div>
-            )}
-
-            {/* Crawlable Pagination links for search engines & smooth in-page navigation */}
-            {totalPages > 1 && (
-              <nav className="crawlable-pagination-bar" aria-label="Brand catalog pagination">
-                {activePage > 1 && (
-                  <a
-                    href={activePage === 2 ? location.pathname : `${location.pathname}?page=${activePage - 1}`}
-                    className="crawlable-page-nav-btn crawlable-page-prev"
-                    aria-label="Previous Page"
-                    onClick={(e) => goToPage(activePage - 1, e)}
-                  >
-                    &larr; Prev
-                  </a>
-                )}
-                {getPaginationNumbers(activePage, totalPages).map((pItem, idx) => {
-                  if (pItem === "...") {
-                    return <span key={`ellipsis-${idx}`} className="crawlable-page-ellipsis">…</span>;
-                  }
-                  const pNum = Number(pItem);
-                  const pageHref = pNum === 1 ? location.pathname : `${location.pathname}?page=${pNum}`;
-                  const isActive = activePage === pNum;
-                  return (
-                    <a
-                      key={pNum}
-                      href={pageHref}
-                      className={`crawlable-page-link ${isActive ? "active" : ""}`}
-                      aria-current={isActive ? "page" : undefined}
-                      onClick={(e) => goToPage(pNum, e)}
-                    >
-                      {pNum}
-                    </a>
-                  );
-                })}
-                {activePage < totalPages && (
-                  <a
-                    href={`${location.pathname}?page=${activePage + 1}`}
-                    className="crawlable-page-nav-btn crawlable-page-next"
-                    aria-label="Next Page"
-                    onClick={(e) => goToPage(activePage + 1, e)}
-                  >
-                    Next &rarr;
-                  </a>
-                )}
-              </nav>
             )}
           </div>
         </div>
