@@ -35,4 +35,5 @@ Thumbs.db
 *.sln
 *.sw?
 
+scripts/
 AGENTS.md
