@@ -17,7 +17,6 @@ import { CartContext } from "../context/CartContext";
 import bagIcon from "../assets/bag.svg";
 import Header from "../components/common/Header";
 import SEOMeta from "../components/common/SEOMeta";
-import { getBlogBySlug } from "../data/blogSeoData";
 import "../styles/ForYou.css";
 import Footer from '../components/common/Footer';
 
@@ -270,59 +269,14 @@ const BlogDetail = () => {
 
   // Fetch blog
   useEffect(() => {
-    window.scrollTo(0, 0);
     const fetchBlog = async () => {
-      setLoading(true);
-      setError(null);
-      const local = getBlogBySlug(slug);
-      const targetSlug = local?.slug || slug;
-
       try {
-        const res = await fetch(`${API_BASE}/blogs/slug/${targetSlug}`);
-        if (res.ok) {
-          const data = await res.json();
-          // If local has more comprehensive optimized content, ensure it's used
-          if (local && (!data.content || data.content.length < 500)) {
-            data.content = local.content;
-          }
-          setBlog(data);
-        } else if (local) {
-          setBlog({
-            title: local.title,
-            slug: local.slug,
-            content: local.content,
-            excerpt: local.excerpt,
-            readingTime: local.readingTime,
-            coverImage: local.coverImage,
-            categoryName: local.category,
-            category: { name: local.category, slug: local.category.toLowerCase() },
-            publishedAtFormatted: "17 Nov 2026",
-            author: { name: local.author || "Joyory Team" },
-            relatedProducts: [],
-            relatedArticles: []
-          });
-        } else {
-          throw new Error('Blog not found');
-        }
+        const res = await fetch(`${API_BASE}/blogs/slug/${slug}`);
+        if (!res.ok) throw new Error('Blog not found');
+        const data = await res.json();
+        setBlog(data);
       } catch (err) {
-        if (local) {
-          setBlog({
-            title: local.title,
-            slug: local.slug,
-            content: local.content,
-            excerpt: local.excerpt,
-            readingTime: local.readingTime,
-            coverImage: local.coverImage,
-            categoryName: local.category,
-            category: { name: local.category, slug: local.category.toLowerCase() },
-            publishedAtFormatted: "17 Nov 2026",
-            author: { name: local.author || "Joyory Team" },
-            relatedProducts: [],
-            relatedArticles: []
-          });
-        } else {
-          setError(err.message);
-        }
+        setError(err.message);
       } finally {
         setLoading(false);
       }
@@ -383,7 +337,7 @@ const BlogDetail = () => {
           <div className="col-lg-12">
 
             {/* Alternating Content Sections */}
-            {blog.contentSections && blog.contentSections.length > 0 && blog.contentSections.some(s => s.image && s.image.trim() !== "") && (
+            {blog.contentSections && blog.contentSections.length > 0 && (
               <div className="sections mt-5">
                 {blog.contentSections.map((section, index) => {
                   const isEven = index % 2 === 0;
@@ -408,7 +362,7 @@ const BlogDetail = () => {
             )}
 
             <div className="meta text-muted mb-4 mt-5 pt-1">
-              By {blog.author?.name || "Joyory Team"} | {blog.publishedAtFormatted || blog.publishedAt || "17 Nov 2026"}
+              By {blog.author?.name || "Admin"} | {blog.publishedAtFormatted || blog.publishedAt}
               {blog.readingTime && ` | ${blog.readingTime} min read`}
             </div>
 
