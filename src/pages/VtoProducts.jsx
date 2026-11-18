@@ -16,7 +16,6 @@ import { toast } from "react-toastify";
 import "../styles/ProductPage.css";
 import "../styles/BestSellers.css";
 import "../styles/ForYou.css";
-import "../styles/CrawlablePagination.css";
 import SEOMeta from "../components/common/SEOMeta"; // Add import at top
 const CART_API_BASE = "/api/user/cart";
 const PRODUCT_ALL_API = "/api/user/products/all";
@@ -94,24 +93,6 @@ const parseFiltersFromSearchParams = (searchParams) => {
     return initialFilters;
 };
 
-const PAGE_SIZE = 20;
-
-const getPaginationNumbers = (current, total) => {
-    if (total <= 7) {
-        return Array.from({ length: total }, (_, i) => i + 1);
-    }
-    const pages = [1];
-    if (current > 3) pages.push("...");
-    const start = Math.max(2, current - 1);
-    const end = Math.min(total - 1, current + 1);
-    for (let i = start; i <= end; i++) {
-        pages.push(i);
-    }
-    if (current < total - 2) pages.push("...");
-    pages.push(total);
-    return pages;
-};
-
 export default function VtoProducts() {
     const navigate = useNavigate();
     const { openCart, syncCartFromBackend } = useContext(CartContext);
@@ -121,15 +102,6 @@ export default function VtoProducts() {
     /* ── state ──────────────────────────────────────────────────────────────── */
     const [allProducts, setAllProducts] = useState([]);
     const [totalCount, setTotalCount] = useState(0);
-    const [activePage, setActivePage] = useState(() => {
-        const initialP = parseInt(searchParams.get("page"), 10);
-        return initialP > 0 ? initialP : 1;
-    });
-    const totalPages = useMemo(() => {
-        return Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
-    }, [totalCount]);
-    const isProgrammaticScrollRef = useRef(false);
-    const isNavigatingPageRef = useRef(false);
     const [filterData, setFilterData] = useState(null);
     const lastContextRef = useRef("");
 
@@ -273,136 +245,8 @@ export default function VtoProducts() {
         }
     };
 
-    const getAppScrollTop = () => {
-        const bodyTop = document.body ? document.body.scrollTop : 0;
-        const docTop = document.documentElement ? document.documentElement.scrollTop : 0;
-        const winTop = window.pageYOffset || 0;
-        return Math.max(bodyTop, docTop, winTop);
-    };
-
-    const scrollAppTo = (y, behavior = "smooth") => {
-        const targetY = Math.max(0, Math.round(y));
-        try {
-            if (document.body) document.body.scrollTo({ top: targetY, behavior });
-        } catch (e) {}
-        try {
-            if (document.documentElement) document.documentElement.scrollTo({ top: targetY, behavior });
-        } catch (e) {}
-        try {
-            window.scrollTo({ top: targetY, behavior });
-        } catch (e) {}
-    };
-
-    const scrollToPageSection = useCallback((pNum, retry = true) => {
-        let attempts = 0;
-        const maxAttempts = retry ? 30 : 1;
-
-        const tryScroll = () => {
-            const targetEl = document.getElementById(`page-section-${pNum}`);
-            if (targetEl) {
-                isProgrammaticScrollRef.current = true;
-                const headerOffset = 130;
-                const currentScroll = getAppScrollTop();
-                const elementPosition = targetEl.getBoundingClientRect().top + currentScroll;
-                const offsetPosition = Math.max(0, Math.round(elementPosition - headerOffset));
-
-                scrollAppTo(offsetPosition, "smooth");
-                setActivePage(pNum);
-
-                const url = new URL(window.location.href);
-                if (pNum === 1) {
-                    url.searchParams.delete("page");
-                } else {
-                    url.searchParams.set("page", pNum);
-                }
-                window.history.replaceState({}, "", url.toString());
-
-                setTimeout(() => {
-                    const elCheck = document.getElementById(`page-section-${pNum}`);
-                    if (elCheck) {
-                        const topCheck = elCheck.getBoundingClientRect().top;
-                        if (Math.abs(topCheck - 130) > 60) {
-                            const newScroll = getAppScrollTop();
-                            const adjustedY = Math.max(0, Math.round(topCheck + newScroll - 130));
-                            scrollAppTo(adjustedY, "smooth");
-                        }
-                    }
-                }, 500);
-
-                setTimeout(() => {
-                    isProgrammaticScrollRef.current = false;
-                }, 1200);
-                return true;
-            } else if (attempts < maxAttempts) {
-                attempts++;
-                setTimeout(tryScroll, 100);
-                return false;
-            }
-            return false;
-        };
-
-        const foundImmediate = document.getElementById(`page-section-${pNum}`);
-        if (foundImmediate) {
-            return tryScroll();
-        } else if (retry) {
-            tryScroll();
-            return false;
-        }
-        return false;
-    }, []);
-
-    const goToPage = useCallback(async (pNum, e) => {
-        if (e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-
-        if (scrollToPageSection(pNum, false)) {
-            return;
-        }
-
-        if (isNavigatingPageRef.current) return;
-        isNavigatingPageRef.current = true;
-        setLoadingMore(true);
-
-        try {
-            const minNeeded = (pNum - 1) * PAGE_SIZE + 1;
-            let currentProducts = [...allProducts];
-            let currentCursor = nextCursor;
-            let currentHasMore = hasMore;
-
-            while (currentProducts.length < minNeeded && currentHasMore && currentCursor) {
-                const queryStr = buildQueryParams(currentCursor);
-                const { data } = await axiosInstance.get(`${PRODUCT_ALL_API}?${queryStr}`);
-                const newProds = Array.isArray(data?.products) ? data.products : [];
-                const pg = data?.pagination || {};
-
-                if (newProds.length === 0) break;
-
-                const productMap = new Map();
-                currentProducts.forEach(p => productMap.set(p._id, p));
-                newProds.forEach(p => productMap.set(p._id, p));
-                currentProducts = Array.from(productMap.values());
-                currentHasMore = pg.hasMore || false;
-                currentCursor = pg.nextCursor || null;
-
-                setAllProducts(currentProducts);
-                setHasMore(currentHasMore);
-                setNextCursor(currentCursor);
-            }
-
-            scrollToPageSection(pNum, true);
-        } catch (err) {
-            console.error("Failed to load products for page:", pNum, err);
-            toast.error(`Failed to load page ${pNum}`);
-        } finally {
-            setLoadingMore(false);
-            isNavigatingPageRef.current = false;
-        }
-    }, [scrollToPageSection, allProducts, nextCursor, hasMore]);
-
     /* ── fetch ──────────────────────────────────────────────────────────────── */
-    const buildQueryParams = (cursor = null, customLimit = null) => {
+    const buildQueryParams = (cursor = null) => {
         const p = new URLSearchParams();
 
         // Enforce Virtual Try-On products
@@ -428,27 +272,23 @@ export default function VtoProducts() {
         // Do not pass sort to backend API due to cursor pagination limitation (nextCursor is null when sorting)
         // if (filters.sort) p.append("sort", filters.sort);
         if (cursor) p.append("cursor", cursor);
-        p.append("limit", String(customLimit || PAGE_SIZE));
+        p.append("limit", "9");
 
         return p.toString();
     };
 
     const fetchProducts = async (cursor = null, reset = false) => {
         try {
-            const requestedPage = reset ? (parseInt(searchParams.get("page"), 10) || 1) : 1;
-            const customLimit = (reset && requestedPage > 1) ? requestedPage * PAGE_SIZE : null;
-
             if (reset) {
                 setLoading(true);
                 setNextCursor(null);
                 setHasMore(true);
-                setActivePage(requestedPage);
             } else {
                 setLoadingMore(true);
             }
 
             const { data } = await axiosInstance.get(
-                `${PRODUCT_ALL_API}?${buildQueryParams(cursor, customLimit)}`
+                `${PRODUCT_ALL_API}?${buildQueryParams(cursor)}`
             );
 
             const newProducts = data.products || [];
@@ -456,37 +296,13 @@ export default function VtoProducts() {
 
             if (reset) {
                 setAllProducts(newProducts);
+                setTotalCount(data.totalProducts || newProducts.length);
             } else {
-                setAllProducts((prev) => {
-                    const productMap = new Map();
-                    prev.forEach(p => productMap.set(p._id, p));
-                    newProducts.forEach(p => productMap.set(p._id, p));
-                    return Array.from(productMap.values());
-                });
-            }
-
-            let detectedTotal = null;
-            if (data.totalProducts != null && !isNaN(Number(data.totalProducts))) {
-                detectedTotal = Number(data.totalProducts);
-            } else if (pg.totalProducts != null && !isNaN(Number(pg.totalProducts))) {
-                detectedTotal = Number(pg.totalProducts);
-            } else if (data.titleMessage) {
-                const match = data.titleMessage.match(/\d+/);
-                if (match) detectedTotal = parseInt(match[0], 10);
-            }
-
-            if (detectedTotal !== null && detectedTotal >= 0) {
-                setTotalCount(detectedTotal);
-            } else {
-                setTotalCount((prev) => (reset ? newProducts.length : prev + newProducts.length));
+                setAllProducts((prev) => [...prev, ...newProducts]);
             }
 
             setHasMore(pg.hasMore || false);
             setNextCursor(pg.nextCursor || null);
-
-            if (reset && requestedPage > 1) {
-                scrollToPageSection(requestedPage, true);
-            }
 
             const currentContext = `${location.pathname}-${searchParams.get("q") || searchParams.get("search") || ""}`;
             const isContextChanged = lastContextRef.current !== currentContext;
@@ -513,75 +329,6 @@ export default function VtoProducts() {
             setLoadingMore(false);
         }
     };
-
-    // Dynamic Page Section Detection on Scroll
-    useEffect(() => {
-        let ticking = false;
-        const handleScroll = () => {
-            if (isProgrammaticScrollRef.current) return;
-            if (!ticking) {
-                window.requestAnimationFrame(() => {
-                    const currentScroll = getAppScrollTop();
-
-                    if (currentScroll < 150) {
-                        setActivePage((prev) => {
-                            if (prev !== 1) {
-                                const url = new URL(window.location.href);
-                                url.searchParams.delete("page");
-                                window.history.replaceState({}, "", url.toString());
-                                return 1;
-                            }
-                            return prev;
-                        });
-                        ticking = false;
-                        return;
-                    }
-
-                    const sections = document.querySelectorAll("[data-page-section]");
-                    if (sections && sections.length > 0) {
-                        let current = 1;
-                        const triggerOffset = 260;
-                        sections.forEach((sec) => {
-                            const rect = sec.getBoundingClientRect();
-                            if (rect.top <= triggerOffset) {
-                                const p = parseInt(sec.getAttribute("data-page-section"), 10);
-                                if (p) current = p;
-                            }
-                        });
-
-                        setActivePage((prev) => {
-                            if (prev !== current) {
-                                const url = new URL(window.location.href);
-                                if (current === 1) {
-                                    url.searchParams.delete("page");
-                                } else {
-                                    url.searchParams.set("page", current);
-                                }
-                                window.history.replaceState({}, "", url.toString());
-                                return current;
-                            }
-                            return prev;
-                        });
-                    }
-                    ticking = false;
-                });
-                ticking = true;
-            }
-        };
-
-        window.addEventListener("scroll", handleScroll, { passive: true, capture: true });
-        document.addEventListener("scroll", handleScroll, { passive: true, capture: true });
-        if (document.body) {
-            document.body.addEventListener("scroll", handleScroll, { passive: true });
-        }
-        return () => {
-            window.removeEventListener("scroll", handleScroll, { capture: true });
-            document.removeEventListener("scroll", handleScroll, { capture: true });
-            if (document.body) {
-                document.body.removeEventListener("scroll", handleScroll);
-            }
-        };
-    }, []);
 
     /* ── Sync URL query parameters when filters change ──────────────────── */
     useEffect(() => {
@@ -1241,11 +988,9 @@ export default function VtoProducts() {
 
                     {/* Products Grid Column */}
                     <div className="col-12 col-lg-9 mt-lg-5">
-                        {/* Anchor for Page 1 */}
-                        <div id="page-section-1" data-page-section="1" style={{ position: "relative", top: "-10px", height: 0, width: "100%", padding: 0, margin: 0 }} />
                         <div className="mb-3 d-flex justify-content-between align-items-center">
                             <span className="text-muted page-title-main-name d-lg-block d-none mt-0">
-                                {(loading && totalCount === 0) ? "Loading products..." : `Showing ${totalCount} products`}
+                                Showing {totalCount} products
                             </span>
                             <div className="d-flex align-items-center gap-3">
                                 {/* {isAnyFilterActive && (
@@ -1317,43 +1062,9 @@ export default function VtoProducts() {
                         </div>
 
 
-                        <div className="row g-4 position-relative responsive-product-grid">
+                        <div className="row g-4 position-relative">
                             {sortedProducts.length > 0 ? (
-                                sortedProducts.map((prod, idx) => {
-                                    const pageNum = Math.floor(idx / PAGE_SIZE) + 1;
-                                    const isNewPageBoundary = idx > 0 && idx % PAGE_SIZE === 0;
-
-                                    return (
-                                        <React.Fragment key={prod._id ? `vto-prod-${prod._id}` : `vto-idx-${idx}`}>
-                                            {isNewPageBoundary && (
-                                                <div
-                                                    id={`page-section-${pageNum}`}
-                                                    data-page-section={pageNum}
-                                                    className="col-12 page-section-divider"
-                                                >
-                                                    <div className="page-section-divider-inner">
-                                                        <span className="page-section-divider-line"></span>
-                                                        <span className="page-section-badge">
-                                                            Page {pageNum}
-                                                        </span>
-                                                        <span className="page-section-divider-line"></span>
-                                                    </div>
-                                                </div>
-                                            )}
-                                            {renderProductCard(prod, idx)}
-                                        </React.Fragment>
-                                    );
-                                })
-                            ) : (loading || loadingMore || !filterData) ? (
-                                <div className="col-12 text-center py-5">
-                                    <DotLottieReact
-                                        src="https://lottie.host/73673e65-df58-41a5-87e7-b837c5d00fe8/dJVGVbJuYJ.lottie"
-                                        loop
-                                        autoplay
-                                        style={{ width: '200px', height: '200px', margin: '0 auto' }}
-                                    />
-                                    <p className="text-muted mt-2">Loading products...</p>
-                                </div>
+                                sortedProducts.map(renderProductCard)
                             ) : (
                                 <div className="col-12 text-center py-5">
                                     <h4>No products found</h4>
@@ -1372,67 +1083,6 @@ export default function VtoProducts() {
                             <div className="text-center mt-4 py-4 border-top">
                                 <p className="text-muted">🎉 You've reached the end! No more products to show.</p>
                             </div>
-                        )}
-
-                        {/* Crawlable Pagination links */}
-                        {totalPages > 1 && (
-                            <nav className="crawlable-pagination-bar" aria-label="Virtual try on products pagination">
-                                {activePage > 1 && (
-                                    <a
-                                        href={(() => {
-                                            const u = new URL(window.location.href);
-                                            if (activePage === 2) u.searchParams.delete("page");
-                                            else u.searchParams.set("page", activePage - 1);
-                                            return `${u.pathname}${u.search}`;
-                                        })()}
-                                        className="crawlable-page-nav-btn crawlable-page-prev"
-                                        aria-label="Previous Page"
-                                        onClick={(e) => goToPage(activePage - 1, e)}
-                                    >
-                                        &larr; Prev
-                                    </a>
-                                )}
-                                {getPaginationNumbers(activePage, totalPages).map((pItem, idx) => {
-                                    if (pItem === "...") {
-                                        return <span key={`ellipsis-${idx}`} className="crawlable-page-ellipsis">…</span>;
-                                    }
-                                    const pNum = Number(pItem);
-                                    const isActive = pNum === activePage;
-                                    const targetHref = (() => {
-                                        const u = new URL(window.location.href);
-                                        if (pNum === 1) u.searchParams.delete("page");
-                                        else u.searchParams.set("page", pNum);
-                                        return `${u.pathname}${u.search}`;
-                                    })();
-
-                                    return (
-                                        <a
-                                            key={`page-btn-${pNum}`}
-                                            href={targetHref}
-                                            className={`crawlable-page-link ${isActive ? "active" : ""}`}
-                                            aria-label={`Page ${pNum}`}
-                                            aria-current={isActive ? "page" : undefined}
-                                            onClick={(e) => goToPage(pNum, e)}
-                                        >
-                                            {pNum}
-                                        </a>
-                                    );
-                                })}
-                                {activePage < totalPages && (
-                                    <a
-                                        href={(() => {
-                                            const u = new URL(window.location.href);
-                                            u.searchParams.set("page", activePage + 1);
-                                            return `${u.pathname}${u.search}`;
-                                        })()}
-                                        className="crawlable-page-nav-btn crawlable-page-next"
-                                        aria-label="Next Page"
-                                        onClick={(e) => goToPage(activePage + 1, e)}
-                                    >
-                                        Next &rarr;
-                                    </a>
-                                )}
-                            </nav>
                         )}
                     </div>
                 </div>
