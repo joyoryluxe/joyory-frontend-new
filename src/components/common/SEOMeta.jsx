@@ -359,10 +359,12 @@ const SEOMeta = ({ type = "home", slug = "", page = "" }) => {
     // Update the applyMetadata function logic
     const applyMetadata = (data) => {
       let fallback = FALLBACKS[type] || FALLBACKS.home;
+      const pageNum = parseInt(page, 10) || 1;
 
-      // Check category pages for custom skincare and makeup metadata
+      // Check category pages for custom skincare, makeup, face, and lips metadata
       if (type === "category") {
-        if (slug === "skincare" || slug === "skin") {
+        const cleanSlug = (slug || "").toLowerCase().replace(/\/+$/, "");
+        if (cleanSlug === "skincare" || cleanSlug === "skin") {
           fallback = {
             title: "Buy Clean Skincare Products Online | Joyory",
             description: "Shop premium, clean skincare products online at Joyory. Explore serums, moisturizers, sunscreens, and face washes curated for all skin types.",
@@ -370,11 +372,27 @@ const SEOMeta = ({ type = "home", slug = "", page = "" }) => {
             image: "https://joyory.com/logo.png",
             type: "website"
           };
-        } else if (slug === "makeup") {
+        } else if (cleanSlug === "makeup") {
           fallback = {
             title: "Buy Makeup Products Online in India: Face & Lips | Joyory",
             description: "Shop makeup products online at Joyory, from face and lip makeup to more beauty essentials. Browse the full range and find your next favourite look.",
             canonical: "https://joyory.com/category/makeup",
+            image: "https://joyory.com/logo.png",
+            type: "website"
+          };
+        } else if (cleanSlug === "face" || cleanSlug === "makeup/face") {
+          fallback = {
+            title: "Buy Face Makeup Online in India | Foundation, Blush & More",
+            description: "Shop face makeup online in India at Joyory: foundation, compact, blush, bronzer, concealer, contour, highlighter & primer from top beauty brands. Order now.",
+            canonical: "https://joyory.com/category/makeup/face",
+            image: "https://joyory.com/logo.png",
+            type: "website"
+          };
+        } else if (cleanSlug === "lips" || cleanSlug === "makeup/lips") {
+          fallback = {
+            title: "Buy Lipsticks, Lip Gloss & Lip Care Online | Joyory",
+            description: "Shop lipsticks, lip gloss, lip liners, lip balms, lip oils & lip stains from top brands like Pilgrim, Dot & Key, Swiss Beauty. Prices from ₹229. Shop now.",
+            canonical: "https://joyory.com/category/makeup/lips",
             image: "https://joyory.com/logo.png",
             type: "website"
           };
@@ -390,16 +408,56 @@ const SEOMeta = ({ type = "home", slug = "", page = "" }) => {
             type: "article"
           };
         }
+      } else if (type === "blog" && !slug) {
+        fallback = {
+          title: "Beauty Blog & Makeup Tips | Joyory",
+          description: "Discover expert skincare advice, makeup tips, foundation matching guides, and beauty tutorials on the Joyory Blog.",
+          canonical: "https://joyory.com/blog",
+          image: "https://joyory.com/logo.png",
+          type: "website"
+        };
       }
 
       let title = data.title || fallback.title;
       let description = data.description || fallback.description;
       let canonical = data.canonical || fallback.canonical;
 
-      if (type === "category" && slug?.toLowerCase() === "makeup") {
-        title = "Buy Makeup Products Online in India: Face & Lips | Joyory";
-        description = "Shop makeup products online at Joyory, from face and lip makeup to more beauty essentials. Browse the full range and find your next favourite look.";
-        canonical = "https://joyory.com/category/makeup";
+      const cleanSlug = (slug || "").toLowerCase().replace(/\/+$/, "");
+      if (type === "category") {
+        if (cleanSlug === "makeup") {
+          title = "Buy Makeup Products Online in India: Face & Lips | Joyory";
+          description = "Shop makeup products online at Joyory, from face and lip makeup to more beauty essentials. Browse the full range and find your next favourite look.";
+          canonical = "https://joyory.com/category/makeup";
+        } else if (cleanSlug === "face" || cleanSlug === "makeup/face") {
+          title = "Buy Face Makeup Online in India | Foundation, Blush & More";
+          description = "Shop face makeup online in India at Joyory: foundation, compact, blush, bronzer, concealer, contour, highlighter & primer from top beauty brands. Order now.";
+          canonical = "https://joyory.com/category/makeup/face";
+        } else if (cleanSlug === "lips" || cleanSlug === "makeup/lips") {
+          title = "Buy Lipsticks, Lip Gloss & Lip Care Online | Joyory";
+          description = "Shop lipsticks, lip gloss, lip liners, lip balms, lip oils & lip stains from top brands like Pilgrim, Dot & Key, Swiss Beauty. Prices from ₹229. Shop now.";
+          canonical = "https://joyory.com/category/makeup/lips";
+        }
+      }
+
+      // Handle Paginated Canonical & Title (Document 1 requirements)
+      if (canonical) {
+        try {
+          const urlObj = new URL(canonical, "https://joyory.com");
+          if (pageNum > 1) {
+            urlObj.searchParams.set("page", String(pageNum));
+          } else {
+            urlObj.searchParams.delete("page");
+          }
+          canonical = urlObj.toString();
+        } catch (_) {}
+      }
+
+      if (pageNum > 1) {
+        const cleanBaseTitle = title
+          .replace(/\s*\|\s*Joyory.*$/i, "")
+          .replace(/\s*-\s*Page\s*\d+.*$/i, "")
+          .trim();
+        title = `${cleanBaseTitle} - Page ${pageNum} | Joyory`;
       }
 
       const ogTitle = (type === "category" && slug?.toLowerCase() === "makeup") ? title : (data.openGraph?.title || title);
