@@ -940,7 +940,7 @@ export default function BrandPage() {
   };
 
   /* ── product card ───────────────────────────────────────────────────────── */
-  const renderProductCard = (prod) => {
+  const renderProductCard = (prod, index = 0) => {
     const vars = Array.isArray(prod.variants) ? prod.variants : [];
     const hasVar = vars.length > 0;
     const displayVariant = tempSelectedVariants[prod._id] || selectedVariants[prod._id] || (hasVar ? vars.find((v) => v.stock > 0) || vars[0] : null) || {};
@@ -972,9 +972,12 @@ export default function BrandPage() {
     else if (showSelectVariantButton) btnText = "Select Variant";
     else if (isCurrentVariantOutOfStock) btnText = "Out of Stock";
 
+    const pageNum = Math.floor(index / PAGE_SIZE) + 1;
+
     return (
       <div
-        key={prod._id}
+        key={prod._id ? `brand-prod-${prod._id}` : `brand-prod-idx-${index}`}
+        data-page-num={pageNum}
         className="col-6 col-md-4 col-lg-4 position-relative page-title-main-name"
       >
         <div className="foryou-card-wrapper">
@@ -1797,8 +1800,10 @@ export default function BrandPage() {
 
           {/* Product Grid */}
           <div className="col-12 col-lg-9">
-            <div className="mb-3 d-flex justify-content-between align-items-center">
-              <span className="text-muted page-title-main-name mt-lg-3">
+            {/* Anchor for Page 1 */}
+            <div id="page-section-1" data-page-section="1" style={{ position: "relative", top: "-10px", height: 0, width: "100%", padding: 0, margin: 0 }} />
+            <div className="mb-4 d-flex justify-content-between align-items-center">
+              <span className="text-muted page-title-main-name">
                 {(loading || !filterData) && totalCount === 0
                   ? "Loading products..."
                   : totalCount > 0
@@ -1806,16 +1811,8 @@ export default function BrandPage() {
                   : "No products found"}
               </span>
               <div className="d-flex align-items-center gap-3">
-                {/* {isAnyFilterActive && (
-                  <button
-                    className="btn btn-sm btn-outline-danger"
-                    onClick={handleClearAllFilters}
-                  >
-                    Clear Filters
-                  </button>
-                )} */}
                 {/* Desktop Sort Dropdown */}
-                <div className="d-none d-lg-flex align-items-center position-relative mt-lg-3" style={{ gap: '6px' }}>
+                <div className="d-none d-lg-flex align-items-center position-relative" style={{ gap: '6px' }}>
                   <span className="text-muted page-title-main-name" style={{ fontSize: '14px' }}>Sort by:</span>
                   <div className="position-relative">
                     <button
@@ -1875,7 +1872,7 @@ export default function BrandPage() {
               </div>
             </div>
 
-            <div className="row g-4 position-relative">
+            <div className="row g-4 position-relative responsive-product-grid">
               {/* Loading overlay when filters change but products already exist */}
               {loading && allProducts.length > 0 && (
                 <div
@@ -1903,28 +1900,26 @@ export default function BrandPage() {
                 </div>
               )}
               {sortedProducts.length > 0 ? (
-                Array.from({ length: Math.ceil(sortedProducts.length / PAGE_SIZE) }).map((_, pageIdx) => {
-                  const pNum = pageIdx + 1;
-                  const start = pageIdx * PAGE_SIZE;
-                  const pageChunk = sortedProducts.slice(start, start + PAGE_SIZE);
+                sortedProducts.map((prod, idx) => {
+                  const pageNum = Math.floor(idx / PAGE_SIZE) + 1;
+                  const isNewPageBoundary = idx > 0 && idx % PAGE_SIZE === 0;
+
                   return (
-                    <React.Fragment key={`brand-page-chunk-${pNum}`}>
-                      {pNum > 1 && (
-                        <div className="col-12 page-section-divider">
+                    <React.Fragment key={prod._id ? `brand-prod-${prod._id}` : `brand-prod-idx-${idx}`}>
+                      {isNewPageBoundary && (
+                        <div
+                          id={`page-section-${pageNum}`}
+                          data-page-section={pageNum}
+                          className="col-12 page-section-divider"
+                        >
                           <div className="page-section-divider-inner">
-                            <div className="page-section-divider-line"></div>
-                            <span className="page-section-badge">Page {pNum}</span>
-                            <div className="page-section-divider-line"></div>
+                            <span className="page-section-divider-line"></span>
+                            <span className="page-section-badge">Page {pageNum}</span>
+                            <span className="page-section-divider-line"></span>
                           </div>
                         </div>
                       )}
-                      <div
-                        id={`page-section-${pNum}`}
-                        data-page-section={pNum}
-                        className="col-12 p-0 row m-0 w-100"
-                      >
-                        {pageChunk.map(renderProductCard)}
-                      </div>
+                      {renderProductCard(prod, idx)}
                     </React.Fragment>
                   );
                 })

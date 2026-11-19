@@ -233,6 +233,13 @@
 
 /* Responsive adjustments */
 
+@media (max-width: 1024px) {
+    .brand-page-responsive-code {
+        padding-left: 15px !important;
+        padding-right: 15px !important;
+    }
+}
+
 @media (max-width: 768px) {
     .brand-banner-image {
         height: 300px !important;
@@ -243,8 +250,10 @@
     }
 
     .brand-page-responsive-code {
-        margin-left: 20px;
-        margin-right: 20px;
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+        margin-left: 0;
+        margin-right: 0;
     }
 
     .margin-padding-brabdpage-responsive {
