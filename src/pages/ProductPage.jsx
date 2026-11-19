@@ -2462,8 +2462,8 @@ export default function ProductPage() {
             })()}
             {/* ===================== END MOBILE BOTTOM SHEET DRAWER ===================== */}
 
-            {/* Category Rich SEO Content & FAQ Block - Only displayed on Page 1 to avoid duplicate content on page 2+ */}
-            {(isFaceCategory || isLipsCategory) && activePage === 1 && (
+            {/* Category Rich SEO Content & FAQ Block */}
+            {(isFaceCategory || isLipsCategory) && (
                 <CategorySeoContentBlock categoryType={isFaceCategory ? "face" : "lips"} />
             )}
 
