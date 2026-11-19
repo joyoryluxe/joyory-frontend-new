@@ -1,6 +1,6 @@
 import ProductCardCartButton from "../components/common/ProductCardCartButton";
-import React, { useState, useEffect, useCallback, useContext } from 'react';
-import { BrowserRouter, Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
+import React, { useState, useEffect, useCallback, useContext, useMemo } from 'react';
+import { BrowserRouter, Routes, Route, Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { Spinner, Container, Row, Col } from 'react-bootstrap';
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination, Navigation } from "swiper/modules";
@@ -15,6 +15,7 @@ import Loader from '../components/common/Loader';
 import "../styles/common/bootstrap.min.css";
 import "../styles/Blog.css";
 import "../styles/BestSellers.css";
+import "../styles/CrawlablePagination.css";
 import "../App.css";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -22,7 +23,8 @@ import axios from "axios";
 import bagIcon from "../assets/bag.svg";
 import { FaHeart, FaRegHeart, FaChevronDown } from "react-icons/fa";
 import { UserContext } from "../context/UserContext";
-import SEOMeta from "../components/common/SEOMeta"; // Add import at top
+import { CartContext } from "../context/CartContext";
+import SEOMeta from "../components/common/SEOMeta";
 
 
 const API_BASE = 'https://beauty.joyory.com/api';
@@ -75,7 +77,24 @@ const useWindowWidth = () => {
   return width;
 };
 
+const getPaginationNumbers = (current, total) => {
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }
+  const pages = [1];
+  if (current > 3) pages.push("...");
+  const start = Math.max(2, current - 1);
+  const end = Math.min(total - 1, current + 1);
+  for (let i = start; i <= end; i++) {
+    pages.push(i);
+  }
+  if (current < total - 2) pages.push("...");
+  pages.push(total);
+  return pages;
+};
+
 const Blog = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [data, setData] = useState({
@@ -86,8 +105,37 @@ const Blog = () => {
     categoryTrending: [],
   });
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [cursor, setCursor] = useState(null);
   const [loadingMore, setLoadingMore] = useState(false);
+
+  const activePage = useMemo(() => {
+    const p = parseInt(searchParams.get("page"), 10);
+    return p > 0 ? p : 1;
+  }, [searchParams]);
+
+  const totalPages = useMemo(() => {
+    if (data.blogs?.totalPages) return data.blogs.totalPages;
+    if (data.blogs?.totalCount) return Math.ceil(data.blogs.totalCount / 6);
+    return data.blogs?.hasMore ? activePage + 1 : activePage;
+  }, [data.blogs, activePage]);
+
+  const goToPage = (pNum, e) => {
+    if (e) e.preventDefault();
+    if (pNum < 1 || pNum > totalPages || pNum === activePage) return;
+    const newParams = new URLSearchParams(searchParams);
+    if (pNum === 1) {
+      newParams.delete("page");
+    } else {
+      newParams.set("page", String(pNum));
+    }
+    setSearchParams(newParams);
+
+    const gridEl = document.getElementById("blog-grid-section");
+    if (gridEl) {
+      gridEl.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else {
+      window.scrollTo({ top: 350, behavior: "smooth" });
+    }
+  };
 
   // Trending Products states (same as BestSellers)
   const [selectedVariants, setSelectedVariants] = useState({});
@@ -534,13 +582,15 @@ const Blog = () => {
     }).format(numPrice);
   }, []);
 
-  // ===================== BLOG DATA FETCHING (Unchanged) =====================
-  const fetchLandingData = async (category = 'all', nextCursor = null) => {
+  // ===================== BLOG DATA FETCHING =====================
+  const fetchLandingData = async (category = 'all', pageNum = 1) => {
     try {
       const url = new URL(`${API_BASE}/blogs/landing`);
       url.searchParams.append('limit', '6');
       if (category !== 'all') url.searchParams.append('category', category);
-      if (nextCursor) url.searchParams.append('cursor', nextCursor);
+      if (pageNum > 1) {
+        url.searchParams.append('page', String(pageNum));
+      }
 
       const res = await fetch(url);
       if (!res.ok) throw new Error('Failed to fetch blog data');
@@ -551,13 +601,13 @@ const Blog = () => {
     }
   };
 
-  // Initial load
+  // Initial load and page change
   useEffect(() => {
-    const loadInitial = async () => {
+    const loadData = async () => {
       setLoading(true);
       setError(null);
       try {
-        const result = await fetchLandingData(selectedCategory);
+        const result = await fetchLandingData(selectedCategory, activePage);
         setData({
           trendingBlog: result.trendingBlog,
           categoryNav: result.categoryNav,
@@ -565,42 +615,21 @@ const Blog = () => {
           trendingProducts: result.trendingProducts || [],
           categoryTrending: result.categoryTrending,
         });
-        setCursor(result.blogs.nextCursor);
       } catch (err) {
         setError(err.message);
       } finally {
         setLoading(false);
       }
     };
-    loadInitial();
-  }, [selectedCategory]);
-
-  // Load more blogs (pagination)
-  const loadMore = async () => {
-    if (!data.blogs.hasMore || loadingMore) return;
-    setLoadingMore(true);
-    try {
-      const result = await fetchLandingData(selectedCategory, cursor);
-      setData(prev => ({
-        ...prev,
-        blogs: {
-          items: [...prev.blogs.items, ...result.blogs.items],
-          nextCursor: result.blogs.nextCursor,
-          hasMore: result.blogs.hasMore,
-        },
-      }));
-      setCursor(result.blogs.nextCursor);
-    } catch (err) {
-      console.error('Load more error:', err);
-    } finally {
-      setLoadingMore(false);
-    }
-  };
+    loadData();
+  }, [selectedCategory, activePage]);
 
   // Category change handler
   const handleCategoryChange = (categoryId) => {
     setSelectedCategory(categoryId);
-    setCursor(null);
+    const newParams = new URLSearchParams(searchParams);
+    newParams.delete("page");
+    setSearchParams(newParams);
   };
 
   // Helper function to safely get image URL
@@ -659,7 +688,7 @@ const Blog = () => {
 
   return (
     <>
-      <SEOMeta type="bloglist" /> {/* Add this */}
+      <SEOMeta type="blog" page={activePage} />
       <Header />
       {/* <ToastContainer position="top-right" autoClose={3000} /> */}
       <div className="blog-landing-container margin-topss page-title-main-name">
@@ -732,8 +761,8 @@ const Blog = () => {
           </Container>
         </nav>
 
-        {/* Blog Grid / Slider - UNCHANGED */}
-        <section className="py-5">
+        {/* Blog Grid / Slider */}
+        <section id="blog-grid-section" className="py-5">
           <div className='container-fluid-lg padding-left-rightss-Blog-grid'>
             {!isMobileOrTablet ? (
               <Row className="g-4">
@@ -773,20 +802,51 @@ const Blog = () => {
               </Slider>
             )}
 
-            {data.blogs.hasMore && (
-              <div className="text-center mt-5 pt-4">
-                <button
-                  className="btn-read-more"
-                  onClick={loadMore}
-                  disabled={loadingMore}
-                >
-                  {loadingMore ? (
-                    <Spinner animation="border" size="sm" />
-                  ) : (
-                    'Read More'
-                  )}
-                </button>
-              </div>
+            {/* Crawlable Pagination links for Google SEO and smooth page navigation */}
+            {totalPages > 1 && (
+              <nav className="crawlable-pagination-bar" aria-label="Blog archive pagination">
+                {activePage > 1 && (
+                  <a
+                    href={activePage === 2 ? "/blog" : `/blog?page=${activePage - 1}`}
+                    className="crawlable-page-nav-btn crawlable-page-prev"
+                    aria-label="Previous Page"
+                    onClick={(e) => goToPage(activePage - 1, e)}
+                  >
+                    &larr; Prev
+                  </a>
+                )}
+                {getPaginationNumbers(activePage, totalPages).map((pItem, idx) => {
+                  if (pItem === "...") {
+                    return <span key={`ellipsis-${idx}`} className="crawlable-page-ellipsis">…</span>;
+                  }
+                  const pNum = Number(pItem);
+                  const isActive = pNum === activePage;
+                  const pageHref = pNum === 1 ? "/blog" : `/blog?page=${pNum}`;
+
+                  return (
+                    <a
+                      key={`page-btn-${pNum}`}
+                      href={pageHref}
+                      className={`crawlable-page-link ${isActive ? "active" : ""}`}
+                      aria-label={`Page ${pNum}`}
+                      aria-current={isActive ? "page" : undefined}
+                      onClick={(e) => goToPage(pNum, e)}
+                    >
+                      {pNum}
+                    </a>
+                  );
+                })}
+                {activePage < totalPages && (
+                  <a
+                    href={`/blog?page=${activePage + 1}`}
+                    className="crawlable-page-nav-btn crawlable-page-next"
+                    aria-label="Next Page"
+                    onClick={(e) => goToPage(activePage + 1, e)}
+                  >
+                    Next &rarr;
+                  </a>
+                )}
+              </nav>
             )}
           </div>
         </section>
@@ -972,13 +1032,13 @@ const Blog = () => {
                                 {/* Add to Cart / Select Variant Button */}
                                 <ProductCardCartButton
                                   item={item}
-                                  displayVariant={displayVariant}
-                                  showOutOfStock={showOutOfStock}
+                                  displayVariant={variant}
+                                  showOutOfStock={outOfStock}
                                   isCurrentVariantOutOfStock={outOfStock}
                                   showSelectVariantButton={showSelectVariantButton}
                                   isAdding={isAdding}
                                   handleAddToCart={handleAddToCart}
-                                  handleOutOfStockClick={handleOutOfStockClick}
+                                  handleOutOfStockClick={() => showToastMsg("This product is currently out of stock", "info")}
                                   openVariantOverlay={openVariantOverlay}
                                   buttonClassName="w-100 btn-add-cart"
                                 />
