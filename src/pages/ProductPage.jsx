@@ -343,6 +343,7 @@ export default function ProductPage() {
 
     if (currentUrlKey !== prevUrlKey) {
         setPrevUrlKey(currentUrlKey);
+        setLoading(true);
         const parsed = parseFiltersFromSearchParams(searchParams);
         if (JSON.stringify(filters) !== JSON.stringify(parsed)) {
             setFilters(parsed);
@@ -704,13 +705,14 @@ export default function ProductPage() {
 
             setHasMore(pg.hasMore || false);
             setNextCursor(pg.nextCursor || null);
+            setLoading(false);
+            setLoadingMore(false);
         } catch (e) {
-            if (axios.isCancel(e) || e.name === "CanceledError") {
+            if (axios.isCancel(e) || e.name === "CanceledError" || e.code === "ERR_CANCELED") {
                 return;
             }
             console.error(e);
             showToastMsg("Failed to fetch products", "error");
-        } finally {
             setLoading(false);
             setLoadingMore(false);
         }
@@ -1345,36 +1347,43 @@ export default function ProductPage() {
         return <PageNotFound />;
     }
 
-    // Keep your OLD loader for initial loading
-    if (loading && allProducts.length === 0)
-        return (
-            <div
-                className="fullscreen-loader page-title-main-name"
-                style={{
-                    minHeight: "100vh",
-                    width: "100%",
-                }}
-            >
-                <div className="text-center">
-                    <DotLottieReact className='foryoulanding-css'
-                        src="https://lottie.host/73673e65-df58-41a5-87e7-b837c5d00fe8/dJVGVbJuYJ.lottie"
-                        loop
-                        autoplay
-                    />
-
-
-                    <p className="text-muted mb-0">
-                        Please wait while we prepare the best products for you...
-                    </p>
-                </div>
-            </div>
-        );
-
     /* ── render ─────────────────────────────────────────────────────────────── */
     return (
         <>
             <SEOMeta type="category" slug={effectiveSlug} />
             <Header />
+
+            {/* Loading Overlay (Screenshot 2 loader) */}
+            {loading && (
+                <div
+                    className="position-fixed top-0 start-0 w-100 h-100 d-flex flex-column justify-content-center align-items-center"
+                    style={{
+                        backgroundColor: 'rgba(255, 255, 255, 0.97)',
+                        zIndex: 9999,
+                        backdropFilter: 'blur(10px)',
+                    }}
+                >
+                    <div className="text-center">
+                        <DotLottieReact
+                            className="mb-4"
+                            src="https://lottie.host/73673e65-df58-41a5-87e7-b837c5d00fe8/dJVGVbJuYJ.lottie"
+                            loop
+                            autoplay
+                            style={{ width: '200px', height: '200px' }}
+                        />
+
+                        <p className="text-muted mb-0">
+                            Finding the perfect products just for you
+                        </p>
+
+                        <div className="d-flex justify-content-center gap-1 mt-4">
+                            <div className="dot-pulse"></div>
+                            <div className="dot-pulse"></div>
+                            <div className="dot-pulse"></div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* 🔥 UPDATED: HERO BANNER REPLACED WITH SWIPER SLIDER 🔥 */}
             {bannerImages?.length > 0 &&
@@ -1721,53 +1730,16 @@ export default function ProductPage() {
                             )} */}
 
 
-                            {loading && (
-                                <div
-                                    className="position-fixed top-0 start-0 w-100 h-100 d-flex flex-column justify-content-center align-items-center"
-                                    style={{
-                                        backgroundColor: 'rgba(255, 255, 255, 0.97)',
-                                        zIndex: 9999,
-                                        backdropFilter: 'blur(10px)',
-                                    }}
-                                >
-                                    <div className="text-center">
-                                        <DotLottieReact
-                                            className="mb-4"
-                                            src="https://lottie.host/73673e65-df58-41a5-87e7-b837c5d00fe8/dJVGVbJuYJ.lottie"
-                                            loop
-                                            autoplay
-                                            style={{ width: '200px', height: '200px' }}
-                                        />
-
-                                        <p className="text-muted mb-0">
-                                            Finding the perfect products just for you
-                                        </p>
-
-                                        {/* Optional loading dots */}
-                                        <div className="d-flex justify-content-center gap-1 mt-4">
-                                            <div className="dot-pulse"></div>
-                                            <div className="dot-pulse"></div>
-                                            <div className="dot-pulse"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
                             {sortedProducts.length > 0
                                 ? sortedProducts.map(renderProductCard)
-                                : loading
+                                : !loading
                                     ? (
-                                        // NEW Loading state when no products yet
                                         <div className="col-12 text-center py-5">
-                                            <DotLottieReact className='foryoulanding-css'
-                                                src="https://lottie.host/73673e65-df58-41a5-87e7-b837c5d00fe8/dJVGVbJuYJ.lottie"
-                                                loop
-                                                autoplay
-                                                style={{ width: '200px', height: '200px', margin: '0 auto' }}
-                                            />
-                                            <p className="text-muted">Loading products...</p>
+                                            <h4>No products found</h4>
+                                            <p className="text-muted">Try adjusting your filters.</p>
                                         </div>
                                     )
-                                    : <div className="col-12 text-center py-5"><h4>No products found</h4><p className="text-muted">Try adjusting your filters.</p></div>
+                                    : null
                             }
                         </div>
 
