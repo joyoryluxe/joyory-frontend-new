@@ -51,6 +51,13 @@ const PhoneAuth = () => {
   const [referralApplied, setReferralApplied] = useState(false);
   const [emailConflict, setEmailConflict] = useState(null); // { maskedPhone, email }
 
+  // Display message if redirected from protected pages (e.g., checkout)
+  useEffect(() => {
+    if (location.state?.message) {
+      toast.info(location.state.message, { toastId: "auth-redirect-message" });
+    }
+  }, [location.state?.message]);
+
   // Animated header text taglines
   const animatedTexts = [
     "Personalised beauty recommendations",

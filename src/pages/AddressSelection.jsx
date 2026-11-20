@@ -1,10 +1,12 @@
 // src/pages/AddressSelection.jsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "../styles/AddressSelection.css";
 import Header from "../components/common/Header";
 import { Spinner, Modal } from "react-bootstrap";
 import { FaPhoneAlt, FaEnvelope } from "react-icons/fa";
+import { UserContext } from "../context/UserContext.jsx";
+import { toast } from "react-toastify";
 
 const PROFILE_API = "https://beauty.joyory.com/api/user/profile";
 const CART_API = "https://beauty.joyory.com/api/user/cart/summary";
@@ -12,6 +14,21 @@ const CART_API = "https://beauty.joyory.com/api/user/cart/summary";
 const AddressSelection = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, loading: authLoading } = useContext(UserContext);
+
+  // 🔐 Auth guard: redirect unauthenticated guest users immediately to login
+  useEffect(() => {
+    if (!authLoading && (!user || user.guest || !user.authenticated)) {
+      toast.info("Please log in to proceed with checkout", { toastId: "checkout-login-required" });
+      navigate("/login", {
+        replace: true,
+        state: {
+          from: "/AddressSelection",
+          message: "Please log in to proceed with checkout",
+        },
+      });
+    }
+  }, [user, authLoading, navigate]);
 
   const [profile, setProfile] = useState({});
   const [addresses, setAddresses] = useState([]);
@@ -57,6 +74,9 @@ const AddressSelection = () => {
   const [addressError, setAddressError] = useState("");
 
   useEffect(() => {
+    if (authLoading) return;
+    if (!user || user.guest || !user.authenticated) return;
+
     if (location.state?.priceDetails) {
       setPriceDetails({
         bagMrp: location.state.priceDetails.bagMrp || 0,
@@ -84,12 +104,23 @@ const AddressSelection = () => {
     }
 
     loadProfileAndAddresses();
-  }, []);
+  }, [authLoading, user]);
 
   const loadProfileAndAddresses = async () => {
     try {
       setProcessingMessage("Loading profile...");
       const res = await fetch(PROFILE_API, { credentials: "include" });
+      if (res.status === 401) {
+        toast.info("Please log in to proceed with checkout", { toastId: "checkout-login-required" });
+        navigate("/login", {
+          replace: true,
+          state: {
+            from: "/AddressSelection",
+            message: "Please log in to proceed with checkout",
+          },
+        });
+        return;
+      }
       if (!res.ok) throw new Error("Failed to fetch profile");
       const data = await res.json();
 
@@ -122,7 +153,7 @@ const AddressSelection = () => {
       }
     } catch (err) {
       console.error(err.message);
-      alert("Failed to load profile and addresses");
+      toast.error("Failed to load profile and addresses");
     }
   };
 
@@ -149,6 +180,17 @@ const AddressSelection = () => {
       const url = queryString ? `${CART_API}?${queryString}` : CART_API;
 
       const res = await fetch(url, { credentials: "include" });
+      if (res.status === 401) {
+        toast.info("Please log in to proceed with checkout", { toastId: "checkout-login-required" });
+        navigate("/login", {
+          replace: true,
+          state: {
+            from: "/AddressSelection",
+            message: "Please log in to proceed with checkout",
+          },
+        });
+        return;
+      }
       if (!res.ok) throw new Error("Failed to fetch cart");
       const data = await res.json();
 
@@ -176,7 +218,7 @@ const AddressSelection = () => {
       });
     } catch (err) {
       console.error(err.message);
-      alert("Failed to load cart data");
+      toast.error("Failed to load cart data");
     }
   };
 
@@ -184,11 +226,21 @@ const AddressSelection = () => {
     const { name, phone, email, addressLine1, city, state, pincode } = newAddress;
 
     if (!name || !phone || !email || !addressLine1 || !city || !state || !pincode) {
-      return alert("Please fill all required fields");
+      toast.warn("Please fill all required fields");
+      return;
     }
-    if (!/^\d{10}$/.test(phone)) return alert("Phone number must be 10 digits");
-    if (!/^\S+@\S+\.\S+$/.test(email)) return alert("Please enter a valid email");
-    if (!/^\d{6}$/.test(pincode)) return alert("Please enter a valid 6-digit pincode");
+    if (!/^\d{10}$/.test(phone)) {
+      toast.warn("Phone number must be 10 digits");
+      return;
+    }
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
+      toast.warn("Please enter a valid email");
+      return;
+    }
+    if (!/^\d{6}$/.test(pincode)) {
+      toast.warn("Please enter a valid 6-digit pincode");
+      return;
+    }
 
     const isDuplicate = addresses.some((addr) => {
       if (editingAddressId && addr._id === editingAddressId) return false;
@@ -201,7 +253,8 @@ const AddressSelection = () => {
     });
 
     if (isDuplicate) {
-      return alert("This address already exists. Please use or edit the existing one.");
+      toast.warn("This address already exists. Please use or edit the existing one.");
+      return;
     }
 
     console.log("📤 Sending to backend:", newAddress);
@@ -224,17 +277,29 @@ const AddressSelection = () => {
         });
       }
 
+      if (res.status === 401) {
+        toast.info("Please log in to save your address.", { toastId: "checkout-login-required" });
+        navigate("/login", {
+          state: {
+            from: "/AddressSelection",
+            message: "Please log in to proceed with checkout",
+          },
+        });
+        return;
+      }
+
       const data = await res.json();
       console.log("📥 Response:", data);
 
       if (!res.ok) {
         if (data.message) {
-          alert(data.message);
+          toast.error(data.message);
           return;
         }
         throw new Error("Failed to save address");
       }
 
+      toast.success(editingAddressId ? "Address updated successfully" : "Address saved successfully");
       await loadProfileAndAddresses();
 
       setEditingAddressId(null);
@@ -251,7 +316,7 @@ const AddressSelection = () => {
 
     } catch (err) {
       console.error("❌ Error saving address:", err);
-      alert(err.message || "Failed to save address");
+      toast.error(err.message || "Failed to save address");
     }
   };
 
@@ -279,23 +344,29 @@ const AddressSelection = () => {
       if (!res.ok) throw new Error("Failed to delete address");
       const data = await res.json();
       console.log("📥 DELETE Response:", data);
+      toast.success("Address deleted successfully");
       await loadProfileAndAddresses();
       if (selectedAddressId === id) setSelectedAddressId(null);
     } catch (err) {
       console.error(err.message);
-      alert("Failed to delete address");
+      toast.error("Failed to delete address");
     }
   };
 
   // Modified proceedToPayment to show alert if no address selected
   const proceedToPayment = async () => {
     if (!selectedAddressId) {
-      // Show alert popup as requested
-      alert("Please select a delivery address before proceeding.");
-      setAddressError("Please select a delivery address."); // Optional inline error
+      toast.warn("Please select a delivery address before proceeding.");
+      setAddressError("Please select a delivery address.");
       return;
     }
-    setAddressError(""); // Clear any previous error
+    setAddressError("");
+
+    if (!cartData || cartData.length === 0) {
+      toast.warn("Your cart is empty. Please add items to your cart before proceeding.");
+      navigate("/CartPage");
+      return;
+    }
 
     const selectedAddress = addresses.find((a) => a._id === selectedAddressId);
 
@@ -405,7 +476,7 @@ const AddressSelection = () => {
         setIsProcessing(false);
         setShowProcessingModal(false);
         setProcessingMessage("");
-        alert(error.message || "Could not start payment process. Please try again.");
+        toast.error(error.message || "Could not start payment process. Please try again.");
       }, 2000);
     }
   };
@@ -551,6 +622,18 @@ const AddressSelection = () => {
       </Modal>
     );
   };
+
+  if (authLoading || !user || user.guest || !user.authenticated) {
+    return (
+      <>
+        <Header />
+        <div className="d-flex flex-column justify-content-center align-items-center" style={{ minHeight: "60vh" }}>
+          <Spinner animation="border" variant="dark" role="status" />
+          <p className="mt-3 text-muted">Checking authentication, please wait...</p>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>

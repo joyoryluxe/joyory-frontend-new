@@ -369,6 +369,13 @@ const Login = () => {
     }
   }, []);
 
+  // Display message if redirected from protected pages (e.g., checkout)
+  useEffect(() => {
+    if (location.state?.message) {
+      toast.info(location.state.message, { toastId: "auth-redirect-message" });
+    }
+  }, [location.state?.message]);
+
   // Handle Google Sign-In
   useEffect(() => {
     /* global google */
@@ -396,7 +403,7 @@ const Login = () => {
       );
 
       if (res.data?.user) {
-        const redirectTo = location.state?.frpom || "/";
+        const redirectTo = location.state?.from || "/";
         loginUser(res.data.user);
         toast.success("Google login successful 🎉");
         navigate(redirectTo, { replace: true });

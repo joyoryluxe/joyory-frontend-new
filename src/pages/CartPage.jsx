@@ -1700,16 +1700,15 @@ const CartPage = () => {
       setInitiating(true);
 
       // 🔐 Check login first
-      if (!document.cookie.includes("token=")) {
-        setTimeout(() => {
-          navigate("/login", {
-            state: {
-              from: "/cartpage",
-              message: "Please login to proceed with checkout",
-            },
-          });
-        }, 1200); // small delay for UX
-
+      if (!user || user.guest || !user.authenticated) {
+        setInitiating(false);
+        toast.info("Please log in to proceed with checkout", { toastId: "checkout-login-required" });
+        navigate("/login", {
+          state: {
+            from: "/AddressSelection",
+            message: "Please log in to proceed with checkout",
+          },
+        });
         return;
       }
 
@@ -1734,7 +1733,14 @@ const CartPage = () => {
 
       if (!res.ok) {
         if (res.status === 401) {
-          setTimeout(() => navigate("/login"), 1200);
+          setInitiating(false);
+          toast.info("Please log in to proceed with checkout", { toastId: "checkout-login-required" });
+          navigate("/login", {
+            state: {
+              from: "/AddressSelection",
+              message: "Please log in to proceed with checkout",
+            },
+          });
           return;
         }
         const errJson = await res.json().catch(() => ({}));
